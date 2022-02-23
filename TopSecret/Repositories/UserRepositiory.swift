@@ -22,6 +22,7 @@ class UserRepository : ObservableObject {
     @Published var events: [EventModel] = []
     @Published var personalChats: [ChatModel] = []
     @Published var notifications : [NotificationModel] = []
+    @Published var homescreenPosts : ([EventModel],[PollModel],[GalleryPostModel]) = ([],[],[])
     @Published var followedGroups : [Group] = []
     @Published var isConnected : Bool = false
     @Published var firestoreListener : [ListenerRegistration] = []
@@ -263,6 +264,22 @@ class UserRepository : ObservableObject {
         }
     }
  
+    func fetchGroupPolls(groupID: String, completion: @escaping ([PollModel]) -> ()) -> () {
+        COLLECTION_GROUP.document(groupID).collection("Polls").getDocuments { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            let documents = snapshot!.documents
+            
+            return completion(documents.map({ queryDocumentSnapshot -> PollModel in
+                let data = queryDocumentSnapshot.data()
+                
+                return PollModel(dictionary: data)
+            }))
+        }
+    }
    
     
     func listenToUserGroups(uid: String){
@@ -278,7 +295,19 @@ class UserRepository : ObservableObject {
             }
             
             self.groups = documents.map{ queryDocumentSnapshot -> Group in
-                let data = queryDocumentSnapshot.data()
+                var data = queryDocumentSnapshot.data()
+                var polls = data["polls"] as? [PollModel] ?? []
+                
+                self.fetchGroupPolls(groupID: data["id"] as? String ?? "") { fetchedPolls in
+                    polls = fetchedPolls
+                    
+                }
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                    for poll in data["polls"] as? [PollModel] ?? []{
+                        print("poll: \(poll.creator ?? "")")
+                    }
+                }
                 
             
                 
@@ -287,7 +316,7 @@ class UserRepository : ObservableObject {
                 print("Fetched Groups!")
                 
                 
-                    return Group(dictionary: data)
+                return Group(dictionary: data)
                 
                 
             }
@@ -296,6 +325,13 @@ class UserRepository : ObservableObject {
             
         }
         firestoreListener.append(listener)
+        
+        
+        for group in self.groups {
+            for poll in group.polls ?? [] {
+                print("poll2: \(poll.creator ?? "")")
+            }
+        }
         
     }
     func listenToUserPolls(uid: String){

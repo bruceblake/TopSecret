@@ -15,6 +15,8 @@ struct HomeScreenView: View {
     @EnvironmentObject var navigationHelper : NavigationHelper
     @ObservedObject var notificationRepository = NotificationRepository()
     @StateObject var chatVM = ChatViewModel()
+    @StateObject var groupVM = GroupViewModel()
+    @State var showInfoScreen : Bool = false
 
     
     @State private var options = ["Groups","Notifications"]
@@ -142,7 +144,7 @@ struct HomeScreenView: View {
                         
                         VStack(alignment: .leading){
                             
-                            Text("Stories").fontWeight(.bold).padding(.leading,5)
+                            Text("Stories").fontWeight(.bold).padding(.leading,7)
                             
                                 ScrollView(.horizontal, showsIndicators: false){
                                     HStack{
@@ -172,12 +174,19 @@ struct HomeScreenView: View {
                             
                             Divider()
                         }
+                        
                       
-
                       
+//                        Button(action:{
+//                            groupVM.changeBio(bio: "", groupID: "9450CD87-42E8-4C09-A908-343BE8235E99", userID: userVM.user?.id ?? "")
+//                        },label:{
+//                            Image(systemName: "plus")
+//                        })
                        
                             Spacer()
+
                         
+//
                         
                         
                     }
@@ -210,14 +219,4 @@ struct HomeScreenView_Previews: PreviewProvider {
     }
 }
 
-struct OpenHomescreenView : View {
-    
-    
-    var body: some View {
-        ZStack{
-            Color("Background")
-            
-            Text("Home").font(.largeTitle).fontWeight(.bold).foregroundColor(Color("AccentColor"))
-        }
-    }
-}
+

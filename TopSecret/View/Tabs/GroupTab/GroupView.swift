@@ -84,6 +84,8 @@ struct GroupView: View {
                                     ForEach(userVM.groups) { group in
                                         
                                         
+                                        
+                                        
                                         NavigationLink(
                                             destination: GroupHomeScreenView(group: group),
                                             label: {

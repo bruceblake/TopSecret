@@ -39,6 +39,9 @@
 		783ADC97275425DC00FD517D /* ImagePicker.swift in Sources */ = {isa = PBXBuildFile; fileRef = 783ADC96275425DC00FD517D /* ImagePicker.swift */; };
 		783ADC9B27545C1600FD517D /* SDWebImageSwiftUI in Frameworks */ = {isa = PBXBuildFile; productRef = 783ADC9A27545C1600FD517D /* SDWebImageSwiftUI */; };
 		7853518527C55E9200B10AC0 /* GroupFollowersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7853518427C55E9200B10AC0 /* GroupFollowersView.swift */; };
+		7853518727C6840500B10AC0 /* GalleryPostModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7853518627C6840500B10AC0 /* GalleryPostModel.swift */; };
+		7853518927C6863600B10AC0 /* CreateGalleryPostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7853518827C6863600B10AC0 /* CreateGalleryPostView.swift */; };
+		7853518B27C6A72F00B10AC0 /* GalleryPostCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7853518A27C6A72F00B10AC0 /* GalleryPostCell.swift */; };
 		785E735E275D815D00BC926F /* ChatUsersIdlingCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 785E735D275D815D00BC926F /* ChatUsersIdlingCell.swift */; };
 		786D0C4327A9BAE400F4D611 /* PollInfoOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786D0C4227A9BAE400F4D611 /* PollInfoOverlay.swift */; };
 		786D0C4627AA0F4200F4D611 /* TestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786D0C4527AA0F4200F4D611 /* TestView.swift */; };
@@ -164,6 +167,9 @@
 		783ADC9027516AB400FD517D /* GroupChatCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupChatCell.swift; sourceTree = "<group>"; };
 		783ADC96275425DC00FD517D /* ImagePicker.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePicker.swift; sourceTree = "<group>"; };
 		7853518427C55E9200B10AC0 /* GroupFollowersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupFollowersView.swift; sourceTree = "<group>"; };
+		7853518627C6840500B10AC0 /* GalleryPostModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryPostModel.swift; sourceTree = "<group>"; };
+		7853518827C6863600B10AC0 /* CreateGalleryPostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateGalleryPostView.swift; sourceTree = "<group>"; };
+		7853518A27C6A72F00B10AC0 /* GalleryPostCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryPostCell.swift; sourceTree = "<group>"; };
 		785E735D275D815D00BC926F /* ChatUsersIdlingCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatUsersIdlingCell.swift; sourceTree = "<group>"; };
 		786D0C4227A9BAE400F4D611 /* PollInfoOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollInfoOverlay.swift; sourceTree = "<group>"; };
 		786D0C4527AA0F4200F4D611 /* TestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestView.swift; sourceTree = "<group>"; };
@@ -295,6 +301,7 @@
 			children = (
 				78F8675127C46C5800750F51 /* AddContentView.swift */,
 				78F8675627C51F7700750F51 /* CreateCountdownView.swift */,
+				7853518827C6863600B10AC0 /* CreateGalleryPostView.swift */,
 			);
 			path = AddContent;
 			sourceTree = "<group>";
@@ -427,6 +434,7 @@
 				78C4DCC727B566F5000F0337 /* NotificationModel.swift */,
 				7808252427BFCD7000C56149 /* CountdownModel.swift */,
 				78F8675827C53B7200750F51 /* BadgeModel.swift */,
+				7853518627C6840500B10AC0 /* GalleryPostModel.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -563,6 +571,7 @@
 				786D0C4227A9BAE400F4D611 /* PollInfoOverlay.swift */,
 				78B0927D27B1DC0D003B27A6 /* GroupSearchCell.swift */,
 				78C4DCCA27B583F3000F0337 /* NotificationCell.swift */,
+				7853518A27C6A72F00B10AC0 /* GalleryPostCell.swift */,
 			);
 			path = Cells;
 			sourceTree = "<group>";
@@ -739,8 +748,10 @@
 				78C74CEC27824E8D0009E08C /* EventRepository.swift in Sources */,
 				78C4DCCB27B583F3000F0337 /* NotificationCell.swift in Sources */,
 				78F13C762783CFFD00EB2346 /* SearchRepository.swift in Sources */,
+				7853518727C6840500B10AC0 /* GalleryPostModel.swift in Sources */,
 				78C74CFF278266430009E08C /* PlaceListView.swift in Sources */,
 				78D1A73426DEC56F0083FE2C /* EnterBirthday.swift in Sources */,
+				7853518B27C6A72F00B10AC0 /* GalleryPostCell.swift in Sources */,
 				62CE5ADA26DEE44E00AE6ACC /* VotingView.swift in Sources */,
 				787E2DA326FB9CCB00670DA4 /* ChatInfoView.swift in Sources */,
 				78B0928127B2F528003B27A6 /* BlockedAccountsView.swift in Sources */,
@@ -793,6 +804,7 @@
 				78F13CA6278BDBB700EB2346 /* CountDownPicker.swift in Sources */,
 				7818EC7E27C2C57600DFE58F /* GroupProfileView.swift in Sources */,
 				78C74D0B278375EE0009E08C /* UserProfilePage.swift in Sources */,
+				7853518927C6863600B10AC0 /* CreateGalleryPostView.swift in Sources */,
 				78F13C9B278B7F4000EB2346 /* LoadingView.swift in Sources */,
 				78F13C862784ECFA00EB2346 /* UserInfoView.swift in Sources */,
 				78B7C77326F4D4CA001244D7 /* AddChatView.swift in Sources */,

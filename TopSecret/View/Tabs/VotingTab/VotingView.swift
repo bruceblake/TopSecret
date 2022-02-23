@@ -57,7 +57,7 @@ struct VotingView: View {
                     ScrollView(showsIndicators: false){
                         VStack{
                             ForEach(userVM.polls){ poll in
-                                PollCell(currentPoll: $currentPoll, poll: poll, showInfoScreen: $showInfoScreen).padding(.vertical,15)
+                                PollCell(poll: poll, showInfoScreen: $showInfoScreen).padding(.vertical,15)
                                 
                                 
                             }

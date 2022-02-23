@@ -36,13 +36,13 @@ struct GroupHomeScreenView: View {
                     
                     HStack{
                         Button(action:{
-                            dismiss.wrappedValue.dismiss()
+                                dismiss.wrappedValue.dismiss()
                         },label:{
                             ZStack{
                                 Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
-                                Image(systemName: "chevron.left")
+                                Image(systemName: "house")
                                     .resizable()
-                                    .frame(width: 12, height: 12).foregroundColor(Color("Foreground"))
+                                    .frame(width: 22, height: 22).foregroundColor(Color("Foreground"))
                                 
                             }
                         })
@@ -205,7 +205,7 @@ struct GroupHomeScreenView: View {
           
             
             
-           
+                
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
             groupVM.getChat(chatID: group.chatID ?? "")
             messageVM.readAllMessages(chatID: group.chatID ?? "", userID: userVM.user?.id ?? "", chatType: "groupChat")

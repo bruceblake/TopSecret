@@ -26,7 +26,7 @@ struct CreateCountdownView: View {
                     Text("Create Countdown")
                 })
             }
-        }
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
     }
 }
 

@@ -14,7 +14,7 @@ struct PollCell: View {
     
     @EnvironmentObject var userVM : UserViewModel
     @StateObject var pollVM = PollViewModel()
-    @Binding var currentPoll : PollModel
+    @State var currentPoll : PollModel = PollModel()
     
     //actual
     @State var poll: PollModel

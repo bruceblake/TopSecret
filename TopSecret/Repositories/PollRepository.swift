@@ -29,6 +29,14 @@ class PollRepository : ObservableObject {
             
         }
         
+        
+        COLLECTION_GROUP.document(group.id).collection("Polls").document(UUID().uuidString).setData(data){ err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+        }
+        
     }
     
     func endPoll(pollID: String){

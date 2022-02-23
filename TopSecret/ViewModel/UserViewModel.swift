@@ -40,6 +40,7 @@ class UserViewModel : ObservableObject {
     @Published var timeToFetchPolls: Int = 0
     @Published var showNotification : Int = 0 //on value change, send notification
     @Published var currentNotification : NotificationModel?
+    @Published var homescreenPosts : ([EventModel],[PollModel],[GalleryPostModel]) = ([],[],[])
 
 
 
@@ -95,6 +96,9 @@ class UserViewModel : ObservableObject {
             .store(in: &cancellables)
         userRepository.$followedGroups
             .assign(to: \.followedGroups, on: self)
+            .store(in: &cancellables)
+        userRepository.$homescreenPosts
+            .assign(to: \.homescreenPosts, on: self)
             .store(in: &cancellables)
         
         

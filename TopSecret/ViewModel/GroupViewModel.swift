@@ -55,6 +55,15 @@ class GroupViewModel: ObservableObject {
             
     }
     
+    
+    func createGalleryPost(groupID: String, post: String, description: String, creator: String, isPrivate: Bool, taggedUsers: [String]){
+        groupRepository.createGalleryPost(groupID: groupID, post: post, description: description, creator: creator, isPrivate: isPrivate, taggedUsers: taggedUsers)
+    }
+    
+    func deleteGalleryPost(galleryPostID: String, groupID: String){
+        groupRepository.deleteGalleryPost(galleryPostID: galleryPostID, groupID: groupID)
+    }
+    
     func loadGroupFollowers(groupID: String){
         groupRepository.loadGroupFollowers(groupID: groupID)
     }

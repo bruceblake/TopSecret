@@ -22,6 +22,7 @@ class GroupRepository : ObservableObject {
     @Published var groupProfileImage = ""
     @Published var activeUsers : [User] = []
     @Published var followers : [User] = []
+    @Published var gallery : [GalleryPostModel] = []
     
     
     func fetchUser(userID: String, completion: @escaping (User) -> ()) -> () {
@@ -36,6 +37,15 @@ class GroupRepository : ObservableObject {
             print("Fetched User!")
             return completion(User(dictionary: data))
         }
+    }
+    
+    func createGalleryPost(groupID: String, post: String, description: String, creator: String, isPrivate: Bool, taggedUsers: [String]){
+        let id = UUID().uuidString
+        COLLECTION_GROUP.document(groupID).collection("Gallery Posts").addDocument(data: ["id":id,"viewers":[],"groupID":groupID,"post":post,"taggedUsers":taggedUsers,"description":description,"creator":creator,"isPrivate":isPrivate])
+    }
+    
+    func deleteGalleryPost(galleryPostID: String, groupID: String){
+        COLLECTION_GROUP.document(groupID).collection("Gallery Posts").document(galleryPostID).delete()
     }
     
     
@@ -336,6 +346,8 @@ class GroupRepository : ObservableObject {
     }
     
     func loadGroupFollowers(groupID: String){
+        self.followers.removeAll()
+
         COLLECTION_GROUP.document(groupID).getDocument { snapshot, err in
             if err != nil{
                 print("ERROR")
@@ -344,7 +356,6 @@ class GroupRepository : ObservableObject {
             
             let users = snapshot!.get("followers") as? [String] ?? []
             
-            self.followers.removeAll()
             
             for user in users {
                 self.fetchUser(userID: user) { fetchedUser in

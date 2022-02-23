@@ -33,9 +33,12 @@ struct GroupFollowersView: View {
                             Image(systemName: "chevron.left")
                                 .font(.title3).foregroundColor(FOREGROUNDCOLOR)
                         }
-                    })
+                    }).padding(.horizontal,10)
                     
-                    Text("Followers: \(group.followers?.count ?? 0)")
+                    
+                    Text("\(group.followers?.count ?? 0) \(group.followers?.count ?? 0 > 1 ? "Followers"  : "Follower")").font(.title2).fontWeight(.bold)
+                    
+                    Spacer()
 
                 }
                 
@@ -48,7 +51,7 @@ struct GroupFollowersView: View {
                         
                         if searchRepository.searchText.isEmpty{
                             VStack{
-                                ForEach(groupVM.followers, id: \.id) { user in
+                                ForEach(groupVM.followers) { user in
                                     if user.id != userVM.user?.id ?? ""{
                                     NavigationLink(
                                         destination: UserProfilePage(user: user, isCurrentUser: false),
@@ -78,7 +81,7 @@ struct GroupFollowersView: View {
                         
                     }
                 }
-            }.padding(.top,40)
+            }.padding(.top,50)
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
             searchRepository.startSearch(searchRequest: "groupUsersFollowers", id: group.id)
            
