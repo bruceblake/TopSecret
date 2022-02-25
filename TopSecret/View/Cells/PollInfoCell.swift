@@ -25,7 +25,7 @@ struct PollInfoCell: View {
     
     @Binding var showInfoScreen: Bool
     
-    var creator: User
+    @State var creator: User
 
     
     var poll: PollModel

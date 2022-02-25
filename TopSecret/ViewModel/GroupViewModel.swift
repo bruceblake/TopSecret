@@ -24,6 +24,7 @@ class GroupViewModel: ObservableObject {
     @Published var groupProfileImage = ""
     @Published var activeUsers : [User] = []
     @Published var followers : [User] = []
+    @Published var galleryPosts : [GalleryPostModel] = []
 
 
     
@@ -49,10 +50,18 @@ class GroupViewModel: ObservableObject {
         groupRepository.$followers
             .assign(to: \.followers, on: self)
             .store(in: &cancellables)
+        groupRepository.$galleryPosts
+            .assign(to: \.galleryPosts, on: self)
+            .store(in: &cancellables)
+     
      
      
         
             
+    }
+    
+    func fetchGroupGalleryPosts(groupID: String){
+        groupRepository.fetchGroupGalleryPosts(groupID: groupID)
     }
     
     
@@ -118,14 +127,14 @@ class GroupViewModel: ObservableObject {
     
     
     
-    func createGroup(groupName: String, memberLimit: Int, dateCreated: Date, users: [String], image: UIImage){
+    func createGroup(groupName: String, memberLimit: Int, dateCreated: Date, users: [String], image: UIImage, currentUser: String){
         
-        groupRepository.createGroup(groupName: groupName, memberLimit: memberLimit, dateCreated: dateCreated, users: users, image: image)
+        groupRepository.createGroup(groupName: groupName, memberLimit: memberLimit, dateCreated: dateCreated, users: users, image: image, currentUser: currentUser)
         
     }
-    func createGroup(groupName: String, memberLimit: Int, dateCreated: Date, users: [String], image: UIImage, completion: @escaping (ChatModel) -> ()) -> (){
+    func createGroup(currentUser: String, groupName: String, memberLimit: Int, dateCreated: Date, users: [String], image: UIImage, completion: @escaping (ChatModel) -> ()) -> (){
         
-        groupRepository.createGroup(groupName: groupName, memberLimit: memberLimit, dateCreated: dateCreated, users: users, image: image) { chat in
+        groupRepository.createGroup(currentUser: currentUser, groupName: groupName, memberLimit: memberLimit, dateCreated: dateCreated, users: users, image: image) { chat in
             return completion(chat)
         }
         

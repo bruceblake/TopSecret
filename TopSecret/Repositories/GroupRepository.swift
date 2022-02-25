@@ -22,7 +22,8 @@ class GroupRepository : ObservableObject {
     @Published var groupProfileImage = ""
     @Published var activeUsers : [User] = []
     @Published var followers : [User] = []
-    @Published var gallery : [GalleryPostModel] = []
+    @Published var galleryPosts : [GalleryPostModel] = []
+
     
     
     func fetchUser(userID: String, completion: @escaping (User) -> ()) -> () {
@@ -39,9 +40,29 @@ class GroupRepository : ObservableObject {
         }
     }
     
+    func fetchGroupGalleryPosts(groupID: String){
+        COLLECTION_GROUP.document(groupID).collection("Gallery Posts").getDocuments { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            self.galleryPosts = snapshot!.documents.map({ queryDocumentSnapshot -> GalleryPostModel in
+                let data = queryDocumentSnapshot.data()
+                
+                return GalleryPostModel(dictionary: data)
+            })
+        }
+    }
+    
     func createGalleryPost(groupID: String, post: String, description: String, creator: String, isPrivate: Bool, taggedUsers: [String]){
-        let id = UUID().uuidString
-        COLLECTION_GROUP.document(groupID).collection("Gallery Posts").addDocument(data: ["id":id,"viewers":[],"groupID":groupID,"post":post,"taggedUsers":taggedUsers,"description":description,"creator":creator,"isPrivate":isPrivate])
+        var id = UUID().uuidString
+        COLLECTION_GROUP.document(groupID).collection("Gallery Posts").document(id).setData(["id":id,"viewers":
+    [],"groupID":groupID,"post":post,"taggedUsers":taggedUsers,"description":description,"creator":creator,"isPrivate":isPrivate])
+        id = UUID().uuidString
+        COLLECTION_GALLERY_POSTS.document(id).setData(["id":id,"viewers":
+                                                        [],"groupID":groupID,"post":post,"taggedUsers":taggedUsers,"description":description,"creator":creator,"isPrivate":isPrivate])
+        
     }
     
     func deleteGalleryPost(galleryPostID: String, groupID: String){
@@ -147,7 +168,7 @@ class GroupRepository : ObservableObject {
                 return
             }
             let data = snapshot!.data()
-            self.groupChat = ChatModel(dictionary: data!)
+            self.groupChat = ChatModel(dictionary: data ?? [:])
         }
     }
     
@@ -179,7 +200,7 @@ class GroupRepository : ObservableObject {
                 let id = data["uid"] as? String ?? ""
                 COLLECTION_GROUP.document(groupID).updateData(["users":FieldValue.arrayUnion([id])])
                 COLLECTION_GROUP.document(groupID).updateData(["memberAmount":FieldValue.increment(Int64(1))])
-                
+                COLLECTION_USER.document(id).updateData(["groups":FieldValue.arrayUnion([groupID])])
                 
                 COLLECTION_GROUP.document(groupID).getDocument { (snapshot, err) in
                     
@@ -211,6 +232,8 @@ class GroupRepository : ObservableObject {
                 return
             }
             let groupChatID = snapshot?.get("chatID") as? String ?? " "
+            COLLECTION_USER.document(userID).updateData(["groups":FieldValue.arrayRemove([groupChatID])])
+
             self.chatRepository.leaveChat(chatID: groupChatID, userID: userID)
             
             let users = snapshot?.get("users") as? [String] ?? []
@@ -241,7 +264,7 @@ class GroupRepository : ObservableObject {
 
     }
     
-    func createGroup(groupName: String, memberLimit: Int, dateCreated: Date, users: [String], image: UIImage){
+    func createGroup(groupName: String, memberLimit: Int, dateCreated: Date, users: [String], image: UIImage, currentUser: String){
         
         
         let id = UUID().uuidString
@@ -261,13 +284,15 @@ class GroupRepository : ObservableObject {
             }
             self.persistImageToStorage(groupID: id,image: image)
         }
+        COLLECTION_USER.document(currentUser).updateData(["groups":FieldValue.arrayUnion([id])])
+
         chatRepository.createGroupChat(name: groupName, users: users, groupID: id)
 
         
         
     }
     
-    func createGroup(groupName: String, memberLimit: Int, dateCreated: Date, users: [String], image: UIImage, completion: @escaping (ChatModel) -> ()) -> (){
+    func createGroup(currentUser: String, groupName: String, memberLimit: Int, dateCreated: Date, users: [String], image: UIImage, completion: @escaping (ChatModel) -> ()) -> (){
         
         
         let id = UUID().uuidString
@@ -287,6 +312,8 @@ class GroupRepository : ObservableObject {
             }
             self.persistImageToStorage(groupID: id,image: image)
         }
+        COLLECTION_USER.document(currentUser).updateData(["groups":FieldValue.arrayUnion([id])])
+
         chatRepository.createGroupChat(name: groupName, users: users, groupID: id,completion: { chat in
             return completion(chat)
         })

@@ -64,7 +64,7 @@ struct AddChatView: View {
                         }else{
                             //create group with multiple people
                             self.selectedUsers.append(userVM.user ?? User())
-                            groupVM.createGroup(groupName: "New Group", memberLimit: 50, dateCreated: Date(), users: self.getUsersID(users: selectedUsers), image: UIImage(named: "Icon")!, completion:{ groupChat in
+                            groupVM.createGroup(currentUser: userVM.user?.id ?? "", groupName: "New Group", memberLimit: 50, dateCreated: Date(), users: self.getUsersID(users: selectedUsers), image: UIImage(named: "Icon")!, completion:{ groupChat in
                                 self.chat = groupChat
                                 self.goToGroupChat.toggle()
                             })

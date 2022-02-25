@@ -25,6 +25,7 @@ struct User : Identifiable, Hashable{
     var followedGroups : [String]?
     var isActive: Bool?
     var lastActive: Timestamp?
+    var groups: [String]?
     
 
 
@@ -41,14 +42,18 @@ init(dictionary: [String:Any]) {
     self.blockedAccounts = dictionary["blockedAccounts"] as? [String] ?? []
     self.userNotificationCount = dictionary["userNotificationCount"] as? Int ?? 0
     self.pendingFriendsList = dictionary["pendingFriendsList"] as? [String] ?? []
-    self.followedGroups = dictionary["followedGroups"] as? [String] ?? []
+    self.followedGroups = dictionary["followedGroups"] as? [String] ?? [" "]
     self.isActive = dictionary["isActive"] as? Bool ?? false
     self.lastActive = dictionary["lastActive"] as? Timestamp ?? Timestamp()
+    self.groups = dictionary["groups"] as? [String] ?? [" "]
  
  }
 
     init(){
         self.id = UUID().uuidString
+        self.followedGroups = [" "]
+        self.groups = [" "]
+
     }
     
 }

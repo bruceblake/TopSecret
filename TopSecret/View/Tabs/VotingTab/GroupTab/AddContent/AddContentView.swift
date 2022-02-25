@@ -31,8 +31,8 @@ struct AddContentView: View {
                     NavigationLink(destination: EmptyView()) {
                         Text("Add to Story")
                     }
-                    NavigationLink(destination: EmptyView()) {
-                        Text("Add to Gallery")
+                    NavigationLink(destination: CreateGalleryPostView(group: group)) {
+                        Text("Create Gallery Post")
                     }
                 
           

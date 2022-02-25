@@ -13,13 +13,15 @@ struct GroupGalleryView: View {
     @StateObject var groupVM = GroupViewModel()
     @State var text = ""
     var body: some View {
-        CustomTextField(text: $text, placeholder: "MOTD", isPassword: false, isSecure: false, hasSymbol: false, symbol: "").padding()
-       Spacer()
-        Button(action:{
-            groupVM.changeMOTD(motd: text, groupID: group.id, userID: userVM.user?.id ?? "")
-        },label:{
-            Text("Save")
-        })
+        ScrollView{
+            VStack{
+                ForEach(groupVM.galleryPosts, id: \.id){ post in
+//                    GalleryPostCell(galleryPost: post)
+                }
+            }
+        }.onAppear{
+            groupVM.fetchGroupGalleryPosts(groupID: group.id)
+        }
     }
 }
 //

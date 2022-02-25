@@ -40,7 +40,7 @@ class UserViewModel : ObservableObject {
     @Published var timeToFetchPolls: Int = 0
     @Published var showNotification : Int = 0 //on value change, send notification
     @Published var currentNotification : NotificationModel?
-    @Published var homescreenPosts : ([EventModel],[PollModel],[GalleryPostModel]) = ([],[],[])
+    @Published var homescreenPosts : [String:String] = [:] //postType, id
 
 
 
@@ -104,6 +104,9 @@ class UserViewModel : ObservableObject {
         
      
     }
+    
+    
+  
     
     func setUserActivity(isActive: Bool, userID: String, completion: @escaping (User) -> ()) -> (){
         userRepository.setUserActivity(isActive: isActive, userID: userID, completion: { user in

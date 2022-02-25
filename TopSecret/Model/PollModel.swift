@@ -32,18 +32,18 @@ struct PollModel : Identifiable {
         self.dateCreated = dictionary["dateCreated"] as? Timestamp ?? Timestamp()
         self.endDate = dictionary["endDate"] as? Timestamp ?? Timestamp()
         self.question = dictionary["question"] as? String ?? ""
-        self.groupID = dictionary["groupID"] as? String ?? ""
+        self.groupID = dictionary["groupID"] as? String ?? " "
         self.groupName = dictionary["groupName"] as? String ?? ""
         self.id = dictionary["id"] as? String ?? ""
         self.pollType = dictionary["pollType"] as? String ?? ""
         self.totalUsers = dictionary["totalUsers"] as? Int ?? 0
-        self.usersAnswered = dictionary["usersAnswered"] as? [[String:String]] ?? []
+        self.usersAnswered = dictionary["usersAnswered"] as? [[String:String]] ?? [[:]]
         self.completionType = dictionary["completionType"] as? String ?? ""
         self.countdownTime = dictionary["countdownTime"] as? Int ?? 0
         self.timeRemaining = dictionary["timeRemaining"] as? Int ?? 0
         self.choices = dictionary["choices"] as? [String] ?? ["","","",""]
         self.finished = dictionary["finished"] as? Bool ?? false
-        self.users = dictionary["users"] as? [String] ?? []
+        self.users = dictionary["users"] as? [String] ?? [""]
     }
     
     init(){

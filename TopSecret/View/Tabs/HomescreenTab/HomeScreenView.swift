@@ -17,13 +17,15 @@ struct HomeScreenView: View {
     @StateObject var chatVM = ChatViewModel()
     @StateObject var groupVM = GroupViewModel()
     @State var showInfoScreen : Bool = false
-
+    
     
     @State private var options = ["Groups","Notifications"]
     
     @State var selectedIndex = 0
     
     @State var isActive : Bool = false
+    
+    
     
     var body: some View {
         
@@ -77,8 +79,8 @@ struct HomeScreenView: View {
                                 })
                             
                             
-                        
-                      
+                            
+                            
                             
                             
                             
@@ -97,9 +99,6 @@ struct HomeScreenView: View {
                         })
                         Spacer()
                         HStack(spacing:10){
-                            
-                            
-                            
                             
                             
                             
@@ -130,7 +129,7 @@ struct HomeScreenView: View {
                             
                             
                             
-                          
+                            
                             
                             
                             
@@ -146,48 +145,46 @@ struct HomeScreenView: View {
                             
                             Text("Stories").fontWeight(.bold).padding(.leading,7)
                             
-                                ScrollView(.horizontal, showsIndicators: false){
-                                    HStack{
-
-                                ForEach(userVM.followedGroups){ group in
-                                    NavigationLink(destination: GroupProfileView(group: group)) {
-                                        
-                                        VStack{
-                                            WebImage(url: URL(string: group.groupProfileImage ?? ""))
-                                                .resizable()
-                                                .scaledToFill()
-                                                .frame(width:50,height:50)
-                                                .clipShape(Circle())
+                            ScrollView(.horizontal, showsIndicators: false){
+                                HStack{
+                                    
+                                    ForEach(userVM.followedGroups){ group in
+                                        NavigationLink(destination: GroupProfileView(group: group)) {
                                             
-                                            Text("\(group.groupName)").font(.footnote).foregroundColor(FOREGROUNDCOLOR)
+                                            VStack{
+                                                WebImage(url: URL(string: group.groupProfileImage ?? ""))
+                                                    .resizable()
+                                                    .scaledToFill()
+                                                    .frame(width:50,height:50)
+                                                    .clipShape(Circle())
+                                                
+                                                Text("\(group.groupName)").font(.footnote).foregroundColor(FOREGROUNDCOLOR)
+                                            }
+                                            
+                                            
+                                            
                                         }
                                         
-                                        
-                                        
                                     }
-                                 
-                                }
                                 }
                                 
-                                }.padding(.leading,7)
+                            }.padding(.leading,7)
                             
                             
                             Divider()
                         }
                         
-                      
-                      
-//                        Button(action:{
-//                            groupVM.changeBio(bio: "", groupID: "9450CD87-42E8-4C09-A908-343BE8235E99", userID: userVM.user?.id ?? "")
-//                        },label:{
-//                            Image(systemName: "plus")
-//                        })
-                       
-                            Spacer()
-
                         
-//
-                        
+                    }
+                    
+                    
+                    
+                }
+                ScrollView{
+                    VStack{
+                        ForEach(userVM.homescreenPosts.keys.sorted(), id: \.self){ key in
+                            HomeScreenPostView(id: key, postType: userVM.homescreenPosts[key] ?? "", showInfoScreen: $showInfoScreen)
+                        }
                         
                     }
                 }
@@ -218,5 +215,90 @@ struct HomeScreenView_Previews: PreviewProvider {
         HomeScreenView().preferredColorScheme(.dark).environmentObject(UserViewModel())
     }
 }
+
+
+struct HomeScreenPostView : View {
+    
+    
+    @State var id: String
+    @State var postType: String
+    @State var currentPoll: PollModel = PollModel()
+    @State var currentGroup : Group = Group()
+    @State var galleryPost: GalleryPostModel = GalleryPostModel()
+    @State var testText: String = ""
+    @Binding var showInfoScreen : Bool
+    @EnvironmentObject var userVM: UserViewModel
+    
+    
+    func fetchPoll(pollID: String, completion: @escaping (PollModel) -> ()) -> () {
+        COLLECTION_POLLS.document(pollID).getDocument { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            let data = snapshot!.data()
+            
+            return completion(PollModel(dictionary: data ?? [:]))
+        }
+    }
+    
+    
+    func fetchGroup(groupID: String, completion: @escaping (Group) -> ()) -> (){
+        COLLECTION_GROUP.document(groupID).getDocument { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            let data = snapshot!.data()
+            
+            return completion(Group(dictionary: data ?? [:]))
+            
+        }
+    }
+    
+    var body : some View {
+        
+        
+        
+        
+        ZStack{
+            if postType == "poll"{
+                PollCell(poll: currentPoll, showInfoScreen: $showInfoScreen)
+            }else if postType == "event"{
+                Text("event")
+            }else if postType == "post"{
+                GalleryPostCell(galleryPost: self.$galleryPost, group: $currentGroup)
+            }
+        }.onAppear{
+            
+            COLLECTION_GALLERY_POSTS.document(id).getDocument { snapshot, err in
+                if err != nil {
+                    print("ERROR")
+                    return
+                }
+                
+                let data = snapshot!.data()
+                
+                self.galleryPost = GalleryPostModel(dictionary: data ?? [:])
+                
+                self.fetchGroup(groupID: snapshot!.get("groupID") as? String ?? " ") { fetchedGroup in
+                        self.currentGroup = fetchedGroup
+                    }
+                
+            }
+            
+         
+        }
+        
+    }
+}
+
+
+
+
+
+
 
 

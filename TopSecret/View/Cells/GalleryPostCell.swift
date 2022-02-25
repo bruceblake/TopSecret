@@ -9,16 +9,25 @@ import SwiftUI
 
 struct GalleryPostCell: View {
     
-    @State var galleryPost: GalleryPostModel
+    @Binding var galleryPost: GalleryPostModel
+    @Binding var group: Group
+    
+  
     
     var body: some View {
         ZStack{
             Color("Color")
             VStack{
-                Text("\(galleryPost.post ?? "")")
+                HStack{
+                    Text("Group: \(group.groupName)")
+                    Text("\(galleryPost.post ?? "")")
+                }
                 Text("@\(galleryPost.creator ?? "")")
             }
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
+          
+           
+        }
     }
 }
 

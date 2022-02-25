@@ -14,6 +14,7 @@ class PollRepository : ObservableObject {
     
     
     
+   
     
     func createPoll(creator: String, question: String, group: Group, pollType: String, days: Int, hours: Int, minutes: Int, choices: [String], completionType: String, users: [String], id: String){
         let newDay = Calendar.current.date(byAdding: .day, value: days, to: Date())

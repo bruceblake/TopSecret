@@ -17,7 +17,7 @@ struct PollCell: View {
     @State var currentPoll : PollModel = PollModel()
     
     //actual
-    @State var poll: PollModel
+    @State var poll: PollModel = PollModel()
     @State var creator: User = User()
     @State var daysRemaining: Int = 0
     @State var hoursRemaining: Int = 0
@@ -58,12 +58,14 @@ struct PollCell: View {
             PollInfoCell(showInfoScreen: $showInfoScreen, creator: creator, poll: poll, currentPoll: $currentPoll).padding(0)
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
-            userVM.fetchUser(userID: poll.creator ?? ""){ creator in
+            userVM.fetchUser(userID: poll.creator ?? " "){ creator in
                 self.creator = creator
             }
+                
+                self.currentPoll = poll
+               
             
-            self.currentPoll = poll
-           
+   
             
                 
          

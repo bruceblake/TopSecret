@@ -32,4 +32,15 @@ struct GalleryPostModel : Identifiable {
         self.isPrivate = dictionary["isPrivate"] as? Bool ?? false
     }
     
+    init(){
+        self.id = ""
+        self.viewers = []
+        self.groupID = ""
+        self.post = ""
+        self.taggedUsers = []
+        self.description = ""
+        self.creator = ""
+        self.isPrivate = false
+    }
+    
 }

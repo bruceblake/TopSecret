@@ -45,7 +45,7 @@ struct CreateGroupView: View {
             })
             
             Button(action:{
-                groupVM.createGroup(groupName: groupName, memberLimit: memberLimit, dateCreated: Date(), users: [userVM.user?.id ?? ""],image: avatarImage)
+                groupVM.createGroup(groupName: groupName, memberLimit: memberLimit, dateCreated: Date(), users: [userVM.user?.id ?? ""],image: avatarImage, currentUser: userVM.user?.id ?? "")
                 presentationMode.wrappedValue.dismiss()
             },label:{
                 Text("Create Group")
