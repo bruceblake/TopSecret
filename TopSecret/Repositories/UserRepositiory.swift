@@ -24,6 +24,7 @@ class UserRepository : ObservableObject {
     @Published var notifications : [NotificationModel] = []
     @Published var homescreenPosts : [String:String] = [" ":" "] //postType, id
     @Published var followedGroups : [Group] = []
+    @Published var allUserGroups : [Group] = []
     @Published var isConnected : Bool = false
     @Published var firestoreListener : [ListenerRegistration] = []
     @Published var userNotificationCount : Int = 0
@@ -100,40 +101,41 @@ class UserRepository : ObservableObject {
     
     
     func listenToUserFollowedGroups(uid: String){
-        let listener = COLLECTION_USER.document(uid).addSnapshotListener { (snapshot, err) in
+        let listener = COLLECTION_USER.document(uid).addSnapshotListener{ (snapshot, err) in
             if err != nil {
                 print("ERROR")
                 return
             }
             
             
-            
-            let groups = snapshot?.get("followedGroups") as? [String] ?? []
+            let followedGroups = snapshot?.get("followedGroups") as? [String] ?? []
             self.followedGroups.removeAll()
-            for group in groups {
-                COLLECTION_GROUP.document(group).getDocument { (snapshot1, err) in
+            for followedGroup in followedGroups {
+                COLLECTION_GROUP.document(followedGroup).getDocument{ (snapshot, err) in
                     if err != nil {
                         print("ERROR")
                         return
                     }
                     
-                    let data = snapshot1?.data()
+                    let data = snapshot!.data()
                     
                     self.followedGroups.append(Group(dictionary: data ?? [:]))
                     
-
                 }
             }
+ 
             
             
             
-            
+
         }
         
         firestoreListener.append(listener)
 
+        
+
     }
-    
+
     func listenToUser(uid: String){
         
         let listener =  COLLECTION_USER.document(uid).addSnapshotListener { (snapshot, err) in
@@ -161,6 +163,9 @@ class UserRepository : ObservableObject {
     
     
     
+   
+    
+     
     
     func listenToUserNotifications(uid: String){
         
@@ -355,6 +360,12 @@ class UserRepository : ObservableObject {
                         print("ERROR")
                         return
                     }
+                    snapshot?.documentChanges.forEach({ doc in
+                        if doc.type == .removed{
+                            let id = doc.document.get("id") as! String
+                            self.homescreenPosts[id] = " "
+                        }
+                    })
                     
                     for document in snapshot!.documents {
                         self.homescreenPosts[document.get("id") as! String] = "post"
@@ -369,7 +380,25 @@ class UserRepository : ObservableObject {
     }
     
   
-   
+    func fetchGroupStories(groupID: String, completion: @escaping ([StoryModel]) -> ()){
+        
+        
+        COLLECTION_GROUP.document(groupID).collection("Story").getDocuments { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            return completion(snapshot!.documents.map({ queryDocumentSnapshot -> StoryModel in
+                let data = queryDocumentSnapshot.data()
+                
+                return StoryModel(dictionary: data)
+            }))
+            
+        }
+        
+       
+    }
     
     func listenToUserGroups(uid: String){
         
@@ -383,23 +412,23 @@ class UserRepository : ObservableObject {
                 return
             }
             
+    
+            
             self.groups = documents.map{ queryDocumentSnapshot -> Group in
                 var data = queryDocumentSnapshot.data()
                 
                 self.fetchGroupPolls(groupID: data["id"] as? String ?? "") { fetchedPolls in
                     data["polls"] = fetchedPolls
-                    
+                
                 }
                 
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                    for poll in data["polls"] as? [PollModel] ?? []{
-                        print("poll: \(poll.creator ?? "")")
-                    }
-                }
+                self.fetchGroupStories(groupID: data["id"] as? String ?? "", completion:{ stories in
+                    data["storyPosts"] = stories
+                })
                 
-            
                 
-    
+     
+                
                 
                 print("Fetched Groups!")
                 
@@ -408,6 +437,8 @@ class UserRepository : ObservableObject {
                 
                 
             }
+            
+            
             
             
             

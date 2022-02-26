@@ -160,7 +160,7 @@ struct OpenMessageView : View {
     var body: some View {
         ZStack{
             Color("Background")
-            
+    
             Text("Messages").font(.title).fontWeight(.bold).foregroundColor(Color("AccentColor"))
         }
     }

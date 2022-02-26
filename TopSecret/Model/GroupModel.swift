@@ -13,10 +13,12 @@ import Firebase
 
 struct Group: Identifiable{
     
+   
+    
     
     var groupName: String = ""
     var motd: String = ""
-    var id: String
+    var id: String = UUID().uuidString
     var dateCreated: Date?
     var memberAmount: Int = 0
     var memberLimit: Int?
@@ -28,6 +30,7 @@ struct Group: Identifiable{
     var followers: [String]?
     var following: [String]?
     var bio : String?
+    var storyPosts: [StoryModel]?
     
     init(dictionary: [String:Any]){
         self.id = dictionary["id"] as? String ?? " "
@@ -44,8 +47,24 @@ struct Group: Identifiable{
         self.followers = dictionary["followers"] as? [String] ?? []
         self.following = dictionary["following"] as? [String] ?? []
         self.bio = dictionary["bio"] as? String ?? ""
-     
+      
+
     }
+    
+    func hasUserSeenAllStories(userID: String) -> Bool{
+        
+        var hasSeenAll : Bool = true
+        
+        for storyPost in storyPosts!{
+            let usersSeenStory = storyPost.usersSeenStory ?? []
+            if !usersSeenStory.contains(userID){
+                hasSeenAll = false
+            }
+        }
+        
+        return hasSeenAll
+    }
+    
     init(){
         self.id = UUID().uuidString
     }

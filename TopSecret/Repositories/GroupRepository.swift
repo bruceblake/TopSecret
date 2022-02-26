@@ -69,6 +69,19 @@ class GroupRepository : ObservableObject {
     func deleteGalleryPost(galleryPostID: String, groupID: String){
         COLLECTION_GROUP.document(groupID).collection("Gallery Posts").document(galleryPostID).delete()
     }
+ 
+    
+    func addToGroupStory(groupID: String, post: Binding<UIImage>, creator: String){
+        let id = UUID().uuidString
+        COLLECTION_GROUP.document(groupID).collection("Story").document(id).setData(["groupID":groupID,"creator":creator,"id":id,"dateCreated":Timestamp()])
+        COLLECTION_GROUP.document(groupID).updateData(["storyPosts":FieldValue.arrayUnion([id])])
+        self.persistImageToStorage(groupID: groupID, image: post, storyID: id)
+        print("added to story")
+    }
+    
+    func seeStory(groupID: String, storyID: String, userID: String){
+        COLLECTION_GROUP.document(groupID).collection("Story").document(storyID).updateData(["usersSeenStory":FieldValue.arrayUnion([userID])])
+    }
     
     
     func loadGroupCountdowns(group: Group){
@@ -374,6 +387,30 @@ class GroupRepository : ObservableObject {
         }
       
     }
+    
+    func persistImageToStorage(groupID: String, image: UIImage, storyID: String) {
+       let fileName = "groupStories/\(groupID)"
+        let ref = Storage.storage().reference(withPath: fileName)
+        guard let imageData = image.jpegData(compressionQuality: 0.5) else { return }
+        ref.putData(imageData, metadata: nil) { (metadata, err) in
+            if err != nil{
+                print("ERROR")
+                return
+            }
+               ref.downloadURL { (url, err) in
+                if err != nil{
+                    print("ERROR: Failed to retreive download URL")
+                    return
+                }
+                print("Successfully stored image in database")
+                let imageURL = url?.absoluteString ?? ""
+                   COLLECTION_GROUP.document(groupID).collection("Story").document(storyID).updateData(["image":imageURL])
+            }
+        }
+      
+    }
+    
+    
     
     func isInGroup(user1: User, group: Group, completion: @escaping (Bool) -> () ) -> (){
         COLLECTION_GROUP.document(group.id).getDocument { (snapshot, err) in

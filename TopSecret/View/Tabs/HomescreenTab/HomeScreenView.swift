@@ -19,11 +19,34 @@ struct HomeScreenView: View {
     @State var showInfoScreen : Bool = false
     
     
+    
     @State private var options = ["Groups","Notifications"]
     
     @State var selectedIndex = 0
     
     @State var isActive : Bool = false
+    @State var unseenStoryGroups : [Group] = []
+    @State var selectedStoryPosts : [StoryModel] = [StoryModel()]
+    @State var selectedGroupStory : Group = Group()
+    @State var showStoryScreen : Bool = false
+    
+    
+    
+    func unseenGroupsContainGroup(unseenGroups: [Group], group: Group) -> Bool{
+        var contains : Bool = false
+        for unseenGroup in unseenGroups{
+            if unseenGroup.id == group.id{
+                contains = true
+            }
+        }
+        
+        return contains
+    }
+    
+    
+ 
+        
+    
     
     
     
@@ -146,8 +169,64 @@ struct HomeScreenView: View {
                             Text("Stories").fontWeight(.bold).padding(.leading,7)
 
                             ScrollView(.horizontal, showsIndicators: false){
-                                HStack{
+                                HStack(spacing: 10){
+                                    
+                             
+                                    NavigationLink(destination: CreateStoryPostView()){
+                                        VStack{
+                                            
+                                     
+                                            ZStack{
+                                                Circle().frame(width: 50, height: 50).foregroundColor(Color("Color"))
+                                                Image(systemName: "plus")
+                                                        .resizable()
+                                                        .scaledToFill()
+                                                        .frame(width:20,height:20).foregroundColor(FOREGROUNDCOLOR)
+                                            }
+                                        
+                                          
+                                            
 
+                                            Text("Add To Story").font(.caption).foregroundColor(FOREGROUNDCOLOR)
+                                        }
+                                    }
+                                   
+                                 
+
+                                    ForEach(userVM.groups){ group in
+                                        
+                                        Button(action:{
+                                            userVM.fetchGroupStories(groupID: group.id, completion:{ stories in
+                                                self.selectedStoryPosts = stories
+                                                self.selectedGroupStory = group
+                                            })
+                                                self.showStoryScreen.toggle()
+                                            
+                                        },label:{
+                                            VStack{
+                                                
+                                         
+
+                                                    WebImage(url: URL(string: group.groupProfileImage ?? " "))
+                                                        .resizable()
+                                                        .scaledToFill()
+                                                        .frame(width:50,height:50)
+                                                        .clipShape(Circle())
+                                                        .overlay(Circle().stroke(self.unseenGroupsContainGroup(unseenGroups: self.unseenStoryGroups, group: group) ? Color(.red) :  Color.gray,lineWidth: 2))
+                                              
+                                                
+
+                                                Text("\(group.groupName)").font(.footnote).foregroundColor(FOREGROUNDCOLOR)
+                                            }
+                                        })
+
+                                      
+
+
+                                        
+
+                                    }
+                                    
                                     ForEach(userVM.followedGroups){ group in
                                         NavigationLink(destination: GroupProfileView(group: group)) {
 
@@ -166,6 +245,8 @@ struct HomeScreenView: View {
                                         }
 
                                     }
+                                    
+                                    
                                 }
 
                             }.padding(.leading,7)
@@ -188,6 +269,13 @@ struct HomeScreenView: View {
 
                     }
                 }
+                
+                
+                NavigationLink(isActive: self.$showStoryScreen, destination:{ GroupStoryView(storyPosts: self.$selectedStoryPosts, groupID: $selectedGroupStory.id)}, label:{
+                    EmptyView()
+                })
+                  
+                
 
             }.onReceive(self.navigationHelper.$moveToDashboard){ move in
                 if move {
@@ -196,10 +284,41 @@ struct HomeScreenView: View {
                     self.navigationHelper.moveToDashboard = false
                 }
             }
+           
 
             
             
-        }.frame(width: UIScreen.main.bounds.width).edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+        }.frame(width: UIScreen.main.bounds.width).edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
+            
+            
+
+           
+       
+            
+                
+                    for group in userVM.allUserGroups{
+                        COLLECTION_GROUP.document(group.id).collection("Story").getDocuments(completion: { snapshot, err in
+                            if err != nil {
+                                print("ERROR")
+                                return
+                            }
+                            
+                            for document in snapshot!.documents {
+
+                                let usersSeenStory = document.get("usersSeenStory") as? [String] ?? []
+                                if !usersSeenStory.contains(userVM.user?.id ?? ""){
+                                    self.unseenStoryGroups.append(group)
+                                    print("Unseen story: \(group.groupName)")
+                                }
+                            }
+                            
+                            
+                        })
+                    }
+            
+                
+            
+        }
         
     }
     

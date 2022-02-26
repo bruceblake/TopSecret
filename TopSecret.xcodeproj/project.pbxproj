@@ -44,6 +44,9 @@
 		7853518B27C6A72F00B10AC0 /* GalleryPostCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7853518A27C6A72F00B10AC0 /* GalleryPostCell.swift */; };
 		7853518D27C995BF00B10AC0 /* ImagePickerViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7853518C27C995BF00B10AC0 /* ImagePickerViewModel.swift */; };
 		7853518F27C9A2DE00B10AC0 /* AssetModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7853518E27C9A2DE00B10AC0 /* AssetModel.swift */; };
+		7853519127CA837A00B10AC0 /* CreateStoryPostView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7853519027CA837A00B10AC0 /* CreateStoryPostView.swift */; };
+		7853519427CA9CD000B10AC0 /* GroupStoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7853519327CA9CD000B10AC0 /* GroupStoryView.swift */; };
+		7853519627CA9DC900B10AC0 /* StoryModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7853519527CA9DC900B10AC0 /* StoryModel.swift */; };
 		785E735E275D815D00BC926F /* ChatUsersIdlingCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 785E735D275D815D00BC926F /* ChatUsersIdlingCell.swift */; };
 		786D0C4327A9BAE400F4D611 /* PollInfoOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786D0C4227A9BAE400F4D611 /* PollInfoOverlay.swift */; };
 		786D0C4627AA0F4200F4D611 /* TestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786D0C4527AA0F4200F4D611 /* TestView.swift */; };
@@ -174,6 +177,9 @@
 		7853518A27C6A72F00B10AC0 /* GalleryPostCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GalleryPostCell.swift; sourceTree = "<group>"; };
 		7853518C27C995BF00B10AC0 /* ImagePickerViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImagePickerViewModel.swift; sourceTree = "<group>"; };
 		7853518E27C9A2DE00B10AC0 /* AssetModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AssetModel.swift; sourceTree = "<group>"; };
+		7853519027CA837A00B10AC0 /* CreateStoryPostView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CreateStoryPostView.swift; sourceTree = "<group>"; };
+		7853519327CA9CD000B10AC0 /* GroupStoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupStoryView.swift; sourceTree = "<group>"; };
+		7853519527CA9DC900B10AC0 /* StoryModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StoryModel.swift; sourceTree = "<group>"; };
 		785E735D275D815D00BC926F /* ChatUsersIdlingCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatUsersIdlingCell.swift; sourceTree = "<group>"; };
 		786D0C4227A9BAE400F4D611 /* PollInfoOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollInfoOverlay.swift; sourceTree = "<group>"; };
 		786D0C4527AA0F4200F4D611 /* TestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestView.swift; sourceTree = "<group>"; };
@@ -306,6 +312,7 @@
 				78F8675127C46C5800750F51 /* AddContentView.swift */,
 				78F8675627C51F7700750F51 /* CreateCountdownView.swift */,
 				7853518827C6863600B10AC0 /* CreateGalleryPostView.swift */,
+				7853519027CA837A00B10AC0 /* CreateStoryPostView.swift */,
 			);
 			path = AddContent;
 			sourceTree = "<group>";
@@ -329,6 +336,7 @@
 		7808252727C1312000C56149 /* GroupTab */ = {
 			isa = PBXGroup;
 			children = (
+				7853519227CA9CC500B10AC0 /* Group Story */,
 				78F8675327C4839D00750F51 /* GroupProfile */,
 				7818EC7727C2C57600DFE58F /* GroupView.swift */,
 				7818EC7A27C2C57600DFE58F /* CreateGroupView.swift */,
@@ -350,6 +358,14 @@
 				7808252B27C1385B00C56149 /* PersonalChatListView.swift */,
 			);
 			path = Chat;
+			sourceTree = "<group>";
+		};
+		7853519227CA9CC500B10AC0 /* Group Story */ = {
+			isa = PBXGroup;
+			children = (
+				7853519327CA9CD000B10AC0 /* GroupStoryView.swift */,
+			);
+			path = "Group Story";
 			sourceTree = "<group>";
 		};
 		7887ADEE26267F5C00D9FC21 /* Login */ = {
@@ -440,6 +456,7 @@
 				78F8675827C53B7200750F51 /* BadgeModel.swift */,
 				7853518627C6840500B10AC0 /* GalleryPostModel.swift */,
 				7853518E27C9A2DE00B10AC0 /* AssetModel.swift */,
+				7853519527CA9DC900B10AC0 /* StoryModel.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -773,11 +790,13 @@
 				78012476273C3B6900FB54AF /* ChatRepository.swift in Sources */,
 				7853518527C55E9200B10AC0 /* GroupFollowersView.swift in Sources */,
 				786D0C4627AA0F4200F4D611 /* TestView.swift in Sources */,
+				7853519627CA9DC900B10AC0 /* StoryModel.swift in Sources */,
 				786D0C4927AA219300F4D611 /* NavBar.swift in Sources */,
 				7894BD3426EB9814008FCE55 /* TextArea.swift in Sources */,
 				7853518D27C995BF00B10AC0 /* ImagePickerViewModel.swift in Sources */,
 				78C74D08278288980009E08C /* PinnedMessageModel.swift in Sources */,
 				78B8DFF326E5069500C99DAD /* MessageModel.swift in Sources */,
+				7853519127CA837A00B10AC0 /* CreateStoryPostView.swift in Sources */,
 				78C74D0227826E9B0009E08C /* EventListCell.swift in Sources */,
 				78C74CEF27824EFE0009E08C /* EventViewModel.swift in Sources */,
 				783ADC8D274C460C00FD517D /* HomescreenGroupCell.swift in Sources */,
@@ -812,6 +831,7 @@
 				78F13CA6278BDBB700EB2346 /* CountDownPicker.swift in Sources */,
 				7818EC7E27C2C57600DFE58F /* GroupProfileView.swift in Sources */,
 				78C74D0B278375EE0009E08C /* UserProfilePage.swift in Sources */,
+				7853519427CA9CD000B10AC0 /* GroupStoryView.swift in Sources */,
 				7853518927C6863600B10AC0 /* CreateGalleryPostView.swift in Sources */,
 				78F13C9B278B7F4000EB2346 /* LoadingView.swift in Sources */,
 				78F13C862784ECFA00EB2346 /* UserInfoView.swift in Sources */,

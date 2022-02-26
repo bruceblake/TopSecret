@@ -82,10 +82,10 @@ struct GalleryPostCell: View {
 //                    }
 //                    
 //                }else{
-//                    WebImage(url: URL(string: galleryPost.posts?[0] ?? ""))
-//                        .resizable()
-//                        .scaledToFill()
-//                        .frame(width: UIScreen.main.bounds.width - 70, height: UIScreen.main.bounds.height / 2.5)
+                    WebImage(url: URL(string: "https://firebasestorage.googleapis.com/v0/b/top-secret-dcb43.appspot.com/o/userProfileImages%2Fb517MKUsMUNzqQkNVPeEQKfnzLg1?alt=media&token=873b3f28-8573-4f78-9b5f-4c516f4f4a50"))
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: UIScreen.main.bounds.width - 70, height: UIScreen.main.bounds.height / 2.5)
 //                }
                
            

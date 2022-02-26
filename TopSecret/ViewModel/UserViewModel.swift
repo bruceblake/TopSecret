@@ -33,6 +33,7 @@ class UserViewModel : ObservableObject {
     @Published var firestoreListener : [ListenerRegistration] = []
     @Published var notifications : [NotificationModel] = []
     @Published var followedGroups : [Group] = []
+    @Published var allUserGroups : [Group] = []
     @Published var userNotificationCount : Int = 0
     @Published var groupNotificationCount : [[String:Int]] = []
     @Published var pollDurationTimer : Int = 0
@@ -100,6 +101,20 @@ class UserViewModel : ObservableObject {
         userRepository.$homescreenPosts
             .assign(to: \.homescreenPosts, on: self)
             .store(in: &cancellables)
+        userRepository.$allUserGroups
+            .assign(to: \.allUserGroups, on: self)
+            .store(in: &cancellables)
+        
+        self.$followedGroups
+            .combineLatest(self.$groups)
+            .map{ [self] all in
+                return concatenate(followedGroups: all.0, groups: all.1)
+            }
+            .assign(to: \.allUserGroups, on: self)
+            .store(in: &self.cancellables)
+
+
+        
         
         self.userSession = Auth.auth().currentUser
         self.fetchUser()
@@ -110,7 +125,18 @@ class UserViewModel : ObservableObject {
      
     }
     
+    func concatenate(followedGroups: [Group], groups: [Group]) -> [Group]{
+        var arr1 : [Group] = []
+        arr1 = groups
+        arr1.append(contentsOf: followedGroups)
+        return arr1
+    }
     
+    func fetchGroupStories(groupID: String, completion: @escaping ([StoryModel]) -> ()) -> (){
+        userRepository.fetchGroupStories(groupID: groupID, completion: { stories in
+            return completion(stories)
+        })
+    }
   
     
     func setUserActivity(isActive: Bool, userID: String, completion: @escaping (User) -> ()) -> (){

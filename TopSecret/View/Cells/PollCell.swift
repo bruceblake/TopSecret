@@ -55,7 +55,7 @@ struct PollCell: View {
                 
                 
             }.frame(width: 350,height:250).background(Rectangle().stroke(FOREGROUNDCOLOR,lineWidth: 3))
-            PollInfoCell(showInfoScreen: $showInfoScreen, creator: creator, poll: poll, currentPoll: $currentPoll).padding(0)
+            PollInfoCell(showInfoScreen: $showInfoScreen, creator: $creator, poll: poll, currentPoll: $currentPoll).padding(0)
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
             userVM.fetchUser(userID: poll.creator ?? " "){ creator in

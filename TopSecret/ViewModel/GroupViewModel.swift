@@ -65,8 +65,18 @@ class GroupViewModel: ObservableObject {
     }
     
     
+    func addToGroupStory(groupID: String, post: Binding<UIImage>, creator: String){
+        groupRepository.addToGroupStory(groupID: groupID, post: $post, creator: creator)
+    }
+    
+    
+    
     func createGalleryPost(groupID: String, posts: [UIImage], description: String, creator: String, isPrivate: Bool, taggedUsers: [String]){
         groupRepository.createGalleryPost(groupID: groupID, posts: posts, description: description, creator: creator, isPrivate: isPrivate, taggedUsers: taggedUsers)
+    }
+    
+    func seeStory(groupID: String, storyID: String, userID: String){
+        groupRepository.seeStory(groupID: groupID, storyID: storyID, userID: userID)
     }
     
     func deleteGalleryPost(galleryPostID: String, groupID: String){

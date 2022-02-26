@@ -30,9 +30,9 @@ struct ChatView: View {
     @State var userIDList: [String] = []
     @State var images : [UIImage] = []
     var columns3Fixed: [GridItem] = [
-        GridItem(.fixed(100), spacing: 10),
-        GridItem(.fixed(100), spacing: 10),
-        GridItem(.fixed(100), spacing: 10)
+        GridItem(.fixed(115), spacing: 10),
+        GridItem(.fixed(115), spacing: 10),
+        GridItem(.fixed(115), spacing: 10)
     ]
     
     var uid: String
@@ -142,29 +142,31 @@ struct ChatView: View {
 
                     }.padding(.leading,5)
                     
-                    ScrollView{
+                        ScrollView(.vertical){
                         VStack{
-                            //Images
+                            
+                         
+                            
                             LazyVGrid(
                                    columns: columns3Fixed,
                                    alignment: .center,
                                    spacing: 10,
                                    pinnedViews: []
                                ) {
-                                  
+
                                    ForEach(imagePickerVM.fetchedPhotos){ photo in
-                                     
+
                                        ThumbnailView(photo: photo).onTapGesture {
                                            imagePickerVM.extractPreviewData(asset: photo.asset)
                                            imagePickerVM.showPreview.toggle()
                                        }
-                                
-                                       
-                                      
-                                       
-                                       
+
+
+
+
+
                                    }
-                                  
+
                                }
                             
                            
