@@ -17,6 +17,7 @@ struct AddChatView: View {
     @State var chat: ChatModel = ChatModel()
     @State var goToPersonalChat: Bool = false
     @State var goToGroupChat: Bool = false
+    @State var personalChatFriend : User = User()
     
     @Environment(\.presentationMode) var dismiss
     
@@ -59,6 +60,9 @@ struct AddChatView: View {
                             //create personal chat with 1 person
                             chatVM.createPersonalChat(user1: userVM.user?.id ?? "", user2: selectedUsers[0].id ?? "") { personalChat in
                                 self.chat = personalChat
+                                userVM.fetchUser(userID: selectedUsers[0].id ?? "") { fetchedUser in
+                                    self.personalChatFriend = fetchedUser
+                                }
                                 self.goToPersonalChat.toggle()
                             }
                         }else{
@@ -135,7 +139,7 @@ struct AddChatView: View {
                 
             }.padding(.top,50)
             NavigationLink(
-                destination: PersonalChatView(chat: chat),
+                destination: PersonalChatView(friend: $personalChatFriend, chat: $chat),
                 isActive: $goToPersonalChat,
                 label: {
                     EmptyView()

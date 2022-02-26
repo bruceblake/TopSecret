@@ -101,7 +101,12 @@ class UserViewModel : ObservableObject {
             .assign(to: \.homescreenPosts, on: self)
             .store(in: &cancellables)
         
-        
+        self.userSession = Auth.auth().currentUser
+        self.fetchUser()
+            if self.userSession != nil{
+                self.listenToAll(uid: userSession?.uid ?? " ")
+
+            }
      
     }
     

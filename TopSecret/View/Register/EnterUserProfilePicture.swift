@@ -14,6 +14,7 @@ struct EnterUserProfilePicture: View {
     @State var avatarImage = UIImage(named: "Icon")!
     @State var isNext: Bool = false
     @EnvironmentObject var userVM : UserViewModel
+    @State var images : [UIImage] = []
     
     var body: some View {
         ZStack{
@@ -31,7 +32,7 @@ struct EnterUserProfilePicture: View {
                         .clipShape(Circle())
                         .padding()
                 }).fullScreenCover(isPresented: $isShowingPhotoPicker, content: {
-                    ImagePicker(avatarImage: $avatarImage, allowsEditing: true)
+                    ImagePicker(avatarImage: $avatarImage, images: $images, allowsEditing: true)
                 })
                 
         Button(action: {

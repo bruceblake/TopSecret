@@ -77,8 +77,9 @@ class ChatRepository : ObservableObject {
                         }
 
 
+                        let data = snapshot!.data()
                         
-                        self.usersIdlingList.append(User(dictionary: (snapshot?.data())!))
+                        self.usersIdlingList.append(User(dictionary:  data ?? [:]))
                         
                     }
                 }

@@ -9,7 +9,7 @@ import SwiftUI
 import SDWebImageSwiftUI
 
 struct UserProfilePage: View {
-    @State var user: User
+    @State var user: User = User()
     var isCurrentUser: Bool
     @State var goToUserInfoPage : Bool = false
     @State var settingsOpen: Bool = false
@@ -247,22 +247,7 @@ struct UserProfilePage: View {
                                     }
                                 }
                                 
-                              
-                         
-                                
-                                
-                             
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
+
                             
                             Text("\(user.bio ?? "")")
                             
@@ -305,7 +290,7 @@ struct UserProfilePage: View {
                     Spacer()
                 }
                 NavigationLink(
-                    destination: PersonalChatView(chat: self.personalChat),
+                    destination: PersonalChatView(friend: $user, chat: self.$personalChat),
                     isActive: $goToPersonalChat,
                     label: {
                         EmptyView()

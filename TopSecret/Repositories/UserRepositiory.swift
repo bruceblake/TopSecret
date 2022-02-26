@@ -22,7 +22,7 @@ class UserRepository : ObservableObject {
     @Published var events: [EventModel] = []
     @Published var personalChats: [ChatModel] = []
     @Published var notifications : [NotificationModel] = []
-    @Published var homescreenPosts : [String:String] = [:] //postType, id
+    @Published var homescreenPosts : [String:String] = [" ":" "] //postType, id
     @Published var followedGroups : [Group] = []
     @Published var isConnected : Bool = false
     @Published var firestoreListener : [ListenerRegistration] = []
@@ -37,16 +37,7 @@ class UserRepository : ObservableObject {
     let store = Firestore.firestore()
     let path = "Users"
     
-    
-    init(){
-        
-        userSession = Auth.auth().currentUser
-        fetchUser()
-        if userSession != nil{
-            self.listenToAll(uid: userSession?.uid ?? "")
-        }
-        
-    }
+ 
     
     
     func setUserActivity(isActive: Bool, userID: String, completion: @escaping (User) ->()) -> (){
@@ -63,9 +54,9 @@ class UserRepository : ObservableObject {
                 return
             }
             
-            let data = snapshot!.data()!
+            let data = snapshot!.data()
             
-            return completion(User(dictionary: data))
+            return completion(User(dictionary: data ?? [:] ))
             
         })
        
@@ -353,8 +344,8 @@ class UserRepository : ObservableObject {
                 return
             }
             
-            var groups = snapshot!.get("groups") as? [String] ?? [""]
-            let followedGroups = snapshot!.get("followedGroups") as? [String] ?? [""]
+            var groups = snapshot!.get("groups") as? [String] ?? [" "]
+            let followedGroups = snapshot!.get("followedGroups") as? [String] ?? [" "]
             groups.append(contentsOf: followedGroups)
             
             
@@ -802,7 +793,7 @@ class UserRepository : ObservableObject {
                     loginErrorMessage = "The email or password is incorrect"
                     
                 default:
-                    loginErrorMessage = "The e"
+                    loginErrorMessage = "There was an error, try again later"
                 }
             }
             
@@ -970,9 +961,9 @@ class UserRepository : ObservableObject {
                 return
             }
             
-            let data = snapshot?.data() as? [String:Any] ?? [:]
+            let data = snapshot!.data()
             
-            return completion(Group(dictionary: data))
+            return completion(Group(dictionary: data ?? [:]))
             
         }
     }

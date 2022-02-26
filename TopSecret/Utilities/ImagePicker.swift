@@ -10,6 +10,7 @@ import SwiftUI
 struct ImagePicker: UIViewControllerRepresentable {
     
     @Binding var avatarImage : UIImage
+    @Binding var images : [UIImage]
     var allowsEditing : Bool
     
     func makeUIViewController(context: Context) -> UIImagePickerController {
@@ -42,8 +43,10 @@ struct ImagePicker: UIViewControllerRepresentable {
         func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
             if let image = info[.editedImage] as? UIImage{
                 imagePicker.avatarImage = image
+                imagePicker.images.append(image)
             }else if let image = info[.originalImage] as? UIImage{
                 imagePicker.avatarImage = image
+                imagePicker.images.append(image)
             }
             else{
                 print("Invalid Image!")

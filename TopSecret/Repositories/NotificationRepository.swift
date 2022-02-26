@@ -49,8 +49,8 @@ class NotificationRepository : ObservableObject {
     
         let uid2 = UUID().uuidString
 
-        COLLECTION_USER.document(user2.id ?? "")       .collection("Notifications").document(uid2).setData(["notificationType":"groupInvite","value":"@\(user1.username ?? "") has invited you to \(group.groupName)","subjectID":group.id,"notificationTime":Timestamp(),"actionType":"groupInvite","id":uid2])
-        COLLECTION_USER.document(user2.id ?? "").updateData(["userNotificationCount":FieldValue.increment(Int64(1))])
+        COLLECTION_USER.document(user2.id ?? " ")       .collection("Notifications").document(uid2).setData(["notificationType":"groupInvite","value":"@\(user1.username ?? "") has invited you to \(group.groupName)","subjectID":group.id,"notificationTime":Timestamp(),"actionType":"groupInvite","id":uid2])
+        COLLECTION_USER.document(user2.id ?? " ").updateData(["userNotificationCount":FieldValue.increment(Int64(1))])
 
 
     }

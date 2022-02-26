@@ -16,6 +16,7 @@ struct CreateGroupView: View {
     @State var memberLimit: Int = 0
     @State var isShowingPhotoPicker:Bool = false
     @State var avatarImage = UIImage(named: "Icon")!
+    @State var images : [UIImage] = []
 
     @Binding var goBack: Bool
     
@@ -41,7 +42,7 @@ struct CreateGroupView: View {
                     .clipShape(Circle())
                     .padding()
             }).fullScreenCover(isPresented: $isShowingPhotoPicker, content: {
-                ImagePicker(avatarImage: $avatarImage, allowsEditing: true)
+                ImagePicker(avatarImage: $avatarImage, images: $images, allowsEditing: true)
             })
             
             Button(action:{

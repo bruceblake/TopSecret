@@ -62,8 +62,8 @@
             filePath = "TopSecret/ViewModel/UserViewModel.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "203"
-            endingLineNumber = "203"
+            startingLineNumber = "208"
+            endingLineNumber = "208"
             landmarkName = "getUserFriendsList(user:completion:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -78,8 +78,8 @@
             filePath = "TopSecret/Repositories/UserRepositiory.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "213"
-            endingLineNumber = "213"
+            startingLineNumber = "204"
+            endingLineNumber = "204"
             landmarkName = "listenToUserNotifications(uid:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -94,8 +94,8 @@
             filePath = "TopSecret/Repositories/UserRepositiory.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "994"
-            endingLineNumber = "994"
+            startingLineNumber = "985"
+            endingLineNumber = "985"
             landmarkName = "isFollowingGroup(user:group:completion:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -110,8 +110,8 @@
             filePath = "TopSecret/Repositories/UserRepositiory.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "985"
-            endingLineNumber = "985"
+            startingLineNumber = "976"
+            endingLineNumber = "976"
             landmarkName = "followGroup(group:user:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -128,7 +128,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "69"
             endingLineNumber = "69"
-            landmarkName = "createGalleryPost(groupID:post:description:creator:isPrivate:taggedUsers:)"
+            landmarkName = "createGalleryPost(groupID:posts:description:creator:isPrivate:taggedUsers:)"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

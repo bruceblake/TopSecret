@@ -13,10 +13,12 @@ struct CreateGalleryPostView: View {
     @EnvironmentObject var userVM: UserViewModel
     @StateObject var groupVM = GroupViewModel()
     @Environment(\.presentationMode) var presentationMode
+    @State var showImageSendView : Bool = false
+    @State var avatarImage = UIImage(named: "Icon")!
+    @State var posts : [UIImage] = []
     
     @State var description : String  = ""
     @State var taggedUsers : [String] = []
-    @State var post: String = ""
     @State var isPrivate : Bool = false
     
     var body: some View {
@@ -41,35 +43,56 @@ struct CreateGalleryPostView: View {
                     
                     Spacer()
                     
-                }.padding(.top,50)
+                }.padding(.leading,5)
                 
-                
-                Text("Post")
-                TextField("post", text: $post)
-                
-                Text("Description")
-                TextField("description", text: $description)
+             
+                    
+                   
+                    
+                    Button(action:{
+                        self.showImageSendView.toggle()
+                    },label:{
+                        Image(uiImage: avatarImage).resizable().scaledToFit().frame(width:  UIScreen.main.bounds.width - 40, height: UIScreen.main.bounds.height / 2.5)
+                    }).fullScreenCover(isPresented: $showImageSendView) {
+                        
+                    } content: {
+                        ImagePicker(avatarImage: $avatarImage, images: $posts, allowsEditing: true)
+                    }
+                    
+                 
+                ScrollView(.horizontal){
+                    HStack{
+                        ForEach(self.posts, id: \.self){ post in
+                            Image(uiImage: post).resizable().scaledToFill().clipShape(Circle()).frame(width: 20, height: 20)
+                        }
+                    }
+                }
+               
+               
                 
                 
                 Button(action:{
-                    groupVM.createGalleryPost(groupID: group.id, post: post, description: description, creator: userVM.user?.id ?? "", isPrivate: isPrivate, taggedUsers: taggedUsers)
+                    groupVM.createGalleryPost(groupID: group.id, posts: posts, description: description, creator: userVM.user?.id ?? "", isPrivate: isPrivate, taggedUsers: taggedUsers)
                 },label:{
                     Text("Create Post")
                 })
                 
-                //isPrivate
-                //taggedUsers
+                ImagePicker(avatarImage: $avatarImage, images: $posts, allowsEditing: true)
+
                 
-                
-                
-                
-            }
+                Spacer()
+
+            }.padding(.top,80)
+            
+        
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
     }
 }
 
-//struct CreateGalleryPostView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        CreateGalleryPostView()
-//    }
-//}
+struct CreateGalleryPostView_Previews: PreviewProvider {
+    static var previews: some View {
+        CreateGalleryPostView(group: Group()).colorScheme(.dark).environmentObject(UserViewModel())
+    }
+}
+
+

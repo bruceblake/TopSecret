@@ -7,6 +7,7 @@
 
 import SwiftUI
 import Firebase
+import SDWebImageSwiftUI
 
 struct PersonalChatView: View {
     
@@ -16,7 +17,8 @@ struct PersonalChatView: View {
     @State var isShowingPhotoPicker:Bool = false
     @State var showImageSendView : Bool = false
     @State var avatarImage = UIImage(named: "Icon")!
-    @State var name: String = ""
+    @State var images : [UIImage] = []
+    @Binding var friend: User
     @State var replyToMessage: Bool = false
     @State var messageToReplyTo : Message = Message()
     @State var showMenu: Bool = false
@@ -26,7 +28,7 @@ struct PersonalChatView: View {
     @StateObject var chatVM = ChatViewModel()
     @StateObject var messageVM = MessageViewModel()
     @EnvironmentObject var userVM: UserViewModel
-    @State var chat: ChatModel
+    @Binding var chat: ChatModel
     
     var body: some View {
         ZStack{
@@ -37,13 +39,56 @@ struct PersonalChatView: View {
                     Button(action:{
                         presentationMode.wrappedValue.dismiss()
                     },label:{
-                        Text("Back").foregroundColor(FOREGROUNDCOLOR)
+                        Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR).font(.title2)
                     }).padding(.leading)
                     
-                    Spacer()
-                    Text("\(name)").foregroundColor(FOREGROUNDCOLOR)
+                        NavigationLink {
+                            UserProfilePage(user: self.friend, isCurrentUser: false)
+                        } label: {
+                            HStack{
+                                
+                                WebImage(url: URL(string: friend.profilePicture ?? "")).resizable().scaledToFill().clipShape(Circle()).frame(width: 30, height: 30)
+                                
+                                Text("\(friend.nickName ?? "")").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                            }
+                        }.padding(.leading,5)
+
                      Spacer()
-                }
+                        
+                        HStack(spacing: 10){
+                            Button(action:{
+                                
+                            },label:{
+                                ZStack{
+                                    Circle().foregroundColor(Color("Background")).frame(width: 40, height: 40)
+                                    Image(systemName: "camera")
+                                        .resizable()
+                                        .frame(width: 20, height: 16).foregroundColor(Color("Foreground"))
+
+                                }
+                            })
+                            
+                            Button(action:{
+                                
+                            },label:{
+                                ZStack{
+                                    Circle().foregroundColor(Color("Background")).frame(width: 40, height: 40)
+                                    Image(systemName: "phone")
+                                        .resizable()
+                                        .frame(width: 16, height: 16).foregroundColor(Color("Foreground"))
+
+                                }
+                            })
+                            
+                        }
+                        
+                        Button(action:{
+                            
+                        },label:{
+                            Text("Info").foregroundColor(FOREGROUNDCOLOR)
+                        }).padding(.horizontal,10)
+                      
+                    }.padding(.bottom,5)
                     Divider()
                 }.padding(.top,50).background(Color("Color"))
                 ScrollView(showsIndicators: false){
@@ -85,7 +130,7 @@ struct PersonalChatView: View {
                         }).fullScreenCover(isPresented: $isShowingPhotoPicker, onDismiss: {
                             self.showImageSendView.toggle()
                         }, content: {
-                            ImagePicker(avatarImage: $avatarImage, allowsEditing: false)
+                            ImagePicker(avatarImage: $avatarImage, images: $images, allowsEditing: false)
                             
                         })
                         
@@ -146,10 +191,7 @@ struct PersonalChatView: View {
             }
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true) .onAppear{
             
-            let id = userVM.user?.id ?? ""
-            userVM.fetchUser(userID: id == chat.users[0] ? chat.users[1] : chat.users[0], completion: { user in
-                self.name = user.nickName ?? ""
-            })
+       
             messageVM.readAllMessages(chatID: chat.id, userID: userVM.user?.id ?? "", chatType: "personal")
             messageVM.getPinnedMessage(chatID: chat.id)
             chatVM.openChat(userID: userVM.user?.id ?? "", chatID: chat.id, chatType: "personal")

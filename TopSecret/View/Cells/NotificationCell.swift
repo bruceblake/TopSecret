@@ -14,6 +14,7 @@ struct NotificationCell: View {
     @State var timeElapsed : String = ""
     @State var personalChat : ChatModel = ChatModel()
     @State var openPersonalChat: Bool = false
+    @State var personalChatFriend : User = User()
     
     func isFriends(user1: User, user2: String) -> Bool{
         let friendsList = user1.friendsList ?? []
@@ -133,6 +134,9 @@ struct NotificationCell: View {
                         userVM.getPersonalChat(user1: userVM.user ?? User(), user2: notification.subjectID, completion: { chat in
                             self.personalChat = chat
                         })
+                        userVM.fetchUser(userID: notification.subjectID) { fetchedUser in
+                            self.personalChatFriend = fetchedUser
+                        }
                         DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
                             self.openPersonalChat.toggle()
                         }
@@ -154,7 +158,7 @@ struct NotificationCell: View {
             }
             
             
-            NavigationLink(destination: PersonalChatView(chat: personalChat), isActive: $openPersonalChat) {
+            NavigationLink(destination: PersonalChatView(friend: self.$personalChatFriend, chat: $personalChat), isActive: $openPersonalChat) {
                 EmptyView()
             }
             
@@ -170,6 +174,8 @@ struct NotificationCell: View {
             
             
         }
+        
+      
             
     }
 }

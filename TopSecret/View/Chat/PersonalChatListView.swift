@@ -14,8 +14,13 @@ struct PersonalChatListView: View {
     
     
     @EnvironmentObject var userVM: UserViewModel
+    @State var friend: User = User()
+    @State var currentChat: ChatModel = ChatModel()
+    @State var show: Bool = false
     @Environment(\.presentationMode) var presentationMode
 
+    
+    
     
     
     var body: some View {
@@ -30,9 +35,18 @@ struct PersonalChatListView: View {
                         Text("You have no chats!")
                     }else{
                         ForEach(userVM.personalChats){ chat in
-                            NavigationLink(destination: PersonalChatView(chat: chat)) {
+                            Button(action:{
+                                self.currentChat = chat
+                                
+                                userVM.fetchUser(userID: self.currentChat.users[0] == userVM.user?.id ?? "" ? self.currentChat.users[1] : self.currentChat.users[0]) { fetchedUser in
+                                    self.friend = fetchedUser
+                                }
+                                self.show.toggle()
+                                
+                            },label:{
                                 PersonalChatCell(chat: chat)
-                            }
+                            })
+                          
                         }
                     }
                    
@@ -60,7 +74,12 @@ struct PersonalChatListView: View {
                 
             }.padding(.top,50)
          
-            
+            NavigationLink(isActive: $show) {
+                PersonalChatView(friend: $friend, chat: $currentChat)
+            } label: {
+                EmptyView()
+            }
+
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
     }

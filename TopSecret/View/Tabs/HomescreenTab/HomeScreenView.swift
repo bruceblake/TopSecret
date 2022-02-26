@@ -36,60 +36,60 @@ struct HomeScreenView: View {
             VStack{
                 VStack{
                     HStack(spacing: 20){
-                        
+
                         HStack{
                             NavigationLink(
                                 destination: UserProfilePage(user: userVM.user ?? User(), isCurrentUser: true),
                                 label: {
-                                    WebImage(url: URL(string: userVM.user?.profilePicture ?? ""))
+                                    WebImage(url: URL(string: userVM.user?.profilePicture ?? " "))
                                         .resizable()
                                         .scaledToFill()
                                         .frame(width:40,height:40)
                                         .clipShape(Circle())
                                 })
-                            
-                            
-                            
+
+
+
                             NavigationLink(
                                 destination: UserNotificationView(),
                                 label: {
                                     ZStack{
                                         Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
-                                        
+
                                         ZStack(){
                                             Image(systemName: "heart")
                                                 .resizable()
                                                 .frame(width: 16, height: 16).foregroundColor(Color("Foreground"))
                                             if userVM.userNotificationCount != 0{
-                                                
+
                                                 ZStack{
                                                     Circle().foregroundColor(Color("AccentColor"))
                                                     Text("\(userVM.userNotificationCount)").foregroundColor(.yellow).font(.footnote)
                                                 }.frame(width: 20, height: 20).offset(x: 18, y: -15)
-                                                
+
                                             }
-                                            
+
                                         }
-                                        
-                                        
-                                        
-                                        
-                                        
+
+
+
+
+
                                     }
                                 })
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
+
+
+
+
+
+
+
+
+
                         }.padding(.leading,20)
-                        
+
                         Spacer()
-                        
+
                         Button(action:{
                             userVM.fetchUserGroups()
                         }, label:{
@@ -99,9 +99,9 @@ struct HomeScreenView: View {
                         })
                         Spacer()
                         HStack(spacing:10){
-                            
-                            
-                            
+
+
+
                             NavigationLink(
                                 destination: SearchView(),
                                 label: {
@@ -110,85 +110,85 @@ struct HomeScreenView: View {
                                         Image(systemName: "magnifyingglass")
                                             .resizable()
                                             .frame(width: 16, height: 16).foregroundColor(Color("Foreground"))
-                                        
+
                                     }
                                 })
-                            
-                            
+
+
                             NavigationLink(destination: PersonalChatListView()) {
                                 ZStack{
                                     Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
                                     Image(systemName: "paperplane.fill")
                                         .resizable()
                                         .frame(width: 16, height: 16).foregroundColor(Color("Foreground"))
-                                    
+
                                 }
                             }
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
-                            
+
+
+
+
+
+
+
+
+
+
                         }.padding(.trailing,20)
-                        
-                        
+
+
                     }.padding(.top,40)
                     //main content
                     VStack{
-                        
+
                         VStack(alignment: .leading){
-                            
+
                             Text("Stories").fontWeight(.bold).padding(.leading,7)
-                            
+
                             ScrollView(.horizontal, showsIndicators: false){
                                 HStack{
-                                    
+
                                     ForEach(userVM.followedGroups){ group in
                                         NavigationLink(destination: GroupProfileView(group: group)) {
-                                            
+
                                             VStack{
-                                                WebImage(url: URL(string: group.groupProfileImage ?? ""))
+                                                WebImage(url: URL(string: group.groupProfileImage ?? " "))
                                                     .resizable()
                                                     .scaledToFill()
                                                     .frame(width:50,height:50)
                                                     .clipShape(Circle())
-                                                
+
                                                 Text("\(group.groupName)").font(.footnote).foregroundColor(FOREGROUNDCOLOR)
                                             }
-                                            
-                                            
-                                            
+
+
+
                                         }
-                                        
+
                                     }
                                 }
-                                
+
                             }.padding(.leading,7)
-                            
-                            
+
+
                             Divider()
                         }
-                        
-                        
+
+
                     }
-                    
-                    
-                    
+
+
+
                 }
                 ScrollView{
-                    VStack{
+                    LazyVStack(spacing: 20){
                         ForEach(userVM.homescreenPosts.keys.sorted(), id: \.self){ key in
-                            HomeScreenPostView(id: key, postType: userVM.homescreenPosts[key] ?? "", showInfoScreen: $showInfoScreen)
+                            HomeScreenPostView(id: key, postType: userVM.homescreenPosts[key] ?? "", showInfoScreen: $showInfoScreen).padding()
                         }
-                        
+
                     }
                 }
-                
+
             }.onReceive(self.navigationHelper.$moveToDashboard){ move in
                 if move {
                     print("Move to dashboard: \(move)")
@@ -196,7 +196,7 @@ struct HomeScreenView: View {
                     self.navigationHelper.moveToDashboard = false
                 }
             }
-            
+
             
             
         }.frame(width: UIScreen.main.bounds.width).edgesIgnoringSafeArea(.all).navigationBarHidden(true)
@@ -225,7 +225,9 @@ struct HomeScreenPostView : View {
     @State var currentPoll: PollModel = PollModel()
     @State var currentGroup : Group = Group()
     @State var galleryPost: GalleryPostModel = GalleryPostModel()
-    @State var testText: String = ""
+    @State var postCreator: User = User()
+    @State var isInGroup: Bool = false
+    @State var isFollowingGroup: Bool = false
     @Binding var showInfoScreen : Bool
     @EnvironmentObject var userVM: UserViewModel
     
@@ -258,6 +260,39 @@ struct HomeScreenPostView : View {
         }
     }
     
+    func isInGroup(groupID: String, userID: String, completion: @escaping (Bool) -> ()) -> (){
+        COLLECTION_USER.document(userID).getDocument { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            let groups = snapshot!.get("groups") as? [String] ?? []
+            
+            for group in groups {
+                if group == groupID{
+                    return completion(true)
+                }
+            }
+        }
+    }
+    
+    func isFollowingGroup(groupID: String, userID: String, completion: @escaping (Bool) -> ()) -> (){
+        COLLECTION_GROUP.document(groupID).getDocument { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            let followers = snapshot!.get("followers") as? [String] ?? []
+            for user in followers {
+                if user == userID{
+                    return completion(true)
+                }
+            }
+        }
+    }
+    
     var body : some View {
         
         
@@ -265,11 +300,11 @@ struct HomeScreenPostView : View {
         
         ZStack{
             if postType == "poll"{
-                PollCell(poll: currentPoll, showInfoScreen: $showInfoScreen)
+               
             }else if postType == "event"{
                 Text("event")
             }else if postType == "post"{
-                GalleryPostCell(galleryPost: self.$galleryPost, group: $currentGroup)
+                GalleryPostCell(galleryPost: self.$galleryPost, group: $currentGroup, user:  $postCreator, isInGroup: $isInGroup, isFollowingGroup: $isFollowingGroup)
             }
         }.onAppear{
             
@@ -281,13 +316,25 @@ struct HomeScreenPostView : View {
                 
                 let data = snapshot!.data()
                 
-                self.galleryPost = GalleryPostModel(dictionary: data ?? [:])
+                self.galleryPost = GalleryPostModel(dictionary: data ?? [" ":" "])
+                let groupID = snapshot!.get("groupID") as? String ?? " "
                 
-                self.fetchGroup(groupID: snapshot!.get("groupID") as? String ?? " ") { fetchedGroup in
+                self.fetchGroup(groupID: groupID) { fetchedGroup in
                         self.currentGroup = fetchedGroup
                     }
+                self.isInGroup(groupID: groupID, userID: userVM.user?.id ?? " ", completion: { res in
+                    self.isInGroup = res
+                })
+                self.isFollowingGroup(groupID: groupID, userID: userVM.user?.id ?? " ") { res in
+                    self.isFollowingGroup = res
+                }
                 
+                userVM.fetchUser(userID: galleryPost.creator ?? " ") { fetchedUser in
+                    self.postCreator = fetchedUser
+                }
             }
+            
+        
             
          
         }

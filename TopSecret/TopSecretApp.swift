@@ -12,6 +12,7 @@ import Firebase
 struct TopSecretApp: App {
     
     init(){
+        
         FirebaseApp.configure()
         
     }

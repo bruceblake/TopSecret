@@ -61,12 +61,12 @@ struct ContentView: View {
         }.onChange(of: scenePhase) { newPhase in
             if newPhase == .active {
                 if userVM.userSession != nil{
-                    userVM.setUserActivity(isActive: true, userID: userVM.user?.id ?? "", completion: { fetchedUser in
+                    userVM.setUserActivity(isActive: true, userID: userVM.user?.id ?? " ", completion: { fetchedUser in
                         userVM.user = fetchedUser
                     })
                 }
             }else if newPhase == .background{
-                userVM.setUserActivity(isActive: false, userID: userVM.user?.id ?? "", completion: { fetchedUser in
+                userVM.setUserActivity(isActive: false, userID: userVM.user?.id ?? " ", completion: { fetchedUser in
                     userVM.user = fetchedUser
                 })
             }

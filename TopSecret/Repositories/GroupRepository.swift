@@ -55,13 +55,14 @@ class GroupRepository : ObservableObject {
         }
     }
     
-    func createGalleryPost(groupID: String, post: String, description: String, creator: String, isPrivate: Bool, taggedUsers: [String]){
+    func createGalleryPost(groupID: String, posts: [UIImage], description: String, creator: String, isPrivate: Bool, taggedUsers: [String]){
         var id = UUID().uuidString
         COLLECTION_GROUP.document(groupID).collection("Gallery Posts").document(id).setData(["id":id,"viewers":
-    [],"groupID":groupID,"post":post,"taggedUsers":taggedUsers,"description":description,"creator":creator,"isPrivate":isPrivate])
+    [],"groupID":groupID,"taggedUsers":taggedUsers,"description":description,"creator":creator,"isPrivate":isPrivate,"dateCreated":Timestamp()])
         id = UUID().uuidString
         COLLECTION_GALLERY_POSTS.document(id).setData(["id":id,"viewers":
-                                                        [],"groupID":groupID,"post":post,"taggedUsers":taggedUsers,"description":description,"creator":creator,"isPrivate":isPrivate])
+                                                        [],"groupID":groupID,"taggedUsers":taggedUsers,"description":description,"creator":creator,"isPrivate":isPrivate,"dateCreated":Timestamp()])
+        self.persistImageToStorage(galleryID: id, images: posts)
         
     }
     
@@ -324,6 +325,33 @@ class GroupRepository : ObservableObject {
     
     
     
+    func persistImageToStorage(galleryID: String, images: [UIImage]) {
+       let fileName = "galleryPosts/\(galleryID)"
+        let ref = Storage.storage().reference(withPath: fileName)
+        
+        for image in images{
+            guard let imageData = image.jpegData(compressionQuality: 0.5) else { return }
+            
+            ref.putData(imageData, metadata: nil) { (metadata, err) in
+                if err != nil{
+                    print("ERROR")
+                    return
+                }
+                   ref.downloadURL { (url, err) in
+                    if err != nil{
+                        print("ERROR: Failed to retreive download URL")
+                        return
+                    }
+                    print("Successfully stored image in database")
+                    let imageURL = url?.absoluteString ?? ""
+                       COLLECTION_GALLERY_POSTS.document(galleryID).updateData(["posts":FieldValue.arrayUnion([imageURL])])
+                }
+            }
+        }
+      
+        
+      
+    }
     
     func persistImageToStorage(groupID: String, image: UIImage) {
        let fileName = "groupImages/\(groupID)"

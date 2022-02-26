@@ -15,6 +15,7 @@ struct ChatView: View {
     @StateObject var chatVM = ChatViewModel()
     @StateObject var messageVM = MessageViewModel()
     @StateObject var groupVM = GroupViewModel()
+    @StateObject var imagePickerVM = ImagePickerViewModel()
     
     @State var value: CGFloat = 0
     @State var text = ""
@@ -27,7 +28,12 @@ struct ChatView: View {
     @State var currentMessage : Message = Message()
     @State var showMenu: Bool = false
     @State var userIDList: [String] = []
-    
+    @State var images : [UIImage] = []
+    var columns3Fixed: [GridItem] = [
+        GridItem(.fixed(100), spacing: 10),
+        GridItem(.fixed(100), spacing: 10),
+        GridItem(.fixed(100), spacing: 10)
+    ]
     
     var uid: String
     @State var chat: ChatModel
@@ -90,14 +96,19 @@ struct ChatView: View {
          
                     
                     Divider()
+            
+                    
+                    VStack(spacing: 0){
                     
                     HStack{
                         Button(action:{
-                            self.isShowingPhotoPicker.toggle()
+                            
+                            
+                            imagePickerVM.openImagePicker()
                         },label:{
                             ZStack{
                                 Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
-                                Image(systemName: "photo.on.rectangle")
+                                Image(systemName: imagePickerVM.showImagePicker ? "xmark" :  "photo.on.rectangle")
                             }
                         })
                         
@@ -105,23 +116,76 @@ struct ChatView: View {
                         CustomChatTextField(text: $text, isShowingPhotoPicker: $isShowingPhotoPicker, avatarImage: $avatarImage, sendAction : {
                             messageVM.sendGroupChatTextMessage(text: text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: chatVM.colors[chat.users.firstIndex(of: uid) ?? 0], messageID: UUID().uuidString, messageType: "text", chat: chat, chatType: "groupChat")
                         }, textChange: {
+                            
+                           
                             if text == ""{
                                 chatVM.stopTyping(userID: uid, chatID: chat.id, chatType: "groupChat")
                             }else{
                                 chatVM.startTyping(userID: uid, chatID: chat.id, chatType: "groupChat")
                             }
-                        }).sheet(isPresented: $showImageSendView, content: {
+                            
+                        }, editingChange: {
+                            if imagePickerVM.showImagePicker{
+                                withAnimation{imagePickerVM.showImagePicker.toggle()}
+                            }
+                        })
+                        
+                       
+                            
+                            .sheet(isPresented: $showImageSendView, content: {
                             ImageSendView(message: Message(dictionary: ["id":UUID().uuidString,"nameColor":chatVM.colors[chat.users.firstIndex(of: uid) ?? 0],"timeStamp":Timestamp(),"name":userVM.user?.nickName ?? "","profilePicture":userVM.user?.profilePicture ?? "","messageType":"image"]), imageURL: avatarImage, chatID: chat.id, messageVM: messageVM)
                         }).fullScreenCover(isPresented: $isShowingPhotoPicker, onDismiss: {
                             self.showImageSendView.toggle()
                         }, content: {
-                            ImagePicker(avatarImage: $avatarImage, allowsEditing: false)
+                            ImagePicker(avatarImage: $avatarImage, images: $images, allowsEditing: false)
                         })
 
-                    }
+                    }.padding(.leading,5)
+                    
+                    ScrollView{
+                        VStack{
+                            //Images
+                            LazyVGrid(
+                                   columns: columns3Fixed,
+                                   alignment: .center,
+                                   spacing: 10,
+                                   pinnedViews: []
+                               ) {
+                                  
+                                   ForEach(imagePickerVM.fetchedPhotos){ photo in
+                                     
+                                       ThumbnailView(photo: photo).onTapGesture {
+                                           imagePickerVM.extractPreviewData(asset: photo.asset)
+                                           imagePickerVM.showPreview.toggle()
+                                       }
+                                
+                                       
+                                      
+                                       
+                                       
+                                   }
+                                  
+                               }
+                            
+                           
+                            
+                        
+                            if imagePickerVM.libraryStatus == .denied || imagePickerVM.libraryStatus == .limited {
+                                VStack(spacing: 10){
+                                    Text(imagePickerVM.libraryStatus == .denied ? "Allow Access for Photos" : "Select More Photos").foregroundColor(.gray)
+                                         
+                                         Button(action:{
+                                             UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!, options: [:], completionHandler: nil)
+                                    },label:{
+                                        Text(imagePickerVM.libraryStatus == .denied ?  "Allow Acces" : "Select More").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold).padding(.vertical,10).padding(.horizontal).background(Color("AccentColor")).cornerRadius(5)
+                                    })
+                                }.frame(width: 150)
+                            }
+                        }
+                    }.frame(height: imagePickerVM.showImagePicker ? 150 : 0).background(Color("Color")).opacity(imagePickerVM.showImagePicker ? 1 : 0)
                     
                         
-                        
+                }
                         
                         
                    
@@ -337,7 +401,8 @@ struct ChatView: View {
         }.edgesIgnoringSafeArea(.all).navigationBarTitle("").navigationBarHidden(true).navigationBarBackButtonHidden(true)
                 
         .onAppear{
-            
+            imagePickerVM.setUp()
+
             messageVM.readAllMessages(chatID: chat.id, userID: userVM.user?.id ?? "", chatType: "groupChat")
             messageVM.getPinnedMessage(chatID: chat.id)
             chatVM.getGroup(groupID: chat.groupID ?? " ")
@@ -370,6 +435,23 @@ struct ChatView: View {
     }
 }
 
+struct ThumbnailView: View {
+    
+    var photo: AssetModel
+    var body: some View {
+        ZStack(alignment: .bottomTrailing){
+            Image(uiImage: photo.image)
+                .resizable()
+                .aspectRatio(contentMode: .fill)
+                .frame(width: 115, height: 115)
+
+            if photo.asset.mediaType == .video{
+                Image(systemName: "video.fill").font(.title2).foregroundColor(FOREGROUNDCOLOR)
+            }
+        }
+    }
+}
+
 
 struct CustomChatTextField : View {
     
@@ -388,12 +470,15 @@ struct CustomChatTextField : View {
 
     var sendAction : () -> (Void)
     var textChange : () -> (Void)
+    var editingChange: () -> (Void)
     
     var body: some View {
         HStack{
          
             
-            TextField("Message", text: $text).onChange(of: text) { message in
+            TextField("Message", text: $text).onTapGesture {
+                editingChange()
+            }.onChange(of: text) { message in
                 showSend = message != ""
                 textChange()
             }.padding(.leading,5)
@@ -447,3 +532,7 @@ struct ChatView_Previews: PreviewProvider {
         ChatView(uid: "", chat: ChatModel())
     }
 }
+
+
+
+
