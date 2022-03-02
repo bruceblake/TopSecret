@@ -12,7 +12,7 @@ struct CreateCountdownView: View {
     @State var selectedDate: Date = Date()
     @StateObject var groupVM = GroupViewModel()
     @State var countdownName : String = ""
-    var group: Group
+    @Binding var group: Group
     var body: some View {
         ZStack{
             Color("Background")

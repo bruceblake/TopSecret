@@ -26,6 +26,7 @@ struct User : Identifiable, Hashable{
     var isActive: Bool?
     var lastActive: Timestamp?
     var groups: [String]?
+    var selectedGroup : String?
     
 
 
@@ -46,6 +47,8 @@ init(dictionary: [String:Any]) {
     self.isActive = dictionary["isActive"] as? Bool ?? false
     self.lastActive = dictionary["lastActive"] as? Timestamp ?? Timestamp()
     self.groups = dictionary["groups"] as? [String] ?? [" "]
+    self.selectedGroup = dictionary["selectedGroup"] as? String ?? " "
+    
  
  }
 

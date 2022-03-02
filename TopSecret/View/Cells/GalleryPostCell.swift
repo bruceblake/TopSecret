@@ -11,12 +11,15 @@ import SDWebImageSwiftUI
 struct GalleryPostCell: View {
     
     @Binding var galleryPost: GalleryPostModel
+    @Binding var selectedGalleryPost : GalleryPostModel
     @Binding var group: Group
     @Binding var user: User
     @Binding var isInGroup: Bool
     @Binding var isFollowingGroup: Bool 
     @EnvironmentObject var userVM: UserViewModel
-    
+    @StateObject var galleryVM = GalleryRepository()
+    @Binding var selectedGalleryPostComments : [GalleryPostCommentModel]
+    @Binding var openComments : Bool 
   
     
     var body: some View {
@@ -29,15 +32,15 @@ struct GalleryPostCell: View {
                     VStack(spacing: 5){
                         HStack(alignment: .firstTextBaseline){
                             NavigationLink(destination: GroupProfileView(group: group)) {
-                                Text("\(group.groupName)").fontWeight(.bold).font(.title2).foregroundColor(FOREGROUNDCOLOR)
-                            }
-                            HStack(spacing: 5){
-                                Text("•").foregroundColor(.gray).font(.footnote)
-                                if isInGroup{
-                                    Text("In Group").foregroundColor(.gray).font(.footnote)
-                                }else if isFollowingGroup{
-                                    Text("Following Group").foregroundColor(.gray).font(.footnote)
+                                HStack{
+                                    WebImage(url: URL(string: group.groupProfileImage ?? "")).resizable().frame(width: 40, height: 40).clipShape(Circle())
+                                    Text("\(group.groupName)").fontWeight(.bold).font(.headline).foregroundColor(FOREGROUNDCOLOR)
                                 }
+                            }
+                            HStack(spacing: 2){
+                                Text("•").foregroundColor(.gray).font(.footnote)
+                                Text("@\(user.username ?? "")").foregroundColor(.gray).font(.footnote).fontWeight(.bold)
+
                             }
                            
                             
@@ -50,7 +53,11 @@ struct GalleryPostCell: View {
                         }
                         
                         HStack{
-                            Text("@\(user.username ?? "")").foregroundColor(.gray).font(.subheadline).fontWeight(.bold)
+                            if isInGroup{
+                                Text("In Group").foregroundColor(.gray).font(.footnote)
+                            }else if isFollowingGroup{
+                                Text("Following Group").foregroundColor(.gray).font(.footnote)
+                            }
                             Spacer()
                         }
                       
@@ -99,19 +106,40 @@ struct GalleryPostCell: View {
                 HStack{
                     
                     NavigationLink(destination: EmptyView()) {
-                        Text("400 views").fontWeight(.bold)
+                        Text("\(galleryPost.likes?.count ?? 0) likes").fontWeight(.bold)
                     }
                     
                     Button(action:{
                         //TODO
+                        if galleryVM.userHasAlreadyLikedPost(userID: userVM.user?.id ?? " ", likes: galleryPost.likes ?? []){
+                            galleryVM.unlikePost(galleryID: galleryPost.id ?? " ", groupID: galleryPost.groupID ?? " ", userID: userVM.user?.id ?? " ")
+                        }else{
+                            galleryVM.likePost(galleryID: galleryPost.id ?? " ", groupID: galleryPost.groupID  ?? " ", userID: userVM.user?.id ?? " ")
+                        }
+                        galleryVM.fetchGalleryPost(galleryPostID: galleryPost.id ?? " ") { fetchedPost in
+                            self.galleryPost = fetchedPost
+                        }
                     },label:{
-                        Image(systemName: "heart")
+                        Image(systemName: galleryVM.userHasAlreadyLikedPost(userID: userVM.user?.id ?? " ", likes: galleryPost.likes ?? []) ?  "heart.fill" : "heart").foregroundColor(Color("AccentColor"))
                     })
                     
                     Button(action:{
                         //TODO
+                        galleryVM.fetchPostComments(galleryID: galleryPost.id ?? " ", groupID: galleryPost.groupID ?? " ") { fetchedComments in
+                            self.selectedGalleryPostComments = fetchedComments
+                            self.selectedGalleryPost = galleryPost
+                            self.openComments.toggle()
+                        }
+                       
                     },label:{
-                        Image(systemName: "bubble.left")
+                        ZStack{
+                            Image(systemName: "text.bubble").foregroundColor(FOREGROUNDCOLOR)
+                            ZStack{
+                                Circle().frame(width: 12, height: 12).foregroundColor(Color("AccentColor"))
+                                Text("\(galleryPost.comments?.count ?? 0)").foregroundColor(FOREGROUNDCOLOR)
+                            }.offset(x: 6, y: 5)
+                           
+                        }
                     })
                     
                     Spacer()

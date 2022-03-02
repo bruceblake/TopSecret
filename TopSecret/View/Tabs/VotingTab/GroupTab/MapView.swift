@@ -14,6 +14,8 @@ struct MapView: View {
     @State private var landmarks: [Landmark] = [Landmark]()
     @State private var search: String = ""
     @State private var tapped: Bool = false
+    @Binding var showMapView : Bool
+    @Binding var showTabButtons : Bool
     
     private func getNearByLandmarks() {
         let request = MKLocalSearch.Request()
@@ -44,26 +46,32 @@ struct MapView: View {
     
     
     var body: some View {
-        ZStack(alignment: .top){
-            MapViewUtility(landmarks: landmarks)
+      
+          
            
-            
-            TextField("Search", text: $search, onEditingChanged: { _ in })
-            {
+            VStack{
+                Spacer()
+                Button(action:{
+                    withAnimation(.spring()){
+                        self.showMapView.toggle()
+                        self.showTabButtons.toggle()
+                    }
+                },label:{
+                    Text("X").foregroundColor(FOREGROUNDCOLOR)
+                }).padding(.top,40)
+                MapViewUtility(landmarks: landmarks).padding(.top,50)
                 
-                self.getNearByLandmarks()
-            }.textFieldStyle(RoundedBorderTextFieldStyle()).padding().offset(y: 44)
+            }.frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height).edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+             
             
-            PlaceListView(landmarks: self.landmarks) {
-                //do something
-                self.tapped.toggle()
-            }.animation(.spring()).offset(y: calculateOffset())
-        }.frame(width: UIScreen.main.bounds.width).edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+          
+   
+        
     }
 }
-
-struct MapView_Previews: PreviewProvider {
-    static var previews: some View {
-        MapView()
-    }
-}
+//
+//struct MapView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        MapView()
+//    }
+//}

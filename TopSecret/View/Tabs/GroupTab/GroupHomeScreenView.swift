@@ -22,8 +22,11 @@ struct GroupHomeScreenView: View {
     @State var edges = UIApplication.shared.windows.first?.safeAreaInsets
     @State var showAddContentView : Bool = false
     @State var timer : Timer? = nil
+    @State var offset : CGSize = .zero
+    @State var showMapView : Bool = false
+    @Binding var showTabButtons : Bool
     
-    @State var group : Group
+    @Binding var group : Group
     
     @Environment(\.presentationMode) var dismiss
 
@@ -48,8 +51,9 @@ struct GroupHomeScreenView: View {
                         })
                         
                         NavigationLink(destination: EmptyView()) {
-                            Text("Cash")
+                            Text("Cash").foregroundColor(FOREGROUNDCOLOR)
                         }
+                        
                     }.padding(.leading)
                   
                     
@@ -82,7 +86,9 @@ struct GroupHomeScreenView: View {
                     HStack(spacing: 10){
                         
                         Button(action:{
-                            withAnimation{ self.showAddContentView.toggle()}
+                            withAnimation{ self.showAddContentView.toggle()
+                          
+                            }
                            
                         },label:{
                             ZStack{
@@ -192,21 +198,50 @@ struct GroupHomeScreenView: View {
                 
             }
             
-            VStack{
-                Spacer()
+         
+            
+            if showMapView{
+                VStack{
+                    MapView(showMapView: $showMapView, showTabButtons: $showTabButtons)
+                }
+              
+            }
+            
+           
+            if showAddContentView {
+                ZStack{
+                    Color("Background")
+                    AddContentView(showAddContentView: $showAddContentView, group: $group).padding().frame(width: UIScreen.main.bounds.width/2).background(Color("Color")).cornerRadius(16).padding(.top,30)
+                }.frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height).onTapGesture {
+                    showAddContentView.toggle()
+                }
+                  
+            }
+            
                 
-                AddContentView(showAddContentView: $showAddContentView, group: group).padding(.bottom,10).padding(.bottom, edges?.bottom).padding(.top,10).background(Color("Color")).offset(y: showAddContentView ? 0 : UIScreen.main.bounds.height / 1.2)
-            }.ignoresSafeArea().background(Color.black.opacity(0.3).ignoresSafeArea()
-                                            .opacity(showAddContentView ? 1 : 0).onTapGesture {
-                withAnimation{self.showAddContentView.toggle()}
-            }            
-            
-            )
-          
-            
-            
-                
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
+        }.gesture(
+        
+            DragGesture()
+                .onChanged({ value in
+                    offset = value.translation
+                    if !showMapView {
+                        if offset.height <= -150{
+                            withAnimation(.spring()){
+                                showMapView.toggle()
+                                showTabButtons.toggle()
+                            }
+                        }
+                    }
+              
+                    
+                })
+                .onEnded({ value in
+                    if !showMapView{
+                        offset = .zero
+                    }
+                })
+        
+        ).edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
             groupVM.getChat(chatID: group.chatID ?? "")
             messageVM.readAllMessages(chatID: group.chatID ?? "", userID: userVM.user?.id ?? "", chatType: "groupChat")
             DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
@@ -221,7 +256,7 @@ struct GroupHomeScreenView: View {
     .onDisappear{
             timer?.invalidate()
             timer = nil
-        }
+    }.frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
     }
 }
 

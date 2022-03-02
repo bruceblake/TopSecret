@@ -17,10 +17,15 @@ struct HomeScreenView: View {
     @StateObject var chatVM = ChatViewModel()
     @StateObject var groupVM = GroupViewModel()
     @State var showInfoScreen : Bool = false
+    @State var goToGroupProfile : Bool = false
+    @State var goToCreateGroupView : Bool = false
+    @State var openComments : Bool = false
+    @State var selectedGalleryPostComments : [GalleryPostCommentModel] = []
+    @State var selectedGalleryPost : GalleryPostModel = GalleryPostModel()
+    @Binding var showTabButtons : Bool
     
     
-    
-    @State private var options = ["Groups","Notifications"]
+
     
     @State var selectedIndex = 0
     
@@ -44,8 +49,19 @@ struct HomeScreenView: View {
     }
     
     
- 
-        
+    func homeScreenPostsAreEmpty(posts: [String:String]) -> Bool{
+        var isEmpty = true
+        for value in posts.values {
+            if value != ""{
+                isEmpty = false
+            }
+            print("value: \(value)")
+        }
+        return isEmpty
+    }
+    
+    
+    
     
     
     
@@ -54,12 +70,15 @@ struct HomeScreenView: View {
         
         
         ZStack{
+            
+            
+            
             Color("Background")
             
             VStack{
                 VStack{
                     HStack(spacing: 20){
-
+                        
                         HStack{
                             NavigationLink(
                                 destination: UserProfilePage(user: userVM.user ?? User(), isCurrentUser: true),
@@ -70,49 +89,49 @@ struct HomeScreenView: View {
                                         .frame(width:40,height:40)
                                         .clipShape(Circle())
                                 })
-
-
-
+                            
+                            
+                            
                             NavigationLink(
                                 destination: UserNotificationView(),
                                 label: {
                                     ZStack{
                                         Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
-
+                                        
                                         ZStack(){
-                                            Image(systemName: "heart")
+                                            Image(systemName: "envelope.fill")
                                                 .resizable()
-                                                .frame(width: 16, height: 16).foregroundColor(Color("Foreground"))
+                                                .frame(width: 20, height: 16).foregroundColor(Color("Foreground"))
                                             if userVM.userNotificationCount != 0{
-
+                                                
                                                 ZStack{
                                                     Circle().foregroundColor(Color("AccentColor"))
                                                     Text("\(userVM.userNotificationCount)").foregroundColor(.yellow).font(.footnote)
                                                 }.frame(width: 20, height: 20).offset(x: 18, y: -15)
-
+                                                
                                             }
-
+                                            
                                         }
-
-
-
-
-
+                                        
+                                        
+                                        
+                                        
+                                        
                                     }
                                 })
-
-
-
-
-
-
-
-
-
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
+                            
                         }.padding(.leading,20)
-
+                        
                         Spacer()
-
+                        
                         Button(action:{
                             userVM.fetchUserGroups()
                         }, label:{
@@ -122,9 +141,9 @@ struct HomeScreenView: View {
                         })
                         Spacer()
                         HStack(spacing:10){
-
-
-
+                            
+                            
+                            
                             NavigationLink(
                                 destination: SearchView(),
                                 label: {
@@ -133,150 +152,205 @@ struct HomeScreenView: View {
                                         Image(systemName: "magnifyingglass")
                                             .resizable()
                                             .frame(width: 16, height: 16).foregroundColor(Color("Foreground"))
-
+                                        
                                     }
                                 })
-
-
+                            
+                            
                             NavigationLink(destination: PersonalChatListView()) {
                                 ZStack{
                                     Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
                                     Image(systemName: "paperplane.fill")
                                         .resizable()
                                         .frame(width: 16, height: 16).foregroundColor(Color("Foreground"))
-
+                                    
                                 }
                             }
-
-
-
-
-
-
-
-
-
-
+                            
                         }.padding(.trailing,20)
-
-
+                        
+                        
                     }.padding(.top,40)
                     //main content
                     VStack{
-
+                        
                         VStack(alignment: .leading){
-
-                            Text("Stories").fontWeight(.bold).padding(.leading,7)
-
-                            ScrollView(.horizontal, showsIndicators: false){
-                                HStack(spacing: 10){
+                            
+                            Text("Groups").fontWeight(.bold).padding(.leading,7)
+                            
+                            
+                            if userVM.groups.count == 0 {
+                                VStack{
+                                    HStack{
+                                        Spacer()
+                                        Text("Your groups will appear here.").foregroundColor(FOREGROUNDCOLOR).font(.footnote).lineLimit(2)
+                                        Spacer()
+                                    }
                                     
-                             
-                                    NavigationLink(destination: CreateStoryPostView()){
-                                        VStack{
-                                            
+                            
+                                        
+                                    HStack{
+                                        Spacer()
+                                        
+                                        Button(action:{
+                                            self.goToCreateGroupView.toggle()
+                                        },label:{
+                                            Text("Create a group")
+                                        }).foregroundColor(Color("Foreground"))
+                                            .padding(.vertical,10)
+                                            .frame(width: UIScreen.main.bounds.width/3).background(Color("AccentColor")).cornerRadius(15).fullScreenCover(isPresented: $goToCreateGroupView, content: {
+                                                CreateGroupView(goBack: $goToCreateGroupView)
+                                            })
+
+
+                                        
                                      
-                                            ZStack{
-                                                Circle().frame(width: 50, height: 50).foregroundColor(Color("Color"))
-                                                Image(systemName: "plus")
+                                        
+                                        Spacer()
+                                    }
+                                   
+                                        
+                                        
+                                        
+                                    
+                                }
+                            }else{
+                                
+                                ScrollView(.horizontal, showsIndicators: false){
+                                    HStack(spacing: 10){
+                                        
+                                        
+                                        NavigationLink(destination: CreateStoryPostView()){
+                                            VStack{
+                                                
+                                                
+                                                ZStack{
+                                                    Circle().frame(width: 50, height: 50).foregroundColor(Color("Color"))
+                                                    Image(systemName: "plus")
                                                         .resizable()
                                                         .scaledToFill()
                                                         .frame(width:20,height:20).foregroundColor(FOREGROUNDCOLOR)
-                                            }
-                                        
-                                          
-                                            
-
-                                            Text("Add To Story").font(.caption).foregroundColor(FOREGROUNDCOLOR)
-                                        }
-                                    }
-                                   
-                                 
-
-                                    ForEach(userVM.groups){ group in
-                                        
-                                        Button(action:{
-                                            userVM.fetchGroupStories(groupID: group.id, completion:{ stories in
-                                                self.selectedStoryPosts = stories
-                                                self.selectedGroupStory = group
-                                            })
-                                                self.showStoryScreen.toggle()
-                                            
-                                        },label:{
-                                            VStack{
+                                                }
                                                 
-                                         
-
+                                                
+                                                
+                                                
+                                                Text("Add To A Group Story").font(.caption).foregroundColor(FOREGROUNDCOLOR)
+                                            }
+                                        }
+                                        
+                                        
+                                        
+                                        
+                                        
+                                        ForEach(userVM.groups){ group in
+                                            
+                                            Button(action:{
+                                                userVM.fetchGroupStories(groupID: group.id, completion:{ stories in
+                                                    self.selectedStoryPosts = stories
+                                                    self.selectedGroupStory = group
+                                                    if selectedStoryPosts.isEmpty{
+                                                        self.goToGroupProfile.toggle()
+                                                    }else{
+                                                        withAnimation(.easeInOut){
+                                                            self.showStoryScreen.toggle()
+                                                            self.showTabButtons.toggle()
+                                                        }
+                                                    }
+                                                })
+                                                
+                                                
+                                                
+                                            },label:{
+                                                VStack{
+                                                    
+                                                    
+                                                    
                                                     WebImage(url: URL(string: group.groupProfileImage ?? " "))
                                                         .resizable()
                                                         .scaledToFill()
                                                         .frame(width:50,height:50)
                                                         .clipShape(Circle())
                                                         .overlay(Circle().stroke(self.unseenGroupsContainGroup(unseenGroups: self.unseenStoryGroups, group: group) ? Color(.red) :  Color.gray,lineWidth: 2))
-                                              
-                                                
-
-                                                Text("\(group.groupName)").font(.footnote).foregroundColor(FOREGROUNDCOLOR)
-                                            }
-                                        })
-
-                                      
-
-
-                                        
-
-                                    }
-                                    
-                                    ForEach(userVM.followedGroups){ group in
-                                        NavigationLink(destination: GroupProfileView(group: group)) {
-
-                                            VStack{
-                                                WebImage(url: URL(string: group.groupProfileImage ?? " "))
-                                                    .resizable()
-                                                    .scaledToFill()
-                                                    .frame(width:50,height:50)
-                                                    .clipShape(Circle())
-
-                                                Text("\(group.groupName)").font(.footnote).foregroundColor(FOREGROUNDCOLOR)
-                                            }
-
-
-
+                                                    
+                                                    
+                                                    
+                                                    Text("\(group.groupName)").font(.footnote).foregroundColor(FOREGROUNDCOLOR)
+                                                }
+                                            })
+                                            
+                                            
+                                            
+                                            
+                                            
+                                            
                                         }
-
+                                        
+                                        ForEach(userVM.followedGroups){ group in
+                                            NavigationLink(destination: GroupProfileView(group: group)) {
+                                                
+                                                VStack{
+                                                    WebImage(url: URL(string: group.groupProfileImage ?? " "))
+                                                        .resizable()
+                                                        .scaledToFill()
+                                                        .frame(width:50,height:50)
+                                                        .clipShape(Circle())
+                                                    
+                                                    Text("\(group.groupName)").font(.footnote).foregroundColor(FOREGROUNDCOLOR)
+                                                }
+                                                
+                                                
+                                                
+                                            }
+                                            
+                                        }
+                                        
+                                        
                                     }
                                     
-                                    
-                                }
-
-                            }.padding(.leading,7)
-
-
+                                }.padding(.leading,7)
+                                
+                            }
                             Divider()
                         }
-
-
+                        
+                        
                     }
-
-
-
+                    
+                    
+                    
                 }
-                ScrollView{
-                    LazyVStack(spacing: 20){
-                        ForEach(userVM.homescreenPosts.keys.sorted(), id: \.self){ key in
-                            HomeScreenPostView(id: key, postType: userVM.homescreenPosts[key] ?? "", showInfoScreen: $showInfoScreen).padding()
+                
+                    
+                    
+                    if homeScreenPostsAreEmpty(posts: userVM.homescreenPosts){
+                        
+                        VStack{
+                            Text("Your feed is empty :(")
+                            Spacer()
+                        }.padding(.top,UIScreen.main.bounds.height/3.5)
+                         
+                        
+                      
+                    }else{
+                        ScrollView{
+                        LazyVStack(spacing: 20){
+                            ForEach(userVM.homescreenPosts.keys.sorted(), id: \.self){ key in
+                                HomeScreenPostView(id: key, postType: userVM.homescreenPosts[key] ?? " ", selectedGalleryPost: $selectedGalleryPost, showInfoScreen: $showInfoScreen, openComments: $openComments, selectedGalleryPostComments: $selectedGalleryPostComments).padding(.horizontal)
+                            }
                         }
-
                     }
-                }
+                    }
+                    
+                    
+                    
+                    
                 
                 
-                NavigationLink(isActive: self.$showStoryScreen, destination:{ GroupStoryView(storyPosts: self.$selectedStoryPosts, groupID: $selectedGroupStory.id)}, label:{
-                    EmptyView()
-                })
-                  
                 
-
+                
+                
+                
             }.onReceive(self.navigationHelper.$moveToDashboard){ move in
                 if move {
                     print("Move to dashboard: \(move)")
@@ -284,39 +358,51 @@ struct HomeScreenView: View {
                     self.navigationHelper.moveToDashboard = false
                 }
             }
-           
-
+            
+            if showStoryScreen {
+                GroupStoryView(storyPosts: $selectedStoryPosts, groupID: $selectedGroupStory.id, isPresented: $showStoryScreen).onDisappear{
+                    self.showTabButtons = true
+                }
+            }
+            
+            NavigationLink(isActive: $goToGroupProfile, destination: {GroupProfileView(group: selectedGroupStory)}, label: {
+                EmptyView()
+            })
+            
+            NavigationLink(isActive: $openComments, destination: {GalleryPostCommentView(galleryPost: $selectedGalleryPost, comments: $selectedGalleryPostComments)}, label: {
+                EmptyView()
+            })
             
             
         }.frame(width: UIScreen.main.bounds.width).edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
             
             
-
-           
-       
             
-                
-                    for group in userVM.allUserGroups{
-                        COLLECTION_GROUP.document(group.id).collection("Story").getDocuments(completion: { snapshot, err in
-                            if err != nil {
-                                print("ERROR")
-                                return
-                            }
-                            
-                            for document in snapshot!.documents {
-
-                                let usersSeenStory = document.get("usersSeenStory") as? [String] ?? []
-                                if !usersSeenStory.contains(userVM.user?.id ?? ""){
-                                    self.unseenStoryGroups.append(group)
-                                    print("Unseen story: \(group.groupName)")
-                                }
-                            }
-                            
-                            
-                        })
+            
+            
+            
+            
+            for group in userVM.allUserGroups{
+                COLLECTION_GROUP.document(group.id).collection("Story").getDocuments(completion: { snapshot, err in
+                    if err != nil {
+                        print("ERROR")
+                        return
                     }
+                    
+                    for document in snapshot!.documents {
+                        
+                        let usersSeenStory = document.get("usersSeenStory") as? [String] ?? []
+                        if !usersSeenStory.contains(userVM.user?.id ?? " "){
+                            self.unseenStoryGroups.append(group)
+                        }
+                    }
+                    
+                    
+                })
+            }
             
-                
+             
+          
             
         }
         
@@ -329,11 +415,11 @@ struct HomeScreenView: View {
     
 }
 
-struct HomeScreenView_Previews: PreviewProvider {
-    static var previews: some View {
-        HomeScreenView().preferredColorScheme(.dark).environmentObject(UserViewModel())
-    }
-}
+//struct HomeScreenView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        HomeScreenView().preferredColorScheme(.dark).environmentObject(UserViewModel())
+//    }
+//}
 
 
 struct HomeScreenPostView : View {
@@ -344,10 +430,13 @@ struct HomeScreenPostView : View {
     @State var currentPoll: PollModel = PollModel()
     @State var currentGroup : Group = Group()
     @State var galleryPost: GalleryPostModel = GalleryPostModel()
+    @Binding var selectedGalleryPost : GalleryPostModel
     @State var postCreator: User = User()
     @State var isInGroup: Bool = false
     @State var isFollowingGroup: Bool = false
     @Binding var showInfoScreen : Bool
+    @Binding var openComments : Bool
+    @Binding var selectedGalleryPostComments : [GalleryPostCommentModel]
     @EnvironmentObject var userVM: UserViewModel
     
     
@@ -419,11 +508,11 @@ struct HomeScreenPostView : View {
         
         ZStack{
             if postType == "poll"{
-               
+                
             }else if postType == "event"{
                 Text("event")
             }else if postType == "post"{
-                GalleryPostCell(galleryPost: self.$galleryPost, group: $currentGroup, user:  $postCreator, isInGroup: $isInGroup, isFollowingGroup: $isFollowingGroup)
+                GalleryPostCell(galleryPost: self.$galleryPost, selectedGalleryPost: $selectedGalleryPost, group: $currentGroup, user:  $postCreator, isInGroup: $isInGroup, isFollowingGroup: $isFollowingGroup, selectedGalleryPostComments: $selectedGalleryPostComments, openComments: $openComments)
             }
         }.onAppear{
             
@@ -439,8 +528,8 @@ struct HomeScreenPostView : View {
                 let groupID = snapshot!.get("groupID") as? String ?? " "
                 
                 self.fetchGroup(groupID: groupID) { fetchedGroup in
-                        self.currentGroup = fetchedGroup
-                    }
+                    self.currentGroup = fetchedGroup
+                }
                 self.isInGroup(groupID: groupID, userID: userVM.user?.id ?? " ", completion: { res in
                     self.isInGroup = res
                 })
@@ -453,9 +542,9 @@ struct HomeScreenPostView : View {
                 }
             }
             
-        
             
-         
+            
+            
         }
         
     }

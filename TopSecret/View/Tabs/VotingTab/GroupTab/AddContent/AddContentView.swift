@@ -10,7 +10,7 @@ import SwiftUI
 struct AddContentView: View {
     
     @Binding var showAddContentView: Bool
-    var group: Group
+    @Binding var group: Group
     
     
     var body: some View {
@@ -19,7 +19,7 @@ struct AddContentView: View {
                 HStack{
                     Spacer()
                 }
-                NavigationLink(destination: CreateCountdownView(group: group)) {
+                NavigationLink(destination: CreateCountdownView(group: $group)) {
                         Text("Create Countdown")
                     }
                     NavigationLink(destination: EmptyView()) {
@@ -31,7 +31,7 @@ struct AddContentView: View {
                     NavigationLink(destination: EmptyView()) {
                         Text("Add to Story")
                     }
-                NavigationLink(destination: CreateGalleryPostView(group: group)) {
+                NavigationLink(destination: CreateGalleryPostView(group: $group)) {
                         Text("Create Gallery Post")
                     }
                 

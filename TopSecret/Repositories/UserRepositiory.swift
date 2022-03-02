@@ -32,14 +32,21 @@ class UserRepository : ObservableObject {
     @ObservedObject var notificationRepository = NotificationRepository()
     @Published var currentNotification : NotificationModel?
     @Published var showNotification : Int = 0 //on value change, send notification
+    @Published var userSelectedGroup : Group = Group()
     
     
     private var cancellables : Set<AnyCancellable> = []
     let store = Firestore.firestore()
     let path = "Users"
+   
     
- 
     
+    func changeUserSelectedGroup(groupID: String, userID: String){
+        COLLECTION_USER.document(userID).updateData(["selectedGroup":groupID])
+        self.fetchUser(userID: userID) { fetchedUser in
+            self.user = fetchedUser
+        }
+    }
     
     func setUserActivity(isActive: Bool, userID: String, completion: @escaping (User) ->()) -> (){
         COLLECTION_USER.document(userID).updateData(["isActive":isActive])
@@ -363,7 +370,7 @@ class UserRepository : ObservableObject {
                     snapshot?.documentChanges.forEach({ doc in
                         if doc.type == .removed{
                             let id = doc.document.get("id") as! String
-                            self.homescreenPosts[id] = " "
+                            self.homescreenPosts[id] = ""
                         }
                     })
                     
@@ -417,12 +424,12 @@ class UserRepository : ObservableObject {
             self.groups = documents.map{ queryDocumentSnapshot -> Group in
                 var data = queryDocumentSnapshot.data()
                 
-                self.fetchGroupPolls(groupID: data["id"] as? String ?? "") { fetchedPolls in
+                self.fetchGroupPolls(groupID: data["id"] as? String ?? " ") { fetchedPolls in
                     data["polls"] = fetchedPolls
                 
                 }
                 
-                self.fetchGroupStories(groupID: data["id"] as? String ?? "", completion:{ stories in
+                self.fetchGroupStories(groupID: data["id"] as? String ?? " ", completion:{ stories in
                     data["storyPosts"] = stories
                 })
                 
@@ -448,11 +455,8 @@ class UserRepository : ObservableObject {
     
         
         
-        for group in self.groups {
-            for poll in group.polls ?? [] {
-                print("poll2: \(poll.creator ?? "")")
-            }
-        }
+       
+       
         
     }
     func listenToUserPolls(uid: String){
@@ -845,6 +849,7 @@ class UserRepository : ObservableObject {
         userSession = nil
         self.loginErrorMessage = ""
         try? Auth.auth().signOut()
+        homescreenPosts.removeAll()
     }
     func fetchUser(){
         
@@ -853,7 +858,11 @@ class UserRepository : ObservableObject {
         store.collection(path).document(uid).getDocument { (snapshot, _) in
             guard let data = snapshot?.data() else {return}
             let user = User(dictionary: data)
-            self.user = user
+            self.fetchGroup(groupID: user.selectedGroup ?? " ") { fetchedGroup in
+                self.userSelectedGroup = fetchedGroup
+                self.user = user
+            }
+           
         }
     }
     func resetPassword(email: String){
@@ -861,9 +870,9 @@ class UserRepository : ObservableObject {
         }
     }
     func addFriend(friendID: String, user: User){
-        COLLECTION_USER.document(user.id ?? "").updateData(["pendingFriendsList":FieldValue.arrayRemove([friendID])])
+        COLLECTION_USER.document(user.id ?? " ").updateData(["pendingFriendsList":FieldValue.arrayRemove([friendID])])
         
-        COLLECTION_USER.document(user.id ?? "").updateData(["friendsList":FieldValue.arrayUnion([friendID])])
+        COLLECTION_USER.document(user.id ?? " ").updateData(["friendsList":FieldValue.arrayUnion([friendID])])
         COLLECTION_USER.document(friendID).updateData(["friendsList":FieldValue.arrayUnion([user.id ?? ""])])
         
         notificationRepository.sendAcceptedFriendRequestNotification(user1: user, user2: friendID)
@@ -873,7 +882,7 @@ class UserRepository : ObservableObject {
     
     func declineFriendRequest(friendID: String, user: User){
         
-        COLLECTION_USER.document(user.id ?? "").updateData(["pendingFriendsList":FieldValue.arrayRemove([friendID])])
+        COLLECTION_USER.document(user.id ?? " ").updateData(["pendingFriendsList":FieldValue.arrayRemove([friendID])])
         
         notificationRepository.sendDeclinedFriendRequestNotification(user1: user, user2: friendID)
     }
@@ -980,7 +989,9 @@ class UserRepository : ObservableObject {
            
             
             let data = snapshot!.data()
-            
+            self.fetchGroup(groupID: data?["selectedGroup"] as? String ?? " ") { fetchedGroup in
+                self.userSelectedGroup = fetchedGroup
+            }
             return completion(User(dictionary: data ?? [:]))
         }
     }
@@ -1001,13 +1012,13 @@ class UserRepository : ObservableObject {
     
     
     func followGroup(group: Group, user: User){
-        COLLECTION_USER.document(user.id ?? "").updateData(["followedGroups":FieldValue.arrayUnion([group.id])])
+        COLLECTION_USER.document(user.id ?? " ").updateData(["followedGroups":FieldValue.arrayUnion([group.id])])
         COLLECTION_GROUP.document(group.id).updateData(["followers":FieldValue.arrayUnion([user.id ?? ""])])
         print("Followed Group: \(group.groupName)!")
     }
     
     func unFollowGroup(group: Group, user: User){
-        COLLECTION_USER.document(user.id ?? "").updateData(["followedGroups":FieldValue.arrayRemove([group.id])])
+        COLLECTION_USER.document(user.id ?? " ").updateData(["followedGroups":FieldValue.arrayRemove([group.id])])
         COLLECTION_GROUP.document(group.id).updateData(["followers":FieldValue.arrayRemove([user.id ?? ""])])
         
         print("Unfollowed Group: \(group.groupName)!")
@@ -1015,7 +1026,7 @@ class UserRepository : ObservableObject {
     
     func isFollowingGroup(user: User, group: Group, completion: @escaping (Bool) -> () ) -> (){
    
-        COLLECTION_USER.document(user.id ?? "").getDocument { (snapshot, err) in
+        COLLECTION_USER.document(user.id ?? " ").getDocument { (snapshot, err) in
             if err != nil {
                 print("ERROR")
                 return

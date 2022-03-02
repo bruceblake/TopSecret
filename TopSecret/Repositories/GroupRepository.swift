@@ -15,14 +15,12 @@ class GroupRepository : ObservableObject {
     @ObservedObject var chatRepository = ChatRepository()
     @ObservedObject var pollRepository = PollRepository()
     @ObservedObject var notificationRepository = NotificationRepository()
-    @EnvironmentObject var userVM : UserViewModel
     @Published var groupChat : ChatModel = ChatModel()
     @Published var usersProfilePictures : [String] = []
     @Published var countdowns : [CountdownModel] = []
     @Published var groupProfileImage = ""
     @Published var activeUsers : [User] = []
     @Published var followers : [User] = []
-    @Published var galleryPosts : [GalleryPostModel] = []
 
     
     
@@ -39,39 +37,13 @@ class GroupRepository : ObservableObject {
             return completion(User(dictionary: data))
         }
     }
+
     
-    func fetchGroupGalleryPosts(groupID: String){
-        COLLECTION_GROUP.document(groupID).collection("Gallery Posts").getDocuments { snapshot, err in
-            if err != nil {
-                print("ERROR")
-                return
-            }
-            
-            self.galleryPosts = snapshot!.documents.map({ queryDocumentSnapshot -> GalleryPostModel in
-                let data = queryDocumentSnapshot.data()
-                
-                return GalleryPostModel(dictionary: data)
-            })
-        }
-    }
     
-    func createGalleryPost(groupID: String, posts: [UIImage], description: String, creator: String, isPrivate: Bool, taggedUsers: [String]){
-        var id = UUID().uuidString
-        COLLECTION_GROUP.document(groupID).collection("Gallery Posts").document(id).setData(["id":id,"viewers":
-    [],"groupID":groupID,"taggedUsers":taggedUsers,"description":description,"creator":creator,"isPrivate":isPrivate,"dateCreated":Timestamp()])
-        id = UUID().uuidString
-        COLLECTION_GALLERY_POSTS.document(id).setData(["id":id,"viewers":
-                                                        [],"groupID":groupID,"taggedUsers":taggedUsers,"description":description,"creator":creator,"isPrivate":isPrivate,"dateCreated":Timestamp()])
-        self.persistImageToStorage(galleryID: id, images: posts)
-        
-    }
     
-    func deleteGalleryPost(galleryPostID: String, groupID: String){
-        COLLECTION_GROUP.document(groupID).collection("Gallery Posts").document(galleryPostID).delete()
-    }
- 
     
-    func addToGroupStory(groupID: String, post: Binding<UIImage>, creator: String){
+    
+    func addToGroupStory(groupID: String, post: UIImage, creator: String){
         let id = UUID().uuidString
         COLLECTION_GROUP.document(groupID).collection("Story").document(id).setData(["groupID":groupID,"creator":creator,"id":id,"dateCreated":Timestamp()])
         COLLECTION_GROUP.document(groupID).updateData(["storyPosts":FieldValue.arrayUnion([id])])
@@ -278,10 +250,10 @@ class GroupRepository : ObservableObject {
 
     }
     
-    func createGroup(groupName: String, memberLimit: Int, dateCreated: Date, users: [String], image: UIImage, currentUser: String){
+    func createGroup(groupName: String, memberLimit: Int, dateCreated: Date, users: [String], image: UIImage, currentUser: String, id: String){
         
         
-        let id = UUID().uuidString
+    
         
        
 
@@ -301,7 +273,7 @@ class GroupRepository : ObservableObject {
         COLLECTION_USER.document(currentUser).updateData(["groups":FieldValue.arrayUnion([id])])
 
         chatRepository.createGroupChat(name: groupName, users: users, groupID: id)
-
+        
         
         
     }
@@ -338,33 +310,6 @@ class GroupRepository : ObservableObject {
     
     
     
-    func persistImageToStorage(galleryID: String, images: [UIImage]) {
-       let fileName = "galleryPosts/\(galleryID)"
-        let ref = Storage.storage().reference(withPath: fileName)
-        
-        for image in images{
-            guard let imageData = image.jpegData(compressionQuality: 0.5) else { return }
-            
-            ref.putData(imageData, metadata: nil) { (metadata, err) in
-                if err != nil{
-                    print("ERROR")
-                    return
-                }
-                   ref.downloadURL { (url, err) in
-                    if err != nil{
-                        print("ERROR: Failed to retreive download URL")
-                        return
-                    }
-                    print("Successfully stored image in database")
-                    let imageURL = url?.absoluteString ?? ""
-                       COLLECTION_GALLERY_POSTS.document(galleryID).updateData(["posts":FieldValue.arrayUnion([imageURL])])
-                }
-            }
-        }
-      
-        
-      
-    }
     
     func persistImageToStorage(groupID: String, image: UIImage) {
        let fileName = "groupImages/\(groupID)"

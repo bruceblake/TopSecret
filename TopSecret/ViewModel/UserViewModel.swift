@@ -42,6 +42,7 @@ class UserViewModel : ObservableObject {
     @Published var showNotification : Int = 0 //on value change, send notification
     @Published var currentNotification : NotificationModel?
     @Published var homescreenPosts : [String:String] = [:] //postType, id
+    @Published var userSelectedGroup : Group = Group()
 
 
 
@@ -50,6 +51,9 @@ class UserViewModel : ObservableObject {
     private var cancellables : Set<AnyCancellable> = []
     
     init(){
+        
+    
+       
         userRepository.$user
             .assign(to: \.user, on: self)
             .store(in: &cancellables)
@@ -104,6 +108,9 @@ class UserViewModel : ObservableObject {
         userRepository.$allUserGroups
             .assign(to: \.allUserGroups, on: self)
             .store(in: &cancellables)
+        userRepository.$userSelectedGroup
+            .assign(to: \.userSelectedGroup, on: self)
+            .store(in: &cancellables)
         
         self.$followedGroups
             .combineLatest(self.$groups)
@@ -122,7 +129,21 @@ class UserViewModel : ObservableObject {
                 self.listenToAll(uid: userSession?.uid ?? " ")
 
             }
+      
+
      
+    }
+    
+    
+    //helper function
+    
+    func deleteAllHomescreenPosts(){
+        homescreenPosts.removeAll()
+    }
+    
+    
+    func changeUserSelectedGroup(groupID: String, userID: String){
+        userRepository.changeUserSelectedGroup(groupID: groupID, userID: userID)
     }
     
     func concatenate(followedGroups: [Group], groups: [Group]) -> [Group]{

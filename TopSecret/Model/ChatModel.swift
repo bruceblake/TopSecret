@@ -35,7 +35,7 @@ struct ChatModel : Identifiable {
         self.messages = dictionary["messages"] as? [Message] ?? [ ]
         self.pinnedMessage = dictionary["pinnedMessage"] as? String ?? ""
         self.groupID = dictionary["groupID"] as? String ?? " "
-        self.chatType = dictionary["chatType"] as? String ?? ""
+        self.chatType = dictionary["chatType"] as? String ?? " "
         self.nameColors = dictionary["nameColors"] as? [[String:String]] ?? [["":""]]
         self.colorPicker = dictionary["colorPicker"] as? Int ?? 0
     }

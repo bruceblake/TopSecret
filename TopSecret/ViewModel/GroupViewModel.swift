@@ -24,7 +24,6 @@ class GroupViewModel: ObservableObject {
     @Published var groupProfileImage = ""
     @Published var activeUsers : [User] = []
     @Published var followers : [User] = []
-    @Published var galleryPosts : [GalleryPostModel] = []
 
 
     
@@ -50,9 +49,7 @@ class GroupViewModel: ObservableObject {
         groupRepository.$followers
             .assign(to: \.followers, on: self)
             .store(in: &cancellables)
-        groupRepository.$galleryPosts
-            .assign(to: \.galleryPosts, on: self)
-            .store(in: &cancellables)
+
      
      
      
@@ -60,28 +57,21 @@ class GroupViewModel: ObservableObject {
             
     }
     
-    func fetchGroupGalleryPosts(groupID: String){
-        groupRepository.fetchGroupGalleryPosts(groupID: groupID)
+
+    
+    
+    func addToGroupStory(groupID: String, post: UIImage, creator: String){
+        groupRepository.addToGroupStory(groupID: groupID, post: post, creator: creator)
     }
     
     
-    func addToGroupStory(groupID: String, post: Binding<UIImage>, creator: String){
-        groupRepository.addToGroupStory(groupID: groupID, post: $post, creator: creator)
-    }
     
-    
-    
-    func createGalleryPost(groupID: String, posts: [UIImage], description: String, creator: String, isPrivate: Bool, taggedUsers: [String]){
-        groupRepository.createGalleryPost(groupID: groupID, posts: posts, description: description, creator: creator, isPrivate: isPrivate, taggedUsers: taggedUsers)
-    }
+ 
     
     func seeStory(groupID: String, storyID: String, userID: String){
         groupRepository.seeStory(groupID: groupID, storyID: storyID, userID: userID)
     }
-    
-    func deleteGalleryPost(galleryPostID: String, groupID: String){
-        groupRepository.deleteGalleryPost(galleryPostID: galleryPostID, groupID: groupID)
-    }
+  
     
     func loadGroupFollowers(groupID: String){
         groupRepository.loadGroupFollowers(groupID: groupID)
@@ -137,9 +127,9 @@ class GroupViewModel: ObservableObject {
     
     
     
-    func createGroup(groupName: String, memberLimit: Int, dateCreated: Date, users: [String], image: UIImage, currentUser: String){
+    func createGroup(groupName: String, memberLimit: Int, dateCreated: Date, users: [String], image: UIImage, currentUser: String, id: String){
         
-        groupRepository.createGroup(groupName: groupName, memberLimit: memberLimit, dateCreated: dateCreated, users: users, image: image, currentUser: currentUser)
+        groupRepository.createGroup(groupName: groupName, memberLimit: memberLimit, dateCreated: dateCreated, users: users, image: image, currentUser: currentUser, id: id)
         
     }
     func createGroup(currentUser: String, groupName: String, memberLimit: Int, dateCreated: Date, users: [String], image: UIImage, completion: @escaping (ChatModel) -> ()) -> (){

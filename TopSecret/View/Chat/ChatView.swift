@@ -29,6 +29,7 @@ struct ChatView: View {
     @State var showMenu: Bool = false
     @State var userIDList: [String] = []
     @State var images : [UIImage] = []
+    @State var group: Group = Group()
     var columns3Fixed: [GridItem] = [
         GridItem(.fixed(115), spacing: 10),
         GridItem(.fixed(115), spacing: 10),
@@ -218,7 +219,7 @@ struct ChatView: View {
                         Text("Back")
                     }).padding([.leading,.bottom],10)
                     Spacer()
-                    NavigationLink(destination: GroupHomeScreenView(group: chatVM.group), label: {
+                    NavigationLink(destination: EmptyView(), label: {
                         VStack{
                             WebImage(url: URL(string: chatVM.group.groupProfileImage ?? ""))
                                 .resizable()
@@ -403,6 +404,7 @@ struct ChatView: View {
         }.edgesIgnoringSafeArea(.all).navigationBarTitle("").navigationBarHidden(true).navigationBarBackButtonHidden(true)
                 
         .onAppear{
+            self.group = chatVM.group
             imagePickerVM.setUp()
 
             messageVM.readAllMessages(chatID: chat.id, userID: userVM.user?.id ?? "", chatType: "groupChat")

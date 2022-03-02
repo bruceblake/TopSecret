@@ -20,6 +20,8 @@ struct GroupView: View {
     @State var selectedIndex = 0
     @State private var options = ["Groups","Friends"]
     @State var showCreateGroupView : Bool = false
+    @State var goToGroupHomeScreen : Bool = false
+    @State var selectedGroup : Group = Group()
     private let gridItems = [GridItem(.flexible())]
 
     
@@ -84,34 +86,40 @@ struct GroupView: View {
                                     ForEach(userVM.groups) { group in
                                         
                                         
-                                        
-                                        
-                                        NavigationLink(
-                                            destination: GroupHomeScreenView(group: group),
-                                            label: {
-                                                ZStack{
-                                                    
-                                                    HomescreenGroupCell(group: group)
+                                        Button(action:{
+                                            self.selectedGroup = group
+                                            self.goToGroupHomeScreen.toggle()
+                                        },label:{
+                                            ZStack{
+                                                
+                                                HomescreenGroupCell(group: group)
 
-                                                    VStack{
-                                                    HStack{
-                                                        Spacer()
-                                                        if notificationRepository.getGroupNotificationCount(group: group, maps: userVM.groupNotificationCount) != 0{
-                                                            
-                                                            ZStack{
-                                                                Circle().foregroundColor(Color("AccentColor"))
-                                                                Text("\(notificationRepository.getGroupNotificationCount(group: group, maps: userVM.groupNotificationCount))").foregroundColor(.yellow).font(.footnote)
-                                                            }.frame(width: 25, height: 25).offset(y: -10)
-                                                            
-                                                        }
-                                                    }.padding(.bottom)
-                                                        Spacer()
-                                                }
+                                                VStack{
+                                                HStack{
+                                                    Spacer()
+                                                    if notificationRepository.getGroupNotificationCount(group: group, maps: userVM.groupNotificationCount) != 0{
+                                                        
+                                                        ZStack{
+                                                            Circle().foregroundColor(Color("AccentColor"))
+                                                            Text("\(notificationRepository.getGroupNotificationCount(group: group, maps: userVM.groupNotificationCount))").foregroundColor(.yellow).font(.footnote)
+                                                        }.frame(width: 25, height: 25).offset(y: -10)
+                                                        
+                                                    }
+                                                }.padding(.bottom)
+                                                    Spacer()
+                                            }
+                                            
                                                 
-                                                    
-                                                }
-                                                
-                                            }).isDetailLink(false)
+                                            }
+
+                                        })
+//                                        
+//                                        NavigationLink(isActive: $goToGroupHomeScreen) {
+//                                            GroupHomeScreenView(group: $selectedGroup, showTabButtons: <#Binding<Bool>#>)
+//                                        } label: {
+//                                            EmptyView()
+//                                        }
+
                                         
                                         
                                     }

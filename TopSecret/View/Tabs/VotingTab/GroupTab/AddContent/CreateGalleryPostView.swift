@@ -9,9 +9,10 @@ import SwiftUI
 
 struct CreateGalleryPostView: View {
     
-    var group: Group
+    @Binding var group: Group
     @EnvironmentObject var userVM: UserViewModel
     @StateObject var groupVM = GroupViewModel()
+    @StateObject var galleryVM = GalleryRepository()
     @Environment(\.presentationMode) var presentationMode
     @State var showImageSendView : Bool = false
     @State var avatarImage = UIImage(named: "Icon")!
@@ -72,7 +73,7 @@ struct CreateGalleryPostView: View {
                 
                 
                 Button(action:{
-                    groupVM.createGalleryPost(groupID: group.id, posts: posts, description: description, creator: userVM.user?.id ?? "", isPrivate: isPrivate, taggedUsers: taggedUsers)
+                    galleryVM.createGalleryPost(groupID: group.id, posts: posts, description: description, creator: userVM.user?.id ?? "", isPrivate: isPrivate, taggedUsers: taggedUsers)
                 },label:{
                     Text("Create Post")
                 })
@@ -89,10 +90,10 @@ struct CreateGalleryPostView: View {
     }
 }
 
-struct CreateGalleryPostView_Previews: PreviewProvider {
-    static var previews: some View {
-        CreateGalleryPostView(group: Group()).colorScheme(.dark).environmentObject(UserViewModel())
-    }
-}
+//struct CreateGalleryPostView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        CreateGalleryPostView(group: Group()).colorScheme(.dark).environmentObject(UserViewModel())
+//    }
+//}
 
 

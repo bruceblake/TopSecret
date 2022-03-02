@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Firebase
 
 struct CreateGroupView: View {
     
@@ -21,14 +22,15 @@ struct CreateGroupView: View {
     @Binding var goBack: Bool
     
     var body: some View {
-        ZStack{
+        ZStack(alignment: .topLeading){
             Color("Background")
         VStack{
             
+          
+            Spacer()
             
-            Text("Create Group!").fontWeight(.bold).font(.title)
             
-            CustomTextField(text: $groupName, placeholder: "Group Name", isPassword: false, isSecure: false, hasSymbol: false,symbol: "phone").padding(.horizontal,20)
+            CustomTextField(text: $groupName, placeholder: "Group Name", isPassword: false, isSecure: false, hasSymbol: false ,symbol: "").padding(.horizontal,20)
             
        
             
@@ -46,7 +48,11 @@ struct CreateGroupView: View {
             })
             
             Button(action:{
-                groupVM.createGroup(groupName: groupName, memberLimit: memberLimit, dateCreated: Date(), users: [userVM.user?.id ?? ""],image: avatarImage, currentUser: userVM.user?.id ?? "")
+                let id = UUID().uuidString
+                groupVM.createGroup(groupName: groupName, memberLimit: memberLimit, dateCreated: Date(), users: [userVM.user?.id ?? ""],image: avatarImage, currentUser: userVM.user?.id ?? "",  id: id)
+              
+                userVM.changeUserSelectedGroup(groupID: id, userID: userVM.user?.id ?? " ")
+                
                 presentationMode.wrappedValue.dismiss()
             },label:{
                 Text("Create Group")
@@ -54,10 +60,32 @@ struct CreateGroupView: View {
             })
             
 
+            Spacer()
         
         }
             
-    }
+            HStack{
+                
+                
+                Button(action:{
+                    presentationMode.wrappedValue.dismiss()
+                },label:{
+                    ZStack{
+                        Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
+                        Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR)
+                    }
+                })
+                
+                Spacer()
+                
+                Text("Create Group!").fontWeight(.bold).font(.title).padding(.trailing,10)
+                
+                Spacer()
+                
+
+            }.padding(10).padding(.top,40)
+            
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
 }
 }
 

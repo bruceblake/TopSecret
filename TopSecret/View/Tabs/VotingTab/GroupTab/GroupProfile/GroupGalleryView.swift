@@ -13,15 +13,16 @@ struct GroupGalleryView: View {
     @StateObject var groupVM = GroupViewModel()
     @State var text = ""
     var body: some View {
-        ScrollView{
-            VStack{
-                ForEach(groupVM.galleryPosts, id: \.id){ post in
-//                    GalleryPostCell(galleryPost: post)
-                }
-            }
-        }.onAppear{
-            groupVM.fetchGroupGalleryPosts(groupID: group.id)
-        }
+//        ScrollView{
+//            VStack{
+//                ForEach(groupVM.galleryPosts, id: \.id){ post in
+////                    GalleryPostCell(galleryPost: post)
+//                }
+//            }
+//        }.onAppear{
+//            groupVM.fetchGroupGalleryPosts(groupID: group.id)
+//        }
+        Text("Hello World!")
     }
 }
 //

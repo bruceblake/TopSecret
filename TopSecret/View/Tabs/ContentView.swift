@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SDWebImageSwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var userVM : UserViewModel
@@ -14,6 +15,7 @@ struct ContentView: View {
     @StateObject var pollVM = PollViewModel()
     @State var tabIndex : Tab = .home
     @State var showNotification : Bool = false
+    @State var selectedGroup : Group = Group()
     @Environment(\.scenePhase) var scenePhase
     
     
@@ -25,7 +27,7 @@ struct ContentView: View {
         ZStack(alignment: .top){
             if userVM.userSession != nil{
                     NavigationView{
-                        TabView(tabIndex: $tabIndex)
+                        TabView(tabIndex: $tabIndex, selectedGroup: $selectedGroup)
                     }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).navigationViewStyle(.stack)
                     
                     
@@ -40,7 +42,7 @@ struct ContentView: View {
                     }.padding().background(Color("Color")).cornerRadius(16).shadow(color: Color.black,radius: 3).animation(.easeIn, value: userVM.isConnected).padding(.top,30)
                 }else if showNotification{
                     HStack{
-                        Text("\(userVM.currentNotification?.value ?? "")").foregroundColor(Color("AccentColor"))
+                        Text("\(userVM.currentNotification?.value ?? " ")").foregroundColor(Color("AccentColor"))
                     }.padding().background(Color("Color")).cornerRadius(16).shadow(color: Color.black,radius: 3).animation(.easeIn, value: showNotification).padding(.top,40)
                 }
                 
@@ -70,6 +72,19 @@ struct ContentView: View {
                     userVM.user = fetchedUser
                 })
             }
+        }.onAppear{
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                userVM.fetchGroup(groupID: userVM.user?.selectedGroup ?? " ") { fetchedGroup in
+                    self.selectedGroup = fetchedGroup
+                }
+            }
+            
+        }.onReceive(userVM.$userSelectedGroup) { value in
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5){
+                userVM.fetchGroup(groupID: userVM.user?.selectedGroup ?? " ") { fetchedGroup in
+                    self.selectedGroup = fetchedGroup
+                }
+            }
         }
     }
 }
@@ -88,26 +103,86 @@ struct ContentView_Previews: PreviewProvider {
 
 
 enum Tab {
-    case voting, groups, home, schedule, map
+    case games, voting, home, schedule, groups
 }
 
-struct TabView : View {
-    @Binding var tabIndex : Tab
+struct EmptyGroupHomescreen : View {
+    
+    @EnvironmentObject var userVM: UserViewModel
+    @ObservedObject var groupVM = GroupViewModel()
+    @State var goToCreateGroupView : Bool = false
     
     var body: some View {
         ZStack{
+            Color("Background")
             
-            if tabIndex == .voting{
+            VStack{
+                Spacer()
+                
+                VStack{
+                    Text("You are not in any groups.")
+                    
+                                
+                            HStack{
+                                Spacer()
+                                
+                                Button(action:{
+                                    self.goToCreateGroupView.toggle()
+                                },label:{
+                                    Text("Create a group")
+                                }).foregroundColor(Color("Foreground"))
+                                    .padding(.vertical,10)
+                                    .frame(width: UIScreen.main.bounds.width/3).background(Color("AccentColor")).cornerRadius(15).fullScreenCover(isPresented: $goToCreateGroupView, content: {
+                                        CreateGroupView(goBack: $goToCreateGroupView)
+                                    })
+
+
+                                
+                             
+                                
+                                Spacer()
+                            }
+                           
+                }
+                
+                
+                Spacer()
+            }
+            
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+    }
+}
+
+struct TabView : View {
+    
+    @Binding var tabIndex : Tab
+    @Binding var selectedGroup : Group
+    @State var showTabButtons : Bool = true
+    @EnvironmentObject var userVM: UserViewModel
+    
+   
+
+    var body: some View {
+        ZStack{
+            
+            if tabIndex == .games{
+                GameView()
+            }else if tabIndex == .voting{
                 VotingView()
-            }else if tabIndex == .groups{
-                GroupView()
             }else if tabIndex == .home{
-                HomeScreenView()
+                HomeScreenView(showTabButtons: $showTabButtons)
+         
             }else if tabIndex == .schedule{
                 ScheduleView()
-            }else if tabIndex == .map{
-                MapView()
+            }else if tabIndex == .groups{
+                if userVM.groups.isEmpty{
+                    EmptyGroupHomescreen()
+                }else{
+                    GroupHomeScreenView(showTabButtons: $showTabButtons, group: $selectedGroup)
+                }
             }
+            
+            if showTabButtons {
             
             VStack{
                 Spacer()
@@ -115,40 +190,47 @@ struct TabView : View {
                 HStack(spacing: 50){
                     Spacer()
                     Button(action:{
+                        self.tabIndex = .games
+                    },label:{
+                        Image(systemName: "gamecontroller").font(.title2)
+                        
+                    }).foregroundColor(self.tabIndex == .games ? Color("AccentColor") : FOREGROUNDCOLOR)
+                    
+                    Button(action:{
                         self.tabIndex = .voting
                     },label:{
-                        Image(systemName: "checkmark").font(.title2)
+                        Image(self.tabIndex == .voting ? "Poll Icon Colored" : "Poll Icon").resizable().frame(width: 30, height: 40)
                         
-                    }).foregroundColor(self.tabIndex == .voting ? Color("AccentColor") : FOREGROUNDCOLOR)
-                    Button(action:{
-                        self.tabIndex = .groups
-                    },label:{
-                        Image(systemName: "person.3.fill").font(.title2)
-                        
-                    }).foregroundColor(self.tabIndex == .groups ? Color("AccentColor") : FOREGROUNDCOLOR)
+                    })
+                    
                     Button(action:{
                         self.tabIndex = .home
                     },label:{
                         Image(systemName: "house").font(.title)
                         
                     }).foregroundColor(self.tabIndex == .home ? Color("AccentColor") : FOREGROUNDCOLOR)
+                    
                     Button(action:{
                         self.tabIndex = .schedule
                     },label:{
-                        Image(systemName: "text.book.closed").font(.title2)
+                        Image(systemName: "calendar").font(.title2)
                         
                     }).foregroundColor(self.tabIndex == .schedule ? Color("AccentColor") : FOREGROUNDCOLOR)
+                    
                     Button(action:{
-                        self.tabIndex = .map
+                        self.tabIndex = .groups
                     },label:{
-                        Image(systemName: "map").font(.title2)
+                        Image(systemName: "person.3.fill").font(.title2)
                         
-                    }).foregroundColor(self.tabIndex == .map ? Color("AccentColor") : FOREGROUNDCOLOR)
+                    }).foregroundColor(self.tabIndex == .groups ? Color("AccentColor") : FOREGROUNDCOLOR)
+                    
+                    
                     Spacer()
                 }.padding([.bottom,.horizontal],35).padding(.top,30).background(Color("Color"))
             }
             
+        }
+            
         }.edgesIgnoringSafeArea(.all)
     }
 }
-

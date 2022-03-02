@@ -17,7 +17,7 @@ struct CreateStoryPostView: View {
     @State var avatarImage = UIImage(named: "Icon")!
     @State var selectedGroup : Group = Group()
     @State var showImageSendView: Bool = false
-    @State var posts : [UIImage] = [UIImage(named: "Icon")!]
+    @State var posts : [UIImage] = []
 
     var body: some View {
         ZStack{
@@ -69,7 +69,7 @@ struct CreateStoryPostView: View {
                 }
                 
                 Button(action:{
-                    groupVM.addToGroupStory(groupID: selectedGroup.id, post: $posts[0], creator: userVM.user?.id ?? "")
+                    groupVM.addToGroupStory(groupID: selectedGroup.id, post: posts.isEmpty ? UIImage() : posts[0], creator: userVM.user?.id ?? "")
                 },label:{
                     Text("Add To Story")
                 })
