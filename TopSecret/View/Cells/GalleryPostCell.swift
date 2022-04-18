@@ -10,17 +10,15 @@ import SDWebImageSwiftUI
 
 struct GalleryPostCell: View {
     
-    @Binding var galleryPost: GalleryPostModel
+    var galleryPost: GalleryPostModel
     @Binding var selectedGalleryPost : GalleryPostModel
-    @Binding var group: Group
-    @Binding var user: User
-    @Binding var isInGroup: Bool
-    @Binding var isFollowingGroup: Bool 
     @EnvironmentObject var userVM: UserViewModel
     @StateObject var galleryVM = GalleryRepository()
     @Binding var selectedGalleryPostComments : [GalleryPostCommentModel]
-    @Binding var openComments : Bool 
-  
+    @Binding var openComments : Bool
+    @State var usersLikeList : [User] = []
+    @State var showLikeListView : Bool = false
+    
     
     var body: some View {
         ZStack{
@@ -31,71 +29,96 @@ struct GalleryPostCell: View {
                     
                     VStack(spacing: 5){
                         HStack(alignment: .firstTextBaseline){
-                            NavigationLink(destination: GroupProfileView(group: group)) {
+                            NavigationLink(destination: GroupProfileView(group: galleryPost.group ?? Group())) {
                                 HStack{
-                                    WebImage(url: URL(string: group.groupProfileImage ?? "")).resizable().frame(width: 40, height: 40).clipShape(Circle())
-                                    Text("\(group.groupName)").fontWeight(.bold).font(.headline).foregroundColor(FOREGROUNDCOLOR)
+                                    WebImage(url: URL(string: galleryPost.group?.groupProfileImage ?? "")).resizable().frame(width: 40, height: 40).clipShape(Circle())
+                                    Text("\(galleryPost.group?.groupName ?? "")").fontWeight(.bold).font(.headline).foregroundColor(FOREGROUNDCOLOR)
                                 }
                             }
                             HStack(spacing: 2){
                                 Text("•").foregroundColor(.gray).font(.footnote)
-                                Text("@\(user.username ?? "")").foregroundColor(.gray).font(.footnote).fontWeight(.bold)
-
+                                Text("@\(galleryPost.creator?.username ?? "")").foregroundColor(.gray).font(.footnote).fontWeight(.bold)
+                                
                             }
-                           
+                            
                             
                             Spacer()
-                            Button(action:{
-                                //todo
-                            },label:{
+                            Menu {
+                                VStack{
+                                    if galleryPost.isInGroup ?? false{
+                                        Button(action:{
+                                            //TODO
+                                        },label:{
+                                            Text("Edit Post").foregroundColor(FOREGROUNDCOLOR)
+                                        })
+                                        
+                                        Button(action:{
+                                            //TODO
+                                            galleryVM.deleteGalleryPost(galleryPostID: galleryPost.id ?? " ", groupID: galleryPost.groupID ?? " ")
+                                            userVM.homescreenPosts.removeValue(forKey: galleryPost.id ?? " ")
+                                        },label:{
+                                            Text("Delete Post").foregroundColor(FOREGROUNDCOLOR)
+                                        })
+                                    }
+                                    
+                                    Button(action:{
+                                        //todo
+                                    },label:{
+                                        Text("Share Post").foregroundColor(FOREGROUNDCOLOR)
+                                    })
+                                    
+                                    
+                                }
+                            } label: {
                                 Image(systemName: "info.circle").frame(width: 30, height: 30).foregroundColor(FOREGROUNDCOLOR)
-                            }).padding(.leading,5)
+                            }.padding(.leading, 5)
+                            
+                            
+                            
                         }
                         
                         HStack{
-                            if isInGroup{
+                            if galleryPost.isInGroup ?? false{
                                 Text("In Group").foregroundColor(.gray).font(.footnote)
-                            }else if isFollowingGroup{
+                            }else if galleryPost.isFollowingGroup ?? true {
                                 Text("Following Group").foregroundColor(.gray).font(.footnote)
                             }
                             Spacer()
                         }
-                      
+                        
                     }
-                   
+                    
                     
                     Spacer()
                     
                 }.padding(7)
-            
-//                if galleryPost.posts?.count ?? 0 > 1{
-//                    
-//                    VStack{
-//                    ScrollView(.horizontal){
-//                        HStack{
-//                            ForEach(galleryPost.posts ?? [], id: \.self){ post in
-//                                WebImage(url: URL(string: post))
-//                                    .resizable()
-//                                    .scaledToFill()
-//                                    .frame(width: UIScreen.main.bounds.width - 70, height: UIScreen.main.bounds.height / 2.5)
-//                            }
-//                        }
-//                    }
-//                        HStack{
-//                            Spacer()
-//                            Text("*&")
-//                            Spacer()
-//                        }
-//                    }
-//                    
-//                }else{
-                    WebImage(url: URL(string: "https://firebasestorage.googleapis.com/v0/b/top-secret-dcb43.appspot.com/o/userProfileImages%2Fb517MKUsMUNzqQkNVPeEQKfnzLg1?alt=media&token=873b3f28-8573-4f78-9b5f-4c516f4f4a50"))
+                
+                if galleryPost.posts?.count == 1 {
+                    WebImage(url: URL(string: galleryPost.posts?[0] ?? ""))
                         .resizable()
                         .scaledToFill()
-                        .frame(width: UIScreen.main.bounds.width - 70, height: UIScreen.main.bounds.height / 2.5)
-//                }
-               
-           
+                        .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 2.5).padding().padding(.top,5)
+                }else{
+                    ScrollView(.horizontal, showsIndicators: false){
+                        HStack(spacing: 100){
+                                
+                                ForEach(galleryPost.posts ?? [], id: \.self){post in
+                                    WebImage(url: URL(string: post))
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 2.5)
+                            
+                                }
+                        }.padding(.horizontal,40)
+                    }.frame(width: UIScreen.main.bounds.width)
+                    
+                }
+             
+                
+                
+                
+                
+                
                 
                 HStack(){
                     Text("\(galleryPost.description ?? "")")
@@ -103,24 +126,42 @@ struct GalleryPostCell: View {
                 }.padding(.leading,5)
                 
                 
-                HStack{
+                HStack(spacing: 20){
                     
-                    NavigationLink(destination: EmptyView()) {
-                        Text("\(galleryPost.likes?.count ?? 0) likes").fontWeight(.bold)
-                    }
+                
+//
+//                    NavigationLink(isActive: $showLikeListView) {
+//                        GalleryPostLikeListView(galleryPost: $galleryPost, userLikesList: $usersLikeList)
+//                    } label: {
+//                        EmptyView()
+//                    }
+//
+                    
+                    
+                    HStack(spacing: 25){
+                   
                     
                     Button(action:{
                         //TODO
-                        if galleryVM.userHasAlreadyLikedPost(userID: userVM.user?.id ?? " ", likes: galleryPost.likes ?? []){
-                            galleryVM.unlikePost(galleryID: galleryPost.id ?? " ", groupID: galleryPost.groupID ?? " ", userID: userVM.user?.id ?? " ")
-                        }else{
-                            galleryVM.likePost(galleryID: galleryPost.id ?? " ", groupID: galleryPost.groupID  ?? " ", userID: userVM.user?.id ?? " ")
+                        let dispatchGroup = DispatchGroup()
+                        dispatchGroup.enter()
+                        galleryVM.fetchPostComments(galleryID: galleryPost.id ?? " ", groupID: galleryPost.groupID ?? " ") { fetchedComments in
+                            self.selectedGalleryPostComments = fetchedComments
+                            self.selectedGalleryPost = galleryPost
+                            dispatchGroup.leave()
+                            
                         }
-                        galleryVM.fetchGalleryPost(galleryPostID: galleryPost.id ?? " ") { fetchedPost in
-                            self.galleryPost = fetchedPost
+                        dispatchGroup.notify(queue: .main){
+                            self.openComments.toggle()
                         }
+
+                        
                     },label:{
-                        Image(systemName: galleryVM.userHasAlreadyLikedPost(userID: userVM.user?.id ?? " ", likes: galleryPost.likes ?? []) ?  "heart.fill" : "heart").foregroundColor(Color("AccentColor"))
+                        VStack(spacing: 3){
+                            Image(systemName: "text.bubble").foregroundColor(FOREGROUNDCOLOR)
+                            Text("\(galleryPost.commentsIDS?.count ?? 0)").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                            
+                        }.frame(width: 20, height : 25)
                     })
                     
                     Button(action:{
@@ -130,25 +171,24 @@ struct GalleryPostCell: View {
                             self.selectedGalleryPost = galleryPost
                             self.openComments.toggle()
                         }
-                       
+
                     },label:{
-                        ZStack{
-                            Image(systemName: "text.bubble").foregroundColor(FOREGROUNDCOLOR)
-                            ZStack{
-                                Circle().frame(width: 12, height: 12).foregroundColor(Color("AccentColor"))
-                                Text("\(galleryPost.comments?.count ?? 0)").foregroundColor(FOREGROUNDCOLOR)
-                            }.offset(x: 6, y: 5)
-                           
-                        }
+                        VStack(spacing: 3){
+                            Image(systemName: "paperplane").foregroundColor(FOREGROUNDCOLOR)
+                            Text("\(galleryPost.comments?.count ?? 0)").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+
+                        }.frame(width: 20, height : 25)
                     })
+                    }.padding(.leading)
                     
                     Spacer()
                     
                     Text("\(galleryPost.dateCreated?.dateValue() ?? Date(), style: .date)").foregroundColor(.gray).font(.caption)
-
-                }.padding(7)
+                    
+                }.padding(.vertical,12)
                 
-            }.background(Color("Color")).cornerRadius(16)
+                Divider().padding(0)
+            }.background(Color("Color")).frame(width: UIScreen.main.bounds.width,height: UIScreen.main.bounds.height / 3)
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
     }
 }

@@ -54,7 +54,8 @@ struct MessageCell: View {
             }
         
         .onLongPressGesture {
-            
+            UIDevice.vibrate()
+
             withAnimation(.easeOut(duration: 0.2)){
                 self.showMenu.toggle()
 

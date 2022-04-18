@@ -12,40 +12,47 @@ import Firebase
 struct GalleryPostModel : Identifiable {
     var id: String?
     var viewers : [String]?
-    var likes : [String]?
     var groupID: String?
     var posts : [String]?
     var taggedUsers : [String]?
     var description : String?
-    var creator : String?
+    var creatorID : String?
     var isPrivate : Bool?
     var dateCreated: Timestamp?
-    var comments : [String]? //id of comment models
-    
+    var commentsIDS: [String]? //id of comment models
+    var group: Group?
+    var creator : User?
+    var isInGroup : Bool?
+    var isFollowingGroup : Bool?
+    var comments: [GalleryPostCommentModel]?
     
     
     init(dictionary: [String:Any]){
         self.id = dictionary["id"] as? String ?? ""
         self.viewers = dictionary["viewers"] as? [String] ?? []
         self.groupID = dictionary["groupID"] as? String ?? " "
-        self.posts = dictionary["posts"] as? [String] ?? [""]
+        self.posts = dictionary["posts"] as? [String] ?? []
         self.taggedUsers = dictionary["taggedUsers"] as? [String] ?? []
         self.description = dictionary["description"] as? String ?? ""
-        self.creator = dictionary["creator"] as? String ?? " "
+        self.creatorID = dictionary["creatorID"] as? String ?? " "
         self.isPrivate = dictionary["isPrivate"] as? Bool ?? false
         self.dateCreated = dictionary["dateCreated"] as? Timestamp ?? Timestamp()
-        self.likes = dictionary["likes"] as? [String] ?? []
-        self.comments = dictionary["comments"] as? [String] ?? []
+        self.commentsIDS = dictionary["commentsIDS"] as? [String] ?? []
+        self.group = dictionary["group"] as? Group ?? Group()
+        self.creator = dictionary["creator"] as? User ?? User()
+        self.isInGroup = dictionary["isInGroup"] as? Bool ?? false
+        self.isFollowingGroup = dictionary["isFollowingGroup"] as? Bool ?? true
+        self.comments = dictionary["comments"] as? [GalleryPostCommentModel] ?? []
     }
     
     init(){
         self.id = " "
         self.viewers = []
         self.groupID = " "
-        self.posts = [""]
+        self.posts = []
         self.taggedUsers = []
         self.description = ""
-        self.creator = " "
+       
         self.isPrivate = false
     }
     

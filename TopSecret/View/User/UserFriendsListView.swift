@@ -23,7 +23,7 @@ struct UserFriendsListView: View {
                             NavigationLink(
                                 destination: UserProfilePage(user: user, isCurrentUser: userVM.user?.id == user.id ?? ""),
                                 label: {
-                                    UserSearchCell(user: user)
+                                    UserSearchCell(user: user, showActivity: true)
                                 })
                             
                         }

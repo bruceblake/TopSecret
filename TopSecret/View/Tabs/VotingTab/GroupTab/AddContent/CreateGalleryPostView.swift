@@ -73,12 +73,11 @@ struct CreateGalleryPostView: View {
                 
                 
                 Button(action:{
-                    galleryVM.createGalleryPost(groupID: group.id, posts: posts, description: description, creator: userVM.user?.id ?? "", isPrivate: isPrivate, taggedUsers: taggedUsers)
+                    galleryVM.createGalleryPost(groupID: group.id, posts: posts, description: description, creatorID: userVM.user?.id ?? "", isPrivate: isPrivate, taggedUsers: taggedUsers)
                 },label:{
                     Text("Create Post")
                 })
                 
-                ImagePicker(avatarImage: $avatarImage, images: $posts, allowsEditing: true)
 
                 
                 Spacer()

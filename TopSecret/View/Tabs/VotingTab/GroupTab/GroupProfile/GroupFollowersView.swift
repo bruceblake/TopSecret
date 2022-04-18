@@ -56,7 +56,7 @@ struct GroupFollowersView: View {
                                     NavigationLink(
                                         destination: UserProfilePage(user: user, isCurrentUser: false),
                                         label: {
-                                            UserSearchCell(user: user)
+                                            UserSearchCell(user: user, showActivity: false)
                                         })
                                     }
                                     
@@ -69,7 +69,7 @@ struct GroupFollowersView: View {
                                     NavigationLink(
                                         destination: UserProfilePage(user: user, isCurrentUser: false),
                                         label: {
-                                            UserSearchCell(user: user)
+                                            UserSearchCell(user: user, showActivity: false)
                                         })
                                     
                                 }

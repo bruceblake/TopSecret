@@ -213,11 +213,10 @@ struct ChatView: View {
             VStack(){
                 VStack{
                 HStack{
-                    Button(action:{
+                    BackCircleButton(action: {
                         presentationMode.wrappedValue.dismiss()
-                    },label:{
-                        Text("Back")
-                    }).padding([.leading,.bottom],10)
+                    })
+                   .padding([.leading,.bottom],10)
                     Spacer()
                     NavigationLink(destination: EmptyView(), label: {
                         VStack{
@@ -234,7 +233,7 @@ struct ChatView: View {
                     Button(action:{
                         
                     },label:{
-                        Text("Info")
+                        Image(systemName: "info")
                     }).padding([.trailing,.bottom],10)
                 }
                     

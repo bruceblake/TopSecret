@@ -6,7 +6,11 @@
 //
 
 import SwiftUI
+import UIKit
+import SCSDKLoginKit
 import SDWebImageSwiftUI
+
+
 
 struct ContentView: View {
     @EnvironmentObject var userVM : UserViewModel
@@ -19,6 +23,8 @@ struct ContentView: View {
     @Environment(\.scenePhase) var scenePhase
     
     
+    
+    
     var body: some View {
         
         //if there is a user signed in then go to the Tab View else go to the register view
@@ -27,11 +33,11 @@ struct ContentView: View {
         ZStack(alignment: .top){
             if userVM.userSession != nil{
                     NavigationView{
-                        TabView(tabIndex: $tabIndex, selectedGroup: $selectedGroup)
+                        Tabs(tabIndex: $tabIndex, selectedGroup: $selectedGroup)
                     }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).navigationViewStyle(.stack)
                     
                     
-                    
+             
                 
                
                 
@@ -78,6 +84,8 @@ struct ContentView: View {
                     self.selectedGroup = fetchedGroup
                 }
             }
+            
+           
             
         }.onReceive(userVM.$userSelectedGroup) { value in
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5){
@@ -153,7 +161,7 @@ struct EmptyGroupHomescreen : View {
     }
 }
 
-struct TabView : View {
+struct Tabs : View {
     
     @Binding var tabIndex : Tab
     @Binding var selectedGroup : Group
@@ -186,17 +194,20 @@ struct TabView : View {
             
             VStack{
                 Spacer()
-                
+            
                 HStack(spacing: 50){
                     Spacer()
                     Button(action:{
+                        UIDevice.vibrate()
                         self.tabIndex = .games
                     },label:{
-                        Image(systemName: "gamecontroller").font(.title2)
+                        Image(systemName: self.tabIndex == .games ? "gamecontroller.fill" : "gamecontroller").font(.title2)
                         
                     }).foregroundColor(self.tabIndex == .games ? Color("AccentColor") : FOREGROUNDCOLOR)
                     
                     Button(action:{
+                        UIDevice.vibrate()
+
                         self.tabIndex = .voting
                     },label:{
                         Image(self.tabIndex == .voting ? "Poll Icon Colored" : "Poll Icon").resizable().frame(width: 30, height: 40)
@@ -204,23 +215,29 @@ struct TabView : View {
                     })
                     
                     Button(action:{
+                        UIDevice.vibrate()
+
                         self.tabIndex = .home
                     },label:{
-                        Image(systemName: "house").font(.title)
+                        Image(systemName: self.tabIndex == .home ? "house.fill" : "house").font(.title)
                         
                     }).foregroundColor(self.tabIndex == .home ? Color("AccentColor") : FOREGROUNDCOLOR)
                     
                     Button(action:{
+                        UIDevice.vibrate()
+
                         self.tabIndex = .schedule
                     },label:{
-                        Image(systemName: "calendar").font(.title2)
+                        Image(systemName: self.tabIndex == .schedule ?  "calendar.circle.fill" : "calendar.circle").font(.title2)
                         
                     }).foregroundColor(self.tabIndex == .schedule ? Color("AccentColor") : FOREGROUNDCOLOR)
                     
                     Button(action:{
+                        UIDevice.vibrate()
+
                         self.tabIndex = .groups
                     },label:{
-                        Image(systemName: "person.3.fill").font(.title2)
+                        Image(systemName: self.tabIndex == .groups ? "person.3.fill" : "person.3").font(.title2)
                         
                     }).foregroundColor(self.tabIndex == .groups ? Color("AccentColor") : FOREGROUNDCOLOR)
                     

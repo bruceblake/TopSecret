@@ -42,7 +42,7 @@ struct SearchView: View {
                                     NavigationLink(
                                         destination: UserProfilePage(user: user, isCurrentUser: false),
                                         label: {
-                                            UserSearchCell(user: user)
+                                            UserSearchCell(user: user, showActivity: true)
                                         })
                                     }
                                 }

@@ -27,6 +27,7 @@ struct User : Identifiable, Hashable{
     var lastActive: Timestamp?
     var groups: [String]?
     var selectedGroup : String?
+    var allGroupsToListenTo : [String]?
     
 
 
@@ -48,6 +49,7 @@ init(dictionary: [String:Any]) {
     self.lastActive = dictionary["lastActive"] as? Timestamp ?? Timestamp()
     self.groups = dictionary["groups"] as? [String] ?? [" "]
     self.selectedGroup = dictionary["selectedGroup"] as? String ?? " "
+    self.allGroupsToListenTo = dictionary["allGroupsToListenTo"] as? [String] ?? []
     
  
  }

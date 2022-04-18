@@ -9,6 +9,7 @@ import Foundation
 import Firebase
 import Combine
 import SwiftUI
+import SCSDKLoginKit
 
 class UserRepository : ObservableObject {
     
@@ -23,6 +24,7 @@ class UserRepository : ObservableObject {
     @Published var personalChats: [ChatModel] = []
     @Published var notifications : [NotificationModel] = []
     @Published var homescreenPosts : [String:String] = [" ":" "] //postType, id
+    @Published var homescreenGalleryPosts: [GalleryPostModel] = []
     @Published var followedGroups : [Group] = []
     @Published var allUserGroups : [Group] = []
     @Published var isConnected : Bool = false
@@ -33,6 +35,8 @@ class UserRepository : ObservableObject {
     @Published var currentNotification : NotificationModel?
     @Published var showNotification : Int = 0 //on value change, send notification
     @Published var userSelectedGroup : Group = Group()
+    @Published var finishedFetchingPosts : Bool = false
+
     
     
     private var cancellables : Set<AnyCancellable> = []
@@ -106,6 +110,14 @@ class UserRepository : ObservableObject {
         
     }
     
+//    func listenToUserGalleryPosts(uid: String){
+//
+//        for groups in self.allUserGroups{
+//
+//        }
+//        let listener = COLLECTION_GALLERY_POSTS.whereField("groupID", in: )
+//    }
+//
     
     func listenToUserFollowedGroups(uid: String){
         let listener = COLLECTION_USER.document(uid).addSnapshotListener{ (snapshot, err) in
@@ -157,7 +169,9 @@ class UserRepository : ObservableObject {
                 return
             }
             
-            
+            for group in data["allGroupsToListenTo"] as? [String] ?? []{
+                print("user group: \(group)")
+            }
             self.user = User(dictionary: data)
             
             
@@ -168,8 +182,151 @@ class UserRepository : ObservableObject {
         
     }
     
+    func listenToUserGalleryPosts(uid: String){
+        print("cock!")
+        let listener = COLLECTION_GALLERY_POSTS.addSnapshotListener { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+
+            
+            let dispatchGroup = DispatchGroup()
+            
+            dispatchGroup.enter()
+            self.fetch(documents: snapshot!.documents){ posts in
+                self.homescreenGalleryPosts = posts
+                dispatchGroup.leave()
+            }
+            
+            DispatchQueue.global(qos: .default).async {
+                dispatchGroup.wait()
+                
+                
+                DispatchQueue.main.async {
+                    self.finishedFetchingPosts = true
+                   
+                }
+            }
+            
+            
+         
+        }
+        firestoreListener.append(listener)
+
+    }
+    
+ 
+    
+
+    
+    func isInGroup(groupID: String, userID: String, completion: @escaping (Bool) -> ()) -> (){
+        var isInGroup = false
+        COLLECTION_USER.document(userID).getDocument { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            let groups = snapshot!.get("groups") as? [String] ?? []
+            
+            for group in groups {
+                if group == groupID{
+                    isInGroup = true
+                    return completion(true)
+                }
+            }
+        }
+       return completion(isInGroup)
+    }
+    
+    func isFollowingGroup(groupID: String, userID: String, completion: @escaping (Bool) -> ()) -> (){
+        var isFollowingGroup = false
+        COLLECTION_GROUP.document(groupID).getDocument { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            let followers = snapshot!.get("followers") as? [String] ?? []
+            for user in followers {
+                if user == userID{
+                    isFollowingGroup = true
+                    return completion(true)
+                }
+            }
+        }
+        return completion(isFollowingGroup)
+    }
     
     
+    func fetch(documents: [QueryDocumentSnapshot], completion: @escaping ([GalleryPostModel]) -> ()) -> (){
+        
+        
+        let dispatchGroup = DispatchGroup()
+
+        dispatchGroup.enter()
+        var galleryPosts : [GalleryPostModel] = []
+
+        
+           for document in documents {
+             
+
+               let groupID = document.get("groupID") as? String ?? " "
+               let creatorID = document.get("creatorID") as? String ?? " "
+               let id = document.get("id") as? String ?? " "
+               let posts = document.get("posts") as? [String] ?? []
+               let description = document.get("description") as? String ?? ""
+               let commentsIDS = document.get("comments") as? [String] ?? []
+               var group : Group = Group()
+               var creator: User = User()
+               var isInGroup = false
+               var isFollowingGroup = true
+               
+               dispatchGroup.enter()
+               self.fetchGroup(groupID: groupID) { fetchedGroup in
+                   group = fetchedGroup
+                   dispatchGroup.leave()
+               }
+               
+//               dispatchGroup.enter()
+//               self.isInGroup(groupID: groupID, userID: self.user?.id ?? " ") { result in
+//                   isInGroup = result
+//                   dispatchGroup.leave()
+//               }
+//
+//               dispatchGroup.enter()
+//               self.isFollowingGroup(groupID: groupID, userID: self.user?.id ?? " ") { result in
+//                   isFollowingGroup = result
+//                   dispatchGroup.leave()
+//               }
+               
+               dispatchGroup.enter()
+               self.fetchUser(userID: creatorID) { fetchedUser in
+                   creator = fetchedUser
+                   dispatchGroup.leave()
+               }
+               
+               
+               
+               dispatchGroup.notify(queue: .main){
+                   print("fetched one post!")
+                   galleryPosts.append(GalleryPostModel(dictionary: ["group":group,"groupID":groupID,"id":id,"creatorID":creatorID,"creator":creator,"isInGroup":isInGroup,"isFollowingGroup":isFollowingGroup,"posts":posts,"description":description,"commentsIDS":commentsIDS]))
+               }
+               
+
+              
+           }
+        dispatchGroup.leave()
+        
+        dispatchGroup.notify(queue: .main){
+            return completion(galleryPosts)
+        }
+   
+        
+        
+    }
    
     
      
@@ -349,42 +506,42 @@ class UserRepository : ObservableObject {
 //    }
     
     
-    func listenToHomeScreenPosts(uid: String){
-        COLLECTION_USER.document(uid).getDocument{ snapshot, err in
-            if err != nil {
-                print("ERROR")
-                return
-            }
-            
-            var groups = snapshot!.get("groups") as? [String] ?? [" "]
-            let followedGroups = snapshot!.get("followedGroups") as? [String] ?? [" "]
-            groups.append(contentsOf: followedGroups)
-            
-            
-            
-                COLLECTION_GALLERY_POSTS.whereField("groupID", in: groups).addSnapshotListener { snapshot, err in
-                    if err != nil {
-                        print("ERROR")
-                        return
-                    }
-                    snapshot?.documentChanges.forEach({ doc in
-                        if doc.type == .removed{
-                            let id = doc.document.get("id") as! String
-                            self.homescreenPosts[id] = ""
-                        }
-                    })
-                    
-                    for document in snapshot!.documents {
-                        self.homescreenPosts[document.get("id") as! String] = "post"
-                   
-                    }
-                    
-                    
-                    
-                }
-            
-        }
-    }
+//    func listenToHomeScreenPosts(uid: String){
+//        COLLECTION_USER.document(uid).getDocument{ snapshot, err in
+//            if err != nil {
+//                print("ERROR")
+//                return
+//            }
+//
+//            var groups = snapshot!.get("groups") as? [String] ?? [" "]
+//            let followedGroups = snapshot!.get("followedGroups") as? [String] ?? [" "]
+//            groups.append(contentsOf: followedGroups)
+//
+//
+//
+//                COLLECTION_GALLERY_POSTS.whereField("groupID", in: groups).addSnapshotListener { snapshot, err in
+//                    if err != nil {
+//                        print("ERROR")
+//                        return
+//                    }
+//                    snapshot?.documentChanges.forEach({ doc in
+//                        if doc.type == .removed{
+//                            let id = doc.document.get("id") as! String
+//                            self.homescreenPosts[id] = ""
+//                        }
+//                    })
+//
+//                    for document in snapshot!.documents {
+//                        self.homescreenPosts[document.get("id") as! String] = "post"
+//
+//                    }
+//
+//
+//
+//                }
+//
+//        }
+//    }
     
   
     func fetchGroupStories(groupID: String, completion: @escaping ([StoryModel]) -> ()){
@@ -630,15 +787,15 @@ class UserRepository : ObservableObject {
         self.listenToPersonalChats(uid: uid)
         self.listenToUserNotifications(uid: uid)
         self.listenToUserFollowedGroups(uid: uid)
-        self.listenToHomeScreenPosts(uid: uid)
-      
+//        self.listenToHomeScreenPosts(uid: uid)
+        self.listenToUserGalleryPosts(uid: uid)
         
         
         
     }
     func fetchUserChats(){
         //TODO
-        COLLECTION_CHAT.whereField("users", arrayContains: user?.id ?? "").getDocuments { (snapshot, err) in
+        COLLECTION_CHAT.whereField("users", arrayContains: user?.id ?? " ").getDocuments { (snapshot, err) in
             if err != nil {
                 print("ERROR \(err!.localizedDescription)")
                 return
@@ -832,6 +989,11 @@ class UserRepository : ObservableObject {
                 }
             }
             
+      
+            
+           
+            
+            
             self.userSession = result?.user
             self.fetchUser()
             self.listenToAll(uid: userSession?.uid ?? " ")
@@ -1014,12 +1176,16 @@ class UserRepository : ObservableObject {
     func followGroup(group: Group, user: User){
         COLLECTION_USER.document(user.id ?? " ").updateData(["followedGroups":FieldValue.arrayUnion([group.id])])
         COLLECTION_GROUP.document(group.id).updateData(["followers":FieldValue.arrayUnion([user.id ?? ""])])
+        COLLECTION_USER.document(user.id ?? " ").updateData(["allGroupsToListenTo":FieldValue.arrayUnion([group.id])])
+
         print("Followed Group: \(group.groupName)!")
     }
     
     func unFollowGroup(group: Group, user: User){
         COLLECTION_USER.document(user.id ?? " ").updateData(["followedGroups":FieldValue.arrayRemove([group.id])])
         COLLECTION_GROUP.document(group.id).updateData(["followers":FieldValue.arrayRemove([user.id ?? ""])])
+        COLLECTION_USER.document(user.id ?? " ").updateData(["allGroupsToListenTo":FieldValue.arrayRemove([group.id])])
+
         
         print("Unfollowed Group: \(group.groupName)!")
     }

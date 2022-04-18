@@ -16,20 +16,27 @@ class GalleryRepository : ObservableObject {
 
     
     
-    func createGalleryPost(groupID: String, posts: [UIImage], description: String, creator: String, isPrivate: Bool, taggedUsers: [String]){
+    func createGalleryPost(groupID: String, posts: [UIImage], description: String, creatorID: String, isPrivate: Bool, taggedUsers: [String]){
         var id = UUID().uuidString
         COLLECTION_GROUP.document(groupID).collection("Gallery Posts").document(id).setData(["id":id,"viewers":
-    [],"groupID":groupID,"taggedUsers":taggedUsers,"description":description,"creator":creator,"isPrivate":isPrivate,"dateCreated":Timestamp()])
-        id = UUID().uuidString
+    [],"groupID":groupID,"taggedUsers":taggedUsers,"description":description,"creator":creatorID,"isPrivate":isPrivate,"dateCreated":Timestamp()])
         COLLECTION_GALLERY_POSTS.document(id).setData(["id":id,"viewers":
-                                                        [],"groupID":groupID,"taggedUsers":taggedUsers,"description":description,"creator":creator,"isPrivate":isPrivate,"dateCreated":Timestamp()])
-        self.persistImageToStorage(galleryID: id, images: posts)
+                                                        [],"groupID":groupID,"taggedUsers":taggedUsers,"description":description,"creatorID":creatorID,"isPrivate":isPrivate,"dateCreated":Timestamp()])
+        COLLECTION_GALLERY_POSTS.document("Comment Manager").setData(["ranking":[:],"id":"Comment Manager"])
+        
+            self.persistImageToStorage(groupID: groupID, galleryID: id, images: posts)
+        
+        
         
     }
+    
+
     
     
     func deleteGalleryPost(galleryPostID: String, groupID: String){
         COLLECTION_GROUP.document(groupID).collection("Gallery Posts").document(galleryPostID).delete()
+        COLLECTION_GALLERY_POSTS.document(galleryPostID).delete()
+      
     }
     
     
@@ -49,13 +56,17 @@ class GalleryRepository : ObservableObject {
     }
     
     
-    func persistImageToStorage(galleryID: String, images: [UIImage]) {
+    func persistImageToStorage(groupID: String, galleryID: String, images: [UIImage]) {
        let fileName = "galleryPosts/\(galleryID)"
         let ref = Storage.storage().reference(withPath: fileName)
+        var imageURLS : [String] = []
+        
+        let dispatchGroup = DispatchGroup()
         
         for image in images{
             guard let imageData = image.jpegData(compressionQuality: 0.5) else { return }
             
+            dispatchGroup.enter()
             ref.putData(imageData, metadata: nil) { (metadata, err) in
                 if err != nil{
                     print("ERROR")
@@ -67,19 +78,33 @@ class GalleryRepository : ObservableObject {
                         return
                     }
                     print("Successfully stored image in database")
-                    let imageURL = url?.absoluteString ?? ""
-                       COLLECTION_GALLERY_POSTS.document(galleryID).updateData(["posts":FieldValue.arrayUnion([imageURL])])
+                    var imageURL = url?.absoluteString ?? ""
+                       imageURLS.append(imageURL)
+                       
+                       dispatchGroup.leave()
+                     
                 }
             }
-        }
-      
+         
+           
         
+        
+      
+  
+          
+        }
+        dispatchGroup.notify(queue: .main){
+            COLLECTION_GALLERY_POSTS.document(galleryID).updateData(["posts":imageURLS])
+            COLLECTION_GROUP.document(groupID).collection("Gallery Posts").document(galleryID).updateData(["posts":imageURLS])
+            print("images saved!")
+        }
+       
       
     }
     
     func addComment(galleryID: String, groupID: String, userID: String, text: String){
         let id = UUID().uuidString
-        let data = ["id":id,"text":text,"dateCreated":Timestamp(),"creator":userID] as [String:Any]
+        let data = ["id":id,"text":text,"dateCreated":Timestamp(),"creator":userID,"likes":0,"galleryPostID":galleryID,"groupID":groupID] as [String:Any]
         COLLECTION_GALLERY_POSTS.document(galleryID).collection("Comments").document(id).setData(data)
         COLLECTION_GALLERY_POSTS.document(galleryID).updateData(["comments":FieldValue.arrayUnion([id])])
         print("\(userID) added comment")
@@ -88,25 +113,30 @@ class GalleryRepository : ObservableObject {
     
     
     
-    func likePost(galleryID: String, groupID: String, userID: String){
-        COLLECTION_GALLERY_POSTS.document(galleryID).updateData(["likes":FieldValue.arrayUnion([userID])])
-        
-    }
+//    func likePost(galleryID: String, groupID: String, userID: String){
+//        COLLECTION_GALLERY_POSTS.document(galleryID).updateData(["likes":FieldValue.arrayUnion([userID])])
+//
+//    }
+//
+//    func unlikePost(galleryID: String, groupID: String, userID: String){
+//        COLLECTION_GALLERY_POSTS.document(galleryID).updateData(["likes":FieldValue.arrayRemove([userID])])
+//    }
     
-    func unlikePost(galleryID: String, groupID: String, userID: String){
-        COLLECTION_GALLERY_POSTS.document(galleryID).updateData(["likes":FieldValue.arrayRemove([userID])])
-    }
+   
+//
+//    func userHasAlreadyLikedPost(userID: String, likes: [String]) -> Bool{
+//        return likes.contains(userID)
+//    }
+   
     
-    func likeComment(galleryID: String, groupID: String, userID: String, commentID: String){
-        COLLECTION_GALLERY_POSTS.document(galleryID).collection(commentID).document(commentID).updateData(["likes":FieldValue.arrayUnion([userID])])
-    }
     
-    func userHasAlreadyLikedPost(userID: String, likes: [String]) -> Bool{
-        return likes.contains(userID)
-    }
+//    func userHasAlreadySeenPost(userID: String, usersSeen: [String]) -> Bool {
+//
+//    }
+    
     
     func fetchPostComments(galleryID: String, groupID: String, completion: @escaping ([GalleryPostCommentModel]) -> ()) -> (){
-        COLLECTION_GALLERY_POSTS.document(galleryID).collection("Comments").getDocuments { snapshot, err in
+        COLLECTION_GALLERY_POSTS.document(galleryID).collection("Comments").order(by: "likes", descending: true).getDocuments { snapshot, err in
             if err != nil {
                 print("ERROR")
                 return
@@ -114,28 +144,53 @@ class GalleryRepository : ObservableObject {
             
             let documents = snapshot!.documents
             
-           return completion(documents.map({ queryDocumentSnapshot -> GalleryPostCommentModel in
-                let data = queryDocumentSnapshot.data()
-                let id = data["id"] as? String ?? " "
-                let text = data["text"] as? String ?? ""
-                let dateCreated = data["dateCreated"] as? Timestamp ?? Timestamp()
-                let likes = data["likes"] as? [String] ?? []
-                let creator = data["creator"] as? String ?? " "
-               var user : User = User()
-               self.fetchUser(userID: creator) { fetchedUser in
-                  user = fetchedUser
-               }
-                   print("user: \(user.username ?? "cock")")
+            var ans : [GalleryPostCommentModel] = []
+            let dispatchGroup = DispatchGroup()
+
+            dispatchGroup.enter()
+            for document in documents {
+                
+                 let data = document.data()
+                 let id = data["id"] as? String ?? " "
+                 let text = data["text"] as? String ?? ""
+                 let dateCreated = data["dateCreated"] as? Timestamp ?? Timestamp()
+                 let likes = data["likes"] as? Int ?? 0
+                let usersLiked = data["usersLiked"] as? [String] ?? []
+                 let creator = data["creator"] as? String ?? " "
+                 var groupID = data["groupID"] as? String ?? " "
+                 var galleryPostID = data["galleryPostID"] as? String ?? " "
+                 var user : User = User()
+                dispatchGroup.enter()
+                 self.fetchUser(userID: creator) { fetchedUser in
+                   user = fetchedUser
+                     dispatchGroup.leave()
+                 }
+                
+                
+                
+                dispatchGroup.notify(queue: .main){
                     
-                   return GalleryPostCommentModel(dictionary: ["id":id,"text":text,"dateCreated":dateCreated,"likes":likes,"creator":creator,"user":user])
-               
-           
-            }))
+                    ans.append(GalleryPostCommentModel(dictionary: ["id":id,"text":text,"dateCreated":dateCreated,"likes":likes,"creator":creator,"user":user,"galleryPostID":galleryPostID,"groupID":groupID,"usersLiked":usersLiked]))
+
+                }
+                
+            }
+            
+            dispatchGroup.leave()
+            dispatchGroup.notify(queue: .main){
+                return completion(ans)
+            }
+            
+            
+            
+         
             
            
             
         }
     }
+    
+ 
     
     func fetchGalleryPost(galleryPostID: String, completion: @escaping (GalleryPostModel) -> ()) -> (){
         COLLECTION_GALLERY_POSTS.document(galleryPostID).getDocument { snapshot, err in

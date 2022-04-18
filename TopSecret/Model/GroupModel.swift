@@ -31,6 +31,7 @@ struct Group: Identifiable{
     var following: [String]?
     var bio : String?
     var storyPosts: [StoryModel]?
+    var sharedInterests: [String]?
     
     init(dictionary: [String:Any]){
         self.id = dictionary["id"] as? String ?? " "
@@ -45,6 +46,7 @@ struct Group: Identifiable{
         self.motd = dictionary["motd"] as? String ?? "Welcome to the group!"
         self.quoteOfTheDay = dictionary["quoteOfTheDay"] as? String ?? ""
         self.followers = dictionary["followers"] as? [String] ?? []
+        self.sharedInterests = dictionary["sharedInterests"] as? [String] ?? []
         self.following = dictionary["following"] as? [String] ?? []
         self.bio = dictionary["bio"] as? String ?? ""
       

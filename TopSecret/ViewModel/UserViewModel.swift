@@ -9,7 +9,7 @@ import Foundation
 import Firebase
 import SwiftUI
 import Combine
-
+import SCSDKLoginKit
 
 class UserViewModel : ObservableObject {
     
@@ -34,6 +34,7 @@ class UserViewModel : ObservableObject {
     @Published var notifications : [NotificationModel] = []
     @Published var followedGroups : [Group] = []
     @Published var allUserGroups : [Group] = []
+    @Published var allUserGroupsIDS: [String] = [" "]
     @Published var userNotificationCount : Int = 0
     @Published var groupNotificationCount : [[String:Int]] = []
     @Published var pollDurationTimer : Int = 0
@@ -42,7 +43,10 @@ class UserViewModel : ObservableObject {
     @Published var showNotification : Int = 0 //on value change, send notification
     @Published var currentNotification : NotificationModel?
     @Published var homescreenPosts : [String:String] = [:] //postType, id
+    @Published var homescreenGalleryPosts : [GalleryPostModel] = []
     @Published var userSelectedGroup : Group = Group()
+    @Published var finishedFetchingPosts : Bool = false
+
 
 
 
@@ -111,6 +115,14 @@ class UserViewModel : ObservableObject {
         userRepository.$userSelectedGroup
             .assign(to: \.userSelectedGroup, on: self)
             .store(in: &cancellables)
+        userRepository.$homescreenGalleryPosts
+            .assign(to: \.homescreenGalleryPosts, on: self)
+            .store(in: &cancellables)
+        userRepository.$finishedFetchingPosts
+            .assign(to: \.finishedFetchingPosts, on: self)
+            .store(in: &cancellables)
+        
+        
         
         self.$followedGroups
             .combineLatest(self.$groups)
@@ -119,8 +131,13 @@ class UserViewModel : ObservableObject {
             }
             .assign(to: \.allUserGroups, on: self)
             .store(in: &self.cancellables)
-
-
+        
+        self.$allUserGroups
+            .map{ [self] all in
+                return getIDS(userGroups: allUserGroups)
+            }
+            .assign(to: \.allUserGroupsIDS, on: self)
+            .store(in: &self.cancellables)
         
         
         self.userSession = Auth.auth().currentUser
@@ -131,15 +148,19 @@ class UserViewModel : ObservableObject {
             }
       
 
+       
      
     }
     
+  
     
     //helper function
     
     func deleteAllHomescreenPosts(){
         homescreenPosts.removeAll()
     }
+    
+   
     
     
     func changeUserSelectedGroup(groupID: String, userID: String){
@@ -151,6 +172,15 @@ class UserViewModel : ObservableObject {
         arr1 = groups
         arr1.append(contentsOf: followedGroups)
         return arr1
+    }
+    
+    func getIDS(userGroups: [Group]) -> [String]{
+        var arr : [String] = [""]
+        for group in userGroups{
+            print("groupID: \(group.id)")
+            arr.append(group.id)
+        }
+        return arr
     }
     
     func fetchGroupStories(groupID: String, completion: @escaping ([StoryModel]) -> ()) -> (){
@@ -218,7 +248,7 @@ class UserViewModel : ObservableObject {
     func signIn(withEmail email: String, password: String){
         
         userRepository.signIn(withEmail: email, password: password)
-        
+      
     }
     
     func signOut(){

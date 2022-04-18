@@ -8,6 +8,7 @@
 import Foundation
 import Firebase
 import SwiftUI
+import AudioToolbox
 
 
 let COLLECTION_USER = Firestore.firestore().collection("Users")
@@ -21,3 +22,11 @@ let COLLECTION_GALLERY_POSTS = Firestore.firestore().collection("Gallery Posts")
 
 let FOREGROUNDCOLOR : Color = Color("Foreground")
 let BACKGROUNDCOLOR : Color = Color("Background")
+
+
+extension UIDevice {
+    static func vibrate(){
+        let generator = UINotificationFeedbackGenerator()
+        generator.notificationOccurred(.success)
+    }
+}

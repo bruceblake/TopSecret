@@ -195,6 +195,7 @@ class GroupRepository : ObservableObject {
                     let users = data?["users"] as? [String] ?? []
                     
                     self.chatRepository.joinChat(chatID: chatID, userID: id)
+                    COLLECTION_USER.document(id).updateData(["allGroupsToListenTo":FieldValue.arrayUnion([groupID])])
                     self.notificationRepository.sendAcceptedGroupInviteNotification(group: Group(dictionary: data ?? [:]), user1: User(dictionary: data ?? [:]), users: users)
                 }
                 
@@ -271,6 +272,7 @@ class GroupRepository : ObservableObject {
             self.persistImageToStorage(groupID: id,image: image)
         }
         COLLECTION_USER.document(currentUser).updateData(["groups":FieldValue.arrayUnion([id])])
+        COLLECTION_USER.document(currentUser).updateData(["allGroupsToListenTo":FieldValue.arrayUnion([id])])
 
         chatRepository.createGroupChat(name: groupName, users: users, groupID: id)
         
@@ -299,6 +301,7 @@ class GroupRepository : ObservableObject {
             self.persistImageToStorage(groupID: id,image: image)
         }
         COLLECTION_USER.document(currentUser).updateData(["groups":FieldValue.arrayUnion([id])])
+        COLLECTION_USER.document(currentUser).updateData(["allGroupsToListenTo":FieldValue.arrayUnion([id])])
 
         chatRepository.createGroupChat(name: groupName, users: users, groupID: id,completion: { chat in
             return completion(chat)
@@ -379,7 +382,7 @@ class GroupRepository : ObservableObject {
     
     func giveBadge(group: Group, badge: Badge){
         COLLECTION_GROUP.document(group.id).collection("Badges").addDocument(data: ["id":badge.id,"badgeName":badge.badgeName,"badgeDescription":badge.badgeDescription,"badgeImage":badge.badgeImage])
-        print("gave \(badge.badgeName ?? "") badge to \(group.groupName ?? "")")
+        print("gave \(badge.badgeName ?? "") badge to \(group.groupName)")
     }
     
     func loadGroupFollowers(groupID: String){
