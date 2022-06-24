@@ -12,34 +12,73 @@ struct AddContentView: View {
     @Binding var showAddContentView: Bool
     @Binding var group: Group
     
+    var texts : [String] = ["Create Countdown", "Create Poll","Create Event","Add to Group Story","Send Group Invitation to Friend"]
+    
     
     var body: some View {
-        if showAddContentView {
-            VStack(spacing: 20){
+        ZStack(alignment: .top){
+            Color("Color")
+            VStack(){
+                
+                ForEach(texts, id: \.self){ text in
+                    NavigationLink {
+                        switch(text){
+                        case "Create Countdown":
+                            CreateCountdownView(group: $group)
+                        case "Create Event":
+                            GeometryReader{ reader in
+                                CreateEventView(group: $group).frame(width: reader.size.width, height: reader.size.height)
+                            }
+                            
+                        case "Send Group Invitation to Friend":
+                            InviteUserToGroup(group: $group)
+                        default:
+                            EmptyView()
+                        }
+                    } label: {
+                        Text(texts[texts.firstIndex(of: text) ?? 0]).fontWeight(.bold).foregroundColor(Color("AccentColor")).padding(.vertical,10).frame(width: UIScreen.main.bounds.width/1.2).background(Color("Background")).cornerRadius(15)
+                    }.padding(.vertical,5)
+
+                }
+               
+
+            }
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+        
+    }
+}
+
+
+struct JoinGroup : View {
+    
+    @Environment(\.presentationMode) var presentationMode
+    @State var userID : String = ""
+    
+    var body: some View {
+        ZStack{
+            Color("Color")
+            
+            VStack{
+                
                 HStack{
+                    Button(action:{
+                        presentationMode.wrappedValue.dismiss()
+                    },label:{
+                        Text("Back")
+                    })
                     Spacer()
                 }
-                NavigationLink(destination: CreateCountdownView(group: $group)) {
-                        Text("Create Countdown")
-                    }
-                    NavigationLink(destination: EmptyView()) {
-                        Text("Create Poll")
-                    }
-                    NavigationLink(destination: EmptyView()) {
-                        Text("Create Event")
-                    }
-                    NavigationLink(destination: EmptyView()) {
-                        Text("Add to Story")
-                    }
-                NavigationLink(destination: CreateGalleryPostView(group: $group)) {
-                        Text("Create Gallery Post")
-                    }
                 
-          
-            
+                
+                Spacer()
+                
+                SearchView()
+                
+                TextField("User ID", text: $userID)
             }
         }
     }
+    
 }
 
 //struct AddContentView_Previews: PreviewProvider {

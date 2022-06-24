@@ -50,11 +50,11 @@ class UserViewModel : ObservableObject {
 
 
 
-
     
     private var cancellables : Set<AnyCancellable> = []
     
     init(){
+        
         
     
        
@@ -146,6 +146,9 @@ class UserViewModel : ObservableObject {
                 self.listenToAll(uid: userSession?.uid ?? " ")
 
             }
+        
+        
+        
       
 
        
@@ -405,6 +408,13 @@ class UserViewModel : ObservableObject {
         userRepository.isFollowingGroup(user: user, group: group, completion: { isFollowing in
             return completion(isFollowing)
         })
+    }
+    
+    
+    func fetchChat(chatID: String, completion: @escaping (ChatModel) -> () ) -> (){
+        userRepository.fetchChat(chatID: chatID) { chat in
+            return completion(chat)
+        }
     }
   
 }

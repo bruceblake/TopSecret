@@ -251,7 +251,7 @@ class GroupRepository : ObservableObject {
 
     }
     
-    func createGroup(groupName: String, memberLimit: Int, dateCreated: Date, users: [String], image: UIImage, currentUser: String, id: String){
+    func createGroup(groupName: String, memberLimit: Int, dateCreated: Date, users: [String], image: UIImage, currentUser: String, id: String, password: String){
         
         
     
@@ -261,7 +261,7 @@ class GroupRepository : ObservableObject {
         let data = ["groupName" : groupName,
                     "memberLimit" : memberLimit,
                     "users" : users ,
-                    "memberAmount": 1, "id":id, "chatID": " ", "dateCreated":Timestamp(), "groupProfileImage": " "
+                    "memberAmount": 1, "id":id, "chatID": " ", "dateCreated":Timestamp(), "groupProfileImage": " ","password":password
         ] as [String:Any]
                 
         COLLECTION_GROUP.document(id).setData(data) { (err) in

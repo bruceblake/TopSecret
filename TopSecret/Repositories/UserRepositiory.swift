@@ -45,6 +45,7 @@ class UserRepository : ObservableObject {
    
     
     
+    
     func changeUserSelectedGroup(groupID: String, userID: String){
         COLLECTION_USER.document(userID).updateData(["selectedGroup":groupID])
         self.fetchUser(userID: userID) { fetchedUser in
@@ -183,7 +184,6 @@ class UserRepository : ObservableObject {
     }
     
     func listenToUserGalleryPosts(uid: String){
-        print("cock!")
         let listener = COLLECTION_GALLERY_POSTS.addSnapshotListener { snapshot, err in
             if err != nil {
                 print("ERROR")
@@ -793,6 +793,9 @@ class UserRepository : ObservableObject {
         
         
     }
+    
+    
+ 
     func fetchUserChats(){
         //TODO
         COLLECTION_CHAT.whereField("users", arrayContains: user?.id ?? " ").getDocuments { (snapshot, err) in
@@ -1157,6 +1160,21 @@ class UserRepository : ObservableObject {
             return completion(User(dictionary: data ?? [:]))
         }
     }
+    
+    func fetchChat(chatID: String, completion: @escaping (ChatModel) -> ()) -> (){
+        COLLECTION_CHAT.document(chatID).getDocument { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            let data = snapshot!.data()
+            return completion(ChatModel(dictionary: data ?? [:]))
+            
+        }
+    }
+    
+    
     
     func fetchGroup(groupID: String, completion: @escaping (Group) -> ()) -> (){
         COLLECTION_GROUP.document(groupID).getDocument { snapshot, err in

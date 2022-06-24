@@ -13,17 +13,26 @@ struct CreateEventView: View {
     @State var eventLocation: String = ""
     @State var eventTime : Date = Date()
     @State var usersVisibleTo : [String] = []
+    @Binding var group : Group
     @StateObject var eventVM = EventViewModel()
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var userVM : UserViewModel
     var body: some View {
         ZStack{
-            Color("Background")
+            Color("Color")
             VStack{
-                Text("Schedule An Event!")
-                    .font(.title)
-                    .fontWeight(.bold).padding(.top,30)
-                Spacer()
+                
+                HStack{
+                    Button(action:{
+                        presentationMode.wrappedValue.dismiss()
+                    },label:{
+                        Text("Back")
+                    }).padding(.leading)
+                    
+                    Text("Schedule An Event!")
+                        .fontWeight(.bold).padding(.top,30)
+                }
+            
                 
                 //Event Name
                 CustomTextField(text: $eventName, placeholder: "Event Name", isPassword: false, isSecure: false, hasSymbol: false, symbol: "")
@@ -31,28 +40,27 @@ struct CreateEventView: View {
                 //Event Location
                 CustomTextField(text: $eventLocation, placeholder: "Event Location", isPassword: false, isSecure: false, hasSymbol: false, symbol: "")
                 
-                
-                DatePicker("", selection: $eventTime, displayedComponents: [.date,.hourAndMinute])
-                    .datePickerStyle(GraphicalDatePickerStyle())
-                
+//
+//                DatePicker("", selection: $eventTime, displayedComponents: [.date,.hourAndMinute])
+//                    .datePickerStyle(GraphicalDatePickerStyle())
+//
           
                 
                 
                 Button(action:{
-                    eventVM.createEvent(eventName: eventName, eventLocation: eventLocation, eventTime: eventTime ?? Date(), usersVisibleTo: usersVisibleTo, userID: userVM.user?.id ?? "")
+                    eventVM.createEvent(groupID: group.id, eventName: eventName, eventLocation: eventLocation, eventTime: eventTime , usersVisibleTo: usersVisibleTo, userID: userVM.user?.id ?? "")
                     presentationMode.wrappedValue.dismiss()
                 },label:{
                     Text("Create Event")
                 })
                 
-                Spacer()
             }
-        }
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
     }
 }
 
-struct CreateEventView_Previews: PreviewProvider {
-    static var previews: some View {
-        CreateEventView()
-    }
-}
+//struct CreateEventView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        CreateEventView()
+//    }
+//}

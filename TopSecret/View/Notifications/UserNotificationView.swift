@@ -8,90 +8,49 @@
 import SwiftUI
 
 struct UserNotificationView: View {
-    @EnvironmentObject var userVM : UserViewModel
-    @Environment(\.presentationMode) var presentationMode
-    @State var selectedIndex : Int = 0
-    var options = ["All","Friend Requests","Group Invites"]
-    
+   
+    @StateObject private var notificationManager = NotificationManager()
     
     var body: some View {
-        ZStack{
+   
+        ZStack(alignment: .topTrailing){
             Color("Background")
+
             VStack{
-                
-                
-                
-                HStack{
-                    Button(action:{
-                        
-                        presentationMode.wrappedValue.dismiss()
-                    },label:{
-                        Text("Back")
-                    }).padding(.leading,10)
-                    
-                    Spacer()
-                    
-                    Text("Notifications")
-                    
-                    Spacer()
+                ForEach(notificationManager.notifications, id: \.identifier){ noti in
+                    Text(noti.content.title)
+                        .fontWeight(.semibold)
                 }
-                .padding(.top,70)
-                
-                Picker("Options",selection: $selectedIndex){
-                    ForEach(0..<options.count){ index in
-                        Text(self.options[index]).tag(index)
-                    }
-                }.pickerStyle(SegmentedPickerStyle()).padding(.horizontal)
-                ScrollView{
-                    
-                    VStack{
-                        ForEach(userVM.notifications){ notification in
-                            
-                            switch selectedIndex{
-                            
-                            case 0:
-                                
-                                //all notifications
-                                NotificationCell(notification: notification).padding(.horizontal)
-                                Divider()
-                                
-                                
-                            case 1:
-                                
-                                //Friend Requests
-                                if notification.notificationType == "friendRequest"{
-                                    NotificationCell(notification: notification).padding(.horizontal)
-                                    Divider()
-                                }
-                                
-                                
-                            default:
-                                if notification.notificationType == "groupInvite"{
-                                    NotificationCell(notification: notification).padding(.horizontal)
-                                    Divider()
-                                    
-                                }
-                                
-                            }
-                            
-                            
-                            
-                            
-                        }
-                        
-                    } 
-                
-                }
-                
-                
-                
-                
+            
             }
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onDisappear{
-            userVM.readAllUserNotifications(uid: userVM.user?.id ?? "")
+            
+                Button(action:{
+                    
+                },label:{
+                    Image(systemName: "plus.circle")
+                        .imageScale(.large).foregroundColor(FOREGROUNDCOLOR)
+                }).padding(60).padding(.trailing,30)
+            
+          
+            
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
+            notificationManager.reloadAuthorizationStatus()
+        }
+        .onChange(of: notificationManager.authorizationStatus){ authorizationStatus in
+            switch authorizationStatus {
+            case .notDetermined:
+                notificationManager.requestAuthorization()
+            case .authorized:
+                notificationManager.reloadLocalNotifications()
+                break
+            default:
+                break
+            }
+        }
+            
         }
     }
-}
+
 
 struct UserNotificationView_Previews: PreviewProvider {
     static var previews: some View {

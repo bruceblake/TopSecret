@@ -148,7 +148,7 @@ struct ScheduleView: View {
                 },label:{
                     Image(systemName: "plus.circle")
                 }).sheet(isPresented: $showCreateEvent, content: {
-                    CreateEventView()
+                   EmptyView()
                 }).padding(.trailing,20)
                 
             }.padding(.top,60)

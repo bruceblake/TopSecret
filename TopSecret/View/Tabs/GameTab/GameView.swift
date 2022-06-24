@@ -9,8 +9,7 @@ import SwiftUI
 
 struct GameView: View {
     var body: some View {
-        LoginCVWrapper()
-        
+        Text("Hello World")
             .navigationBarHidden(true).edgesIgnoringSafeArea(.all)
     }
 }

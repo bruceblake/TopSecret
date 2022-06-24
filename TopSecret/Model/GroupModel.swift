@@ -32,9 +32,11 @@ struct Group: Identifiable{
     var bio : String?
     var storyPosts: [StoryModel]?
     var sharedInterests: [String]?
+    var password : String?
+    var events : [String]?
     
     init(dictionary: [String:Any]){
-        self.id = dictionary["id"] as? String ?? " "
+        self.id = dictionary["id"] as? String ?? UUID().uuidString
         self.groupName = dictionary["groupName"] as? String ?? ""
         self.dateCreated = dictionary["dateCreated"] as? Date ?? Date()
         self.memberAmount = dictionary["memberAmount"] as? Int ?? 0
@@ -49,6 +51,8 @@ struct Group: Identifiable{
         self.sharedInterests = dictionary["sharedInterests"] as? [String] ?? []
         self.following = dictionary["following"] as? [String] ?? []
         self.bio = dictionary["bio"] as? String ?? ""
+        self.password = dictionary["password"] as? String ?? ""
+        self.events = dictionary["events"] as? [String] ?? []
       
 
     }

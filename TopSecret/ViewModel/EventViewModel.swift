@@ -16,8 +16,8 @@ class EventViewModel: ObservableObject {
     @ObservedObject var eventRepository = EventRepository()
     
     
-    func createEvent(eventName: String, eventLocation: String, eventTime: Date, usersVisibleTo: [String], userID: String){
-        eventRepository.createEvent(eventName: eventName, eventLocation: eventLocation, eventTime: eventTime, usersVisibleTo: usersVisibleTo, userID: userID)
+    func createEvent(groupID: String, eventName: String, eventLocation: String, eventTime: Date, usersVisibleTo: [String], userID: String){
+        eventRepository.createEvent(groupID: groupID, eventName: eventName, eventLocation: eventLocation, eventTime: eventTime, usersVisibleTo: usersVisibleTo, userID: userID)
     }
     
     func deleteEvent(eventID: String){
@@ -30,5 +30,11 @@ class EventViewModel: ObservableObject {
     
     func addUserToVisibilityList(userID: String, eventID: String){
         eventRepository.addUserToVisibilityList(eventID: eventID, userID: userID)
+    }
+    
+    func fetchEvent(eventID: String, completion: @escaping (EventModel) -> ()) -> (){
+        eventRepository.fetchEvent(eventID: eventID) { event in
+            return completion(event)
+        }
     }
 }

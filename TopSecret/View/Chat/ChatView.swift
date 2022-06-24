@@ -210,47 +210,28 @@ struct ChatView: View {
                 
             }
             
-            VStack(){
-                VStack{
-                HStack{
-                    BackCircleButton(action: {
-                        presentationMode.wrappedValue.dismiss()
-                    })
-                   .padding([.leading,.bottom],10)
-                    Spacer()
-                    NavigationLink(destination: EmptyView(), label: {
-                        VStack{
-                            WebImage(url: URL(string: chatVM.group.groupProfileImage ?? ""))
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width:45,height:45)
-                                .clipShape(Circle())
-                            Text("\(chat.name ?? "")").foregroundColor(FOREGROUNDCOLOR)
-                        }
-                    })
-                    
-                    Spacer()
-                    Button(action:{
-                        
-                    },label:{
-                        Image(systemName: "info")
-                    }).padding([.trailing,.bottom],10)
-                }
-                    
-                  
-                }
+            VStack{
+                
                 
                 ScrollView(.horizontal){
                     HStack(spacing: 0){
                         ForEach(chatVM.userList){ user in
                             
                             NavigationLink(destination: UserProfilePage(user: user, isCurrentUser: false), label:{
-                                WebImage(url: URL(string: user.profilePicture ?? ""))
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width:40,height:40)
-                                    .clipShape(Circle())
-                                    .overlay(Circle().stroke(chat.usersIdling.contains(user.id ?? "") ? Color(getColor(userID: user.id ?? "", groupChat: chat)) : Color.gray,lineWidth: 2))
+                                
+                                VStack(spacing: 5){
+                                    WebImage(url: URL(string: user.profilePicture ?? ""))
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width:40,height:40)
+                                        .clipShape(Circle())
+                                        .overlay(Circle().stroke(chat.usersIdling.contains(user.id ?? "") ? Color(getColor(userID: user.id ?? "", groupChat: chat)) : Color.gray,lineWidth: 2))
+                                    
+                                    Text("\(user.nickName ?? "TOP SECRET USER")").foregroundColor(FOREGROUNDCOLOR)
+                                }
+                             
+                                
+                                
                             }).padding([.leading,.bottom],7).padding(.top,5)
                             
                          
@@ -264,7 +245,7 @@ struct ChatView: View {
                 }
             
                 Divider()
-            }.padding(.top,40).background(Color("Background"))
+            }.padding(.top,10).background(Color("Background"))
          
             
          
@@ -400,13 +381,13 @@ struct ChatView: View {
             }
             
             
-        }.edgesIgnoringSafeArea(.all).navigationBarTitle("").navigationBarHidden(true).navigationBarBackButtonHidden(true)
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
                 
         .onAppear{
             self.group = chatVM.group
             imagePickerVM.setUp()
 
-            messageVM.readAllMessages(chatID: chat.id, userID: userVM.user?.id ?? "", chatType: "groupChat")
+            messageVM.readAllMessages(chatID: chat.id, userID: userVM.user?.id ?? " ", chatType: "groupChat")
             messageVM.getPinnedMessage(chatID: chat.id)
             chatVM.getGroup(groupID: chat.groupID ?? " ")
             chatVM.openChat(userID: uid, chatID: chat.id, chatType: "groupChat")

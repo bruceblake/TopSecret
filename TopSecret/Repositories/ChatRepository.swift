@@ -193,7 +193,7 @@ class ChatRepository : ObservableObject {
         
         COLLECTION_GROUP.document(groupID).updateData(["chatID": id])
         for user in users {
-            pickColor(chatID: id, picker: 0, userID: user)
+            let color = pickColor(chatID: id, picker: 0, userID: user)
         }
 
     }

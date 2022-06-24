@@ -9,38 +9,21 @@ import Firebase
 import SCSDKCoreKit
 import UIKit
 import SCSDKLoginKit
+import UserNotifications
+import FirebaseMessaging
 
 @main
 struct TopSecretApp: App {
     
+    @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
- 
-
-    
-    init(){
-        
-        FirebaseApp.configure()
-        
-    }
+   
     var body: some Scene {
+        
         WindowGroup {
             ContentView().environmentObject(UserViewModel()).environmentObject(NavigationHelper()).environmentObject(TabViewModel())
         }
     }
 }
 
-class AppDelegate: UIResponder, UIApplicationDelegate {
-
- 
-    func application(
-      _ app: UIApplication,
-      open url: URL,
-      options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
-        if SCSDKLoginClient.application(app, open: url, options: options) {
-          return true
-        }
-          return false
-    }
-
-}
 

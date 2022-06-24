@@ -64,7 +64,7 @@ struct GroupView: View {
                             
                             
                         }).padding(.trailing)            .sheet(isPresented: $showCreateGroupView, content: {
-                            CreateGroupView(goBack: $showCreateGroupView)
+                            CreateGroupView()
                         })
                        
                         
@@ -92,7 +92,7 @@ struct GroupView: View {
                                         },label:{
                                             ZStack{
                                                 
-                                                HomescreenGroupCell(group: group)
+//                                                HomescreenGroupCell(group: group, isMultiColumn: false)
 
                                                 VStack{
                                                 HStack{

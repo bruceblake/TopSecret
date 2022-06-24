@@ -127,9 +127,9 @@ class GroupViewModel: ObservableObject {
     
     
     
-    func createGroup(groupName: String, memberLimit: Int, dateCreated: Date, users: [String], image: UIImage, currentUser: String, id: String){
+    func createGroup(groupName: String, memberLimit: Int, dateCreated: Date, users: [String], image: UIImage, currentUser: String, id: String, password: String){
         
-        groupRepository.createGroup(groupName: groupName, memberLimit: memberLimit, dateCreated: dateCreated, users: users, image: image, currentUser: currentUser, id: id)
+        groupRepository.createGroup(groupName: groupName, memberLimit: memberLimit, dateCreated: dateCreated, users: users, image: image, currentUser: currentUser, id: id, password: password)
         
     }
     func createGroup(currentUser: String, groupName: String, memberLimit: Int, dateCreated: Date, users: [String], image: UIImage, completion: @escaping (ChatModel) -> ()) -> (){

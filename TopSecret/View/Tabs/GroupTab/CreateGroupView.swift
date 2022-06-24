@@ -18,8 +18,9 @@ struct CreateGroupView: View {
     @State var isShowingPhotoPicker:Bool = false
     @State var avatarImage = UIImage(named: "Icon")!
     @State var images : [UIImage] = []
+    @State var password : String = ""
 
-    @Binding var goBack: Bool
+    
     
     var body: some View {
         ZStack(alignment: .topLeading){
@@ -29,10 +30,15 @@ struct CreateGroupView: View {
           
             Spacer()
             
+         
+            
             
             CustomTextField(text: $groupName, placeholder: "Group Name", isPassword: false, isSecure: false, hasSymbol: false ,symbol: "").padding(.horizontal,20)
             
-       
+            
+            
+            CustomTextField(text: $password, placeholder: "Group Password", isPassword: false, isSecure: false, hasSymbol: false ,symbol: "").padding(.horizontal,20)
+
             
             Button(action:{
                 isShowingPhotoPicker.toggle()
@@ -49,9 +55,9 @@ struct CreateGroupView: View {
             
             Button(action:{
                 let id = UUID().uuidString
-                groupVM.createGroup(groupName: groupName, memberLimit: memberLimit, dateCreated: Date(), users: [userVM.user?.id ?? ""],image: avatarImage, currentUser: userVM.user?.id ?? "",  id: id)
+                groupVM.createGroup(groupName: groupName, memberLimit: memberLimit, dateCreated: Date(), users: [userVM.user?.id ?? ""],image: avatarImage, currentUser: userVM.user?.id ?? "",  id: id, password: password)
               
-                userVM.changeUserSelectedGroup(groupID: id, userID: userVM.user?.id ?? " ")
+                userVM.changeUserSelectedGroup(groupID: id,userID: userVM.user?.id ?? " ")
                 
                 presentationMode.wrappedValue.dismiss()
             },label:{
@@ -91,6 +97,6 @@ struct CreateGroupView: View {
 
 struct CreateGroupView_Previews: PreviewProvider {
     static var previews: some View {
-        CreateGroupView(goBack: .constant(false))
+        CreateGroupView()
     }
 }

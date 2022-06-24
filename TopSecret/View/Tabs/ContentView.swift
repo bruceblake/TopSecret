@@ -20,6 +20,7 @@ struct ContentView: View {
     @State var tabIndex : Tab = .home
     @State var showNotification : Bool = false
     @State var selectedGroup : Group = Group()
+
     @Environment(\.scenePhase) var scenePhase
     
     
@@ -56,7 +57,8 @@ struct ContentView: View {
                 LoginView()
             }
             
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onReceive(userVM.$userNotificationCount) { count in
+        }
+ .edgesIgnoringSafeArea(.all).navigationBarHidden(true).onReceive(userVM.$userNotificationCount) { count in
             if count != 0{
                 self.showNotification = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: {
@@ -79,11 +81,21 @@ struct ContentView: View {
                 })
             }
         }.onAppear{
+            
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 userVM.fetchGroup(groupID: userVM.user?.selectedGroup ?? " ") { fetchedGroup in
                     self.selectedGroup = fetchedGroup
                 }
             }
+            
+          
+                
+                
+
+             
+                
+               
+             
             
            
             
@@ -141,7 +153,7 @@ struct EmptyGroupHomescreen : View {
                                 }).foregroundColor(Color("Foreground"))
                                     .padding(.vertical,10)
                                     .frame(width: UIScreen.main.bounds.width/3).background(Color("AccentColor")).cornerRadius(15).fullScreenCover(isPresented: $goToCreateGroupView, content: {
-                                        CreateGroupView(goBack: $goToCreateGroupView)
+                                        CreateGroupView()
                                     })
 
 
@@ -166,6 +178,7 @@ struct Tabs : View {
     @Binding var tabIndex : Tab
     @Binding var selectedGroup : Group
     @State var showTabButtons : Bool = true
+
     @EnvironmentObject var userVM: UserViewModel
     
    
@@ -178,7 +191,7 @@ struct Tabs : View {
             }else if tabIndex == .voting{
                 VotingView()
             }else if tabIndex == .home{
-                HomeScreenView(showTabButtons: $showTabButtons)
+                HomeScreen()
          
             }else if tabIndex == .schedule{
                 ScheduleView()
@@ -214,14 +227,29 @@ struct Tabs : View {
                         
                     })
                     
-                    Button(action:{
-                        UIDevice.vibrate()
-
-                        self.tabIndex = .home
-                    },label:{
-                        Image(systemName: self.tabIndex == .home ? "house.fill" : "house").font(.title)
+                    
+                    ZStack{
                         
-                    }).foregroundColor(self.tabIndex == .home ? Color("AccentColor") : FOREGROUNDCOLOR)
+                      
+                        
+                        
+                        Button(action:{
+                            UIDevice.vibrate()
+
+                            self.tabIndex = .home
+                        },label:{
+                            Image(systemName: self.tabIndex == .home ? "house.fill" : "house").font(.title)
+                            
+                        }).foregroundColor(self.tabIndex == .home ? Color("AccentColor") : FOREGROUNDCOLOR)
+                        
+                        Button(action:{
+                            
+                        },label:{
+                            Image(systemName: "plus")
+                        }).offset(y: -30).foregroundColor(Color.orange)
+                    }
+                
+                    
                     
                     Button(action:{
                         UIDevice.vibrate()

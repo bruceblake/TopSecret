@@ -56,9 +56,9 @@ struct SearchView: View {
                             VStack{
                                 ForEach(searchRepository.groupReturnedResults, id: \.id) { group in
                                     
-                                    NavigationLink(destination: GroupProfileView(group: group)) {
-                                        GroupSearchCell(group: group)
-                                    }
+//                                    NavigationLink(destination: GroupProfileView(group: group)) {
+//                                        GroupSearchCell(group: group)
+//                                    }
                                 
                                 }
                             }.background(Color("Color")).cornerRadius(12).padding(.horizontal)

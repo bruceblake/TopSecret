@@ -12,129 +12,186 @@ struct HomeScreenView: View {
     
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var navigationHelper : NavigationHelper
-    
-    @Binding var showTabButtons : Bool
+    @StateObject var groupRepository = GroupRepository()
 
-    @State var options = ["Activity","Chat","Games","Top Secret's Profile"]
+    @State var options = ["Home","Chat","Map","Profile","Games"]
     @State var selectedView : Int = 0
+    @State var goBack = false
+    @State var showAddContent = false
+    @Binding var group : Group
+    @Binding var groupChat : ChatModel
+    @Binding var users : [User]
+    @Binding var events : [EventModel]
     
-    
+    @Environment(\.presentationMode) var presentationMode
+
+            
     var body: some View {
-        
         
         ZStack{
             
-            Color("Background")
+            Color("Background").opacity(showAddContent ? 0.2 : 1)
             
             VStack{
                 
                 HStack{
                     
-                    
-                    //Group Selection
-                    Menu(content:{
-                        ForEach(userVM.groups, id: \.id){ group in
-                            Button(action:{
-                                userVM.userSelectedGroup = group
-                            },label:{
-                                Text(group.groupName)
-                            })
-                        }
+                    Button(action:{
+                        presentationMode.wrappedValue.dismiss()
                     },label:{
-                        HStack{
-                            Text(userVM.userSelectedGroup.groupName).fontWeight(.bold).font(.title2).foregroundColor(FOREGROUNDCOLOR)
-                            Image(systemName: "chevron.down").font(.footnote)
-
-                        }
-                    }).padding(.leading,120)
+                       
+                        HStack(spacing: 2){
+                                Image(systemName: "chevron.left")
+                                    .font(.title3).foregroundColor(FOREGROUNDCOLOR)
+                                Image(systemName: "house")
+                                    .font(.title3).foregroundColor(FOREGROUNDCOLOR)
+                        }.padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
+                     
+                        
+                    }).padding(.leading)
+                    
+                    
+            
                        
                     
                     
-                   
-                    HStack{
-                        Button(action:{
-                            
-                        },label:{
-                            Image(systemName: "map").foregroundColor(.green)
-                        })
-                        
-                        Button(action:{
-                            
-                        },label:{
-                            Image(systemName: "list.bullet").foregroundColor(.blue)
-                        })
-                        
-                        Spacer()
-                        
-                        NavigationLink(destination:{
-                            UserProfilePage(isCurrentUser: true)
-                        },label:{
-                            Image(systemName: "person")
-                        }).padding(.trailing,100)
-                      
-                    }.padding(.leading)
+                    Text(group.groupName).font(.title).fontWeight(.bold)
                     
-                }.padding(.top,40)
+                    Spacer()
+                    
+                    Button(action:{
+                        showAddContent.toggle()
+                    },label:{
+                        Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title2)
+                    }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color"))).padding(.trailing,12)
+
+                
+                }.padding(.top,60)
                 
                 Spacer()
                 
+                ScrollView(.horizontal, showsIndicators: false){
+                
                 HStack(spacing: 20){
-                    
+                     
                     Button(action:{
-                        selectedView = 0
+                        withAnimation(.easeIn){
+                            selectedView = 0
+                        }
+                    
                     },label:{
                         VStack{
-                            Text("Activity")
-                            Rectangle().frame(width: UIScreen.main.bounds.width/5,height:1)
+                            Text("Home").fontWeight(.bold)
+                            Rectangle().frame(width: UIScreen.main.bounds.width/5,height:2)
                         }
                     }).foregroundColor(selectedView == 0 ? Color("AccentColor") : FOREGROUNDCOLOR)
                    
                     Button(action:{
-                        selectedView = 1
+                        withAnimation(.easeIn){
+                            selectedView = 1
+                        }
+                     
                     },label:{
                         
                         VStack{
-                            Text("Chat")
-                            Rectangle().frame(width: UIScreen.main.bounds.width/5,height:1)
+                            Text("Chat").fontWeight(.bold)
+                            Rectangle().frame(width: UIScreen.main.bounds.width/5,height:2)
                         }
                     }).foregroundColor(selectedView == 1 ? Color("AccentColor") : FOREGROUNDCOLOR)
                     
-                    
                     Button(action:{
-                        selectedView = 2
+                        withAnimation(.easeIn){
+                            selectedView = 2
+                        }
+                       
                     },label:{
                         VStack{
-                            Text("Games")
-                            Rectangle().frame(width: UIScreen.main.bounds.width/5,height:1)
+                            Text("Gallery").fontWeight(.bold)
+                            Rectangle().frame(width: UIScreen.main.bounds.width/5,height:2)
                         }
                         
                     }).foregroundColor(selectedView == 2 ? Color("AccentColor") : FOREGROUNDCOLOR)
                     
                     Button(action:{
-                        selectedView = 3
+                        withAnimation(.easeIn){
+                            selectedView = 3
+                        }
+                       
                     },label:{
                         VStack{
-                            Text("Profile")
-                            Rectangle().frame(width:UIScreen.main.bounds.width/5,height:1)
+                            Text("Map").fontWeight(.bold)
+                            Rectangle().frame(width: UIScreen.main.bounds.width/5,height:2)
                         }
+                        
                     }).foregroundColor(selectedView == 3 ? Color("AccentColor") : FOREGROUNDCOLOR)
+                    
+              
+                    
+                    
+                    Button(action:{
+                        withAnimation(.easeIn){
+                            selectedView = 4
+                        }
+                       
+                    },label:{
+                        VStack{
+                            Text("Games").fontWeight(.bold)
+                            Rectangle().frame(width:UIScreen.main.bounds.width/5,height:2)
+                        }
+                    }).foregroundColor(selectedView == 4 ? Color("AccentColor") : FOREGROUNDCOLOR)
                    
+                    
+                    Button(action:{
+                        withAnimation(.easeIn){
+                            selectedView = 5
+                        }
+                       
+                    },label:{
+                        VStack{
+                            Text("Profile").fontWeight(.bold)
+                            Rectangle().frame(width:UIScreen.main.bounds.width/5,height:2)
+                        }
+                    }).foregroundColor(selectedView == 5 ? Color("AccentColor") : FOREGROUNDCOLOR)
                
                     
-                }.padding(.top)
-                
-                TabView(selection: $selectedView){
-                    ActivityView().tag(0)
-                    Text("Chat").tag(1)
-                    Text("Games").tag(2)
-                    Text("Profile").tag(3)
-                }.tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                }.padding(.vertical).padding(.leading,5)
                 
             }
+                
+                TabView(selection: $selectedView){
+                    ActivityView(group: $group,groupMembers: $users, groupEvents: $events).tag(0)
+                 
+                
+                    ChatView(uid: userVM.user?.id ?? " ", chat: groupChat).tag(1)
+                    
+                        Text("Gallery").tag(2)
+                    Text("Map").tag(3)
+                    
+                    
+                    Text("Games").tag(4)
+
+                    
+                    GroupProfileView(group: $group).tag(5)
+                    
+                        
+                    
+                }.tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+                
+            }.opacity(showAddContent ? 0.2 : 1).onTapGesture {
+                if(showAddContent){
+                    showAddContent.toggle()
+                }
+            }
+            
+            BottomSheetView(isOpen: $showAddContent, maxHeight: UIScreen.main.bounds.height * 0.45) {
+                NavigationView{
+                    AddContentView(showAddContentView: $showAddContent, group: $group)
+                }
+            }
+            
         
             
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
-        
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)        
     }
     
     
@@ -217,11 +274,7 @@ struct Home : View {
     }
 }
 
-struct HomeScreenView_Previews: PreviewProvider {
-    static var previews: some View {
-        HomeScreenView(showTabButtons: .constant(true)).preferredColorScheme(.dark).environmentObject(UserViewModel())
-    }
-}
+
 
 
 //struct HomeScreenPostView : View {

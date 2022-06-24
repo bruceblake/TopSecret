@@ -101,7 +101,7 @@ struct GroupHomeScreenView: View {
                         })
                         
                         NavigationLink(
-                            destination: GroupProfileView(group: group),
+                            destination: GroupProfileView(group: $group),
                             label: {
                                 ZStack{
                                     Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)

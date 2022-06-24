@@ -29,12 +29,12 @@ struct GalleryPostCell: View {
                     
                     VStack(spacing: 5){
                         HStack(alignment: .firstTextBaseline){
-                            NavigationLink(destination: GroupProfileView(group: galleryPost.group ?? Group())) {
-                                HStack{
-                                    WebImage(url: URL(string: galleryPost.group?.groupProfileImage ?? "")).resizable().frame(width: 40, height: 40).clipShape(Circle())
-                                    Text("\(galleryPost.group?.groupName ?? "")").fontWeight(.bold).font(.headline).foregroundColor(FOREGROUNDCOLOR)
-                                }
-                            }
+//                            NavigationLink(destination: GroupProfileView(group: galleryPost.group ?? Group())) {
+//                                HStack{
+//                                    WebImage(url: URL(string: galleryPost.group?.groupProfileImage ?? "")).resizable().frame(width: 40, height: 40).clipShape(Circle())
+//                                    Text("\(galleryPost.group?.groupName ?? "")").fontWeight(.bold).font(.headline).foregroundColor(FOREGROUNDCOLOR)
+//                                }
+//                            }
                             HStack(spacing: 2){
                                 Text("•").foregroundColor(.gray).font(.footnote)
                                 Text("@\(galleryPost.creator?.username ?? "")").foregroundColor(.gray).font(.footnote).fontWeight(.bold)

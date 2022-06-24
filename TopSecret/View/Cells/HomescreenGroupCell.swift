@@ -15,6 +15,7 @@ struct HomescreenGroupCell : View {
     @StateObject var groupVM = GroupViewModel()
     @EnvironmentObject var userVM: UserViewModel
     var group: Group
+    @Binding var isMultiColumn : Bool
     @State var profilePicturesCount = 0
     
     
@@ -60,7 +61,8 @@ struct HomescreenGroupCell : View {
         }.cornerRadius(10).onAppear{
             groupVM.getUsersProfilePictures(groupID: group.id)
         }
-        }.shadow(color: Color.black, radius: 5)
+            
+        }.shadow(color: Color.black, radius: 5).frame(width: 200, height: isMultiColumn ? 150 : 100)
         
     
     }
@@ -68,9 +70,9 @@ struct HomescreenGroupCell : View {
 
 
 
-
-struct HomescreenGroupCell_Previews: PreviewProvider {
-    static var previews: some View {
-        HomescreenGroupCell(group: Group()).colorScheme(.dark)
-    }
-}
+//
+//struct HomescreenGroupCell_Previews: PreviewProvider {
+//    static var previews: some View {
+//        HomescreenGroupCell(group: Group(), isMultiColumn: .constant(true)).colorScheme(.dark)
+//    }
+//}
