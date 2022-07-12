@@ -23,8 +23,8 @@ struct GroupSettingsView: View {
                     Button(action:{
                         dismiss.wrappedValue.dismiss()
                     },label:{
-                        Text("<").foregroundColor(FOREGROUNDCOLOR).font(.headline)
-                    }).padding(.leading)
+                        Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR).font(.title3)
+                    }).padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color"))).padding(.leading)
                     
                     Spacer()
                     

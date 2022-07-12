@@ -19,40 +19,74 @@ struct CreateEventView: View {
     @EnvironmentObject var userVM : UserViewModel
     var body: some View {
         ZStack{
-            Color("Color")
+            Color("Background")
             VStack{
                 
                 HStack{
                     Button(action:{
                         presentationMode.wrappedValue.dismiss()
                     },label:{
-                        Text("Back")
+                        ZStack{
+                            Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
+                            
+                            Image(systemName: "chevron.left")
+                                .font(.title3).foregroundColor(FOREGROUNDCOLOR)
+                        }
                     }).padding(.leading)
                     
+                    
+                    
+                    Spacer()
+                    
                     Text("Schedule An Event!")
-                        .fontWeight(.bold).padding(.top,30)
-                }
-            
+                        .fontWeight(.bold).font(.title)
+                    Spacer()
+                }.padding(.top,50)
                 
-                //Event Name
-                CustomTextField(text: $eventName, placeholder: "Event Name", isPassword: false, isSecure: false, hasSymbol: false, symbol: "")
                 
-                //Event Location
-                CustomTextField(text: $eventLocation, placeholder: "Event Location", isPassword: false, isSecure: false, hasSymbol: false, symbol: "")
+                VStack(spacing: 20){
+                    //Event Name
+                    
+                    VStack(alignment: .leading){
+                        Text("Event Name").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                        VStack{
+                            CustomTextField(text: $eventName, placeholder: "Event Name", isPassword: false, isSecure: false, hasSymbol: false, symbol: "")
+                        }
+                    }.padding(.horizontal)
+                    
+                    VStack(alignment: .leading){
+                        Text("Event Location").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                        VStack{
+                            CustomTextField(text: $eventLocation, placeholder: "Event Location", isPassword: false, isSecure: false, hasSymbol: false, symbol: "")
+                            
+                        }
+                    }.padding(.horizontal)
+                    
+                    VStack(alignment: .leading){
+                        Text("Event Time").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                        HStack{
+                            DatePicker("", selection: $eventTime)
+                            Spacer()
+                        }
+                    }.padding(.horizontal)
+                    
+                    
+                }.padding(.vertical,10)
                 
-//
-//                DatePicker("", selection: $eventTime, displayedComponents: [.date,.hourAndMinute])
-//                    .datePickerStyle(GraphicalDatePickerStyle())
-//
-          
+                
+                
                 
                 
                 Button(action:{
-                    eventVM.createEvent(groupID: group.id, eventName: eventName, eventLocation: eventLocation, eventTime: eventTime , usersVisibleTo: usersVisibleTo, userID: userVM.user?.id ?? "")
+                    eventVM.createEvent(groupID: group.id, eventName: eventName, eventLocation: eventLocation, eventTime: eventTime , usersVisibleTo: usersVisibleTo, user: userVM.user ?? User())
                     presentationMode.wrappedValue.dismiss()
                 },label:{
-                    Text("Create Event")
+                    Text("Create Event").foregroundColor(Color("Foreground"))
+                        .padding(.vertical)
+                        .frame(width: UIScreen.main.bounds.width/1.5).background(Color("AccentColor")).cornerRadius(15)
                 })
+                
+                Spacer()
                 
             }
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)

@@ -17,6 +17,8 @@ class ChatRepository : ObservableObject {
     @Published var usersTypingList : [User] = []
     @Published var usersIdlingList : [User] = []
     @Published var group : Group = Group()
+    @Published var pushText : Bool = false
+
     
     var colors: [String] = ["green","red","blue","orange","purple","teal"]
 
@@ -123,26 +125,26 @@ class ChatRepository : ObservableObject {
        
     }
     
-    func startTyping(userID: String, chatID: String, chatType: String){
+    func startTyping(userID: String, chatID: String, chatType: String, groupID: String){
         if chatType == "groupChat" {
-            COLLECTION_CHAT.document(chatID).updateData(["usersTypingList":FieldValue.arrayUnion([userID])])
+            COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["usersTypingList":FieldValue.arrayUnion([userID])])
         }else if chatType == "personal"{
             COLLECTION_USER.document(userID).collection("Personal Chats").document(chatID).updateData(["usersTypingList":FieldValue.arrayUnion([userID])])
         }
     }
     
-    func stopTyping(userID: String, chatID: String, chatType: String){
+    func stopTyping(userID: String, chatID: String, chatType: String, groupID: String){
         if chatType == "groupChat" {
-            COLLECTION_CHAT.document(chatID).updateData(["usersTypingList":FieldValue.arrayRemove([userID])])
+            COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["usersTypingList":FieldValue.arrayRemove([userID])])
         }else if chatType == "personal"{
             COLLECTION_USER.document(userID).collection("Personal Chats").document(chatID).updateData(["usersTypingList":FieldValue.arrayRemove([userID])])
         }
     }
   
     
-    func openChat(userID: String, chatID: String, chatType: String){
+    func openChat(userID: String, chatID: String, chatType: String, groupID: String){
         if chatType == "groupChat"{
-            COLLECTION_CHAT.document(chatID).updateData(["usersIdlingList":FieldValue.arrayUnion([userID])])
+            COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["usersIdlingList":FieldValue.arrayUnion([userID])])
         }else if chatType == "personal"{
             COLLECTION_USER.document(userID).collection("Personal Chats").document(chatID).updateData(["usersIdlingList":FieldValue.arrayUnion([userID])])
         }
@@ -150,9 +152,9 @@ class ChatRepository : ObservableObject {
         
     }
     
-    func exitChat(userID: String, chatID: String, chatType: String){
+    func exitChat(userID: String, chatID: String, chatType: String, groupID: String){
         if chatType == "groupChat"{
-            COLLECTION_CHAT.document(chatID).updateData(["usersIdlingList":FieldValue.arrayRemove([userID])])
+            COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["usersIdlingList":FieldValue.arrayRemove([userID])])
         }else if chatType == "personal"{
             COLLECTION_USER.document(userID).collection("Personal Chats").document(chatID).updateData(["usersIdlingList":FieldValue.arrayRemove([userID])])
         }
@@ -166,13 +168,13 @@ class ChatRepository : ObservableObject {
                 print("ERROR")
                 return
             }
-            let data = snapshot!.data()
-            self.group = Group(dictionary: data!) 
+            let data = snapshot?.data() as? [String:Any]
+            self.group = Group(dictionary: data ?? [:])
         }
     }
    
     
-    func createGroupChat(name: String, users: [String], groupID: String){
+    func createGroupChat(name: String, users: [String], groupID: String, chatID: String){
         
         let id = UUID().uuidString
         
@@ -180,76 +182,76 @@ class ChatRepository : ObservableObject {
         let data = ["name": name,
                     "memberAmount":1,
                     "dateCreated":Date(),
-                    "users":users, "id":id, "chatNameColors":[], "pickedColors":[], "nextColor":0,"groupID":groupID,"chatType":"groupChat"] as [String : Any]
+                    "users":users, "id":chatID, "chatNameColors":[], "pickedColors":[], "nextColor":0,"groupID":groupID,"chatType":"groupChat"] as [String : Any]
         
         let chat = ChatModel(dictionary: data)
         
-        COLLECTION_CHAT.document(chat.id).setData(data) { (err) in
+        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).setData(data) { (err) in
             if err != nil{
                 print("Error")
                 return
             }
         }
         
-        COLLECTION_GROUP.document(groupID).updateData(["chatID": id])
-        for user in users {
-            let color = pickColor(chatID: id, picker: 0, userID: user)
-        }
+   
+        
+            for user in users {
+                self.pickColor(chatID: chatID, picker: 0, userID: user, groupID: groupID)
+            }
 
     }
-    func createGroupChat(name: String, users: [String], groupID: String, completion: @escaping (ChatModel) -> ()) -> (){
+    func createGroupChat(name: String, users: [String], groupID: String, chatID: String, completion: @escaping (ChatModel) -> ()) -> (){
         
-        let id = UUID().uuidString
         
         
         let data = ["name": name,
                     "memberAmount":1,
                     "dateCreated":Date(),
-                    "users":users, "id":id, "chatNameColors":[], "pickedColors":[], "nextColor":0,"groupID":groupID,"chatType":"groupChat"] as [String : Any]
+                    "users":users, "id":chatID, "chatNameColors":[], "pickedColors":[], "nextColor":0,"groupID":groupID,"chatType":"groupChat"] as [String : Any]
         
         let chat = ChatModel(dictionary: data)
         
-        COLLECTION_CHAT.document(chat.id).setData(data) { (err) in
+        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).setData(data) { (err) in
             if err != nil{
                 print("Error")
                 return
             }
         }
         
-        COLLECTION_GROUP.document(groupID).updateData(["chatID": id])
-        for user in users {
-            pickColor(chatID: id, picker: 0, userID: user)
-        }
-
+       
+            for user in users {
+                self.pickColor(chatID: chatID, picker: 0, userID: user, groupID: groupID)
+            }
+    
         return completion(chat)
     }
     
     
     
-    func leaveChat(chatID: String, userID: String){
-        COLLECTION_CHAT.document(chatID).updateData(["memberAmount":FieldValue.increment(Int64(-1))])
-        COLLECTION_CHAT.document(chatID).updateData(["users":FieldValue.arrayRemove([userID])])
+    func leaveChat(chatID: String, userID: String, groupID: String){
+        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["memberAmount":FieldValue.increment(Int64(-1))])
+        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["users":FieldValue.arrayRemove([userID])])
         
-        COLLECTION_CHAT.document(chatID).getDocument { (snapshot, err) in
+        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).getDocument { (snapshot, err) in
             
             if err != nil {
                 print("ERROR")
                 return
             }
             
-            let users = snapshot?.get("users") as? [String] ?? []
+            let users = snapshot?.get("Users") as? [String] ?? []
+      
             
             if users.count <= 0 {
                 
-                COLLECTION_CHAT.document(chatID).collection("Messages").getDocuments { (snapshot, err) in
+                COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).collection("Messages").getDocuments { (snapshot, err) in
                   
                     for document in snapshot!.documents{
                         let messageID = document.get("id") as! String
-                        COLLECTION_CHAT.document(chatID).collection("Messages").document(messageID).delete()
+                        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).collection("Messages").document(messageID).delete()
                     }
                 }
-                
-                COLLECTION_CHAT.document(chatID).delete() { err in
+                COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).delete() { err in
                     
                     if err != nil {
                         print("Unable to delete chat")
@@ -269,11 +271,11 @@ class ChatRepository : ObservableObject {
         
     }
     
-    func pickColor(chatID: String,picker: Int,userID: String) -> String{
+    func pickColor(chatID: String,picker: Int,userID: String, groupID: String) -> String{
        
         var choice = 0
         
-        COLLECTION_CHAT.document(chatID).getDocument { (snapshot, err) in
+        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).getDocument { (snapshot, err) in
             if err != nil {
                 print("ERROR")
                 return
@@ -281,8 +283,8 @@ class ChatRepository : ObservableObject {
             _ = snapshot?.get("nameColors") as? [[String:String]] ?? [["":""]]
             let nextColor = snapshot?.get("nextColor") as? Int ?? 0
             choice = nextColor
-            COLLECTION_CHAT.document(chatID).updateData(["nameColors":FieldValue.arrayUnion([[userID:self.colors[nextColor]]])])
-            COLLECTION_CHAT.document(chatID).updateData(["nextColor":FieldValue.increment(Int64(1))])
+            COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["nameColors":FieldValue.arrayUnion([[userID:self.colors[nextColor]]])])
+            COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["nextColor":FieldValue.increment(Int64(1))])
             
         }
         
@@ -291,11 +293,11 @@ class ChatRepository : ObservableObject {
         
     }
     
-    func joinChat(chatID: String, userID: String){
+    func joinChat(chatID: String, userID: String, groupID: String){
         
-        COLLECTION_CHAT.document(chatID).updateData(["users":FieldValue.arrayUnion([userID])])
-        COLLECTION_CHAT.document(chatID).updateData(["memberAmount":FieldValue.increment(Int64(1))])
-        pickColor(chatID: chatID, picker: 0, userID: userID)
+        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["users":FieldValue.arrayUnion([userID])])
+        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["memberAmount":FieldValue.increment(Int64(1))])
+        pickColor(chatID: chatID, picker: 0, userID: userID, groupID: groupID)
         
     }
     

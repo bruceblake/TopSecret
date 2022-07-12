@@ -12,7 +12,7 @@ import Combine
 class EventRepository : ObservableObject {
     
     
-    func createEvent(groupID: String, eventName: String, eventLocation: String,eventTime: Date, usersVisibleTo: [String],userID: String){
+    func createEvent(groupID: String, eventName: String, eventLocation: String,eventTime: Date, usersVisibleTo: [String],user: User){
         //TODO
         let id = UUID().uuidString
         
@@ -24,13 +24,21 @@ class EventRepository : ObservableObject {
                     "usersVisibleTo" : usersVisibleTo, "id":id] as [String:Any]
         
                 
-        COLLECTION_EVENTS.document(id).setData(data) { (err) in
+        COLLECTION_GROUP.document(groupID).collection("Events").document(id).setData(data) { (err) in
             if err != nil {
                 print("ERROR \(err!.localizedDescription)")
                 return
             }
         }
-        addUserToVisibilityList(eventID: id, userID: userID)
+        
+        let notificationData = ["id":UUID().uuidString,
+                                "notificationName": "Event Created",
+                                "notificationTime":Timestamp(),
+                                "notificationType":"eventCreated", "notificationCreator":user.id ?? "USER_ID"] as [String:Any]
+        COLLECTION_GROUP.document(groupID).collection("Notifications").addDocument(data: notificationData)
+        COLLECTION_GROUP.document(groupID).collection("UnreadNotifications").addDocument(data: notificationData)
+        
+        addUserToVisibilityList(eventID: id, userID: user.id ?? "USER_USERNAME")
         COLLECTION_GROUP.document(groupID).updateData(["events":FieldValue.arrayUnion([id])])
     }
     

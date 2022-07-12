@@ -20,7 +20,7 @@ struct ReplyOverlay: View {
     
     var message: Message
     var chatID: String
-    
+    var groupID: String
 
     func getColor(chatID: String, userID: String, completion: @escaping (String) -> ()) -> (){
         
@@ -106,7 +106,7 @@ struct ReplyOverlay: View {
                                          "repliedMessageValue":text,
                                          "repliedMessageName":userVM.user?.nickName ?? "",
                                          "repliedMessageProfilePicture":userVM.user?.profilePicture ?? "",
-                                         "repliedMessageTimestamp":Timestamp(),"timeStamp":Timestamp()]), chatID: chatID)
+                                         "repliedMessageTimestamp":Timestamp(),"timeStamp":Timestamp()]), chatID: chatID, groupID: groupID)
                     }
                   
                     self.replyToMessage.toggle()

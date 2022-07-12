@@ -12,6 +12,7 @@ struct EditMessageOverlay: View {
     
     var message: Message
     var chatID: String
+    var groupID: String
     @State var text: String = ""
     @StateObject var messageVM = MessageViewModel()
     @Binding var editMessage: Bool
@@ -63,7 +64,7 @@ struct EditMessageOverlay: View {
                     Button(action:{
                       
                   
-                        messageVM.editMessage(messageID: message.id, chatID: chatID, text: text)
+                        messageVM.editMessage(messageID: message.id, chatID: chatID, text: text, groupID: groupID)
                       
                         self.editMessage.toggle()
                     },label:{

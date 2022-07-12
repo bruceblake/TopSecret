@@ -9,7 +9,7 @@ import SwiftUI
 
 struct FullEventView: View {
     
-    @Binding var event : EventModel
+    var event : EventModel
     @Environment(\.presentationMode) var presentationMode
 
     var body: some View {

@@ -16,6 +16,8 @@ struct ChatView: View {
     @StateObject var messageVM = MessageViewModel()
     @StateObject var groupVM = GroupViewModel()
     @StateObject var imagePickerVM = ImagePickerViewModel()
+    @StateObject private var keyboardHandler = KeyboardGuardian()
+    @StateObject var selectedGroupVM : SelectedGroupViewModel
     
     @State var value: CGFloat = 0
     @State var text = ""
@@ -29,7 +31,8 @@ struct ChatView: View {
     @State var showMenu: Bool = false
     @State var userIDList: [String] = []
     @State var images : [UIImage] = []
-    @State var group: Group = Group()
+    @Binding var group: Group
+    @State var pushText : Bool = false
     var columns3Fixed: [GridItem] = [
         GridItem(.fixed(115), spacing: 10),
         GridItem(.fixed(115), spacing: 10),
@@ -37,7 +40,6 @@ struct ChatView: View {
     ]
     
     var uid: String
-    @State var chat: ChatModel
     
     
     
@@ -54,6 +56,20 @@ struct ChatView: View {
         return ans
     }
     
+    func sortChatUsersIdle(users: [User]) -> [User]{
+        return users.sorted(by: { checkIfUserIsIdling(userID: $0.id ?? " ") && !checkIfUserIsIdling(userID: $1.id ?? " ") })
+    }
+    
+    func checkIfUserIsIdling(userID: String) -> Bool {
+        for user in chatVM.usersIdlingList {
+            let id = user.id ?? " "
+            if id == userID{
+                return true
+            }
+        }
+        return false
+    }
+    
     
     var body: some View {
         
@@ -65,22 +81,52 @@ struct ChatView: View {
             
             VStack{
                 
-               
+                
                 ScrollView(showsIndicators: false){
                     ScrollViewReader{ scrollViewProxy in
                         
-                      
+                        
                         VStack{
                             
-                           
-                           
+                            
+                            
+                            
                             ForEach(messageVM.messages){ message in
-                                MessageCell(replyToMessage: $replyToMessage, messageToReplyTo: $currentMessage, showMenu: $showMenu,message: message, chatID: chat.id).padding(.horizontal,10)
+                                MessageCell(replyToMessage: $replyToMessage, messageToReplyTo: $currentMessage, showMenu: $showMenu,message: message, chatID: selectedGroupVM.group.chat?.id ?? " ").padding(.horizontal,10).padding(.vertical,-4)
                             }
+                            
+                            
+                            VStack{
+                                ForEach(chatVM.usersTypingList){ user in
+                                    
+                                    if user.id == userVM.user?.id ?? ""{
+                                        HStack(spacing: 4){
+                                            Text("YOU").foregroundColor(Color("AccentColor")).fontWeight(.bold)
+                                            Text("are typing...").foregroundColor(.gray)
+                                            Spacer()
+                                        }
+                                    }else{
+                                        HStack(spacing: 4){
+                                            Text("\(user.nickName ?? "USER_NICKNAME")").foregroundColor(Color.red)
+                                            Text("is typing...").foregroundColor(.gray)
+                                            Spacer()
+                                        }
+                                    }
+                                    
+                                    
+                                }
+                            }.padding(.horizontal,10).padding(.vertical,7)
+                            
+                            
+                            
                             
                             HStack{Spacer()}.padding(0).id("Empty")
                             
-                        }.padding(.top,200).padding(.bottom,30).onReceive(messageVM.$scrollToBottom, perform: { _ in
+                            
+                            
+                            
+                            
+                        }.padding(.top,105).padding(.bottom, keyboardHandler.keyboardHeight).animation(.default).padding(.bottom,30).onReceive(messageVM.$scrollToBottom, perform: { _ in
                             withAnimation(.easeOut(duration: 0.5)) {
                                 scrollViewProxy.scrollTo("Empty", anchor: .bottom)
                             }
@@ -90,123 +136,126 @@ struct ChatView: View {
                     
                     
                 }
-                 
-               
                 
-                VStack{
-         
+                
+                
+                VStack(spacing: 0){
+                    
                     
                     Divider()
-            
+                    
                     
                     VStack(spacing: 0){
-                    
-                    HStack{
-                        Button(action:{
-                            
-                            
-                            imagePickerVM.openImagePicker()
-                        },label:{
-                            ZStack{
-                                Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
-                                Image(systemName: imagePickerVM.showImagePicker ? "xmark" :  "photo.on.rectangle")
-                            }
-                        })
                         
+                        HStack{
+                            Button(action:{
+                                
+                                
+                                imagePickerVM.openImagePicker()
+                            },label:{
+                                ZStack{
+                                    Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
+                                    Image(systemName: imagePickerVM.showImagePicker ? "xmark" :  "photo.on.rectangle")
+                                }
+                            })
+                            
+                            
+                            CustomChatTextField(text: $text, isShowingPhotoPicker: $isShowingPhotoPicker, avatarImage: $avatarImage, sendAction : {
+                                messageVM.sendGroupChatTextMessage(text: text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: chatVM.colors[selectedGroupVM.group.chat?.users.firstIndex(of: uid) ?? 0], messageID: UUID().uuidString, messageType: messageVM.readLastMessage().name ?? " " == userVM.user?.nickName ?? " " ? "followUpUserText" : "text", chatID: selectedGroupVM.group.chatID ?? "CHAT_ID", chatType: "groupChat", groupID: selectedGroupVM.group.id)
+                            }, textChange: {
+                                
+                                
+                                if text == ""{
+                                    chatVM.stopTyping(userID: uid, chatID: selectedGroupVM.group.chatID ?? " ", chatType: "groupChat", groupID: group.id)
+                                }else{
+                                    chatVM.startTyping(userID: uid, chatID: selectedGroupVM.group.chatID ?? " ", chatType: "groupChat", groupID: group.id)
+                                }
+                                
+                            }, editingChange: {
+                                if imagePickerVM.showImagePicker{
+                                    withAnimation{imagePickerVM.showImagePicker.toggle()}
+                                }
+                                pushText.toggle()
+                                
+                            })
+                            
+                            
+                            
+                                .sheet(isPresented: $showImageSendView, content: {
+                                    ImageSendView(message: Message(dictionary: ["id":UUID().uuidString,"nameColor":chatVM.colors[selectedGroupVM.group.chat?.users.firstIndex(of: uid) ?? 0],"timeStamp":Timestamp(),"name":userVM.user?.nickName ?? "","profilePicture":userVM.user?.profilePicture ?? "","messageType":"image"]), imageURL: avatarImage, chatID: selectedGroupVM.group.chat?.id ?? "CHAT_ID", groupID: selectedGroupVM.group.id, messageVM: messageVM)
+                                }).fullScreenCover(isPresented: $isShowingPhotoPicker, onDismiss: {
+                                    self.showImageSendView.toggle()
+                                }, content: {
+                                    ImagePicker(avatarImage: $avatarImage, images: $images, allowsEditing: false)
+                                })
+                            
+                        }.padding(.leading,5)
                         
-                        CustomChatTextField(text: $text, isShowingPhotoPicker: $isShowingPhotoPicker, avatarImage: $avatarImage, sendAction : {
-                            messageVM.sendGroupChatTextMessage(text: text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: chatVM.colors[chat.users.firstIndex(of: uid) ?? 0], messageID: UUID().uuidString, messageType: "text", chat: chat, chatType: "groupChat")
-                        }, textChange: {
-                            
-                           
-                            if text == ""{
-                                chatVM.stopTyping(userID: uid, chatID: chat.id, chatType: "groupChat")
-                            }else{
-                                chatVM.startTyping(userID: uid, chatID: chat.id, chatType: "groupChat")
-                            }
-                            
-                        }, editingChange: {
-                            if imagePickerVM.showImagePicker{
-                                withAnimation{imagePickerVM.showImagePicker.toggle()}
-                            }
-                        })
-                        
-                       
-                            
-                            .sheet(isPresented: $showImageSendView, content: {
-                            ImageSendView(message: Message(dictionary: ["id":UUID().uuidString,"nameColor":chatVM.colors[chat.users.firstIndex(of: uid) ?? 0],"timeStamp":Timestamp(),"name":userVM.user?.nickName ?? "","profilePicture":userVM.user?.profilePicture ?? "","messageType":"image"]), imageURL: avatarImage, chatID: chat.id, messageVM: messageVM)
-                        }).fullScreenCover(isPresented: $isShowingPhotoPicker, onDismiss: {
-                            self.showImageSendView.toggle()
-                        }, content: {
-                            ImagePicker(avatarImage: $avatarImage, images: $images, allowsEditing: false)
-                        })
-
-                    }.padding(.leading,5)
-                    
                         ScrollView(.vertical){
-                        VStack{
-                            
-                         
-                            
-                            LazyVGrid(
-                                   columns: columns3Fixed,
-                                   alignment: .center,
-                                   spacing: 10,
-                                   pinnedViews: []
-                               ) {
-
-                                   ForEach(imagePickerVM.fetchedPhotos){ photo in
-
-                                       ThumbnailView(photo: photo).onTapGesture {
-                                           imagePickerVM.extractPreviewData(asset: photo.asset)
-                                           imagePickerVM.showPreview.toggle()
-                                       }
-
-
-
-
-
-                                   }
-
-                               }
-                            
-                           
-                            
-                        
-                            if imagePickerVM.libraryStatus == .denied || imagePickerVM.libraryStatus == .limited {
-                                VStack(spacing: 10){
-                                    Text(imagePickerVM.libraryStatus == .denied ? "Allow Access for Photos" : "Select More Photos").foregroundColor(.gray)
-                                         
-                                         Button(action:{
-                                             UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!, options: [:], completionHandler: nil)
-                                    },label:{
-                                        Text(imagePickerVM.libraryStatus == .denied ?  "Allow Acces" : "Select More").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold).padding(.vertical,10).padding(.horizontal).background(Color("AccentColor")).cornerRadius(5)
-                                    })
-                                }.frame(width: 150)
+                            VStack{
+                                
+                                
+                                
+                                LazyVGrid(
+                                    columns: columns3Fixed,
+                                    alignment: .center,
+                                    spacing: 10,
+                                    pinnedViews: []
+                                ) {
+                                    
+                                    ForEach(imagePickerVM.fetchedPhotos){ photo in
+                                        
+                                        ThumbnailView(photo: photo).onTapGesture {
+                                            imagePickerVM.extractPreviewData(asset: photo.asset)
+                                            imagePickerVM.showPreview.toggle()
+                                        }
+                                        
+                                        
+                                        
+                                        
+                                        
+                                    }
+                                    
+                                }
+                                
+                                
+                                
+                                
+                                if imagePickerVM.libraryStatus == .denied || imagePickerVM.libraryStatus == .limited {
+                                    VStack(spacing: 10){
+                                        Text(imagePickerVM.libraryStatus == .denied ? "Allow Access for Photos" : "Select More Photos").foregroundColor(.gray)
+                                        
+                                        Button(action:{
+                                            UIApplication.shared.open(URL(string: UIApplication.openSettingsURLString)!, options: [:], completionHandler: nil)
+                                        },label:{
+                                            Text(imagePickerVM.libraryStatus == .denied ?  "Allow Acces" : "Select More").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold).padding(.vertical,10).padding(.horizontal).background(Color("AccentColor")).cornerRadius(5)
+                                        })
+                                    }.frame(width: 150)
+                                }
                             }
+                        }.frame(height: imagePickerVM.showImagePicker ? 150 : 0).background(Color("Color")).opacity(imagePickerVM.showImagePicker ? 1 : 0)
+                        
+                        
+                    }
+                    
+                    
+                    
+                    
+                }.background(Color("Background")).offset(y: -self.value).navigationBarHidden(true)
+                    .animation(.spring())
+                    .onAppear {
+                        
+                        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { (noti) in
+                            let value = noti.userInfo![UIResponder.keyboardFrameEndUserInfoKey] as! CGRect
+                            let height = value.height
+                            self.value = height
                         }
-                    }.frame(height: imagePickerVM.showImagePicker ? 150 : 0).background(Color("Color")).opacity(imagePickerVM.showImagePicker ? 1 : 0)
-                    
                         
-                }
-                        
-                        
-                   
-                    
-                }.padding(.bottom,10).background(Color("Background")).offset(y: -self.value).navigationBarHidden(true)
-                .animation(.spring())
-                .onAppear{
-                    NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { (noti) in
-                        let value = noti.userInfo![UIResponder.keyboardFrameEndUserInfoKey] as! CGRect
-                        let height = value.height
-                        self.value = height
+                        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { (noti) in
+                            
+                            self.value = 0
+                        }
                     }
-                    
-                    NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { (noti) in
-                        
-                        self.value = 0
-                    }
-                }
                 
             }
             
@@ -215,7 +264,7 @@ struct ChatView: View {
                 
                 ScrollView(.horizontal){
                     HStack(spacing: 0){
-                        ForEach(chatVM.userList){ user in
+                        ForEach(sortChatUsersIdle(users: chatVM.userList)){ user in
                             
                             NavigationLink(destination: UserProfilePage(user: user, isCurrentUser: false), label:{
                                 
@@ -225,35 +274,35 @@ struct ChatView: View {
                                         .scaledToFill()
                                         .frame(width:40,height:40)
                                         .clipShape(Circle())
-                                        .overlay(Circle().stroke(chat.usersIdling.contains(user.id ?? "") ? Color(getColor(userID: user.id ?? "", groupChat: chat)) : Color.gray,lineWidth: 2))
+                                        .overlay(Circle().stroke(selectedGroupVM.group.chat?.usersIdling.contains(user.id ?? " ") ?? false ? Color(getColor(userID: user.id ?? "", groupChat: selectedGroupVM.group.chat ?? ChatModel())) : Color.gray,lineWidth: 2))
                                     
                                     Text("\(user.nickName ?? "TOP SECRET USER")").foregroundColor(FOREGROUNDCOLOR)
                                 }
-                             
                                 
                                 
-                            }).padding([.leading,.bottom],7).padding(.top,5)
+                                
+                            }).padding(.leading,5).padding(.top,5)
                             
-                         
-
-                              
-                               
+                            
+                            
+                            
+                            
                         }
                     }
-                   
-                 
+                    
+                    
                 }
-            
+                
                 Divider()
             }.padding(.top,10).background(Color("Background"))
-         
             
-         
-         
+            
+            
+            
             
             if replyToMessage{
                 GeometryReader{ _ in
-                    ReplyOverlay(replyToMessage: $replyToMessage, message: currentMessage, chatID: chat.id)
+                    ReplyOverlay(replyToMessage: $replyToMessage, message: currentMessage, chatID: selectedGroupVM.group.chat?.id ?? "CHAT_ID", groupID: selectedGroupVM.group.id)
                 }.padding(.horizontal,40).padding(.top,350).background(Color.black.opacity(0.45)).edgesIgnoringSafeArea(.all)
             }
             
@@ -261,7 +310,7 @@ struct ChatView: View {
                 GeometryReader{ _ in
                     
                     
-                    EditMessageOverlay(message: currentMessage, chatID: chat.id, editMessage: $editMessage)
+                    EditMessageOverlay(message: currentMessage, chatID: selectedGroupVM.group.chat?.id ?? "CHAT_ID", groupID: selectedGroupVM.group.id, editMessage: $editMessage)
                 }.padding(.horizontal,40).padding(.top,350).background(Color.black.opacity(0.45)).edgesIgnoringSafeArea(.all)
                 
             }
@@ -292,7 +341,7 @@ struct ChatView: View {
                                         
                                         Text("\(currentMessage.timeStamp?.dateValue() ?? Date(), style: .time)")
                                     }
-                                  
+                                    
                                     
                                     HStack{
                                         Text("\(currentMessage.messageValue ?? "")")
@@ -304,11 +353,11 @@ struct ChatView: View {
                                 
                                 Spacer()
                                 
-                                    
                                 
                                 
                                 
-                              
+                                
+                                
                                 
                             }
                         }.padding(.horizontal).background(Color("Color")).cornerRadius(16)
@@ -316,26 +365,26 @@ struct ChatView: View {
                         VStack{
                             
                             if currentMessage.name == userVM.user?.nickName{
+                                Button(action:{
+                                    withAnimation(.easeIn(duration: 0.2)){
+                                        self.showMenu.toggle()
+                                    }
+                                    
+                                    messageVM.deleteMessage(chatID: selectedGroupVM.group.chat?.id ?? "CHAT_ID", message: currentMessage, groupID: selectedGroupVM.group.id)
+                                },label:{
+                                    Text("Delete").foregroundColor(FOREGROUNDCOLOR)
+                                }).padding()
+                                
+                                Divider()
+                            }
+                            
                             Button(action:{
                                 withAnimation(.easeIn(duration: 0.2)){
                                     self.showMenu.toggle()
                                 }
                                 
-                                messageVM.deleteMessage(chatID: chat.id, message: currentMessage)
-                            },label:{
-                                Text("Delete").foregroundColor(FOREGROUNDCOLOR)
-                            }).padding(10)
-                            
-                            Divider()
-                            }
-                            
-                            Button(action:{
-                                withAnimation(.easeIn(duration: 0.2)){
-                                self.showMenu.toggle()
-                            }
-                            
                                 
-                                messageVM.pinMessage(chatID: chat.id, messageID: currentMessage.id, userID: userVM.user?.id ?? "")
+                                messageVM.pinMessage(chatID: selectedGroupVM.group.chat?.id ?? "CHAT_ID", messageID: currentMessage.id, userID: userVM.user?.id ?? "", groupID: selectedGroupVM.group.id)
                             },label:{
                                 Text("Pin").foregroundColor(FOREGROUNDCOLOR)
                             }).padding(10)
@@ -343,20 +392,20 @@ struct ChatView: View {
                             Divider()
                             
                             if currentMessage.name == userVM.user?.nickName{
-
-                            Button(action:{
-                                //EDIT MESSAGE
-                                withAnimation(.easeIn(duration: 0.2)){
-                                    self.showMenu.toggle()
-                                    self.editMessage.toggle()
-                                }
                                 
-                          
-                            },label:{
-                                Text("Edit").foregroundColor(FOREGROUNDCOLOR)
-                            }).padding(10)
-                            
-                            Divider()
+                                Button(action:{
+                                    //EDIT MESSAGE
+                                    withAnimation(.easeIn(duration: 0.2)){
+                                        self.showMenu.toggle()
+                                        self.editMessage.toggle()
+                                    }
+                                    
+                                    
+                                },label:{
+                                    Text("Edit").foregroundColor(FOREGROUNDCOLOR)
+                                }).padding(10)
+                                
+                                Divider()
                             }
                             Button(action:{
                                 withAnimation(.easeIn(duration: 0.2)){
@@ -382,42 +431,40 @@ struct ChatView: View {
             
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+        
+            .onAppear{
+                imagePickerVM.setUp()
                 
-        .onAppear{
-            self.group = chatVM.group
-            imagePickerVM.setUp()
-
-            messageVM.readAllMessages(chatID: chat.id, userID: userVM.user?.id ?? " ", chatType: "groupChat")
-            messageVM.getPinnedMessage(chatID: chat.id)
-            chatVM.getGroup(groupID: chat.groupID ?? " ")
-            chatVM.openChat(userID: uid, chatID: chat.id, chatType: "groupChat")
-            chatVM.getUsers(usersID: chat.users)
-            chatVM.getUsersIdlingList(chatID: chat.id)
-            chatVM.getUsersTypingList(chatID: chat.id)
-            
-            
-            
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                messageVM.scrollToBottom += 1
-                chatVM.getUsersIDList(users: chatVM.usersIdlingList) { users in
-                    self.userIDList = users
+                
+                messageVM.getPinnedMessage(chatID: selectedGroupVM.group.chatID ?? "CHAT_ID", groupID: selectedGroupVM.group.id)
+                chatVM.openChat(userID: uid, chatID: selectedGroupVM.group.chatID ?? "CHAT_ID", chatType: "groupChat", groupID: selectedGroupVM.group.id)
+                chatVM.getUsers(usersID: selectedGroupVM.group.users ?? [])
+                chatVM.getUsersIdlingList(chatID: selectedGroupVM.group.chatID ?? "CHAT_ID")
+                chatVM.getUsersTypingList(chatID: selectedGroupVM.group.chatID ?? "CHAT_ID")
+                messageVM.readAllMessages(chatID: selectedGroupVM.group.chatID ?? "CHAT_ID", userID: userVM.user?.id ?? " ", chatType: "groupChat", groupID: selectedGroupVM.group.id)
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    messageVM.scrollToBottom += 1
+                    chatVM.getUsersIDList(users: chatVM.usersIdlingList) { users in
+                        self.userIDList = users
+                    }
+                    
+                    
                 }
             }
-            
-        }.onDisappear{
-            chatVM.exitChat(userID: uid, chatID: chat.id, chatType: "groupChat")
-        }.onReceive(userVM.$groupChats) { i in
-            for groupChat in i {
-                if chat.id == groupChat.id {
-                    self.chat = groupChat
-                }
-            }
-            
-            
-        }
+        
+        
+        
+     
+    .onDisappear{
+        chatVM.exitChat(userID: uid, chatID: selectedGroupVM.group.chatID ?? "CHAT_ID", chatType: "groupChat", groupID: selectedGroupVM.group.id)
+        chatVM.stopTyping(userID: uid, chatID: selectedGroupVM.group.chatID ?? "CHAT_ID", chatType: "groupChat", groupID: selectedGroupVM.group.id)
+    }
+    
     }
 }
+
+
 
 struct ThumbnailView: View {
     
@@ -428,7 +475,7 @@ struct ThumbnailView: View {
                 .resizable()
                 .aspectRatio(contentMode: .fill)
                 .frame(width: 115, height: 115)
-
+            
             if photo.asset.mediaType == .video{
                 Image(systemName: "video.fill").font(.title2).foregroundColor(FOREGROUNDCOLOR)
             }
@@ -441,7 +488,7 @@ struct CustomChatTextField : View {
     
     
     
-
+    
     
     
     @State var showSend : Bool = false
@@ -450,19 +497,18 @@ struct CustomChatTextField : View {
     @Binding var isShowingPhotoPicker : Bool
     @Binding var avatarImage : UIImage
     @State var showImageSendView : Bool = false
-
-
+    
     var sendAction : () -> (Void)
     var textChange : () -> (Void)
     var editingChange: () -> (Void)
     
     var body: some View {
         HStack{
-         
             
-            TextField("Message", text: $text).onTapGesture {
+            
+            TextField("Message", text: $text, onEditingChanged: { editingChanged in
                 editingChange()
-            }.onChange(of: text) { message in
+            }).onChange(of: text) { message in
                 showSend = message != ""
                 textChange()
             }.padding(.leading,5)
@@ -480,7 +526,7 @@ struct CustomChatTextField : View {
                         }
                     }).padding(.leading)
                     
-                 
+                    
                 }
             }else{
                 Button(action:{
@@ -490,16 +536,7 @@ struct CustomChatTextField : View {
                     
                     text = ""
                     
-                    NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { (noti) in
-                        let value = noti.userInfo![UIResponder.keyboardFrameEndUserInfoKey] as! CGRect
-                        let height = value.height
-                        self.value = height
-                    }
                     
-                    NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { (noti) in
-                        
-                        self.value = 0
-                    }
                     
                 },label:{
                     Text("Send")
@@ -511,11 +548,11 @@ struct CustomChatTextField : View {
 
 
 
-struct ChatView_Previews: PreviewProvider {
-    static var previews: some View {
-        ChatView(uid: "", chat: ChatModel())
-    }
-}
+//struct ChatView_Previews: PreviewProvider {
+//    static var previews: some View {
+//        ChatView(uid: "", chat: ChatModel())
+//    }
+//}
 
 
 

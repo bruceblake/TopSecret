@@ -12,6 +12,8 @@ struct SearchView: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject var searchRepository = SearchRepository()
     @EnvironmentObject var userVM : UserViewModel
+    @State var openGroupProfile : Bool = false
+    @State var selectedGroup : Group = Group()
 
     var body: some View {
         ZStack{
@@ -56,9 +58,14 @@ struct SearchView: View {
                             VStack{
                                 ForEach(searchRepository.groupReturnedResults, id: \.id) { group in
                                     
-//                                    NavigationLink(destination: GroupProfileView(group: group)) {
-//                                        GroupSearchCell(group: group)
-//                                    }
+                                    Button(action:{
+                                        selectedGroup = group
+                                        openGroupProfile.toggle()
+                                    },label:{
+                                        GroupSearchCell(group: group)
+                                    })
+                                    
+                                   
                                 
                                 }
                             }.background(Color("Color")).cornerRadius(12).padding(.horizontal)
@@ -72,7 +79,11 @@ struct SearchView: View {
                 }
                 Spacer()
             }
-       
+            
+            
+            NavigationLink(destination: GroupProfileView(group: $selectedGroup, isInGroup: selectedGroup.users?.contains(userVM.user?.id ?? " ") ?? false, showProfileView: $openGroupProfile), isActive: $openGroupProfile){
+                EmptyView()
+            }
 
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
             searchRepository.startSearch(searchRequest: "allGroupsAndUsers", id: "")

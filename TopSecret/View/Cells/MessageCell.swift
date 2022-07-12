@@ -26,22 +26,75 @@ struct MessageCell: View {
                
             ZStack{
                 Color("Background")
-                VStack(spacing: 0){
-                    HStack{
-                        Text("\(message.name ?? "")").foregroundColor(Color("\(message.nameColor ?? "")"))
-                        Spacer()
-                    }
+                VStack(alignment: .leading, spacing: 0){
+                    
+                    HStack(spacing: 3){
+                            Image(systemName: "chevron.left").foregroundColor(Color("\(message.nameColor ?? "")")).frame(width:2).padding(.horizontal,5)
+                            Text("\(message.name ?? "")").foregroundColor(Color("\(message.nameColor ?? "")"))
+                            Spacer()
+                        }.padding(.top,3)
+                    
+                    
                     
                     HStack(alignment: .center){
                         HStack{
-                            Image(systemName: "chevron.left").foregroundColor(Color("\(message.nameColor ?? "")")).frame(width:2).padding(.horizontal,5)
+                            
+                            HStack(spacing: 3){
+                                Rectangle().foregroundColor(Color("\(message.nameColor ?? "")")).frame(width:2).padding(.horizontal,5)
+
+                                HStack{
+                                    Text("\(message.messageValue ?? "")").lineLimit(5)
+                                    if message.edited ?? false{
+                                        Text("(edited)").foregroundColor(.gray).font(.footnote)
+                                    }
+                                }
+                            }
+                          
+                        }
+               
+                    
+                        Spacer()
+                        Text("\(message.timeStamp?.dateValue() ?? Date(), style: .time)").foregroundColor(.gray).font(.footnote)
+                    
+
+                    }.padding(.top,5)
+                
+            }
+        
+      
+                
+                
+            }.onTapGesture{}  .onLongPressGesture {
+                UIDevice.vibrate()
+
+                withAnimation(.easeOut(duration: 0.2)){
+                    self.showMenu.toggle()
+
+                }
+                    self.messageToReplyTo = message
+                
+                }
+        
+        }
+        else if message.messageType == "followUpUserText"{
+            ZStack{
+                Color("Background")
+                VStack(alignment: .leading, spacing: 0){
+                    
+                    
+                    
+                    
+                    HStack(alignment: .center){
+                        HStack(spacing: 3){
+                            
+                            Rectangle().foregroundColor(Color("\(message.nameColor ?? "")")).frame(width:2).padding(.horizontal,5)
                             
                             HStack{
                                 Text("\(message.messageValue ?? "")").lineLimit(5)
                                 if message.edited ?? false{
                                     Text("(edited)").foregroundColor(.gray).font(.footnote)
                                 }
-                            }.padding(.trailing,1)
+                            }
                         }
                
                     
@@ -53,20 +106,19 @@ struct MessageCell: View {
                 
             }
         
-        .onLongPressGesture {
-            UIDevice.vibrate()
-
-            withAnimation(.easeOut(duration: 0.2)){
-                self.showMenu.toggle()
-
-            }
-                self.messageToReplyTo = message
-            
-            }
+       
                 
                 
-            }
-        
+            }.onTapGesture{}.onLongPressGesture {
+                UIDevice.vibrate()
+
+                withAnimation(.easeOut(duration: 0.2)){
+                    self.showMenu.toggle()
+
+                }
+                    self.messageToReplyTo = message
+                
+                }
         }
         else if message.messageType == "image"{
             ZStack{
@@ -97,18 +149,18 @@ struct MessageCell: View {
                 
             }
         
-        .onLongPressGesture {
-            
-            withAnimation(.easeOut(duration: 0.2)){
-                self.showMenu.toggle()
+       
+                
+            }.onTapGesture{}.onLongPressGesture {
+                
+                withAnimation(.easeOut(duration: 0.2)){
+                    self.showMenu.toggle()
 
-            }
-                self.messageToReplyTo = message
-            
-            }
+                }
+                    self.messageToReplyTo = message
                 
-                
-            }
+                }
+                    
             }
             
         else if message.messageType == "deletedMessage"{
@@ -143,11 +195,6 @@ struct MessageCell: View {
                                     ReplyMessageCell(message: message, chatID: chatID).frame(width:250, height: 50)
                                     
                                 }
-                             
-                                
-
-                                    
-                                        
                                         HStack{
                                             Text("\(message.messageValue ?? "")").lineLimit(5)
                                             if message.edited ?? false{
@@ -156,32 +203,20 @@ struct MessageCell: View {
                                             
                                             Spacer()
                                         }
-                                    
-
                             }
                         }
-                      
-                        
+    
                     }
-                    
-                    
-                 
-                    
                     
                     HStack{
                         Spacer()
                         Text("\(message.timeStamp?.dateValue() ?? Date(), style: .time)").foregroundColor(.gray).font(.footnote)
                     
                     }
-            
-                    
-                    
-                    
-                    
-                  
+
                 }
                     
-            }
+        }
             
         
         

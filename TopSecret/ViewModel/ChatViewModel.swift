@@ -16,6 +16,7 @@ class ChatViewModel : ObservableObject {
     @Published var usersTypingList : [User] = []
     @Published var usersIdlingList : [User] = []
     @Published var group : Group = Group()
+    @Published var pushText : Bool = false
 
     var colors: [String] = ["green","red","blue","orange","purple","teal"]
     @EnvironmentObject var userVM: UserViewModel
@@ -36,14 +37,17 @@ class ChatViewModel : ObservableObject {
         chatRepository.$group
             .assign(to: \.group, on: self)
             .store(in: &cancellables)
+        chatRepository.$pushText
+            .assign(to: \.pushText, on: self)
+            .store(in: &cancellables)
     }
     
-    func startTyping(userID: String, chatID: String, chatType: String){
-        chatRepository.startTyping(userID: userID, chatID: chatID, chatType: chatType)
+    func startTyping(userID: String, chatID: String, chatType: String, groupID: String){
+        chatRepository.startTyping(userID: userID, chatID: chatID, chatType: chatType, groupID: groupID)
     }
   
-    func stopTyping(userID: String, chatID: String, chatType: String){
-        chatRepository.stopTyping(userID: userID, chatID: chatID, chatType: chatType)
+    func stopTyping(userID: String, chatID: String, chatType: String, groupID: String){
+        chatRepository.stopTyping(userID: userID, chatID: chatID, chatType: chatType, groupID: groupID)
     }
     
     func getUsersIDList(users: [User], completion: @escaping ([String]) -> () ){
@@ -70,24 +74,24 @@ class ChatViewModel : ObservableObject {
         chatRepository.getUsers(usersID: usersID)
     }
     
-    func openChat(userID: String, chatID: String, chatType: String){
-        chatRepository.openChat(userID: userID, chatID: chatID, chatType: chatType)
+    func openChat(userID: String, chatID: String, chatType: String, groupID: String){
+        chatRepository.openChat(userID: userID, chatID: chatID, chatType: chatType, groupID: groupID)
     }
     
-    func exitChat(userID: String, chatID: String, chatType: String){
-        chatRepository.exitChat(userID: userID, chatID: chatID, chatType: chatType)
+    func exitChat(userID: String, chatID: String, chatType: String, groupID: String){
+        chatRepository.exitChat(userID: userID, chatID: chatID, chatType: chatType, groupID: groupID)
     }
     
     func getGroup(groupID: String){
         chatRepository.getGroup(groupID: groupID)
     }
 
-    func joinChat(chatID: String, userID: String){
-        chatRepository.joinChat(chatID: chatID, userID: userID)
+    func joinChat(chatID: String, userID: String, groupID: String){
+        chatRepository.joinChat(chatID: chatID, userID: userID, groupID: groupID)
     }
    
-    func createGroupChat(name: String, users: [String], groupID: String){
-        chatRepository.createGroupChat(name: name, users: users, groupID: groupID)
+    func createGroupChat(name: String, users: [String], groupID: String, chatID: String){
+        chatRepository.createGroupChat(name: name, users: users, groupID: groupID, chatID: chatID)
     }
     
     
@@ -174,12 +178,12 @@ class ChatViewModel : ObservableObject {
 //        }
 //    }
     
-    func pickColor(chatID: String, picker: Int, userID: String){
-        chatRepository.pickColor(chatID: chatID, picker: picker, userID: userID)
+    func pickColor(chatID: String, picker: Int, userID: String, groupID: String){
+        chatRepository.pickColor(chatID: chatID, picker: picker, userID: userID, groupID: groupID)
     }
     
-    func leaveChat(chatID: String, userID: String){
-        chatRepository.leaveChat(chatID: chatID, userID: userID)
+    func leaveChat(chatID: String, userID: String, groupID: String){
+        chatRepository.leaveChat(chatID: chatID, userID: userID, groupID: groupID)
     }
     
     

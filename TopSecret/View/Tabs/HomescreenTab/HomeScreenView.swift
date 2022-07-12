@@ -13,6 +13,7 @@ struct HomeScreenView: View {
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var navigationHelper : NavigationHelper
     @StateObject var groupRepository = GroupRepository()
+    @StateObject var selectedGroupVM = SelectedGroupViewModel()
 
     @State var options = ["Home","Chat","Map","Profile","Games"]
     @State var selectedView : Int = 0
@@ -21,7 +22,12 @@ struct HomeScreenView: View {
     @Binding var group : Group
     @Binding var groupChat : ChatModel
     @Binding var users : [User]
-    @Binding var events : [EventModel]
+    @Binding var tryPassword : Bool
+    @State var offset : CGSize = .zero
+    @State var showProfileView : Bool = false
+    @State var showGalleryView : Bool = false
+    @State var showTabButtons : Bool = false
+
     
     @Environment(\.presentationMode) var presentationMode
 
@@ -30,13 +36,14 @@ struct HomeScreenView: View {
         
         ZStack{
             
-            Color("Background").opacity(showAddContent ? 0.2 : 1)
+            Color("Background").opacity(showAddContent ? 0.2 : 1).zIndex(0)
             
             VStack{
                 
                 HStack{
                     
                     Button(action:{
+                        tryPassword.toggle()
                         presentationMode.wrappedValue.dismiss()
                     },label:{
                        
@@ -55,16 +62,36 @@ struct HomeScreenView: View {
                        
                     
                     
-                    Text(group.groupName).font(.title).fontWeight(.bold)
+                    Text(group.groupName).font(.title2).fontWeight(.heavy).minimumScaleFactor(0.5)
                     
                     Spacer()
                     
-                    Button(action:{
-                        showAddContent.toggle()
-                    },label:{
-                        Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title2)
-                    }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color"))).padding(.trailing,12)
+                    HStack{
+                        
+                        Button(action: {
+                            //TODO
+                            
+                           
+                            
+                                withAnimation(.spring()){
+                                    self.showProfileView.toggle()
+                                }
+                          
+                            
+                           
+                        },label:{
+                                Image(systemName: "person.3.fill").foregroundColor(FOREGROUNDCOLOR).font(.title3)
+                        }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
+                        
+                        Button(action:{
+                            showAddContent.toggle()
+                        },label:{
+                            Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title2)
+                        }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
 
+                    }.padding(.trailing,12)
+                    
+           
                 
                 }.padding(.top,60)
                 
@@ -99,6 +126,10 @@ struct HomeScreenView: View {
                         }
                     }).foregroundColor(selectedView == 1 ? Color("AccentColor") : FOREGROUNDCOLOR)
                     
+
+              
+                    
+                    
                     Button(action:{
                         withAnimation(.easeIn){
                             selectedView = 2
@@ -106,11 +137,11 @@ struct HomeScreenView: View {
                        
                     },label:{
                         VStack{
-                            Text("Gallery").fontWeight(.bold)
-                            Rectangle().frame(width: UIScreen.main.bounds.width/5,height:2)
+                            Text("Games").fontWeight(.bold)
+                            Rectangle().frame(width:UIScreen.main.bounds.width/5,height:2)
                         }
-                        
                     }).foregroundColor(selectedView == 2 ? Color("AccentColor") : FOREGROUNDCOLOR)
+                   
                     
                     Button(action:{
                         withAnimation(.easeIn){
@@ -120,78 +151,80 @@ struct HomeScreenView: View {
                     },label:{
                         VStack{
                             Text("Map").fontWeight(.bold)
-                            Rectangle().frame(width: UIScreen.main.bounds.width/5,height:2)
+                            Rectangle().frame(width:UIScreen.main.bounds.width/5,height:2)
                         }
-                        
                     }).foregroundColor(selectedView == 3 ? Color("AccentColor") : FOREGROUNDCOLOR)
-                    
-              
-                    
-                    
-                    Button(action:{
-                        withAnimation(.easeIn){
-                            selectedView = 4
-                        }
-                       
-                    },label:{
-                        VStack{
-                            Text("Games").fontWeight(.bold)
-                            Rectangle().frame(width:UIScreen.main.bounds.width/5,height:2)
-                        }
-                    }).foregroundColor(selectedView == 4 ? Color("AccentColor") : FOREGROUNDCOLOR)
-                   
-                    
-                    Button(action:{
-                        withAnimation(.easeIn){
-                            selectedView = 5
-                        }
-                       
-                    },label:{
-                        VStack{
-                            Text("Profile").fontWeight(.bold)
-                            Rectangle().frame(width:UIScreen.main.bounds.width/5,height:2)
-                        }
-                    }).foregroundColor(selectedView == 5 ? Color("AccentColor") : FOREGROUNDCOLOR)
                
                     
-                }.padding(.vertical).padding(.leading,5)
+                }.padding(.leading,5).padding(.top,10)
                 
-            }
+                }
                 
                 TabView(selection: $selectedView){
-                    ActivityView(group: $group,groupMembers: $users, groupEvents: $events).tag(0)
+                    ActivityView(group: $group,groupMembers: $users, selectedGroupVM: selectedGroupVM).tag(0)
                  
                 
-                    ChatView(uid: userVM.user?.id ?? " ", chat: groupChat).tag(1)
+                    ChatView(selectedGroupVM: selectedGroupVM, group: $group, uid: userVM.user?.id ?? " ").tag(1)
+        
                     
-                        Text("Gallery").tag(2)
-                    Text("Map").tag(3)
-                    
-                    
-                    Text("Games").tag(4)
+                    Text("Games").tag(2)
 
                     
-                    GroupProfileView(group: $group).tag(5)
+                    MapView(group: $group, groupUsers: $users).tag(3)
                     
                         
                     
                 }.tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
                 
-            }.opacity(showAddContent ? 0.2 : 1).onTapGesture {
+              
+                
+            }.zIndex(1).opacity(showAddContent ? 0.2 : 1).onTapGesture {
                 if(showAddContent){
                     showAddContent.toggle()
                 }
             }
             
             BottomSheetView(isOpen: $showAddContent, maxHeight: UIScreen.main.bounds.height * 0.45) {
-                NavigationView{
+                
                     AddContentView(showAddContentView: $showAddContent, group: $group)
-                }
+                
+            }.zIndex(2)
+            
+            if showProfileView{
+                GroupProfileView(group: $group, isInGroup: group.users?.contains(userVM.user?.id ?? " ") ?? false, showProfileView: $showProfileView).zIndex(3)
             }
+         
+            
+//            if showGalleryView {
+//                ZStack{
+//                    Color("AccentColor")
+//                    VStack{
+//
+//                        HStack{
+//
+//                            Spacer()
+//                            Button(action:{
+//                    withAnimation(.spring()){
+//                                    showGalleryView.toggle()
+//                                }
+//                                offset = .zero
+//                            },label:{
+//                                Text("X").foregroundColor(FOREGROUNDCOLOR)
+//                            })
+//
+//                            Spacer()
+//                        }.padding(.top,50)
+//
+//                        Text("Gallery")
+//                    }
+//                }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+//            }
             
         
             
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)        
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
+            selectedGroupVM.readGroupNotifications(groupID: group.id)
+        }
     }
     
     

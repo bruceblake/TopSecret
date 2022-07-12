@@ -568,9 +568,7 @@ class UserRepository : ObservableObject {
         
         let listener = COLLECTION_GROUP.whereField("users", arrayContains: uid).addSnapshotListener { (snapshot, err) in
             
-            
-            
-            
+
             guard let documents = snapshot?.documents else {
                 print("No document!")
                 return
@@ -581,26 +579,9 @@ class UserRepository : ObservableObject {
             self.groups = documents.map{ queryDocumentSnapshot -> Group in
                 var data = queryDocumentSnapshot.data()
                 
-                self.fetchGroupPolls(groupID: data["id"] as? String ?? " ") { fetchedPolls in
-                    data["polls"] = fetchedPolls
-                
-                }
-                
-                self.fetchGroupStories(groupID: data["id"] as? String ?? " ", completion:{ stories in
-                    data["storyPosts"] = stories
-                })
-                
-                
-     
-                
-                
-                print("Fetched Groups!")
-                
-                
-                return Group(dictionary: data)
-                
-                
-            }
+    
+                  return Group(dictionary: data)
+       }
             
             
             
@@ -610,110 +591,9 @@ class UserRepository : ObservableObject {
         
         firestoreListener.append(listener)
     
-        
-        
-       
-       
-        
+
     }
-    func listenToUserPolls(uid: String){
-        
-        let listener = COLLECTION_POLLS.whereField("users", arrayContains: uid).addSnapshotListener { (snapshot, err) in
-            
-            
-            
-            
-            guard let documents = snapshot?.documents else {
-                print("No document!")
-                return
-            }
-            self.polls = documents.map{ queryDocumentSnapshot -> PollModel in
-                
-                
-                
-                let data = queryDocumentSnapshot.data()
-                let question = data["question"] as? String ?? ""
-                let creator = data["creator"] as? String ?? ""
-                let dateCreated = data["dateCreated"] as? Timestamp ?? Timestamp()
-                let groupID = data["groupID"] as? String ?? ""
-                let groupName = data["groupName"] as? String ?? ""
-                let totalUsers = data["totalUsers"] as? Int ?? 0
-                let users = data["users"] as? [String] ?? [""]
-                let choices = data["choices"] as? [String] ?? ["","","",""]
-                let pollType = data["pollType"] as? String ?? ""
-                let usersAnswered = data["usersAnswered"] as? [[String:String]] ?? []
-                let completionType = data["completionType"] as? String ?? ""
-                let endDate = data["endDate"] as? Timestamp ?? Timestamp()
-                let finished = data["finished"] as? Bool ?? false
-                let id = data["id"] as? String ?? ""
-                
-                
-                
-                print("Fetched Polls!")
-                
-            
-                self.homescreenPosts[id] = "poll"
 
-
-                
-                
-                
-                return PollModel(dictionary: ["question":question,"creator":creator,"dateCreated":dateCreated,"groupID":groupID,"groupName":groupName,"id":id,"totalUsers":totalUsers,"choices":choices,"pollType":pollType,"usersAnswered":usersAnswered,"completionType":completionType,"endDate":endDate,"finished":finished,"users":users])
-                
-                
-            }
-            
-            
-            
-            
-        }
-        
-        
-        firestoreListener.append(listener)
-        
-        
-        
-    }
-    func listenToUserEvents(uid: String){
-        
-        let listener = COLLECTION_EVENTS.whereField("usersVisibleTo", arrayContains: uid).addSnapshotListener { (snapshot, err) in
-            
-            
-            
-            guard let documents = snapshot?.documents else {
-                print("No document!")
-                return
-            }
-            
-            self.events = documents.map{ queryDocumentSnapshot -> EventModel in
-                let data = queryDocumentSnapshot.data()
-                let eventName = data["eventName"] as? String ?? ""
-                let eventLocation = data["eventLocation"] as? String ?? ""
-                let eventTime = data["eventTime"] as? Timestamp ?? Timestamp()
-                let usersVisibleTo = data["usersVisibleTo"] as? [String] ?? []
-                let id = data["id"] as? String ?? ""
-                print("Fetched Events!")
-                
-                self.homescreenPosts[id] = "event"
-
-
-                
-                return EventModel(dictionary: ["eventName":eventName,"eventLocation":eventLocation, "eventTime":eventTime, "usersVisibleTo":usersVisibleTo,"id":id])
-                
-                
-            }
-            
-           
-            
-        }
-        
-        
-        firestoreListener.append(listener)
-        
-        
-        
-    }
-    
     
     
     func listenToUserFriends(uid: String){
@@ -779,8 +659,6 @@ class UserRepository : ObservableObject {
     func listenToAll(uid: String){
         self.listenToUserChats(uid: uid)
         self.listenToUserGroups(uid: uid)
-        self.listenToUserPolls(uid: uid)
-        self.listenToUserEvents(uid: uid)
         self.listenToUserFriends(uid: uid)
         self.listenToUser(uid: uid)
         self.listenToNetworkChanges(uid: uid)

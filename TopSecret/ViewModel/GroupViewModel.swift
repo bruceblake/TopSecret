@@ -81,9 +81,7 @@ class GroupViewModel: ObservableObject {
         groupRepository.loadActiveUsers(group: group)
     }
     
-    func loadGroupCountdowns(group: Group){
-        groupRepository.loadGroupCountdowns(group: group)
-    }
+  
     
     func changeMOTD(motd: String, groupID: String, userID: String){
         groupRepository.changeMOTD(motd: motd, groupID: groupID, userID: userID)
@@ -112,9 +110,6 @@ class GroupViewModel: ObservableObject {
         
     }
     
-    func inviteToGroup(user1: User, user2: User, group: Group){
-        groupRepository.inviteToGroup(user1: user1, user2: user2, group: group)
-    }
     
     
     
@@ -151,9 +146,9 @@ class GroupViewModel: ObservableObject {
     }
     
     
-    func createCountdown(group: Group, countdownName: String, startDate: Timestamp, endDate: Date){
+    func createCountdown(group: Group, countdownName: String, startDate: Timestamp, endDate: Date, user: User){
 
-        groupRepository.createCountdown(group: group, countdownName: countdownName, startDate: startDate, endDate: endDate)
+        groupRepository.createCountdown(group: group, countdownName: countdownName, startDate: startDate, endDate: endDate, user: user)
     }
     func giveBadge(group: Group, badge: Badge){
         groupRepository.giveBadge(group: group, badge: badge)

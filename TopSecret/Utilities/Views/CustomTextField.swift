@@ -16,6 +16,7 @@ struct CustomTextField: View {
     var hasSymbol: Bool
     var symbol: String
     var numbersOnly: Bool = false
+ 
     var body: some View {
         ZStack{
             

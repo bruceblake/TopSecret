@@ -7,15 +7,15 @@
 
 import SwiftUI
 import MapKit
-
+import SDWebImageSwiftUI
 
 struct MapView: View {
     @ObservedObject var locationManager = LocationManager()
     @State private var landmarks: [Landmark] = [Landmark]()
     @State private var search: String = ""
     @State private var tapped: Bool = false
-    @Binding var showMapView : Bool
-    @Binding var showTabButtons : Bool
+    @Binding var group : Group
+    @Binding var groupUsers : [User]
     
     private func getNearByLandmarks() {
         let request = MKLocalSearch.Request()
@@ -47,28 +47,63 @@ struct MapView: View {
     
     var body: some View {
       
-          
            
-            VStack{
-                Spacer()
-                Button(action:{
-                    withAnimation(.spring()){
-                        self.showMapView.toggle()
-                        self.showTabButtons.toggle()
-                    }
-                },label:{
-                    Text("X").foregroundColor(FOREGROUNDCOLOR)
-                }).padding(.top,40)
-                MapViewUtility(landmarks: landmarks).padding(.top,50)
+            ZStack{
+                MapViewUtility(landmarks: landmarks)
+
+                VStack{
+                    
+                 
+                    
+                    
+                    Spacer()
+                    
+                    ScrollView(.horizontal){
+                        HStack(spacing: 20){
+                            ForEach(groupUsers){ user in
+                                
+                                NavigationLink(destination: UserProfilePage(user: user, isCurrentUser: false), label:{
+                                    
+                                    VStack(spacing: 5){
+                                        WebImage(url: URL(string: user.profilePicture ?? ""))
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width:40,height:40)
+                                            .clipShape(Circle())
+//                                                .overlay(Circle().stroke(chat.usersIdling.contains(user.id ?? "") ? Color(getColor(userID: user.id ?? "", groupChat: chat)) : Color.gray,lineWidth: 2))
+                                        
+                                        Text("\(user.nickName ?? "TOP SECRET USER")").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                                        
+                                        Text("Lukyan's House").foregroundColor(FOREGROUNDCOLOR).font(.caption)
+                                    }
+                                 
+                                    
+                                    
+                                })
+                                
+                             
+
+                                  
+                                   
+                            }
+                        }
+                       
+                     
+                    }.padding().background(RoundedRectangle(cornerRadius: 16).fill(Color("Color"))).padding().padding(.bottom,UIScreen.main.bounds.height/8)
+                   
+                }
+              
                 
             }.frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height).edgesIgnoringSafeArea(.all).navigationBarHidden(true)
-             
+    
+        
+    }
             
           
    
         
     }
-}
+
 //
 //struct MapView_Previews: PreviewProvider {
 //    static var previews: some View {

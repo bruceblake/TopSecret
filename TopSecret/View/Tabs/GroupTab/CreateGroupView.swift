@@ -11,15 +11,17 @@ import Firebase
 struct CreateGroupView: View {
     
     @EnvironmentObject var userVM : UserViewModel
+
+    @ObservedObject var groupNameLimit = TextLimitViewModel(limit: 16)
+    @ObservedObject var groupPasswordLimit = TextLimitViewModel(limit: 4)
     @Environment(\.presentationMode) var presentationMode
     @StateObject var groupVM = GroupViewModel()
-    @State var groupName: String = ""
     @State var memberLimit: Int = 0
     @State var isShowingPhotoPicker:Bool = false
     @State var avatarImage = UIImage(named: "Icon")!
     @State var images : [UIImage] = []
     @State var password : String = ""
-
+    @State var groupName : String = ""
     
     
     var body: some View {
@@ -32,12 +34,12 @@ struct CreateGroupView: View {
             
          
             
-            
+             
             CustomTextField(text: $groupName, placeholder: "Group Name", isPassword: false, isSecure: false, hasSymbol: false ,symbol: "").padding(.horizontal,20)
             
             
             
-            CustomTextField(text: $password, placeholder: "Group Password", isPassword: false, isSecure: false, hasSymbol: false ,symbol: "").padding(.horizontal,20)
+            CustomTextField(text: $password, placeholder: "Group Password", isPassword: false, isSecure: false, hasSymbol: false ,symbol: "", numbersOnly: true).padding(.horizontal,20)
 
             
             Button(action:{

@@ -222,12 +222,6 @@ class UserViewModel : ObservableObject {
         userRepository.listenToUserChats(uid: userSession!.uid)
     }
     
-    func listenToUserPolls(){
-        userRepository.listenToUserPolls(uid: userSession!.uid)
-    }
-    func listenToUserEvents(){
-        userRepository.listenToUserEvents(uid: userSession!.uid)
-    }
     
     func listenToUserFriends(){
         userRepository.listenToUserFriends(uid: userSession!.uid)

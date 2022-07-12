@@ -13,7 +13,7 @@ struct AddContentView: View {
     @Binding var group: Group
     
     var texts : [String] = ["Create Countdown", "Create Poll","Create Event","Add to Group Story","Send Group Invitation to Friend"]
-    
+     
     
     var body: some View {
         ZStack(alignment: .top){
@@ -37,7 +37,7 @@ struct AddContentView: View {
                         }
                     } label: {
                         Text(texts[texts.firstIndex(of: text) ?? 0]).fontWeight(.bold).foregroundColor(Color("AccentColor")).padding(.vertical,10).frame(width: UIScreen.main.bounds.width/1.2).background(Color("Background")).cornerRadius(15)
-                    }.padding(.vertical,5)
+                    }.padding(.vertical,5).padding(.top,5)
 
                 }
                

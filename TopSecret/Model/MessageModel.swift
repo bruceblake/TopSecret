@@ -28,6 +28,7 @@ struct Message : Identifiable{
     
     enum MessageType {
         case text
+        case followUpUserText
         case image
         case deletedMessage
         case savedMessage

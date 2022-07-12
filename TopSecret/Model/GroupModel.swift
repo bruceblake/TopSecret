@@ -25,6 +25,7 @@ struct Group: Identifiable{
     var users: [String]?
     var polls : [PollModel]?
     var chatID: String?
+    var chat: ChatModel?
     var groupProfileImage: String?
     var quoteOfTheDay: String?
     var followers: [String]?
@@ -33,7 +34,10 @@ struct Group: Identifiable{
     var storyPosts: [StoryModel]?
     var sharedInterests: [String]?
     var password : String?
-    var events : [String]?
+    var events : [EventModel]?
+    var countdowns: [CountdownModel]?
+    var groupNotifications: [GroupNotificationModel]?
+    var unreadGroupNotifications: [GroupNotificationModel]?
     
     init(dictionary: [String:Any]){
         self.id = dictionary["id"] as? String ?? UUID().uuidString
@@ -43,6 +47,7 @@ struct Group: Identifiable{
         self.memberLimit = dictionary["memberLimit"] as? Int ?? 0
         self.users = dictionary["users"] as? [String] ?? []
         self.chatID = dictionary["chatID"] as? String ?? " "
+        self.chat = dictionary["chat"] as? ChatModel ?? ChatModel()
         self.polls = dictionary["polls"] as? [PollModel] ?? []
         self.groupProfileImage = dictionary["groupProfileImage"] as? String ?? " "
         self.motd = dictionary["motd"] as? String ?? "Welcome to the group!"
@@ -52,8 +57,10 @@ struct Group: Identifiable{
         self.following = dictionary["following"] as? [String] ?? []
         self.bio = dictionary["bio"] as? String ?? ""
         self.password = dictionary["password"] as? String ?? ""
-        self.events = dictionary["events"] as? [String] ?? []
-      
+        self.events = dictionary["events"] as? [EventModel] ?? []
+        self.countdowns = dictionary["countdowns"] as? [CountdownModel] ?? []
+        self.groupNotifications = dictionary["groupNotifications"] as? [GroupNotificationModel] ?? []
+        self.unreadGroupNotifications = dictionary["unreadGroupNotifications"] as? [GroupNotificationModel] ?? []
 
     }
     

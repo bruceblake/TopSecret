@@ -196,11 +196,7 @@ struct Tabs : View {
             }else if tabIndex == .schedule{
                 ScheduleView()
             }else if tabIndex == .groups{
-                if userVM.groups.isEmpty{
-                    EmptyGroupHomescreen()
-                }else{
-                    GroupHomeScreenView(showTabButtons: $showTabButtons, group: $selectedGroup)
-                }
+               Text("Hello World")
             }
             
             if showTabButtons {

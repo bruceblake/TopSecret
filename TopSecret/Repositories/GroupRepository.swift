@@ -56,23 +56,6 @@ class GroupRepository : ObservableObject {
     }
     
     
-    func loadGroupCountdowns(group: Group){
-        COLLECTION_GROUP.document(group.id).collection("Countdowns").getDocuments { (snapshot, err) in
-            if err != nil {
-                print("ERROR")
-                return
-            }
-            
-            let documents = snapshot!.documents
-            
-            self.countdowns = documents.map({ (queryDocumentSnapshot) -> CountdownModel in
-                let data = queryDocumentSnapshot.data()
-                
-                return CountdownModel(dictionary: data)
-            })
-        }
-    }
-    
     func loadActiveUsers(group: Group){
         COLLECTION_GROUP.document(group.id).getDocument { snapshot, err in
             if err != nil {
@@ -158,9 +141,7 @@ class GroupRepository : ObservableObject {
         }
     }
     
-    func inviteToGroup(user1: User, user2: User, group: Group){
-        notificationRepository.sendInvitedToGroupNotification(user1: user1, user2: user2, group: group, users: group.users ?? [])
-    }
+
     
     func joinGroup(groupID: String, username: String){
         
@@ -194,7 +175,7 @@ class GroupRepository : ObservableObject {
                     let chatID = data?["chatID"] as? String ?? ""
                     let users = data?["users"] as? [String] ?? []
                     
-                    self.chatRepository.joinChat(chatID: chatID, userID: id)
+                    self.chatRepository.joinChat(chatID: chatID, userID: id, groupID: groupID)
                     COLLECTION_USER.document(id).updateData(["allGroupsToListenTo":FieldValue.arrayUnion([groupID])])
                     self.notificationRepository.sendAcceptedGroupInviteNotification(group: Group(dictionary: data ?? [:]), user1: User(dictionary: data ?? [:]), users: users)
                 }
@@ -221,7 +202,7 @@ class GroupRepository : ObservableObject {
             let groupChatID = snapshot?.get("chatID") as? String ?? " "
             COLLECTION_USER.document(userID).updateData(["groups":FieldValue.arrayRemove([groupChatID])])
 
-            self.chatRepository.leaveChat(chatID: groupChatID, userID: userID)
+            self.chatRepository.leaveChat(chatID: groupChatID, userID: userID, groupID: groupID)
             
             let users = snapshot?.get("users") as? [String] ?? []
             
@@ -256,12 +237,12 @@ class GroupRepository : ObservableObject {
         
     
         
-       
+        let chatID = UUID().uuidString
 
         let data = ["groupName" : groupName,
                     "memberLimit" : memberLimit,
                     "users" : users ,
-                    "memberAmount": 1, "id":id, "chatID": " ", "dateCreated":Timestamp(), "groupProfileImage": " ","password":password
+                    "memberAmount": 1, "id":id, "chatID": chatID, "dateCreated":Timestamp(), "groupProfileImage": " ","password":password
         ] as [String:Any]
                 
         COLLECTION_GROUP.document(id).setData(data) { (err) in
@@ -274,7 +255,7 @@ class GroupRepository : ObservableObject {
         COLLECTION_USER.document(currentUser).updateData(["groups":FieldValue.arrayUnion([id])])
         COLLECTION_USER.document(currentUser).updateData(["allGroupsToListenTo":FieldValue.arrayUnion([id])])
 
-        chatRepository.createGroupChat(name: groupName, users: users, groupID: id)
+        chatRepository.createGroupChat(name: groupName, users: users, groupID: id, chatID: chatID)
         
         
         
@@ -284,13 +265,14 @@ class GroupRepository : ObservableObject {
         
         
         let id = UUID().uuidString
+        let chatID = UUID().uuidString
         
        
 
         let data = ["groupName" : groupName,
                     "memberLimit" : memberLimit,
                     "users" : users ,
-                    "memberAmount": 1, "id":id, "chatID": " ", "dateCreated":Timestamp(), "groupProfileImage": " "
+                    "memberAmount": 1, "id":id, "chatID": chatID, "dateCreated":Timestamp(), "groupProfileImage": " "
         ] as [String:Any]
                 
         COLLECTION_GROUP.document(id).setData(data) { (err) in
@@ -303,7 +285,7 @@ class GroupRepository : ObservableObject {
         COLLECTION_USER.document(currentUser).updateData(["groups":FieldValue.arrayUnion([id])])
         COLLECTION_USER.document(currentUser).updateData(["allGroupsToListenTo":FieldValue.arrayUnion([id])])
 
-        chatRepository.createGroupChat(name: groupName, users: users, groupID: id,completion: { chat in
+        chatRepository.createGroupChat(name: groupName, users: users, groupID: id, chatID: chatID ,completion: { chat in
             return completion(chat)
         })
 
@@ -374,10 +356,19 @@ class GroupRepository : ObservableObject {
         }
     }
     
-    func createCountdown(group: Group, countdownName: String, startDate: Timestamp, endDate: Date){
+    func createCountdown(group: Group, countdownName: String, startDate: Timestamp, endDate: Date, user: User){
 
         
         COLLECTION_GROUP.document(group.id).collection("Countdowns").addDocument(data: ["id":UUID().uuidString,"countdownName":countdownName,"dateCreated":startDate, "endDate":endDate])
+        
+        let notificationData = ["id":UUID().uuidString,
+                                "notificationName": "Countdown Created",
+                                "notificationTime":Timestamp(),
+                                "notificationType":"countdownCreated", "notificationCreator":user.id ?? "USER_ID"] as [String:Any]
+        
+        COLLECTION_GROUP.document(group.id).collection("Notifications").addDocument(data: notificationData)
+        
+        COLLECTION_GROUP.document(group.id).collection("UnreadNotifications").addDocument(data: notificationData)
     }
     
     func giveBadge(group: Group, badge: Badge){

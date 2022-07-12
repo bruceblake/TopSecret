@@ -137,12 +137,12 @@ struct PersonalChatView: View {
                         
                         TextField("message", text: $text).onChange(of: text, perform: { value in
                             if text == ""{
-                                chatVM.stopTyping(userID: userVM.user?.id ?? "", chatID: chat.id, chatType: "personal")
+                                chatVM.stopTyping(userID: userVM.user?.id ?? " ", chatID: chat.id, chatType: "personal", groupID: " ")
                             }else{
-                                chatVM.startTyping(userID: userVM.user?.id ?? "", chatID: chat.id, chatType: "personal")
+                                chatVM.startTyping(userID: userVM.user?.id ?? " ", chatID: chat.id, chatType: "personal", groupID: " ")
                             }
                         }).padding(.vertical,10).padding(.leading,5).background(Color("Color")).cornerRadius(12).sheet(isPresented: $showImageSendView, content: {
-                            ImageSendView(message: Message(dictionary: ["id":UUID().uuidString,"timeStamp":Timestamp(),"name":userVM.user?.nickName ?? "","profilePicture":userVM.user?.profilePicture ?? "","imageURL":"","messageType":"image"]), imageURL: avatarImage, chatID: chat.id, messageVM: messageVM)
+                            ImageSendView(message: Message(dictionary: ["id":UUID().uuidString,"timeStamp":Timestamp(),"name":userVM.user?.nickName ?? "","profilePicture":userVM.user?.profilePicture ?? "","imageURL":"","messageType":"image"]), imageURL: avatarImage, chatID: chat.id, groupID: " ", messageVM: messageVM)
                         })
                         
                         Button(action:{
@@ -170,7 +170,7 @@ struct PersonalChatView: View {
                     }.padding()
                     
                     if replyToMessage{
-                        ReplyOverlay(replyToMessage: $replyToMessage,message: messageToReplyTo, chatID: chat.id)
+                        ReplyOverlay(replyToMessage: $replyToMessage,message: messageToReplyTo, chatID: chat.id, groupID: " ")
                     }
                     
                     
@@ -192,9 +192,9 @@ struct PersonalChatView: View {
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true) .onAppear{
             
        
-            messageVM.readAllMessages(chatID: chat.id, userID: userVM.user?.id ?? "", chatType: "personal")
-            messageVM.getPinnedMessage(chatID: chat.id)
-            chatVM.openChat(userID: userVM.user?.id ?? "", chatID: chat.id, chatType: "personal")
+            messageVM.readAllMessages(chatID: chat.id, userID: userVM.user?.id ?? "", chatType: "personal", groupID: " ")
+            messageVM.getPinnedMessage(chatID: chat.id, groupID: " ")
+            chatVM.openChat(userID: userVM.user?.id ?? "", chatID: chat.id, chatType: "personal", groupID: " ")
             chatVM.getUsersIdlingList(chatID: chat.id)
             chatVM.getUsersTypingList(chatID: chat.id)
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {

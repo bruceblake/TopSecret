@@ -138,18 +138,18 @@ struct AddChatView: View {
                 
                 
             }.padding(.top,50)
-            NavigationLink(
-                destination: PersonalChatView(friend: $personalChatFriend, chat: $chat),
-                isActive: $goToPersonalChat,
-                label: {
-                    EmptyView()
-                })
-            NavigationLink(
-                destination: ChatView(uid: userVM.user?.id ?? "", chat: chat),
-                isActive: $goToGroupChat,
-                label: {
-                    EmptyView()
-                })
+//            NavigationLink(
+//                destination: PersonalChatView(friend: $personalChatFriend, chat: $chat),
+//                isActive: $goToPersonalChat,
+//                label: {
+//                    EmptyView()
+//                })
+//            NavigationLink(
+//                destination: ChatView(uid: userVM.user?.id ?? "", chat: $chat, group: $group),
+//                isActive: $goToGroupChat,
+//                label: {
+//                    EmptyView()
+//                })
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
             searchRepository.startSearch(searchRequest: "allUsers", id: "")
         }

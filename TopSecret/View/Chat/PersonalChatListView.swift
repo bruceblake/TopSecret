@@ -140,7 +140,7 @@ struct PersonalChatCell : View {
                 self.friend = fetchedFriend
             }
             
-                messageVM.readAllMessages(chatID: chat.id, userID: userVM.user?.id ?? "", chatType: "personal")
+            messageVM.readAllMessages(chatID: chat.id, userID: userVM.user?.id ?? "", chatType: "personal", groupID: " ")
             
                     
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

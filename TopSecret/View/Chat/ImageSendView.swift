@@ -13,6 +13,7 @@ struct ImageSendView: View {
     var message: Message
     var imageURL: UIImage
     var chatID: String
+    var groupID: String
     
     var messageVM : MessageViewModel
     
@@ -27,7 +28,7 @@ struct ImageSendView: View {
                 Image(uiImage: imageURL).resizable().scaledToFit()
                 
                 Button(action:{
-                    messageVM.sendImageMessage(name: message.name!, timeStamp: message.timeStamp!, nameColor: message.nameColor!, messageID: message.id, profilePicture: message.profilePicture!, messageType: message.messageType!, chatID: chatID, imageURL: imageURL)
+                    messageVM.sendImageMessage(name: message.name!, timeStamp: message.timeStamp!, nameColor: message.nameColor!, messageID: message.id, profilePicture: message.profilePicture!, messageType: message.messageType!, chatID: chatID, imageURL: imageURL, groupID: groupID)
                     
                     presentationMode.wrappedValue.dismiss()
                 },label:{
