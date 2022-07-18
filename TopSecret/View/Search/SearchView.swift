@@ -14,6 +14,13 @@ struct SearchView: View {
     @EnvironmentObject var userVM : UserViewModel
     @State var openGroupProfile : Bool = false
     @State var selectedGroup : Group = Group()
+    
+    
+    func convertToBinding(users: [User]) -> Binding<[User]>{
+        
+        
+        return Binding(get: {users}, set: {_ in})
+    }
 
     var body: some View {
         ZStack{
@@ -39,14 +46,13 @@ struct SearchView: View {
                                 Text("Users").fontWeight(.bold).foregroundColor(Color("Foreground")).padding(.leading)
                             }
                             VStack{
-                                ForEach(searchRepository.userReturnedResults, id: \.id) { user in
-                                    if user.id != userVM.user?.id{
+                                ForEach(self.convertToBinding(users: searchRepository.userReturnedResults), id: \.id) { user in
                                     NavigationLink(
                                         destination: UserProfilePage(user: user, isCurrentUser: false),
                                         label: {
                                             UserSearchCell(user: user, showActivity: true)
                                         })
-                                    }
+                                    
                                 }
                             }.background(Color("Color")).cornerRadius(12).padding(.horizontal)
                         }

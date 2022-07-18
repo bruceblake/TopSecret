@@ -165,15 +165,21 @@ class UserRepository : ObservableObject {
             }
             
             
-            guard let data = snapshot!.data() else {
-                print("NO USER")
-                return
+            var data = snapshot?.data() as? [String:Any] ?? [:]
+        
+            
+            let groupD = DispatchGroup()
+            
+            groupD.enter()
+            
+            self.fetchUserFriendsList(friendsList: data["friendsList"] as? [String] ?? []) { fetchedFriends in
+                data["friendsList"] = fetchedFriends
+                groupD.leave()
             }
             
-            for group in data["allGroupsToListenTo"] as? [String] ?? []{
-                print("user group: \(group)")
-            }
-            self.user = User(dictionary: data)
+            groupD.notify(queue: .main, execute:{
+                self.user = User(dictionary: data)
+            })
             
             
             
@@ -596,34 +602,7 @@ class UserRepository : ObservableObject {
 
     
     
-    func listenToUserFriends(uid: String){
-        
-        
-        let listener = COLLECTION_USER.whereField("friendsList", arrayContains: uid).addSnapshotListener { (snapshot, err) in
-            
-            
-            
-            guard let documents = snapshot?.documents else {
-                print("No document!")
-                return
-            }
-            self.user?.friendsList = documents.map{ queryDocumentSnapshot -> String in
-                
-                let data = queryDocumentSnapshot.data()
-                let uid = data["uid"] as? String ?? ""
-                return uid
-                
-                
-            }
-            
-        }
-        
-        
-        firestoreListener.append(listener)
-        
-        
-        
-    }
+  
     func listenToNetworkChanges(uid: String){
         let connectedRef = Database.database().reference(withPath: ".info/connected")
         connectedRef.observe(.value, with: { snapshot in
@@ -659,7 +638,6 @@ class UserRepository : ObservableObject {
     func listenToAll(uid: String){
         self.listenToUserChats(uid: uid)
         self.listenToUserGroups(uid: uid)
-        self.listenToUserFriends(uid: uid)
         self.listenToUser(uid: uid)
         self.listenToNetworkChanges(uid: uid)
         self.listenToPersonalChats(uid: uid)
@@ -823,7 +801,7 @@ class UserRepository : ObservableObject {
                         "username": username,
                         "nickName": nickName,
                         "uid": user.uid,
-                        "birthday": birthday,"profilePicture":"", "friendsList": [], "bio":""
+                        "birthday": birthday,"profilePicture":"", "bio":""
                         
             ] as [String : Any]
             
@@ -1031,12 +1009,52 @@ class UserRepository : ObservableObject {
             }
            
             
-            let data = snapshot!.data()
-            self.fetchGroup(groupID: data?["selectedGroup"] as? String ?? " ") { fetchedGroup in
-                self.userSelectedGroup = fetchedGroup
+            var data = snapshot?.data() as? [String:Any] ?? [:]
+            
+            let groupD = DispatchGroup()
+            
+            groupD.enter()
+            
+            self.fetchUserFriendsList(friendsList: data["friendsList"] as? [String] ?? []) { fetchedFriends in
+                data["friendsList"] = fetchedFriends
+                groupD.leave()
             }
-            return completion(User(dictionary: data ?? [:]))
+            
+            groupD.notify(queue: .main, execute:{
+                return completion(User(dictionary: data))
+            })
+            
+           
         }
+    }
+    
+    func fetchUserFriendsList(friendsList: [String], completion: @escaping ([User]) -> ()) -> (){
+        var users : [User] = []
+        
+        var groupD = DispatchGroup()
+        
+        
+        
+        for userID in friendsList {
+            groupD.enter()
+            COLLECTION_USER.document(userID).getDocument { snapshot, err in
+                if err != nil {
+                    print("ERROR")
+                    return
+                }
+                
+                let data = snapshot?.data() as? [String:Any] ?? [:]
+                
+                users.append(User(dictionary: data))
+                groupD.leave()
+                
+            }
+        }
+        
+        groupD.notify(queue: .main, execute: {
+            return completion(users)
+        })
+        
     }
     
     func fetchChat(chatID: String, completion: @escaping (ChatModel) -> ()) -> (){
@@ -1100,6 +1118,22 @@ class UserRepository : ObservableObject {
                 return completion(followedGroup == group.id)
             }
         }
+    }
+    
+
+    
+    
+    func addFriend(friend: User){
+        
+        
+        
+        
+        COLLECTION_USER.document(self.user?.id ?? " ").updateData(["friendsList":FieldValue.arrayUnion([friend.id ?? " "])])
+        
+        
+        COLLECTION_USER.document(friend.id ?? " ").updateData(["friendsList":FieldValue.arrayUnion([user?.id ?? " "])])
+        
+        
     }
 
 }

@@ -176,7 +176,7 @@ class GroupRepository : ObservableObject {
                     let users = data?["users"] as? [String] ?? []
                     
                     self.chatRepository.joinChat(chatID: chatID, userID: id, groupID: groupID)
-                    COLLECTION_USER.document(id).updateData(["allGroupsToListenTo":FieldValue.arrayUnion([groupID])])
+          
                     self.notificationRepository.sendAcceptedGroupInviteNotification(group: Group(dictionary: data ?? [:]), user1: User(dictionary: data ?? [:]), users: users)
                 }
                 
@@ -253,7 +253,7 @@ class GroupRepository : ObservableObject {
             self.persistImageToStorage(groupID: id,image: image)
         }
         COLLECTION_USER.document(currentUser).updateData(["groups":FieldValue.arrayUnion([id])])
-        COLLECTION_USER.document(currentUser).updateData(["allGroupsToListenTo":FieldValue.arrayUnion([id])])
+    
 
         chatRepository.createGroupChat(name: groupName, users: users, groupID: id, chatID: chatID)
         
@@ -361,19 +361,23 @@ class GroupRepository : ObservableObject {
         
         COLLECTION_GROUP.document(group.id).collection("Countdowns").addDocument(data: ["id":UUID().uuidString,"countdownName":countdownName,"dateCreated":startDate, "endDate":endDate])
         
-        let notificationData = ["id":UUID().uuidString,
+        
+        let notificationID = UUID().uuidString
+        
+        let notificationData = ["id":notificationID,
                                 "notificationName": "Countdown Created",
                                 "notificationTime":Timestamp(),
-                                "notificationType":"countdownCreated", "notificationCreator":user.id ?? "USER_ID"] as [String:Any]
+                                "notificationType":"countdownCreated", "notificationCreatorID":user.id ?? "USER_ID",
+                                "usersThatHaveSeen":[]] as [String:Any]
         
-        COLLECTION_GROUP.document(group.id).collection("Notifications").addDocument(data: notificationData)
+        COLLECTION_GROUP.document(group.id).collection("Notifications").document(notificationID).setData(notificationData)
         
-        COLLECTION_GROUP.document(group.id).collection("UnreadNotifications").addDocument(data: notificationData)
+        COLLECTION_GROUP.document(group.id).updateData(["notificationCount":FieldValue.increment((Int64(1)))])
+   
     }
     
     func giveBadge(group: Group, badge: Badge){
         COLLECTION_GROUP.document(group.id).collection("Badges").addDocument(data: ["id":badge.id,"badgeName":badge.badgeName,"badgeDescription":badge.badgeDescription,"badgeImage":badge.badgeImage])
-        print("gave \(badge.badgeName ?? "") badge to \(group.groupName)")
     }
     
     func loadGroupFollowers(groupID: String){
@@ -398,13 +402,4 @@ class GroupRepository : ObservableObject {
     }
     
    
-//    func loadGroupProfileImage(groupID: String){
-//        COLLECTION_GROUP.document(groupID).getDocument { (snapshot, err) in
-//            if err != nil {
-//                print("ERROR")
-//                return
-//            }
-//            let image = snapshot?.get("groupProfileImage") as! String
-//        }
-//    }
 }

@@ -141,7 +141,9 @@ class UserViewModel : ObservableObject {
         
         
         self.userSession = Auth.auth().currentUser
-        self.fetchUser()
+        self.fetchUser(userID: userSession?.uid ?? " ") { fetchedUser in
+            self.user = fetchedUser
+        }
             if self.userSession != nil{
                 self.listenToAll(uid: userSession?.uid ?? " ")
 
@@ -223,9 +225,7 @@ class UserViewModel : ObservableObject {
     }
     
     
-    func listenToUserFriends(){
-        userRepository.listenToUserFriends(uid: userSession!.uid)
-    }
+   
     func listenToNetworkChanges(){
         userRepository.listenToNetworkChanges(uid: userSession!.uid)
     }
@@ -322,6 +322,10 @@ class UserViewModel : ObservableObject {
     
     func addFriend(user: User, friendID: String){
         userRepository.addFriend(friendID: friendID, user: user)
+    }
+    
+    func addFriend(friend: User){
+        userRepository.addFriend(friend: friend)
     }
     
     func declineFriendRequest(friendID: String, user: User){

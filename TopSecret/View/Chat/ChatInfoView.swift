@@ -39,17 +39,16 @@ struct ChatInfoView: View {
                                         .padding(.bottom,2)
                                 
                                 VStack{
-                                    ForEach(chatVM.userList, id: \.id){ user in
+                                    ForEach(Binding(get: {chatVM.userList}, set: {_ in}), id: \.id){ user in
                                         Button(action:{
-                                            _user = user
                                            
                                                 self.goToUserProfilePage.toggle()
                                             
                                             
                                         },label:{
-                                            GroupUsersListCell(user: user, isCurrentUser: user.id == userVM.user?.id, nameColor: chatVM.colors[chat.users.firstIndex(of: user.id ?? "") ?? 0])
+                                            GroupUsersListCell(user: user.wrappedValue, isCurrentUser: user.wrappedValue.id == userVM.user?.id, nameColor: chatVM.colors[chat.users.firstIndex(of: user.wrappedValue.id ?? "") ?? 0])
                                         }).fullScreenCover(isPresented: $goToUserProfilePage, content: {
-                                            UserProfilePage(user: user, isCurrentUser: userVM.user?.id == user.id ?? "")
+                                            UserProfilePage(user: user, isCurrentUser: userVM.user?.id == user.wrappedValue.id ?? "")
                                         })
                                     }
                                     

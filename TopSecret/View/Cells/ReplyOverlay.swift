@@ -24,7 +24,7 @@ struct ReplyOverlay: View {
 
     func getColor(chatID: String, userID: String, completion: @escaping (String) -> ()) -> (){
         
-        COLLECTION_CHAT.document(chatID).getDocument { (snapshot, err) in
+        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).getDocument { (snapshot, err) in
             if err != nil {
                 print("ERROR")
                 return

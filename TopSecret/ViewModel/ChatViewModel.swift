@@ -62,12 +62,12 @@ class ChatViewModel : ObservableObject {
         
     }
     
-    func getUsersTypingList(chatID: String){
-        chatRepository.getUsersTypingList(chatID: chatID)
+    func getUsersTypingList(chatID: String, groupID: String){
+        chatRepository.getUsersTypingList(chatID: chatID, groupID: groupID)
     }
     
-    func getUsersIdlingList(chatID: String){
-        chatRepository.getUsersIdlingList(chatID: chatID)
+    func getUsersIdlingList(chatID: String, groupID: String){
+        chatRepository.getUsersIdlingList(chatID: chatID, groupID: groupID)
     }
     
     func getUsers(usersID: [String]){

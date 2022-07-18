@@ -11,6 +11,7 @@ struct AddContentView: View {
     
     @Binding var showAddContentView: Bool
     @Binding var group: Group
+    @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
     
     var texts : [String] = ["Create Countdown", "Create Poll","Create Event","Add to Group Story","Send Group Invitation to Friend"]
      
@@ -27,8 +28,10 @@ struct AddContentView: View {
                             CreateCountdownView(group: $group)
                         case "Create Event":
                             GeometryReader{ reader in
-                                CreateEventView(group: $group).frame(width: reader.size.width, height: reader.size.height)
+                                CreateEventView().frame(width: reader.size.width, height: reader.size.height).environmentObject(selectedGroupVM)
                             }
+                        case "Add to Group Story":
+                            CreateStoryPostView()
                             
                         case "Send Group Invitation to Friend":
                             InviteUserToGroup(group: $group)

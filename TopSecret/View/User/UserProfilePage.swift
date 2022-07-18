@@ -9,7 +9,8 @@ import SwiftUI
 import SDWebImageSwiftUI
 
 struct UserProfilePage: View {
-    @State var user: User = User()
+    
+    @Binding var user: User
     var isCurrentUser: Bool
     @State var goToUserInfoPage : Bool = false
     @State var settingsOpen: Bool = false
@@ -27,9 +28,6 @@ struct UserProfilePage: View {
     
     
     
-    @State private var options = ["Gallery","Groups","Friends"]
-    
-    @State var selectedIndex = 0
     
     var body: some View {
         
@@ -50,8 +48,8 @@ struct UserProfilePage: View {
                         }
                     }).padding(.leading)
                     
-              
-                   
+                    
+                    
                     Spacer()
                     
                     Button(action:{
@@ -62,7 +60,7 @@ struct UserProfilePage: View {
                             Text("\(user.nickName ?? "") ").fontWeight(.bold).font(.subheadline).lineLimit(1).foregroundColor(FOREGROUNDCOLOR)
                             Image(systemName: "chevron.down").font(.subheadline).foregroundColor(FOREGROUNDCOLOR)
                         }
-                       
+                        
                         
                         
                     }).padding(.leading,50)
@@ -113,7 +111,7 @@ struct UserProfilePage: View {
                         
                         if isCurrentUser {
                             
-                           
+                            
                             
                             NavigationLink(destination: SettingsMenuView().onDisappear(perform: {
                                 userVM.fetchUser(userID: self.user.id ?? "") { user in
@@ -130,7 +128,7 @@ struct UserProfilePage: View {
                                     
                                 }
                             })
-                          
+                            
                         }else{
                             Button(action:{
                                 self.goToUserInfoPage.toggle()
@@ -142,11 +140,7 @@ struct UserProfilePage: View {
                                     Image(systemName: "info.circle").resizable().frame(width: 24, height: 24).foregroundColor(Color("Foreground"))
                                 }
                             })
-                            .sheet(isPresented: $goToUserInfoPage, content: {
-                                let _friendsList = userVM.user?.friendsList ?? []
-                                
-                                UserInfoView(user: user, isFriends: _friendsList.contains(user.id ?? ""))
-                            })
+                            
                         }
                     }.padding(10)
                     
@@ -159,7 +153,7 @@ struct UserProfilePage: View {
                     HStack{
                         Spacer()
                         VStack(spacing: 10){
-                          
+                            
                             
                             WebImage(url: URL(string: user.profilePicture ?? ""))
                                 .resizable()
@@ -170,28 +164,28 @@ struct UserProfilePage: View {
                             HStack{
                                 HStack{
                                     Text("@\(user.username ?? "")").foregroundColor(.gray).font(.caption)
-
+                                    
                                     Menu(content:{
                                         
                                         if isCurrentUser{
-                                                VStack{
-                                                    Button(action:{
-                                                        userVM.setUserActivity(isActive: false, userID: user.id ?? "", completion: { fetchedUser in
-                                                            self.user = fetchedUser
-                                                        })
-                                                    },label:{
-                                                        Text("Set to inactive")
+                                            VStack{
+                                                Button(action:{
+                                                    userVM.setUserActivity(isActive: false, userID: user.id ?? "", completion: { fetchedUser in
+                                                        self.user = fetchedUser
                                                     })
-                                                    
-                                                    Button(action:{
-                                                        userVM.setUserActivity(isActive: true, userID: user.id ?? "", completion: { fetchedUser in
-                                                            self.user = fetchedUser
-                                                        })
-                                                    },label:{
-                                                        Text("Set to active")
+                                                },label:{
+                                                    Text("Set to inactive")
+                                                })
+                                                
+                                                Button(action:{
+                                                    userVM.setUserActivity(isActive: true, userID: user.id ?? "", completion: { fetchedUser in
+                                                        self.user = fetchedUser
                                                     })
-                                                    
-                                                }
+                                                },label:{
+                                                    Text("Set to active")
+                                                })
+                                                
+                                            }
                                             
                                         }else{
                                             if user.isActive ?? false == false{
@@ -201,53 +195,25 @@ struct UserProfilePage: View {
                                             }
                                         }
                                         
-                                      
+                                        
                                         
                                         
                                     },label:{
-                                            Circle().frame(width: 8, height: 8).foregroundColor(user.isActive ?? false ? Color.green : Color.red)
-
+                                        Circle().frame(width: 8, height: 8).foregroundColor(user.isActive ?? false ? Color.green : Color.red)
+                                        
                                         
                                     })
                                     
-                                  
+                                    
                                 }
-                               
-                            
+                                
+                                
                                 
                             }
                             
                             
-                            VStack{
-                                
-                                    
-                                                                    
-
-                                    let friendsList = userVM.user?.friendsList ?? []
-                                    let pendingFriendsList = user.pendingFriendsList ?? []
-                                    if !isCurrentUser {
-                                        if friendsList.contains(user.id ?? ""){
-                                            
-                                            Text("Friends").foregroundColor(.gray).font(.caption)
-                                        }else if pendingFriendsList.contains(userVM.user?.id ?? ""){
-                                            Text("Pending").foregroundColor(.gray).font(.caption)
-                                        }
-                                        else{
-                                            Button(action:{
-                                                //TODO
-                                                
-                                                notificationRepository.sendFriendRequestNotification(user1: userVM.user ?? User(), user2: user.id ?? "")
-                                                
-                                                
-                                            },label:{
-                                                Text("Send Friend Request?").font(.caption2)
-                                            })
-                                        }
-                                        
-                                    }
-                                }
-                                
-
+                            
+                            
                             
                             Text("\(user.bio ?? "")")
                             
@@ -256,55 +222,46 @@ struct UserProfilePage: View {
                         Spacer()
                     }
                     
+                    if isCurrentUser == false{
+                        Button(action:{
+                            userVM.addFriend(friend: self.$user.wrappedValue)
+                        },label:{
+                            Text("Add Friend").foregroundColor(FOREGROUNDCOLOR)
+                        })
+                    }
+                    
+                    
                     Divider()
                     VStack{
-                        Picker("Options",selection: $selectedIndex){
-                            ForEach(0..<options.count){ index in
-                                Text(self.options[index]).tag(index)
-                            }
-                        }.pickerStyle(SegmentedPickerStyle()).padding()
-                        //List of groups
-                        if selectedIndex == 0 {
-                            VStack{
-                                
-                            }
-                        }else if selectedIndex == 1{
-                            //Groups
-                            VStack{
-                                
-                            }
-                        }else {
-                            
-                            
-                            //Friends
-                                
-                                UserFriendsListView(user: user)
-                                
-                                
-                            
-                            
-                        }
+                        
+                        
+                        UserFriendsListView(user: $user)
                         
                         
                     }
                     Spacer()
                 }
-                NavigationLink(
-                    destination: PersonalChatView(friend: $user, chat: self.$personalChat),
-                    isActive: $goToPersonalChat,
-                    label: {
-                        EmptyView()
-                    })
+                
             }
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
+            if isCurrentUser{
+                self.user = userVM.user ?? User()
+            
+            }
+            
+            userVM.fetchUser(userID: user.id ?? " ") { fetchedUser in
+                self.user = fetchedUser
+            }
+            
+        }
         
         
     }
 }
 
 
-struct UserProfilePage_Previews: PreviewProvider {
-    static var previews: some View {
-        UserProfilePage(user: User(dictionary: ["username":"bj_lao","nickName":"B R U C E","bio":"16","profilePicture":"https://firebasestorage.googleapis.com/v0/b/top-secret-dcb43.appspot.com/o/userProfileImages%2FdEUxJX1gXZcYViXUyLJTr0wf5RM2?alt=media&token=68acfeed-0dfb-496e-9929-82bdf70b1e80"]), isCurrentUser: true, personalChat: ChatModel()).environmentObject(UserViewModel()).colorScheme(.dark)
-    }
-}
+//struct UserProfilePage_Previews: PreviewProvider {
+//    static var previews: some View {
+//        UserProfilePage(user: User(dictionary: ["username":"bj_lao","nickName":"B R U C E","bio":"16","profilePicture":"https://firebasestorage.googleapis.com/v0/b/top-secret-dcb43.appspot.com/o/userProfileImages%2FdEUxJX1gXZcYViXUyLJTr0wf5RM2?alt=media&token=68acfeed-0dfb-496e-9929-82bdf70b1e80"]), isCurrentUser: true, personalChat: ChatModel()).environmentObject(UserViewModel()).colorScheme(.dark)
+//    }
+//}

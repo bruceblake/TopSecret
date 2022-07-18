@@ -27,19 +27,52 @@ struct CreateGroupView: View {
     var body: some View {
         ZStack(alignment: .topLeading){
             Color("Background")
-        VStack{
+            VStack{
+                
+                HStack{
+                    
+                    Button(action:{
+                        presentationMode.wrappedValue.dismiss()
+                    },label:{
+                        ZStack{
+                            Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
+                            
+                            Image(systemName: "chevron.left")
+                                .font(.title3).foregroundColor(FOREGROUNDCOLOR)
+                        }
+                    }).padding(.leading)
+                    
+                    Spacer()
+                    
+                    Text("Create Group!").fontWeight(.bold).font(.title).padding(.trailing,10)
+                    
+                    Spacer()
+                    
+
+                }.padding(.top,50)
             
           
-            Spacer()
+                VStack(spacing: 20){
+                    VStack(alignment: .leading){
+                        Text("Create Group").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                        VStack{
+                            CustomTextField(text: $groupName, placeholder: "Group Name", isPassword: false, isSecure: false, hasSymbol: false ,symbol: "")
+                        }
+                    }.padding(.horizontal)
+                    
+                     
+                    VStack(alignment: .leading){
+                        Text("Group Password").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                        VStack{
+                            CustomTextField(text: $password, placeholder: "Group Password", isPassword: false, isSecure: false, hasSymbol: false ,symbol: "", numbersOnly: true)
+                        }
+                    }.padding(.horizontal)
+                    
+                }.padding(.vertical,10)
             
-         
+      
             
-             
-            CustomTextField(text: $groupName, placeholder: "Group Name", isPassword: false, isSecure: false, hasSymbol: false ,symbol: "").padding(.horizontal,20)
-            
-            
-            
-            CustomTextField(text: $password, placeholder: "Group Password", isPassword: false, isSecure: false, hasSymbol: false ,symbol: "", numbersOnly: true).padding(.horizontal,20)
+           
 
             
             Button(action:{
@@ -70,28 +103,8 @@ struct CreateGroupView: View {
 
             Spacer()
         
-        }
+            }
             
-            HStack{
-                
-                
-                Button(action:{
-                    presentationMode.wrappedValue.dismiss()
-                },label:{
-                    ZStack{
-                        Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
-                        Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR)
-                    }
-                })
-                
-                Spacer()
-                
-                Text("Create Group!").fontWeight(.bold).font(.title).padding(.trailing,10)
-                
-                Spacer()
-                
-
-            }.padding(10).padding(.top,40)
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
 }

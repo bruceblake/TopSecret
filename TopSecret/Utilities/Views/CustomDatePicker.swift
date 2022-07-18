@@ -10,6 +10,7 @@ import SwiftUI
 struct CustomDatePicker: View {
     @EnvironmentObject var userVM: UserViewModel
     @Binding var currentDate: Date
+    @Binding var group : Group
     
     @State var currentMonth: Int = 0
     
@@ -21,18 +22,21 @@ struct CustomDatePicker: View {
     var body: some View {
         VStack(){
             
-            
+            VStack(spacing: 15){
             HStack(spacing: 20){
                 
-                VStack(alignment: .leading, spacing: 10){
-                    Text(extraDate()[0])
-                        .font(.caption)
-                        .fontWeight(.semibold)
-                    
+                HStack{
+
                     Text(extraDate()[1])
                         .font(.title)
                         .fontWeight(.bold)
-                }.padding(.bottom,30)
+                    
+                    Text(extraDate()[0])
+                        .font(.caption)
+                        .fontWeight(.semibold)
+                }
+                
+            
                 
                     Spacer(minLength: 0)
                     
@@ -69,13 +73,17 @@ struct CustomDatePicker: View {
                 }
             }
             
+        }
+            
             let columns = Array(repeating: GridItem(.flexible()), count: 7)
             
             LazyVGrid(columns: columns, spacing: 10){
                 ForEach(extractDate()){ value in
-                    CardView(eventList: userVM.events,value: value, selectedDay: selectedDay, completion: { day in
+                    CardView(eventList: group.events ?? [],value: value, selectedDay: selectedDay, completion: { day in
+                        
                        
                         selectedDay = day
+                        
                  
                         
                     })

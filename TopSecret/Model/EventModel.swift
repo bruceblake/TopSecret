@@ -14,6 +14,8 @@ struct EventModel : Identifiable{
     var eventLocation : String?
     var eventTime : Timestamp?
     var usersVisibleTo : [String]?
+    var usersAttendingID : [String]?
+    var usersAttending : [User]?
   
     
     init(dictionary: [String:Any]) {
@@ -22,6 +24,8 @@ struct EventModel : Identifiable{
         self.eventLocation = dictionary["eventLocation"] as? String ?? "EVENT_LOCATION"
         self.eventTime = dictionary["eventTime"] as? Timestamp ?? Timestamp()
         self.usersVisibleTo = dictionary["usersVisibleTo"] as? [String] ?? []
+        self.usersAttendingID = dictionary["usersAttendingID"] as? [String] ?? []
+        self.usersAttending = dictionary["usersAttending"] as? [User] ?? []
         
     }
     

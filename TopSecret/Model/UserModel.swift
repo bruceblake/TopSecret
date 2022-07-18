@@ -18,7 +18,7 @@ struct User : Identifiable, Hashable{
     var birthday: Date?
     var bio: String?
     var profilePicture: String?
-    var friendsList : [String]?
+    var friendsList : [User]?
     var blockedAccounts : [String]?
     var userNotificationCount : Int?
     var pendingFriendsList : [String]?
@@ -40,7 +40,7 @@ init(dictionary: [String:Any]) {
     self.birthday = dictionary["birthday"] as? Date ?? Date()
     self.profilePicture = dictionary["profilePicture"] as? String ?? ""
     self.bio = dictionary["bio"] as? String ?? "This is my bio"
-    self.friendsList = dictionary["friendsList"] as? [String] ?? []
+    self.friendsList = dictionary["friendsList"] as? [User] ?? []
     self.blockedAccounts = dictionary["blockedAccounts"] as? [String] ?? []
     self.userNotificationCount = dictionary["userNotificationCount"] as? Int ?? 0
     self.pendingFriendsList = dictionary["pendingFriendsList"] as? [String] ?? []
@@ -59,6 +59,11 @@ init(dictionary: [String:Any]) {
         self.followedGroups = [" "]
         self.groups = [" "]
 
+    }
+    
+    
+    func hash(into hasher: inout Hasher){
+        hasher.combine(id)
     }
     
 }

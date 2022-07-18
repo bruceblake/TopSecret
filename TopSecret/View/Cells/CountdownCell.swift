@@ -11,21 +11,60 @@ struct CountdownCell: View {
     
    var countdown : CountdownModel
     
-    func daysUntil() -> DateComponents {
-        let userDate = Calendar.current.dateComponents([.day,.month,.year], from: countdown.endDate?.dateValue() ?? Date())
+    func getTimeRemaining() -> Int {
+        let interval = (countdown.endDate?.dateValue() ?? Date()) - Date()
         
-        let userDateComponents = DateComponents(calendar: Calendar.current, year: userDate.year!, month: userDate.month!, day: userDate.day!).date!
+        return interval.hour ?? 0
+    }
+    
+    
+    func isCurrentHour(date: Date) -> Bool{
+        let calendar = Calendar.current
         
-        let daysUntil = Calendar.current.dateComponents([.day], from: Date(), to: userDateComponents)
+        let hour = calendar.component(.hour, from: date)
         
-        return daysUntil
+        let currentHour = calendar.component(.hour, from: Date())
+        
+        return hour == currentHour
     }
     
     var body: some View {
-        VStack{
-            Text(countdown.countdownName ?? "COUNTDOWN_NAME").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
-            Text("\(daysUntil().day!) Days Left!").foregroundColor(Color.gray).font(.caption)
-        }.padding(10).background(Color("Color")).cornerRadius(16)
+        HStack(alignment: .top, spacing: 30){
+                VStack(spacing: 10){
+                    Circle()
+                        .fill(self.isCurrentHour(date: countdown.endDate?.dateValue() ?? Date()) ? Color("AccentColor") : .clear)
+                        .frame(width: 15, height: 15)
+                        .background(Circle().stroke(FOREGROUNDCOLOR,lineWidth: 1).padding(-3))
+                        .scaleEffect(!self.isCurrentHour(date: countdown.endDate?.dateValue() ?? Date()) ? 0.8 : 1)
+                    
+                    Rectangle()
+                        .fill(self.isCurrentHour(date: countdown.endDate?.dateValue() ?? Date()) ? Color("AccentColor") : Color("Color"))
+                        .frame(width: 3)
+                }
+                
+                VStack{
+                    
+                  
+                    HStack(alignment: .top, spacing: 10){
+                        VStack(alignment: .leading, spacing: 12){
+                            
+                            Text("\(countdown.countdownName ?? "COUNTDOWN_NAME")")
+                                .font(.title2.bold())
+                            
+                        }.frame(maxWidth: .infinity, alignment: .leading)
+                        
+                        VStack(alignment: .leading, spacing: 12){
+                            Text("\(countdown.endDate?.dateValue() ?? Date(), style: .time)")
+                            
+                            if !self.isCurrentHour(date: countdown.endDate?.dateValue() ?? Date()){
+                                Text("\(getTimeRemaining()) hours remaining!").foregroundColor(Color("AccentColor")).fontWeight(.bold)
+                            }
+                        }
+                        
+                    }
+                }.foregroundColor(self.isCurrentHour(date: countdown.endDate?.dateValue() ?? Date()) ? FOREGROUNDCOLOR : .gray).padding(self.isCurrentHour(date: countdown.endDate?.dateValue() ?? Date()) ? 15 : 0).frame(maxWidth: .infinity, alignment: .leading).background(Color("Color").cornerRadius(25).opacity(self.isCurrentHour(date: countdown.endDate?.dateValue() ?? Date()) ? 1 : 0))
+                
+            }.frame(maxWidth: .infinity, alignment: .leading).padding()
         
     }
 }

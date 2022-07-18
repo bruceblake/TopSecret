@@ -8,20 +8,19 @@
 import SwiftUI
 
 struct UserFriendsListView: View {
-    @State var user: User 
-    @State var friendsList: [User] = []
+    @Binding var user: User
     @EnvironmentObject var userVM: UserViewModel
     var body: some View {
         ScrollView(){
             VStack(alignment: .leading){
-                if friendsList.isEmpty{
+                if user.friendsList?.isEmpty ?? true{
                     Text("0 friends :(").foregroundColor(FOREGROUNDCOLOR)
                 }
                 else{
                     VStack{
-                        ForEach(friendsList, id: \.self) { user in
+                        ForEach(Binding(get: {user.friendsList ?? []}, set: {_ in}), id: \.self) { user in
                             NavigationLink(
-                                destination: UserProfilePage(user: user, isCurrentUser: userVM.user?.id == user.id ?? ""),
+                                destination: UserProfilePage(user: user, isCurrentUser: userVM.user?.id == user.wrappedValue.id ?? ""),
                                 label: {
                                     UserSearchCell(user: user, showActivity: true)
                                 })
@@ -36,18 +35,6 @@ struct UserFriendsListView: View {
                 
             }
             
-            
-        }.onAppear{
-            userVM.fetchUser(userID: user.id ?? "", completion: { user in
-                self.user = user
-            })
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                
-                userVM.getUserFriendsList(user: user, completion: { list in
-                    friendsList = list
-                })
-              
-            }
             
         }
     }

@@ -59,9 +59,7 @@ struct GroupChatCell: View {
             
             
             
-        }.background(Color("Color")).cornerRadius(12).onAppear{
-            chatVM.getUsersIdlingList(chatID: chat.id)
-        }.padding().shadow(color: Color.black, radius: 5)
+        }.background(Color("Color")).cornerRadius(12).padding().shadow(color: Color.black, radius: 5)
         
     }
 }

@@ -9,7 +9,7 @@ import SwiftUI
 import SDWebImageSwiftUI
 
 struct UserSearchCell: View {
-    var user: User
+    @Binding var user: User
     var showActivity: Bool
     var body: some View {
         

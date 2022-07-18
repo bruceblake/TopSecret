@@ -13,16 +13,14 @@ struct HomeScreenView: View {
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var navigationHelper : NavigationHelper
     @StateObject var groupRepository = GroupRepository()
-    @StateObject var selectedGroupVM = SelectedGroupViewModel()
+    @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
 
     @State var options = ["Home","Chat","Map","Profile","Games"]
     @State var selectedView : Int = 0
     @State var goBack = false
     @State var showAddContent = false
     @Binding var group : Group
-    @Binding var groupChat : ChatModel
     @Binding var users : [User]
-    @Binding var tryPassword : Bool
     @State var offset : CGSize = .zero
     @State var showProfileView : Bool = false
     @State var showGalleryView : Bool = false
@@ -43,7 +41,6 @@ struct HomeScreenView: View {
                 HStack{
                     
                     Button(action:{
-                        tryPassword.toggle()
                         presentationMode.wrappedValue.dismiss()
                     },label:{
                        
@@ -57,37 +54,30 @@ struct HomeScreenView: View {
                         
                     }).padding(.leading)
                     
-                    
-            
-                       
-                    
-                    
-                    Text(group.groupName).font(.title2).fontWeight(.heavy).minimumScaleFactor(0.5)
+
+                    Text(selectedGroupVM.group?.groupName ?? "TOPSECRET_GROUP_GROUPNAME").font(.title2).fontWeight(.heavy).minimumScaleFactor(0.5)
                     
                     Spacer()
                     
                     HStack{
                         
                         Button(action: {
-                            //TODO
-                            
-                           
-                            
+
                                 withAnimation(.spring()){
                                     self.showProfileView.toggle()
                                 }
-                          
-                            
-                           
                         },label:{
                                 Image(systemName: "person.3.fill").foregroundColor(FOREGROUNDCOLOR).font(.title3)
                         }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
+                        
                         
                         Button(action:{
                             showAddContent.toggle()
                         },label:{
                             Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title2)
                         }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
+                        
+   
 
                     }.padding(.trailing,12)
                     
@@ -161,10 +151,10 @@ struct HomeScreenView: View {
                 }
                 
                 TabView(selection: $selectedView){
-                    ActivityView(group: $group,groupMembers: $users, selectedGroupVM: selectedGroupVM).tag(0)
+                    ActivityView(group: $group).tag(0)
                  
                 
-                    ChatView(selectedGroupVM: selectedGroupVM, group: $group, uid: userVM.user?.id ?? " ").tag(1)
+                    ChatView(group: $group, uid: userVM.user?.id ?? " ").tag(1)
         
                     
                     Text("Games").tag(2)
@@ -223,7 +213,12 @@ struct HomeScreenView: View {
         
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
-            selectedGroupVM.readGroupNotifications(groupID: group.id)
+            selectedGroupVM.fetchGroup(userID: userVM.user?.id ?? " ", groupID: group.id) { fetched in
+                if fetched {
+                    print("fetched \(group.groupName ?? "")")
+
+                }
+            }
         }
     }
     

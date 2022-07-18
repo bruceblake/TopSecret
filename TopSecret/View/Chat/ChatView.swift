@@ -17,7 +17,7 @@ struct ChatView: View {
     @StateObject var groupVM = GroupViewModel()
     @StateObject var imagePickerVM = ImagePickerViewModel()
     @StateObject private var keyboardHandler = KeyboardGuardian()
-    @StateObject var selectedGroupVM : SelectedGroupViewModel
+    @StateObject var selectedGroupVM = SelectedGroupViewModel()
     
     @State var value: CGFloat = 0
     @State var text = ""
@@ -56,8 +56,11 @@ struct ChatView: View {
         return ans
     }
     
-    func sortChatUsersIdle(users: [User]) -> [User]{
-        return users.sorted(by: { checkIfUserIsIdling(userID: $0.id ?? " ") && !checkIfUserIsIdling(userID: $1.id ?? " ") })
+    func sortChatUsersIdle(users: [User]) -> Binding<[User]>{
+        
+        let users = users.sorted(by: { checkIfUserIsIdling(userID: $0.id ?? " ") && !checkIfUserIsIdling(userID: $1.id ?? " ") })
+        
+        return Binding(get: {users}, set: {_ in})
     }
     
     func checkIfUserIsIdling(userID: String) -> Bool {
@@ -92,7 +95,7 @@ struct ChatView: View {
                             
                             
                             ForEach(messageVM.messages){ message in
-                                MessageCell(replyToMessage: $replyToMessage, messageToReplyTo: $currentMessage, showMenu: $showMenu,message: message, chatID: selectedGroupVM.group.chat?.id ?? " ").padding(.horizontal,10).padding(.vertical,-4)
+                                MessageCell(replyToMessage: $replyToMessage, messageToReplyTo: $currentMessage, showMenu: $showMenu,message: message, chatID: selectedGroupVM.group?.chat?.id ?? " ").padding(.horizontal,10).padding(.vertical,-4)
                             }
                             
                             
@@ -161,14 +164,14 @@ struct ChatView: View {
                             
                             
                             CustomChatTextField(text: $text, isShowingPhotoPicker: $isShowingPhotoPicker, avatarImage: $avatarImage, sendAction : {
-                                messageVM.sendGroupChatTextMessage(text: text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: chatVM.colors[selectedGroupVM.group.chat?.users.firstIndex(of: uid) ?? 0], messageID: UUID().uuidString, messageType: messageVM.readLastMessage().name ?? " " == userVM.user?.nickName ?? " " ? "followUpUserText" : "text", chatID: selectedGroupVM.group.chatID ?? "CHAT_ID", chatType: "groupChat", groupID: selectedGroupVM.group.id)
+                                messageVM.sendGroupChatTextMessage(text: text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: chatVM.colors[selectedGroupVM.group?.chat?.users.firstIndex(of: uid) ?? 0], messageID: UUID().uuidString, messageType: messageVM.readLastMessage().name ?? " " == userVM.user?.nickName ?? " " ? "followUpUserText" : "text", chatID: selectedGroupVM.group?.chat?.id ?? "CHAT_ID", chatType: "groupChat", groupID: selectedGroupVM.group?.id ?? " ")
                             }, textChange: {
                                 
                                 
                                 if text == ""{
-                                    chatVM.stopTyping(userID: uid, chatID: selectedGroupVM.group.chatID ?? " ", chatType: "groupChat", groupID: group.id)
+                                    chatVM.stopTyping(userID: uid, chatID: selectedGroupVM.group?.chat?.id ?? " ", chatType: "groupChat", groupID: group.id)
                                 }else{
-                                    chatVM.startTyping(userID: uid, chatID: selectedGroupVM.group.chatID ?? " ", chatType: "groupChat", groupID: group.id)
+                                    chatVM.startTyping(userID: uid, chatID: selectedGroupVM.group?.chat?.id ?? " ", chatType: "groupChat", groupID: group.id)
                                 }
                                 
                             }, editingChange: {
@@ -182,7 +185,7 @@ struct ChatView: View {
                             
                             
                                 .sheet(isPresented: $showImageSendView, content: {
-                                    ImageSendView(message: Message(dictionary: ["id":UUID().uuidString,"nameColor":chatVM.colors[selectedGroupVM.group.chat?.users.firstIndex(of: uid) ?? 0],"timeStamp":Timestamp(),"name":userVM.user?.nickName ?? "","profilePicture":userVM.user?.profilePicture ?? "","messageType":"image"]), imageURL: avatarImage, chatID: selectedGroupVM.group.chat?.id ?? "CHAT_ID", groupID: selectedGroupVM.group.id, messageVM: messageVM)
+                                    ImageSendView(message: Message(dictionary: ["id":UUID().uuidString,"nameColor":chatVM.colors[selectedGroupVM.group?.chat?.users.firstIndex(of: uid) ?? 0],"timeStamp":Timestamp(),"name":userVM.user?.nickName ?? "","profilePicture":userVM.user?.profilePicture ?? "","messageType":"image"]), imageURL: avatarImage, chatID: selectedGroupVM.group?.chat?.id ?? "CHAT_ID", groupID: selectedGroupVM.group?.id ?? " " , messageVM: messageVM)
                                 }).fullScreenCover(isPresented: $isShowingPhotoPicker, onDismiss: {
                                     self.showImageSendView.toggle()
                                 }, content: {
@@ -269,14 +272,14 @@ struct ChatView: View {
                             NavigationLink(destination: UserProfilePage(user: user, isCurrentUser: false), label:{
                                 
                                 VStack(spacing: 5){
-                                    WebImage(url: URL(string: user.profilePicture ?? ""))
+                                    WebImage(url: URL(string: user.wrappedValue.profilePicture ?? ""))
                                         .resizable()
                                         .scaledToFill()
                                         .frame(width:40,height:40)
                                         .clipShape(Circle())
-                                        .overlay(Circle().stroke(selectedGroupVM.group.chat?.usersIdling.contains(user.id ?? " ") ?? false ? Color(getColor(userID: user.id ?? "", groupChat: selectedGroupVM.group.chat ?? ChatModel())) : Color.gray,lineWidth: 2))
+                                        .overlay(Circle().stroke(selectedGroupVM.group?.chat?.usersIdling.contains(user.wrappedValue.id ?? " ") ?? false ? Color(getColor(userID: user.wrappedValue.id ?? "", groupChat: selectedGroupVM.group?.chat ?? ChatModel())) : Color.gray,lineWidth: 2))
                                     
-                                    Text("\(user.nickName ?? "TOP SECRET USER")").foregroundColor(FOREGROUNDCOLOR)
+                                    Text("\(user.wrappedValue.nickName ?? "TOP SECRET USER")").foregroundColor(FOREGROUNDCOLOR)
                                 }
                                 
                                 
@@ -302,7 +305,7 @@ struct ChatView: View {
             
             if replyToMessage{
                 GeometryReader{ _ in
-                    ReplyOverlay(replyToMessage: $replyToMessage, message: currentMessage, chatID: selectedGroupVM.group.chat?.id ?? "CHAT_ID", groupID: selectedGroupVM.group.id)
+                    ReplyOverlay(replyToMessage: $replyToMessage, message: currentMessage, chatID: selectedGroupVM.group?.chat?.id ?? "CHAT_ID", groupID: selectedGroupVM.group?.id ?? " ")
                 }.padding(.horizontal,40).padding(.top,350).background(Color.black.opacity(0.45)).edgesIgnoringSafeArea(.all)
             }
             
@@ -310,7 +313,7 @@ struct ChatView: View {
                 GeometryReader{ _ in
                     
                     
-                    EditMessageOverlay(message: currentMessage, chatID: selectedGroupVM.group.chat?.id ?? "CHAT_ID", groupID: selectedGroupVM.group.id, editMessage: $editMessage)
+                    EditMessageOverlay(message: currentMessage, chatID: selectedGroupVM.group?.chat?.id ?? "CHAT_ID", groupID: selectedGroupVM.group?.id ?? " ", editMessage: $editMessage)
                 }.padding(.horizontal,40).padding(.top,350).background(Color.black.opacity(0.45)).edgesIgnoringSafeArea(.all)
                 
             }
@@ -370,7 +373,7 @@ struct ChatView: View {
                                         self.showMenu.toggle()
                                     }
                                     
-                                    messageVM.deleteMessage(chatID: selectedGroupVM.group.chat?.id ?? "CHAT_ID", message: currentMessage, groupID: selectedGroupVM.group.id)
+                                    messageVM.deleteMessage(chatID: selectedGroupVM.group?.chat?.id ?? "CHAT_ID", message: currentMessage, groupID: selectedGroupVM.group?.id ?? " ")
                                 },label:{
                                     Text("Delete").foregroundColor(FOREGROUNDCOLOR)
                                 }).padding()
@@ -384,7 +387,7 @@ struct ChatView: View {
                                 }
                                 
                                 
-                                messageVM.pinMessage(chatID: selectedGroupVM.group.chat?.id ?? "CHAT_ID", messageID: currentMessage.id, userID: userVM.user?.id ?? "", groupID: selectedGroupVM.group.id)
+                                messageVM.pinMessage(chatID: selectedGroupVM.group?.chat?.id ?? "CHAT_ID", messageID: currentMessage.id, userID: userVM.user?.id ?? "", groupID: selectedGroupVM.group?.id ?? " ")
                             },label:{
                                 Text("Pin").foregroundColor(FOREGROUNDCOLOR)
                             }).padding(10)
@@ -435,30 +438,41 @@ struct ChatView: View {
             .onAppear{
                 imagePickerVM.setUp()
                 
+                let groupD = DispatchGroup()
                 
-                messageVM.getPinnedMessage(chatID: selectedGroupVM.group.chatID ?? "CHAT_ID", groupID: selectedGroupVM.group.id)
-                chatVM.openChat(userID: uid, chatID: selectedGroupVM.group.chatID ?? "CHAT_ID", chatType: "groupChat", groupID: selectedGroupVM.group.id)
-                chatVM.getUsers(usersID: selectedGroupVM.group.users ?? [])
-                chatVM.getUsersIdlingList(chatID: selectedGroupVM.group.chatID ?? "CHAT_ID")
-                chatVM.getUsersTypingList(chatID: selectedGroupVM.group.chatID ?? "CHAT_ID")
-                messageVM.readAllMessages(chatID: selectedGroupVM.group.chatID ?? "CHAT_ID", userID: userVM.user?.id ?? " ", chatType: "groupChat", groupID: selectedGroupVM.group.id)
+                groupD.enter()
+                selectedGroupVM.fetchGroup(userID: userVM.user?.id ?? " ", groupID: group.id, completion: { fetched in
+                    groupD.leave()
+                })
                 
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    messageVM.scrollToBottom += 1
-                    chatVM.getUsersIDList(users: chatVM.usersIdlingList) { users in
-                        self.userIDList = users
+                groupD.notify(queue: .main, execute: {
+                    
+                    messageVM.getPinnedMessage(chatID: selectedGroupVM.group?.chatID ?? "CHAT_ID", groupID: selectedGroupVM.group?.id ?? " ")
+                    chatVM.openChat(userID: uid, chatID: selectedGroupVM.group?.chat?.id ?? "CHAT_ID" , chatType: "groupChat", groupID: selectedGroupVM.group?.id ?? " ")
+                    chatVM.getUsers(usersID: group.users ?? [])
+                    chatVM.getUsersIdlingList(chatID: selectedGroupVM.group?.chat?.id ?? "CHAT_ID", groupID: group.id)
+                    chatVM.getUsersTypingList(chatID: selectedGroupVM.group?.chat?.id ?? "CHAT_ID", groupID: group.id)
+                    messageVM.readAllMessages(chatID: selectedGroupVM.group?.chat?.id ?? "CHAT_ID", userID: userVM.user?.id ?? " ", chatType: "groupChat", groupID: selectedGroupVM.group?.id ?? " ")
+                    
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                        messageVM.scrollToBottom += 1
+                        chatVM.getUsersIDList(users: chatVM.usersIdlingList) { users in
+                            self.userIDList = users
+                        }
+
                     }
                     
-                    
-                }
+                })
+                
+           
             }
         
         
         
      
     .onDisappear{
-        chatVM.exitChat(userID: uid, chatID: selectedGroupVM.group.chatID ?? "CHAT_ID", chatType: "groupChat", groupID: selectedGroupVM.group.id)
-        chatVM.stopTyping(userID: uid, chatID: selectedGroupVM.group.chatID ?? "CHAT_ID", chatType: "groupChat", groupID: selectedGroupVM.group.id)
+        chatVM.exitChat(userID: uid, chatID: selectedGroupVM.group?.chat?.id ?? "CHAT_ID", chatType: "groupChat", groupID: selectedGroupVM.group?.id ?? " ")
+        chatVM.stopTyping(userID: uid, chatID: selectedGroupVM.group?.chat?.id ?? "CHAT_ID", chatType: "groupChat", groupID: selectedGroupVM.group?.id ?? " ")
     }
     
     }

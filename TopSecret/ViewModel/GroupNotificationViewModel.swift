@@ -17,8 +17,8 @@ class GroupNotificationViewModel : ObservableObject {
     func fetchNotificationCreator(notification: GroupNotificationModel){
         switch notification.notificationType ?? " "{
             
-        case "eventCreated":
-            COLLECTION_USER.document(notification.notificationCreator ?? " ").getDocument { snapshot, err in
+        case "eventCreated",  "countdownCreated":
+            COLLECTION_USER.document(notification.notificationCreatorID ?? " ").getDocument { snapshot, err in
                 if err != nil {
                     print("ERROR")
                     return
@@ -29,6 +29,8 @@ class GroupNotificationViewModel : ObservableObject {
                 self.notificationCreator = User(dictionary: data ?? [:])
                 
             }
+            
+            
         
         default:
             return

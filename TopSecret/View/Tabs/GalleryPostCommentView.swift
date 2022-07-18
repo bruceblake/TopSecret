@@ -42,9 +42,9 @@ struct GalleryPostCommentView: View {
                         
                         LazyVStack{
                            
-                            ForEach(comments.indices, id: \.self){  index in
-                                GalleryPostCommentCell(comment: $comments[index], rank: index+1).padding(.horizontal,10).padding(.vertical,10)
-                            }
+//                            ForEach(comments.indices, id: \.self){  index in
+//                                GalleryPostCommentCell(comment: $comments[index], rank: index+1).padding(.horizontal,10).padding(.vertical,10)
+//                            }
                           
                         }
                     }

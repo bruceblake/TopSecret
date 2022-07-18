@@ -15,7 +15,9 @@ struct GroupNotificationModel : Identifiable {
     var notificationName : String?
     var notificationTime : Timestamp?
     var notificationType: String?
-    var notificationCreator: String?
+    var notificationCreatorID: String?
+    var notificationCreator : User?
+    var usersThatHaveSeen : [String]?
     
     
     init(dictionary: [String:Any]) {
@@ -23,7 +25,9 @@ struct GroupNotificationModel : Identifiable {
         self.notificationName = dictionary["notificationName"] as? String ?? "NOTIFICATION_NAME"
         self.notificationTime = dictionary["notificationTime"] as? Timestamp ?? Timestamp()
         self.notificationType = dictionary["notificationType"] as? String ?? "NOTIFICATION_TYPE"
-        self.notificationCreator = dictionary["notificationCreator"] as? String ?? "NOTIFICATION_CREATOR"
+        self.notificationCreatorID = dictionary["notificationCreatorID"] as? String ?? "NOTIFICATION_CREATOR"
+        self.usersThatHaveSeen = dictionary["usersThatHaveSeen"] as? [String] ?? []
+        self.notificationCreator = dictionary["notificationCreator"] as? User ?? User()
         
     }
     

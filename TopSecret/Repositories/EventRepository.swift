@@ -21,7 +21,7 @@ class EventRepository : ObservableObject {
         let data = ["groupID": groupID, "eventName" : eventName,
                     "eventLocation" : eventLocation,
                     "eventTime": eventTime,
-                    "usersVisibleTo" : usersVisibleTo, "id":id] as [String:Any]
+                    "usersVisibleTo" : usersVisibleTo, "id":id, "usersAttendingID":[user.id ?? " "]] as [String:Any]
         
                 
         COLLECTION_GROUP.document(groupID).collection("Events").document(id).setData(data) { (err) in
@@ -31,14 +31,20 @@ class EventRepository : ObservableObject {
             }
         }
         
-        let notificationData = ["id":UUID().uuidString,
+        var notificationID = UUID().uuidString
+        
+        let notificationData = ["id":notificationID,
                                 "notificationName": "Event Created",
                                 "notificationTime":Timestamp(),
-                                "notificationType":"eventCreated", "notificationCreator":user.id ?? "USER_ID"] as [String:Any]
-        COLLECTION_GROUP.document(groupID).collection("Notifications").addDocument(data: notificationData)
-        COLLECTION_GROUP.document(groupID).collection("UnreadNotifications").addDocument(data: notificationData)
+                                "notificationType":"eventCreated", "notificationCreatorID":user.id ?? "USER_ID",
+                                "usersThatHaveSeen":[]] as [String:Any]
+        COLLECTION_GROUP.document(groupID).collection("Notifications").document(notificationID).setData(notificationData)
         
-        addUserToVisibilityList(eventID: id, userID: user.id ?? "USER_USERNAME")
+        COLLECTION_GROUP.document(groupID).updateData(["notificationCount":FieldValue.increment((Int64(1)))])
+        
+
+        
+//        addUserToVisibilityList(eventID: id, userID: user.id ?? "USER_USERNAME")
         COLLECTION_GROUP.document(groupID).updateData(["events":FieldValue.arrayUnion([id])])
     }
     

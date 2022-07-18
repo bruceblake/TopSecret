@@ -92,7 +92,7 @@ class MessageRepository : ObservableObject {
     }
     
     func getPinnedMessage(chatID: String, groupID: String){
-        COLLECTION_CHAT.document(chatID).addSnapshotListener { (snapshot, err) in
+        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).addSnapshotListener { (snapshot, err) in
             if err != nil {
                 print(err!.localizedDescription)
                 return

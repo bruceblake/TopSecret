@@ -70,7 +70,8 @@ struct ScheduleView: View {
                     if selectedIndex == 0 {
                         
                         VStack{
-                            CustomDatePicker(currentDate: $currentDate, selectedMonth: $selectedMonth, selectedDay: $selectedDay, selectedYear: $selectedYear)
+//                            CustomDatePicker(currentDate: $currentDate, selectedMonth: $selectedMonth, group: <#Binding<Group>#>, selectedDay: $selectedDay, selectedYear: $selectedYear)
+                            
                             
                             VStack{
                                 HStack{
@@ -177,6 +178,7 @@ struct ShowEvent : View {
     
     var body: some View {
         ZStack{
+            Color("Color")
             if hasEvents {
                 VStack(){
                     ScrollView(showsIndicators: false){
@@ -214,23 +216,28 @@ struct ShowEvent : View {
                 }
                 }
             }else{
-                VStack(){
-                    Text("You have no plans for today").padding(.top)
-                    
-                    Spacer()
-                    
-                    Button(action:{
-                        showCreateEvent.toggle()
-                    },label:{
-                        Text("Create Hangout!").foregroundColor(FOREGROUNDCOLOR).padding(.vertical).frame(width: UIScreen.main.bounds.width/2).background(Color("AccentColor")).cornerRadius(15)
-                    })
-                }
+             
+                    VStack(){
+                        Text("You have no plans for today").padding(.top)
+                        
+                        Spacer()
+                        
+                        Button(action:{
+                            showCreateEvent.toggle()
+                        },label:{
+                            Text("Create Hangout!").foregroundColor(FOREGROUNDCOLOR).padding(.vertical).frame(width: UIScreen.main.bounds.width/2).background(Color("AccentColor")).cornerRadius(15)
+                        })
+                    }
                 
+                 
+                    
+            
+           
                 
                 
                 
             }
-        }
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).frame(width: UIScreen.main.bounds.width - 60, height: UIScreen.main.bounds.height/6.5)
         
     }
     

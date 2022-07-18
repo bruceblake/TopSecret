@@ -42,7 +42,15 @@ struct MapView: View {
         }else {
             return UIScreen.main.bounds.size.height
         }
+    
     }
+    
+    func convertToBinding(users: [User]) -> Binding<[User]>{
+        
+        
+        return Binding(get: {users}, set: {_ in})
+    }
+    
     
     
     var body: some View {
@@ -60,19 +68,22 @@ struct MapView: View {
                     
                     ScrollView(.horizontal){
                         HStack(spacing: 20){
-                            ForEach(groupUsers){ user in
+                            
+                            //0 -> Binding
+                            //1 -> Not Binding
+                            ForEach(self.convertToBinding(users: groupUsers)){ user in
                                 
                                 NavigationLink(destination: UserProfilePage(user: user, isCurrentUser: false), label:{
                                     
                                     VStack(spacing: 5){
-                                        WebImage(url: URL(string: user.profilePicture ?? ""))
+                                        WebImage(url: URL(string: user.wrappedValue.profilePicture ?? " "))
                                             .resizable()
                                             .scaledToFill()
                                             .frame(width:40,height:40)
                                             .clipShape(Circle())
 //                                                .overlay(Circle().stroke(chat.usersIdling.contains(user.id ?? "") ? Color(getColor(userID: user.id ?? "", groupChat: chat)) : Color.gray,lineWidth: 2))
                                         
-                                        Text("\(user.nickName ?? "TOP SECRET USER")").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                                        Text("\(user.wrappedValue.nickName ?? "TOP SECRET USER")").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
                                         
                                         Text("Lukyan's House").foregroundColor(FOREGROUNDCOLOR).font(.caption)
                                     }

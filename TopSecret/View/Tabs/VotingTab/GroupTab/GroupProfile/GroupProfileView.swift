@@ -40,13 +40,10 @@ struct GroupProfileView: View {
                     }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color"))).padding(.leading,10)
                     Spacer()
                     
-                    if isInGroup {
                         
-                        NavigationLink(destination: GroupSettingsView(group: group)){
-                            Image(systemName: "gear").foregroundColor(FOREGROUNDCOLOR).font(.title3).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color"))).padding(.trailing,10)
-                        }
+                       
                         
-                    }
+                    
                 }.padding(.top,50)
                 
                 //STORY

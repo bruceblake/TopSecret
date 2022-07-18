@@ -57,8 +57,8 @@ class ChatRepository : ObservableObject {
     
     
     //this is for fetching idle users from database
-    func getUsersIdlingList(chatID: String){
-        COLLECTION_CHAT.document(chatID).addSnapshotListener { (snapshot, err) in
+    func getUsersIdlingList(chatID: String, groupID: String){
+        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).addSnapshotListener { (snapshot, err) in
             if err != nil {
                 print(err!.localizedDescription)
                 return
@@ -91,8 +91,8 @@ class ChatRepository : ObservableObject {
         }
     }
     
-    func getUsersTypingList(chatID: String){
-        COLLECTION_CHAT.document(chatID).addSnapshotListener { (snapshot, err) in
+    func getUsersTypingList(chatID: String, groupID: String){
+        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).addSnapshotListener { (snapshot, err) in
             if err != nil {
                 print(err!.localizedDescription)
                 return

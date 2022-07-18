@@ -51,8 +51,8 @@ struct GroupFollowersView: View {
                         
                         if searchRepository.searchText.isEmpty{
                             VStack{
-                                ForEach(groupVM.followers) { user in
-                                    if user.id != userVM.user?.id ?? ""{
+                                ForEach(Binding(get: {groupVM.followers}, set: {_ in})) { user in
+                                    if user.wrappedValue.id != userVM.user?.id ?? ""{
                                     NavigationLink(
                                         destination: UserProfilePage(user: user, isCurrentUser: false),
                                         label: {
@@ -65,7 +65,7 @@ struct GroupFollowersView: View {
                             }.background(Color("Color")).cornerRadius(12).padding(.horizontal)
                         }else{
                             VStack{
-                                ForEach(searchRepository.userReturnedResults, id: \.id) { user in
+                                ForEach(Binding(get: {searchRepository.userReturnedResults}, set: {_ in}), id: \.id) { user in
                                     NavigationLink(
                                         destination: UserProfilePage(user: user, isCurrentUser: false),
                                         label: {

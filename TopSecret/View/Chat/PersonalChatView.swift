@@ -43,7 +43,7 @@ struct PersonalChatView: View {
                     }).padding(.leading)
                     
                         NavigationLink {
-                            UserProfilePage(user: self.friend, isCurrentUser: false)
+                            UserProfilePage(user: self.$friend, isCurrentUser: false)
                         } label: {
                             HStack{
                                 
@@ -195,8 +195,8 @@ struct PersonalChatView: View {
             messageVM.readAllMessages(chatID: chat.id, userID: userVM.user?.id ?? "", chatType: "personal", groupID: " ")
             messageVM.getPinnedMessage(chatID: chat.id, groupID: " ")
             chatVM.openChat(userID: userVM.user?.id ?? "", chatID: chat.id, chatType: "personal", groupID: " ")
-            chatVM.getUsersIdlingList(chatID: chat.id)
-            chatVM.getUsersTypingList(chatID: chat.id)
+            chatVM.getUsersIdlingList(chatID: chat.id, groupID: " ")
+            chatVM.getUsersTypingList(chatID: chat.id, groupID: " ")
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                 messageVM.scrollToBottom += 1
             }
