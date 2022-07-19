@@ -378,11 +378,16 @@ struct ChatView: View {
                                     Text("Delete").foregroundColor(FOREGROUNDCOLOR)
                                 }).padding()
                                 
-                                Divider()
+                                
+                              Divider()
+                                
+                                
                             }
                             
                             Button(action:{
                                 withAnimation(.easeIn(duration: 0.2)){
+                                    
+                                   
                                     self.showMenu.toggle()
                                 }
                                 
@@ -439,15 +444,19 @@ struct ChatView: View {
                 imagePickerVM.setUp()
                 
                 let groupD = DispatchGroup()
-                
+              
                 groupD.enter()
                 selectedGroupVM.fetchGroup(userID: userVM.user?.id ?? " ", groupID: group.id, completion: { fetched in
                     groupD.leave()
+                    
                 })
                 
                 groupD.notify(queue: .main, execute: {
                     
                     messageVM.getPinnedMessage(chatID: selectedGroupVM.group?.chatID ?? "CHAT_ID", groupID: selectedGroupVM.group?.id ?? " ")
+                    
+                    
+                    
                     chatVM.openChat(userID: uid, chatID: selectedGroupVM.group?.chat?.id ?? "CHAT_ID" , chatType: "groupChat", groupID: selectedGroupVM.group?.id ?? " ")
                     chatVM.getUsers(usersID: group.users ?? [])
                     chatVM.getUsersIdlingList(chatID: selectedGroupVM.group?.chat?.id ?? "CHAT_ID", groupID: group.id)

@@ -48,6 +48,17 @@ class EventRepository : ObservableObject {
         COLLECTION_GROUP.document(groupID).updateData(["events":FieldValue.arrayUnion([id])])
     }
     
+    
+    func joinEvent(eventID: String, groupID: String, userID: String){
+        COLLECTION_GROUP.document(groupID).collection("Events").document(eventID).updateData(["usersAttendingID":FieldValue.arrayUnion([userID])])
+        print("user joined event: \(eventID)")
+    }
+    
+    func leaveEvent(eventID: String, groupID: String, userID: String){
+        COLLECTION_GROUP.document(groupID).collection("Events").document(eventID).updateData(["usersAttendingID":FieldValue.arrayRemove([userID])])
+        print("user left event: \(eventID)")
+    }
+    
     func deleteEvent(eventID: String){
         //TODO
     }

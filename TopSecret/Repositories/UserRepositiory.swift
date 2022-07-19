@@ -570,6 +570,87 @@ class UserRepository : ObservableObject {
        
     }
     
+    func fetchGroupUnreadNotifications(userID: String, groupID: String, completion: @escaping ([GroupNotificationModel]) -> ()) -> () {
+        COLLECTION_GROUP.document(groupID).collection("Notifications").getDocuments { snapshot, err in
+            if err != nil{
+                print("ERROR")
+                return
+            }
+            
+            let documents = snapshot!.documents.filter({ (($0.get("usersThatHaveSeen") as? [String] ?? []).contains(userID) == false)})
+            
+            
+            
+            
+            return completion(documents.map({ queryDocumentSnapshot -> GroupNotificationModel in
+                let data = queryDocumentSnapshot.data()
+                
+                return GroupNotificationModel(dictionary: data)
+            }))
+            
+        }
+    }
+    
+    func fetchGroupNotificationCreator(notificationCreatorID: String, completion: @escaping (User) -> ()) -> (){
+        
+        COLLECTION_USER.document(notificationCreatorID).getDocument { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            let data = snapshot?.data() as? [String:Any] ?? [:]
+            
+            return completion(User(dictionary: data))
+            
+        }
+        
+    }
+    
+    func fetchGroupNotifications(groupID: String, completion: @escaping ([GroupNotificationModel]) -> ()) -> () {
+        
+        
+        var notificationsToReturn : [GroupNotificationModel] = []
+        COLLECTION_GROUP.document(groupID).collection("Notifications").getDocuments { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            let documents = snapshot!.documents
+            
+            let groupD = DispatchGroup()
+
+            groupD.enter()
+       
+            for document in documents {
+                var data = document.data()
+                
+                
+                groupD.enter()
+                
+                self.fetchGroupNotificationCreator(notificationCreatorID: data["notificationCreatorID"] as? String ?? " ") { fetchedUser in
+                    data["notificationCreator"] = fetchedUser
+                    groupD.leave()
+                }
+                
+                groupD.notify(queue: .main, execute: {
+                    notificationsToReturn.append(GroupNotificationModel(dictionary: data))
+                })
+            }
+            
+            groupD.leave()
+            
+            groupD.notify(queue: .main, execute: {
+                return completion(notificationsToReturn)
+            })
+            
+            
+          
+            
+        }
+    }
+    
     func listenToUserGroups(uid: String){
         
         let listener = COLLECTION_GROUP.whereField("users", arrayContains: uid).addSnapshotListener { (snapshot, err) in
@@ -579,26 +660,58 @@ class UserRepository : ObservableObject {
                 print("No document!")
                 return
             }
+            var groupsToReturn : [Group] = []
+
+            //fetching notifications
             
-    
             
-            self.groups = documents.map{ queryDocumentSnapshot -> Group in
-                var data = queryDocumentSnapshot.data()
+            
+            let groupD = DispatchGroup()
+            
+            groupD.enter()
+            
+            for document in documents {
+                groupD.enter()
+                var data = document.data()
+                self.fetchGroupNotifications(groupID: document.documentID) { fetchedNotifications in
+                    data["groupNotifications"] = fetchedNotifications
+                    groupD.leave()
+                }
                 
+                groupD.enter()
+                
+                self.fetchGroupUnreadNotifications(userID: uid, groupID: data["id"] as? String ?? " ") { fetchedUnreadNotifications in
+                    data["unreadGroupNotifications"] = fetchedUnreadNotifications
+                    groupD.leave()
+                }
+                    
+                groupD.notify(queue: .main, execute: {
+                    groupsToReturn.append(Group(dictionary: data))
+                })
+                    
+                }
+            
+            groupD.leave()
     
-                  return Group(dictionary: data)
-       }
+            
+            groupD.notify(queue: .main, execute: {
+                self.groups = groupsToReturn
+            })
+            
+            }
             
             
             
             
+    
+        firestoreListener.append(listener)
+
             
         }
         
-        firestoreListener.append(listener)
     
 
-    }
+    
 
     
     

@@ -10,9 +10,11 @@ import Firebase
 
 struct FullEventView : View {
     
-    @Binding var eventUsers: [User]
+  
     @Binding var event : EventModel
     var group: Group
+    @EnvironmentObject var userVM: UserViewModel
+    @StateObject var eventVM = EventViewModel()
     @Environment(\.presentationMode) var presentationMode
 
     var body: some View {
@@ -91,23 +93,36 @@ struct FullEventView : View {
                             })
                         }
                         VStack{
-                            ForEach(eventUsers){ user in
+                            ForEach(event.usersAttending ?? []){ user in
                                 UserSearchCell(user: Binding(get: {user}, set: {_ in}), showActivity: true)
                             }
-                        }.padding(.horizontal)
+                        }
                     }
                     
                     Spacer()
                 }.padding()
                 
-                Button(action: {
-                    
-                }, label: {
-                    Text("Edit Availability").foregroundColor(Color("Foreground"))
-                        .padding(.vertical)
-                       .frame(width: UIScreen.main.bounds.width/1.5).background(Color("AccentColor")).cornerRadius(15)
-                }).padding(30)
                 
+                if !(event.usersAttendingID?.contains(userVM.user?.id ?? " ") ?? false){
+                    Button(action: {
+                        eventVM.joinEvent(eventID: event.id, groupID: group.id, userID: userVM.user?.id ?? " ")
+                    }, label: {
+                        Text("Join Event").foregroundColor(Color("Foreground"))
+                            .padding(.vertical)
+                           .frame(width: UIScreen.main.bounds.width/1.5).background(Color("AccentColor")).cornerRadius(15)
+                    }).padding(30)
+                }else{
+                    Button(action: {
+                        eventVM.leaveEvent(eventID: event.id, groupID: group.id, userID: userVM.user?.id ?? " ")
+                        presentationMode.wrappedValue.dismiss()
+                    }, label: {
+                        Text("Edit Availability").foregroundColor(Color("Foreground"))
+                            .padding(.vertical)
+                           .frame(width: UIScreen.main.bounds.width/1.5).background(Color("AccentColor")).cornerRadius(15)
+                    }).padding(30)
+                }
+               
+               
              
                 
             

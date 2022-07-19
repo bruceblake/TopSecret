@@ -61,7 +61,14 @@ struct HomeScreenView: View {
                     
                     HStack{
                         
+                        Button(action:{
+                            showAddContent.toggle()
+                        },label:{
+                            Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title2)
+                        }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
+                        
                         Button(action: {
+                            
 
                                 withAnimation(.spring()){
                                     self.showProfileView.toggle()
@@ -70,12 +77,11 @@ struct HomeScreenView: View {
                                 Image(systemName: "person.3.fill").foregroundColor(FOREGROUNDCOLOR).font(.title3)
                         }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
                         
+                        NavigationLink(destination: GroupSettingsView(group: group)){
+                            Image(systemName: "gear").foregroundColor(FOREGROUNDCOLOR).font(.title3).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
+                        }
                         
-                        Button(action:{
-                            showAddContent.toggle()
-                        },label:{
-                            Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title2)
-                        }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
+                        
                         
    
 
@@ -109,11 +115,12 @@ struct HomeScreenView: View {
                         }
                      
                     },label:{
+                            VStack{
+                                Text("Chat").fontWeight(.bold)
+                                Rectangle().frame(width: UIScreen.main.bounds.width/5,height:2)
+                            }
                         
-                        VStack{
-                            Text("Chat").fontWeight(.bold)
-                            Rectangle().frame(width: UIScreen.main.bounds.width/5,height:2)
-                        }
+                       
                     }).foregroundColor(selectedView == 1 ? Color("AccentColor") : FOREGROUNDCOLOR)
                     
 

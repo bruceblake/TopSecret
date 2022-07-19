@@ -214,7 +214,7 @@ class SelectedGroupViewModel : ObservableObject {
                 
                 groupD.enter()
                 
-                self.fetchGroupNotificationCreator(notificationCreatorID: data["notificationCreatorID"] as! String) { fetchedUser in
+                self.fetchGroupNotificationCreator(notificationCreatorID: data["notificationCreatorID"] as? String ?? " ") { fetchedUser in
                     data["notificationCreator"] = fetchedUser
                     groupD.leave()
                 }

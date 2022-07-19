@@ -59,80 +59,86 @@ struct ShowGroups : View {
     var width : CGFloat = UIScreen.main.bounds.width
     var height : CGFloat = UIScreen.main.bounds.height
     
+    
+    
     var body: some View{
         ScrollView(showsIndicators: false){
-                        VStack(spacing: 30){
-                            ForEach(userVM.groups, id: \.id){ group in
-                                Button(action:{
-                                    
-                                    let dispatchGroup = DispatchGroup()
-                                    
-                                    dispatchGroup.enter()
-                                    self.users.removeAll()
-                                    dispatchGroup.leave()
-                                    
-                                    for userID in group.users ?? [] {
-                                        dispatchGroup.enter()
-                                        userVM.fetchUser(userID: userID) { fetchedUser in
-                                            self.users.append(fetchedUser)
-                                            dispatchGroup.leave()
-                                        }
-                                    }
-                                    
-                                    dispatchGroup.enter()
-                                    self.selectedGroup = group
-                                    dispatchGroup.leave()
-                                    
-                                    dispatchGroup.notify(queue: .global(), execute:{
-                                        openGroupHomescreen.toggle()
-                                    })
-                                    
-                                },label:{
-                                    VStack{
-                                    VStack(alignment: .leading){
-                                        
-                                        
-                                        
-                                            HStack{
-                                                Spacer()
-                                                
-                                                
-                                            }.padding(50).background(WebImage(url: URL(string: group.groupProfileImage ?? "")).resizable().scaledToFill())
-                     
-                                        
-                                        HStack(alignment: .top){
-                                            
-                                            VStack(alignment: .leading,spacing:10){
-                                                Text(group.groupName).font(.headline).bold().foregroundColor(FOREGROUNDCOLOR)
-                                                
-                                                HStack{
-                                                    Text(group.motd)
-                                                        .lineLimit(1)
-                                                }.foregroundColor(FOREGROUNDCOLOR)
-                                                
-                                                HStack{
-                                                    Text("\(group.memberAmount) \(group.memberAmount == 1 ? "member" : "members")").foregroundColor(FOREGROUNDCOLOR)
-                                                  
-                                                    
-                                                }
-                                            }
-                                            
-                                            Spacer(minLength: 0)
-                                        }.padding(10).background(Rectangle().foregroundColor(Color("Color")))
-                                        
-                                        
-                                    }.cornerRadius(10)
-                                        
-                                    }.shadow(color: Color.black, radius: 5).frame(width: width - widthAdd, height: height/heightDivide).padding(.top,30)
-                                
-                                }).disabled(group.groupName == "" || group.groupName == " ")
-                                
+            VStack(spacing: 30){
+                ForEach(userVM.groups, id: \.id){ group in
+                    Button(action:{
+                        
+                        let dispatchGroup = DispatchGroup()
+                        
+                        dispatchGroup.enter()
+                        self.users.removeAll()
+                        dispatchGroup.leave()
+                        
+                        for userID in group.users ?? [] {
+                            dispatchGroup.enter()
+                            userVM.fetchUser(userID: userID) { fetchedUser in
+                                self.users.append(fetchedUser)
+                                dispatchGroup.leave()
                             }
                         }
-                       
+                        
+                        dispatchGroup.enter()
+                        self.selectedGroup = group
+                        dispatchGroup.leave()
+                        
+                        dispatchGroup.notify(queue: .global(), execute:{
+                            openGroupHomescreen.toggle()
+                        })
+                        
+                    },label:{
+                            VStack{
+                                VStack(alignment: .leading){
+                                    
+                                    
+                                    
+                                    HStack{
+                                        Spacer()
+                                        
+                                        
+                                    }.padding(50).background(WebImage(url: URL(string: group.groupProfileImage ?? "")).resizable().scaledToFill())
+                                    
+                                    
+                                    HStack(alignment: .top){
+                                        
+                                        VStack(alignment: .leading,spacing:10){
+                                            Text(group.groupName).font(.headline).bold().foregroundColor(FOREGROUNDCOLOR)
+                                            
+                                            HStack{
+                                                Text(group.motd)
+                                                    .lineLimit(1)
+                                            }.foregroundColor(FOREGROUNDCOLOR)
+                                            
+                                            HStack{
+                                                Text("\(group.memberAmount) \(group.memberAmount == 1 ? "member" : "members")").foregroundColor(FOREGROUNDCOLOR)
+                                                
+                                                
+                                            }
+                                        }
+                                        
+                                        Spacer(minLength: 0)
+                                    }.padding(10).background(Rectangle().foregroundColor(Color("Color")))
+                                    
+                                    
+                                }.cornerRadius(10)
+                                
+                            }.shadow(color: Color.black, radius: 5).frame(width: width - widthAdd, height: height/heightDivide).padding(.top,30)
+                            
+                        
+                            
                         
                         
-                    }.padding(.top).padding(.bottom,100)
+                    }).disabled(group.groupName == "" || group.groupName == " ")
+                    
+                }
+            }
+            
+            
+            
+        }.padding(.top).padding(.bottom,100)
     }
 }
-                    
+

@@ -22,12 +22,14 @@ struct GroupCalendarView: View {
     @State var currentEvents : [EventModel] = []
     @State var hasEvents : Bool = false
     @StateObject var homeCalendarVM = HomeCalendarViewModel()
+    @State var selectedEvent : EventModel = EventModel()
     
     var options = ["All","Events","Countdowns","Polls"]
     @State var selectedOptionIndex = 0
     @State var selectedBottomCardIndex = 0
+    @State var openEventView: Bool = false
     
-
+    
     
     func getDateComponents(date: Date) -> [String]{ // month, day, year
         let components = Calendar.current.dateComponents([.month,.day,.year], from: date)
@@ -40,9 +42,9 @@ struct GroupCalendarView: View {
     
     func getDate(year: Binding<Int>, month: Binding<Int>, day: Binding<Int>) -> Binding<Date>{
         let dateComponent = DateComponents(year: year.wrappedValue, month: month.wrappedValue, day: day.wrappedValue)
-
+        
         return Binding(get: {Calendar.current.date(from: dateComponent) ?? Date()}, set: {_ in})
-
+        
     }
     
     func getMonth(monthNumber: Int) -> String{
@@ -69,7 +71,7 @@ struct GroupCalendarView: View {
             
             VStack{
                 
-          
+                
                 
                 VStack(alignment: .leading){
                     
@@ -83,7 +85,7 @@ struct GroupCalendarView: View {
                                     
                                     
                                     Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
-
+                                    
                                     Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR).font(.title3)
                                     
                                 }
@@ -98,7 +100,7 @@ struct GroupCalendarView: View {
                                     
                                     
                                     Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
-
+                                    
                                     Image(systemName: "gear").foregroundColor(FOREGROUNDCOLOR).font(.title3)
                                     
                                 }
@@ -109,74 +111,59 @@ struct GroupCalendarView: View {
                         
                     }
                     
-          
+                    
                     
                     VStack{
                         HStack{
                             
                             
-
+                            
                             Text("\(getMonth(monthNumber: selectedMonth))").fontWeight(.bold).font(.title2)
                             Text("\(selectedDay)").font(.title2).fontWeight(.bold)
                             Spacer()
+                            
                             Button(action:{
-
+                                
+                            },label:{
+                                Text("See Availability")
+                            })
+                            
+                            Button(action:{
+                                
                             },label:{
                                 Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title2)
                             }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
-
-
-                        }
-                        
-                        HStack{
-                            Button(action:{
-                                withAnimation {
-                                    selectedBottomCardIndex = 0
-                                }
-                            },label:{
-                                Text("Plans")
-                            }).foregroundColor(selectedBottomCardIndex == 0 ? Color("AccentColor") : FOREGROUNDCOLOR).padding(.leading,10)
                             
-                            Spacer()
-                            
-                            Button(action:{
-                                withAnimation {
-                                    selectedBottomCardIndex = 1
-                                }
-                            },label:{
-                                Text("Availability")
-                            }).foregroundColor(selectedBottomCardIndex == 1 ? Color("AccentColor") : FOREGROUNDCOLOR).padding(.trailing,10)
                             
                         }
                         
-                        if selectedBottomCardIndex == 0 {
-                            PlansView(currentDate: getDate(year: $selectedYear, month: $selectedMonth, day: $selectedDay), group: $group)
-                        }else {
-                            AvailabilityView()
-                        }
                         
                         
-                    
+                        PlansView(currentDate: getDate(year: $selectedYear, month: $selectedMonth, day: $selectedDay) , group: $group, openEventView: $openEventView, selectedEvent: $selectedEvent)
                         
-
-
+                        
+                        
+                        
+                        
+                        
+                        
                     }.padding().background(Color("Color")).cornerRadius(16).frame(height: UIScreen.main.bounds.height / 3)
-                  
+                    
                     
                     
                 }.frame(height: UIScreen.main.bounds.height/2)
                 
-               
-                
-                 
-
                 
                 
-
+                
+                
+                
+                
+                
                 
             }.padding(.horizontal)
             
-            
+            NavigationLink(destination: FullEventView(event: $selectedEvent, group: group), isActive: $openEventView, label: {EmptyView()})
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
         
@@ -194,7 +181,10 @@ struct GroupCalendarView: View {
 struct PlansView : View {
     @Binding var currentDate : Date
     @Binding var group: Group
+    @Binding var openEventView: Bool
+    @Binding var selectedEvent : EventModel
     @StateObject var homeCalendarVM = HomeCalendarViewModel()
+    @State var action : Bool = false
     
     var options = ["All","Events","Countdowns","Polls"]
     @State var selectedOptionIndex = 0
@@ -202,90 +192,104 @@ struct PlansView : View {
     
     var body: some View {
         VStack{
-        HStack(spacing: 20){
             
-            ForEach(0..<options.count) { option in
-                Button(action:{
-                    withAnimation(.easeInOut){
-                        self.selectedOptionIndex = option
-                    }
-                },label:{
-                    Text("\(options[option])").foregroundColor(FOREGROUNDCOLOR).font(.callout)
-                }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(selectedOptionIndex == option ? Color("AccentColor") : Color("Background")))
+            HStack(spacing: 20){
+                
+                ForEach(0..<options.count) { option in
+                    Button(action:{
+                        withAnimation(.easeInOut){
+                            self.selectedOptionIndex = option
+                        }
+                    },label:{
+                        Text("\(options[option])").foregroundColor(FOREGROUNDCOLOR).font(.callout)
+                    }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(selectedOptionIndex == option ? Color("AccentColor") : Color("Background")))
+                }
+                
+                
             }
             
             
             
             
-        }
-        
-        
-        
-        
-        ScrollView(showsIndicators: false){
-            VStack{
-                switch self.selectedOptionIndex {
-                    
-                case 0:
-                    
-                    if homeCalendarVM.eventsReturnedResults.isEmpty && homeCalendarVM.countdownReturnedResults.isEmpty {
-                        Text("Nothing for Today!")
-                    }
-                    ForEach(homeCalendarVM.eventsReturnedResults, id: \.id){ event in
-                        EventCell(event: event, currentDate: currentDate, isHomescreen: false)
-                    }
-                    
-                    
-                    
-                    ForEach(homeCalendarVM.countdownReturnedResults, id: \.id){ countdown in
-                        CountdownCell(countdown: countdown)
-                    }
-                    
-                     
-                case 1:
-                    if homeCalendarVM.eventsReturnedResults.isEmpty {
-                        Text("No Events for Today!")
-                    }else{
-                        ForEach(homeCalendarVM.eventsReturnedResults, id: \.id){ event in
-                            EventCell(event: event, currentDate: currentDate, isHomescreen: false)
+            ScrollView(showsIndicators: false){
+                VStack{
+                    switch self.selectedOptionIndex {
+                        
+                    case 0:
+                        
+                        if homeCalendarVM.eventsReturnedResults.isEmpty && homeCalendarVM.countdownReturnedResults.isEmpty {
+                            Text("Nothing for Today!")
                         }
-                    }
-                    
-                    
-                case 2:
-                    if homeCalendarVM.countdownReturnedResults.isEmpty {
-                        Text("No Countdowns for Today!")
-                    }else{
+                        ForEach($homeCalendarVM.eventsReturnedResults, id: \.id){ event in
+                            Button(action:{
+                                selectedEvent = event.wrappedValue
+                                self.openEventView.toggle()
+                            },label:{
+                                EventCell(event: event, currentDate: currentDate, isHomescreen: false, group: $group, action: $action)
+                            })
+                            
+                        }
+                        
+                        
+                        
                         ForEach(homeCalendarVM.countdownReturnedResults, id: \.id){ countdown in
                             CountdownCell(countdown: countdown)
                         }
+                        
+                        
+                    case 1:
+                        if homeCalendarVM.eventsReturnedResults.isEmpty {
+                            Text("No Events for Today!")
+                        }else{
+                            ForEach($homeCalendarVM.eventsReturnedResults, id: \.id){ event in
+                                Button(action:{
+                                    selectedEvent = event.wrappedValue
+                                    self.openEventView.toggle()
+                                },label:{
+                                    EventCell(event: event, currentDate: currentDate, isHomescreen: false, group: $group, action: $action)
+                                })
+                            }
+                        }
+                        
+                        
+                    case 2:
+                        if homeCalendarVM.countdownReturnedResults.isEmpty {
+                            Text("No Countdowns for Today!")
+                        }else{
+                            ForEach(homeCalendarVM.countdownReturnedResults, id: \.id){ countdown in
+                                CountdownCell(countdown: countdown)
+                            }
+                        }
+                        
+                        
+                    default:
+                        Text("Hello World")
+                        
                     }
                     
-                    
-                default:
-                    Text("Hello World")
-
                 }
                 
             }
             
-        }.padding()
-        
-    }.onAppear{
-        homeCalendarVM.startSearch(groupID: group.id)
-    }.onChange(of: self.currentDate) { newDate in
-        let groupD = DispatchGroup()
-        
-        groupD.enter()
-        homeCalendarVM.setCurrentDate(currentDate: newDate)
-        groupD.leave()
-        
-        groupD.notify(queue: .main, execute: {
+        }.onAppear{
             homeCalendarVM.startSearch(groupID: group.id)
-            print("current date: \(newDate)")
-            print("started search!")
-        })
-    }
+        }.onChange(of: self.currentDate) { newDate in
+            let groupD = DispatchGroup()
+            
+            groupD.enter()
+            homeCalendarVM.setCurrentDate(currentDate: newDate)
+            groupD.leave()
+            
+            groupD.notify(queue: .main, execute: {
+                homeCalendarVM.startSearch(groupID: group.id)
+                print("current date: \(newDate)")
+                print("started search!")
+            })
+        }.onChange(of: self.action) { action in
+            
+            homeCalendarVM.startSearch(groupID: group.id)
+            
+        }
         
     }
 }

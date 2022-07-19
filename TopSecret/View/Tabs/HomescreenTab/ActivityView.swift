@@ -1,4 +1,4 @@
-//
+
 //  ActivityView.swift
 //  Top Secret
 //
@@ -33,12 +33,12 @@ struct ActivityView: View {
         }
         return false
     }
-    
     func filterIfUnread(notifications: [GroupNotificationModel]) -> [GroupNotificationModel]{
         
-        return notifications.filter({ (($0.usersThatHaveSeen as? [String] ?? []).contains(userVM.user?.id ?? " ") == false)})
+        return notifications.filter({ (($0.usersThatHaveSeen ?? []).contains(userVM.user?.id ?? " ") == false)})
         
     }
+    
     
     
     var body: some View {
@@ -47,13 +47,24 @@ struct ActivityView: View {
             ScrollView(showsIndicators: false){
                 VStack(spacing: 20){
                     
-                    //story
                     VStack{
                         
                         HStack{
                             
-                            HStack{
+                            HStack(spacing: 7){
                                 
+                                
+                                Text("Today").font(.largeTitle).bold().foregroundColor(FOREGROUNDCOLOR)
+                                
+                                Text(Date(), style: .date).foregroundColor(.gray).fontWeight(.bold).font(.subheadline)
+                                
+                                
+                            }.padding(.leading,10)
+                            
+                            
+                            Spacer()
+                            
+                            HStack(spacing: 15){
                                 NavigationLink(destination: GroupNotificationsView(group: $group).environmentObject(selectedGroupVM)) {
                                     ZStack{
                                         Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
@@ -65,7 +76,7 @@ struct ActivityView: View {
                                         if self.filterIfUnread(notifications: selectedGroupVM.group?.unreadGroupNotifications ?? []).count != 0 {
                                             ZStack{
                                                 Circle().foregroundColor(Color("AccentColor")).frame(width: 20, height: 20)
-                                                Text("\(self.filterIfUnread(notifications: selectedGroupVM.group?.unreadGroupNotifications ?? []).count ?? 0)").foregroundColor(Color.yellow).font(.body)
+                                                Text("\(self.filterIfUnread(notifications: selectedGroupVM.group?.unreadGroupNotifications ?? []).count )").foregroundColor(Color.yellow).font(.body)
                                             }.offset(x: 15, y: -17)
                                         }
                                         
@@ -73,51 +84,22 @@ struct ActivityView: View {
                                     }
                                 }
                                 
-                                Spacer()
-                            }.padding(.leading,12).offset(y: -35)
-                            
-                            
-                            
-                            
-                            
-                            
-                            Button(action:{
-                                //TODO
-                            },label:{
-                                WebImage(url: URL(string: group.groupProfileImage ?? ""))
-                                    .resizable()
-                                    .scaledToFill()
-                                    .frame(width:100,height:100)
-                                    .clipShape(Circle())
-                                    .overlay(Circle().stroke(Color("AccentColor"), lineWidth: 5))
-                            })
-                            
-                            
-                            HStack{
-                                Spacer()
                                 
-                                NavigationLink(destination: GroupSettingsView(group: group)){
-                                    Image(systemName: "gear").foregroundColor(FOREGROUNDCOLOR).font(.title3).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
+                                
+                                NavigationLink(destination: GroupCalendarView(group: $group)){
+                                    ZStack{
+                                        Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
+                                        
+                                        Image(systemName: "calendar").foregroundColor(FOREGROUNDCOLOR).font(.title3)
+                                    }
+                                   
                                 }
-                                
-                            }.padding(.trailing,12).offset(y: -35)
+                            }.padding(15)
+                       
                             
                             
-                            
-                            
-                            
-                        }
+                        }.padding(.trailing,10)
                         
-                    }.padding(.top)
-                    
-                    
-                    VStack{
-                        HStack{
-                            Text("Activity").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold).font(.largeTitle)
-                            
-                            
-                            Spacer()
-                        }.padding(.leading,10)
                         ScrollView(.horizontal, showsIndicators: false){
                             HStack(spacing: 20){
                                 ForEach(sortUsersActive(users: selectedGroupVM.group?.realUsers ?? [])){ user in
@@ -141,10 +123,13 @@ struct ActivityView: View {
                                         
                                     })
                                 }
-                            }.padding(.leading, 7)
+                            }.padding(.leading,12)
                             
                         }
+                        
                     }
+                    
+                    
                     
                     HomeCalendarView(group: $group)
                     
@@ -174,92 +159,56 @@ struct HomeCalendarView : View {
     @Binding var group: Group
     @State var openEventView : Bool = false
     @State var selectedEvent : EventModel = EventModel()
-    @State var eventUsers : [User] = []
+    @State var action : Bool = false
     
-    var options = ["All","Events","Countdowns","Polls"]
     @State var selectedOptionIndex = 0
     
-    func fetchEventUsersAttending(completion: @escaping ([User]) -> ()) -> (){
-        COLLECTION_GROUP.document(group.id).collection("Events").document(selectedEvent.id).getDocument { snapshot, err in
-            
-            if err != nil {
-                print("ERROR")
-                return
-            }
-            var usersToReturn : [User] = []
-            
-            
-            let groupD = DispatchGroup()
-            
-            let data = snapshot?.data() as? [String:Any] ?? [:]
-            let users = data["usersAttendingID"] as? [String] ?? []
-            
-            for user in users {
-                groupD.enter()
-                COLLECTION_USER.document(user).getDocument { userSnapshot, err in
-                    if err != nil {
-                        print("ERROR")
-                        return
-                    }
-                    
-                    let userData = userSnapshot?.data() as? [String:Any] ?? [:]
-                    
-                    usersToReturn.append(User(dictionary: userData))
-                    groupD.leave()
-                }
-            }
-            
-            groupD.notify(queue: .main, execute: {
-                return completion(usersToReturn)
-            })
-            
-        }
-        
-        
-    }
     
     var body: some View {
         ZStack{
             Color("Background")
             VStack{
                 
+                
+                
+                
+                
                 HStack{
                     
-                    HStack(spacing: 7){
-                        
-                        
-                        Text("Today").font(.largeTitle).bold().foregroundColor(FOREGROUNDCOLOR)
-                        
-                        Text(Date(), style: .date).foregroundColor(.gray).fontWeight(.bold).font(.subheadline)
-                        
-                        
-                    }.padding(.leading,10)
-                    
-                    
-                    Spacer()
-                    
-
-                    
-                    NavigationLink(destination: GroupCalendarView(group: $group)){
-                        Image(systemName: "calendar").foregroundColor(FOREGROUNDCOLOR).font(.title3).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
-                    }
-                    
-                    
-                }.padding(.trailing,10)
-                
-                
-                
-                HStack(spacing: 20){
-                    
-                    ForEach(0..<options.count) { option in
+                    HStack{
+                        Spacer()
                         Button(action:{
                             withAnimation(.easeInOut){
-                                self.selectedOptionIndex = option
+                                self.selectedOptionIndex = 0
                             }
                         },label:{
-                            Text("\(options[option])").foregroundColor(FOREGROUNDCOLOR)
-                        }).padding(10).background(RoundedRectangle(cornerRadius: 16).fill(selectedOptionIndex == option ? Color("AccentColor") : Color("Color")))
+                            Text("All").foregroundColor(FOREGROUNDCOLOR)
+                        }).padding(10).background(RoundedRectangle(cornerRadius: 16).fill(selectedOptionIndex == 0 ? Color("AccentColor") : Color("Color")))
+                        
+                        Spacer()
+                        
+                        Button(action:{
+                            withAnimation(.easeInOut){
+                                self.selectedOptionIndex = 1
+                            }
+                        },label:{
+                            Text("Events").foregroundColor(FOREGROUNDCOLOR)
+                        }).padding(10).background(RoundedRectangle(cornerRadius: 16).fill(selectedOptionIndex == 1 ? Color("AccentColor") : Color("Color")))
+                        
+                        Spacer()
+                        
+                        Button(action:{
+                            withAnimation(.easeInOut){
+                                self.selectedOptionIndex = 2
+                            }
+                        },label:{
+                            Text("Polls").foregroundColor(FOREGROUNDCOLOR)
+                        }).padding(10).background(RoundedRectangle(cornerRadius: 16).fill(selectedOptionIndex == 2 ? Color("AccentColor") : Color("Color")))
+                        
+                        Spacer()
                     }
+                    
+                 
                     
                     
                     
@@ -275,21 +224,13 @@ struct HomeCalendarView : View {
                             if homeCalendarVM.eventsReturnedResults.isEmpty && homeCalendarVM.countdownReturnedResults.isEmpty {
                                 Text("Nothing for Today!")
                             }
-                            ForEach(homeCalendarVM.eventsReturnedResults, id: \.id){ event in
+                            ForEach($homeCalendarVM.eventsReturnedResults, id: \.id){ event in
                                 Button(action:{
-                                    let groupD = DispatchGroup()
-                                    groupD.enter()
-                                    selectedEvent = event
-                                    eventUsers.removeAll()
-                                    self.fetchEventUsersAttending { fetchedUsers in
-                                        self.eventUsers = fetchedUsers
-                                        groupD.leave()
-                                    }
-                                    groupD.notify(queue: .main, execute: {
-                                        self.openEventView.toggle()
-                                    })
+                                    selectedEvent = event.wrappedValue
+                                    
+                                    self.openEventView.toggle()
                                 },label:{
-                                    EventCell(event: event, currentDate:Date(), isHomescreen: true)
+                                    EventCell(event: event, currentDate:Date(), isHomescreen: true, group: $group, action: $action)
                                 })
                             }
                             
@@ -299,13 +240,18 @@ struct HomeCalendarView : View {
                                 CountdownCell(countdown: countdown)
                             }
                             
-                             
+                            
                         case 1:
                             if homeCalendarVM.eventsReturnedResults.isEmpty {
                                 Text("No Events for Today!")
                             }else{
-                                ForEach(homeCalendarVM.eventsReturnedResults, id: \.id){ event in
-                                    EventCell(event: event, currentDate: Date(), isHomescreen: true)
+                                ForEach($homeCalendarVM.eventsReturnedResults, id: \.id){ event in
+                                    Button(action:{
+                                        selectedEvent = event.wrappedValue
+                                        self.openEventView.toggle()
+                                    },label:{
+                                        EventCell(event: event, currentDate:Date(), isHomescreen: true, group: $group, action: $action)
+                                    })
                                 }
                             }
                             
@@ -329,16 +275,18 @@ struct HomeCalendarView : View {
                         
                     }
                     
-                }.padding()
+                }
                 
-          
+                
                 
             }
             
-            NavigationLink(destination: FullEventView(eventUsers: $eventUsers, event: $selectedEvent, group: group), isActive: $openEventView, label: {EmptyView()})
+            NavigationLink(destination: FullEventView(event: $selectedEvent, group: group), isActive: $openEventView, label: {EmptyView()})
             
             
         }.onAppear{
+            homeCalendarVM.startSearch(groupID: group.id)
+        }.onChange(of: self.action) { action in
             homeCalendarVM.startSearch(groupID: group.id)
         }
         
@@ -452,16 +400,16 @@ struct EventList : View {
                     
                     HStack{
                         ForEach(group.events?.identifiableIndices ?? IdentifiableIndices(base: [EventModel()])){ index in
-//                            Button {
-//
-//                            } label: {
-////                                EventCell(event: group.events?[index.rawValue] ?? EventModel())
-//                            }.sheet(isPresented: $showEvent){
-//
-//                            } content: {
-//                                FullEventView(event:  group.events?[index.rawValue] ?? EventModel())
-//                            }
-//
+                            //                            Button {
+                            //
+                            //                            } label: {
+                            ////                                EventCell(event: group.events?[index.rawValue] ?? EventModel())
+                            //                            }.sheet(isPresented: $showEvent){
+                            //
+                            //                            } content: {
+                            //                                FullEventView(event:  group.events?[index.rawValue] ?? EventModel())
+                            //                            }
+                            //
                         }
                     }
                     
