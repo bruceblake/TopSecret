@@ -9,6 +9,8 @@ import SwiftUI
 import UIKit
 import SCSDKLoginKit
 import SDWebImageSwiftUI
+import CoreData
+
 
 
 
@@ -20,8 +22,10 @@ struct ContentView: View {
     @State var tabIndex : Tab = .home
     @State var showNotification : Bool = false
     @State var selectedGroup : Group = Group()
-
+    
     @Environment(\.scenePhase) var scenePhase
+    
+    @Environment(\.managedObjectContext) private var viewContext
     
     
     
@@ -33,14 +37,14 @@ struct ContentView: View {
         
         ZStack(alignment: .top){
             if userVM.userSession != nil{
-                    NavigationView{
-                        Tabs(tabIndex: $tabIndex, selectedGroup: $selectedGroup)
-                    }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).navigationViewStyle(.stack)
-                    
-                    
-             
+                NavigationView{
+                    Tabs(tabIndex: $tabIndex, selectedGroup: $selectedGroup)
+                }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).navigationViewStyle(.stack)
                 
-               
+                
+                
+                
+                
                 
                 
                 if userVM.isConnected == false{
@@ -58,7 +62,7 @@ struct ContentView: View {
             }
             
         }
- .edgesIgnoringSafeArea(.all).navigationBarHidden(true).onReceive(userVM.$userNotificationCount) { count in
+        .edgesIgnoringSafeArea(.all).navigationBarHidden(true).onReceive(userVM.$userNotificationCount) { count in
             if count != 0{
                 self.showNotification = true
                 DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: {
@@ -67,7 +71,7 @@ struct ContentView: View {
                     }
                 })
             }
-          
+            
         }.onChange(of: scenePhase) { newPhase in
             if newPhase == .active {
                 if userVM.userSession != nil{
@@ -76,33 +80,10 @@ struct ContentView: View {
                     })
                 }
             }else if newPhase == .background{
-                userVM.setUserActivity(isActive: false, userID: userVM.user?.id ?? " ", completion: { fetchedUser in
-                    userVM.user = fetchedUser
-                })
-            }
-        }.onAppear{
-            
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                userVM.fetchGroup(groupID: userVM.user?.selectedGroup ?? " ") { fetchedGroup in
-                    self.selectedGroup = fetchedGroup
-                }
-            }
-            
-          
-                
-                
-
-             
-                
-               
-             
-            
-           
-            
-        }.onReceive(userVM.$userSelectedGroup) { value in
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5){
-                userVM.fetchGroup(groupID: userVM.user?.selectedGroup ?? " ") { fetchedGroup in
-                    self.selectedGroup = fetchedGroup
+                if userVM.userSession != nil{
+                    userVM.setUserActivity(isActive: false, userID: userVM.user?.id ?? " ", completion: { fetchedUser in
+                        userVM.user = fetchedUser
+                    })
                 }
             }
         }
@@ -123,7 +104,7 @@ struct ContentView_Previews: PreviewProvider {
 
 
 enum Tab {
-    case games, voting, home, schedule, groups
+    case search, notifications, home, schedule, user
 }
 
 struct EmptyGroupHomescreen : View {
@@ -142,27 +123,27 @@ struct EmptyGroupHomescreen : View {
                 VStack{
                     Text("You are not in any groups.")
                     
-                                
-                            HStack{
-                                Spacer()
-                                
-                                Button(action:{
-                                    self.goToCreateGroupView.toggle()
-                                },label:{
-                                    Text("Create a group")
-                                }).foregroundColor(Color("Foreground"))
-                                    .padding(.vertical,10)
-                                    .frame(width: UIScreen.main.bounds.width/3).background(Color("AccentColor")).cornerRadius(15).fullScreenCover(isPresented: $goToCreateGroupView, content: {
-                                        CreateGroupView()
-                                    })
-
-
-                                
-                             
-                                
-                                Spacer()
-                            }
-                           
+                    
+                    HStack{
+                        Spacer()
+                        
+                        Button(action:{
+                            self.goToCreateGroupView.toggle()
+                        },label:{
+                            Text("Create a group")
+                        }).foregroundColor(Color("Foreground"))
+                            .padding(.vertical,10)
+                            .frame(width: UIScreen.main.bounds.width/3).background(Color("AccentColor")).cornerRadius(15).fullScreenCover(isPresented: $goToCreateGroupView, content: {
+                                CreateGroupView()
+                            })
+                        
+                        
+                        
+                        
+                        
+                        Spacer()
+                    }
+                    
                 }
                 
                 
@@ -178,99 +159,114 @@ struct Tabs : View {
     @Binding var tabIndex : Tab
     @Binding var selectedGroup : Group
     @State var showTabButtons : Bool = true
-
+    
     @EnvironmentObject var userVM: UserViewModel
     
-   
-
+    
+    
     var body: some View {
         ZStack{
             
-            if tabIndex == .games{
-                GameView()
-            }else if tabIndex == .voting{
-                VotingView()
+            if tabIndex == .search{
+                Text("Search")
+            }else if tabIndex == .notifications{
+                UserNotificationView()
             }else if tabIndex == .home{
                 HomeScreen()
-         
+                
             }else if tabIndex == .schedule{
                 ScheduleView()
-            }else if tabIndex == .groups{
-               Text("Hello World")
+            }else if tabIndex == .user{
+                UserProfilePage(user: Binding(get: {userVM.user ?? User()}, set: {_ in}), isCurrentUser: true)
             }
             
             if showTabButtons {
-            
-            VStack{
-                Spacer()
-            
-                HStack(spacing: 50){
+                
+                VStack{
                     Spacer()
-                    Button(action:{
-                        UIDevice.vibrate()
-                        self.tabIndex = .games
-                    },label:{
-                        Image(systemName: self.tabIndex == .games ? "gamecontroller.fill" : "gamecontroller").font(.title2)
-                        
-                    }).foregroundColor(self.tabIndex == .games ? Color("AccentColor") : FOREGROUNDCOLOR)
                     
-                    Button(action:{
-                        UIDevice.vibrate()
-
-                        self.tabIndex = .voting
-                    },label:{
-                        Image(self.tabIndex == .voting ? "Poll Icon Colored" : "Poll Icon").resizable().frame(width: 30, height: 40)
+                    HStack(spacing: 50){
+                        Spacer()
+                        Button(action:{
+                            UIDevice.vibrate()
+                            self.tabIndex = .search
+                        },label:{
+                            Image(systemName: "magnifyingglass").font(.title2)
+                            
+                        }).foregroundColor(self.tabIndex == .search ? Color("AccentColor") : FOREGROUNDCOLOR)
                         
-                    })
-                    
-                    
-                    ZStack{
+                        Button(action:{
+                            UIDevice.vibrate()
+                            
+                            self.tabIndex = .notifications
+                        },label:{
+                            
+                            ZStack{
+                                Image(systemName: self.tabIndex == .notifications ? "heart.fill" : "heart").font(.title2)
+                                
+                                if self.userVM.user?.userNotificationCount ?? 0 != 0 {
+                                    ZStack{
+                                        Circle().foregroundColor(Color("AccentColor")).frame(width: 22, height: 22)
+                                        Text("\(self.userVM.user?.userNotificationCount ?? 0)").foregroundColor(Color.yellow).font(.body)
+                                    }.offset(x: 13, y: -15)
+                                }
+                                
+                                
+                            }
+                            
+                            
+                        }).foregroundColor(self.tabIndex == .notifications ? Color("AccentColor") : FOREGROUNDCOLOR)
                         
-                      
+                        
+                        
+                        ZStack{
+                            
+                            
+                            
+                            
+                            Button(action:{
+                                UIDevice.vibrate()
+                                
+                                self.tabIndex = .home
+                            },label:{
+                                Image(systemName: self.tabIndex == .home ? "house.fill" : "house").font(.title)
+                                
+                            }).foregroundColor(self.tabIndex == .home ? Color("AccentColor") : FOREGROUNDCOLOR)
+                            
+                            
+                        }
+                        
                         
                         
                         Button(action:{
                             UIDevice.vibrate()
-
-                            self.tabIndex = .home
-                        },label:{
-                            Image(systemName: self.tabIndex == .home ? "house.fill" : "house").font(.title)
                             
-                        }).foregroundColor(self.tabIndex == .home ? Color("AccentColor") : FOREGROUNDCOLOR)
+                            self.tabIndex = .schedule
+                        },label:{
+                            Image(systemName: self.tabIndex == .schedule ?  "text.book.closed.fill" : "text.book.closed").font(.title2)
+                            
+                        }).foregroundColor(self.tabIndex == .schedule ? Color("AccentColor") : FOREGROUNDCOLOR)
                         
                         Button(action:{
+                            UIDevice.vibrate()
                             
+                            self.tabIndex = .user
                         },label:{
-                            Image(systemName: "plus")
-                        }).offset(y: -30).foregroundColor(Color.orange)
-                    }
+                            WebImage(url: URL(string: userVM.user?.profilePicture ?? ""))
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width:35,height:35)
+                                .clipShape(Circle())
+                                .overlay(Circle().stroke(Color("AccentColor"), lineWidth: self.tabIndex == .user ? 3 : 1))
+                            
+                        }).foregroundColor(self.tabIndex == .user ? Color("AccentColor") : FOREGROUNDCOLOR)
+                        
+                        
+                        Spacer()
+                    }.padding([.bottom,.horizontal],35).padding(.top,30).background(Color("Color"))
+                }
                 
-                    
-                    
-                    Button(action:{
-                        UIDevice.vibrate()
-
-                        self.tabIndex = .schedule
-                    },label:{
-                        Image(systemName: self.tabIndex == .schedule ?  "calendar.circle.fill" : "calendar.circle").font(.title2)
-                        
-                    }).foregroundColor(self.tabIndex == .schedule ? Color("AccentColor") : FOREGROUNDCOLOR)
-                    
-                    Button(action:{
-                        UIDevice.vibrate()
-
-                        self.tabIndex = .groups
-                    },label:{
-                        Image(systemName: self.tabIndex == .groups ? "person.3.fill" : "person.3").font(.title2)
-                        
-                    }).foregroundColor(self.tabIndex == .groups ? Color("AccentColor") : FOREGROUNDCOLOR)
-                    
-                    
-                    Spacer()
-                }.padding([.bottom,.horizontal],35).padding(.top,30).background(Color("Color"))
             }
-            
-        }
             
         }.edgesIgnoringSafeArea(.all)
     }

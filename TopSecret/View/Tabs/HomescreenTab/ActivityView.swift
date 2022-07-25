@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SDWebImageSwiftUI
+import Firebase
 
 struct ActivityView: View {
     
@@ -16,6 +17,7 @@ struct ActivityView: View {
     @State var showEvent : Bool = false
     @ObservedObject var groupVM = GroupViewModel()
     @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
+    @State var openChat : Bool = false
     
     
     func sortUsersActive(users: [User]) -> Binding<[User]>{
@@ -96,58 +98,39 @@ struct ActivityView: View {
                                 }
                             }.padding(15)
                        
+
                             
                             
                         }.padding(.trailing,10)
                         
-                        ScrollView(.horizontal, showsIndicators: false){
-                            HStack(spacing: 20){
-                                ForEach(sortUsersActive(users: selectedGroupVM.group?.realUsers ?? [])){ user in
-                                    
-                                    NavigationLink(destination: UserProfilePage(user: user, isCurrentUser: user.wrappedValue.id ?? " " == userVM.user?.id ?? " "), label:{
-                                        
-                                        VStack(spacing: 5){
-                                            WebImage(url: URL(string: user.wrappedValue.profilePicture ?? ""))
-                                                .resizable()
-                                                .scaledToFill()
-                                                .frame(width:40,height:40)
-                                                .clipShape(Circle())
-                                            
-                                            HStack{
-                                                Text("\(user.wrappedValue.nickName ?? "TOP SECRET USER")").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
-                                                Circle().frame(width: 5, height: 5).foregroundColor(user.wrappedValue.isActive ?? false ? Color.green : Color.red)
-                                            }
-                                            
-                                            
-                                        }
-                                        
-                                    })
-                                }
-                            }.padding(.leading,12)
-                            
-                        }
+                     
                         
                     }
+                    
+                    Button(action:{
+                        self.openChat.toggle()
+                    },label:{
+                        ChatBubble(chat: selectedGroupVM.group?.chat ?? ChatModel(), groupID: group.id)
+                    }).padding()
+
                     
                     
                     
                     HomeCalendarView(group: $group)
                     
                     
-                    //                EventList(group: $selectedGroupVM.group)
-                    //                CountdownList(group: $selectedGroupVM.group)
+             
                     
                 }
                 
             }
             
+            NavigationLink(destination: ChatView(group: $group, uid: userVM.user?.id ?? " ").environmentObject(selectedGroupVM), isActive: $openChat) {
+                EmptyView()
+            }
             
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear {
-            selectedGroupVM.fetchGroup(userID: userVM.user?.id ?? " ", groupID: group.id, completion: { fetched in
-                //TODO
-                self.group = selectedGroupVM.group ?? Group()
-            })
-        }
+            
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
         
         
     }
@@ -183,7 +166,7 @@ struct HomeCalendarView : View {
                             }
                         },label:{
                             Text("All").foregroundColor(FOREGROUNDCOLOR)
-                        }).padding(10).background(RoundedRectangle(cornerRadius: 16).fill(selectedOptionIndex == 0 ? Color("AccentColor") : Color("Color")))
+                        }).padding(10).padding(.horizontal,10).background(RoundedRectangle(cornerRadius: 16).fill(selectedOptionIndex == 0 ? Color("AccentColor") : Color("Color")))
                         
                         Spacer()
                         
@@ -193,7 +176,7 @@ struct HomeCalendarView : View {
                             }
                         },label:{
                             Text("Events").foregroundColor(FOREGROUNDCOLOR)
-                        }).padding(10).background(RoundedRectangle(cornerRadius: 16).fill(selectedOptionIndex == 1 ? Color("AccentColor") : Color("Color")))
+                        }).padding(10).padding(.horizontal,10).background(RoundedRectangle(cornerRadius: 16).fill(selectedOptionIndex == 1 ? Color("AccentColor") : Color("Color")))
                         
                         Spacer()
                         
@@ -203,7 +186,7 @@ struct HomeCalendarView : View {
                             }
                         },label:{
                             Text("Polls").foregroundColor(FOREGROUNDCOLOR)
-                        }).padding(10).background(RoundedRectangle(cornerRadius: 16).fill(selectedOptionIndex == 2 ? Color("AccentColor") : Color("Color")))
+                        }).padding(10).padding(.horizontal,10).background(RoundedRectangle(cornerRadius: 16).fill(selectedOptionIndex == 2 ? Color("AccentColor") : Color("Color")))
                         
                         Spacer()
                     }
@@ -215,68 +198,73 @@ struct HomeCalendarView : View {
                     
                 }
                 
-                ScrollView(showsIndicators: false){
-                    VStack{
-                        switch self.selectedOptionIndex {
-                            
-                        case 0:
-                            
-                            if homeCalendarVM.eventsReturnedResults.isEmpty && homeCalendarVM.countdownReturnedResults.isEmpty {
-                                Text("Nothing for Today!")
-                            }
-                            ForEach($homeCalendarVM.eventsReturnedResults, id: \.id){ event in
-                                Button(action:{
-                                    selectedEvent = event.wrappedValue
-                                    
-                                    self.openEventView.toggle()
-                                },label:{
-                                    EventCell(event: event, currentDate:Date(), isHomescreen: true, group: $group, action: $action)
-                                })
-                            }
-                            
-                            
-                            
-                            ForEach(homeCalendarVM.countdownReturnedResults, id: \.id){ countdown in
-                                CountdownCell(countdown: countdown)
-                            }
-                            
-                            
-                        case 1:
-                            if homeCalendarVM.eventsReturnedResults.isEmpty {
-                                Text("No Events for Today!")
-                            }else{
+                if selectedGroupVM.finishedFetchingGroupEvents {
+                    ScrollView(showsIndicators: false){
+                        VStack{
+                            switch self.selectedOptionIndex {
+                                
+                            case 0:
+                                
+                                if homeCalendarVM.eventsReturnedResults.isEmpty && homeCalendarVM.countdownReturnedResults.isEmpty {
+                                    Text("Nothing for Today!")
+                                }
                                 ForEach($homeCalendarVM.eventsReturnedResults, id: \.id){ event in
                                     Button(action:{
                                         selectedEvent = event.wrappedValue
+                                        
                                         self.openEventView.toggle()
                                     },label:{
                                         EventCell(event: event, currentDate:Date(), isHomescreen: true, group: $group, action: $action)
                                     })
                                 }
-                            }
-                            
-                            
-                        case 2:
-                            if homeCalendarVM.countdownReturnedResults.isEmpty {
-                                Text("No Countdowns for Today!")
-                            }else{
+                                
+                                
+                                
                                 ForEach(homeCalendarVM.countdownReturnedResults, id: \.id){ countdown in
                                     CountdownCell(countdown: countdown)
                                 }
+                                
+                                
+                            case 1:
+                                if homeCalendarVM.eventsReturnedResults.isEmpty {
+                                    Text("No Events for Today!")
+                                }else{
+                                    ForEach($homeCalendarVM.eventsReturnedResults, id: \.id){ event in
+                                        Button(action:{
+                                            selectedEvent = event.wrappedValue
+                                            self.openEventView.toggle()
+                                        },label:{
+                                            EventCell(event: event, currentDate:Date(), isHomescreen: true, group: $group, action: $action)
+                                        })
+                                    }
+                                }
+                                
+                                
+                            case 2:
+                                if homeCalendarVM.countdownReturnedResults.isEmpty {
+                                    Text("No Countdowns for Today!")
+                                }else{
+                                    ForEach(homeCalendarVM.countdownReturnedResults, id: \.id){ countdown in
+                                        CountdownCell(countdown: countdown)
+                                    }
+                                }
+                                
+                                
+                            default:
+                                Text("Hello World")
+                                
+                                
+                                
                             }
-                            
-                            
-                        default:
-                            Text("Hello World")
-                            
-                            
                             
                         }
                         
                     }
                     
+                }else{
+                    ProgressView()
                 }
-                
+               
                 
                 
             }
@@ -290,6 +278,36 @@ struct HomeCalendarView : View {
             homeCalendarVM.startSearch(groupID: group.id)
         }
         
+    }
+}
+
+struct ChatBubble : View {
+    
+    var chat: ChatModel
+    @StateObject var messageVM = MessageViewModel()
+    @EnvironmentObject var userVM : UserViewModel
+    var groupID: String
+    var body: some View {
+        VStack{
+            
+            
+            HStack(alignment: .top, spacing: 5){
+                
+          
+                Text("\(messageVM.readLastMessage().name ?? " ")").bold()
+
+                Text("\(messageVM.readLastMessage().messageValue ?? " ")").padding(.leading,7)
+                
+                Spacer()
+                
+                Text("\(messageVM.readLastMessage().messageTimeStamp?.dateValue() ?? Date(), style: .time)")
+            }
+            
+            Spacer()
+            
+        }.foregroundColor(FOREGROUNDCOLOR).padding(15).frame(maxWidth: .infinity, maxHeight: UIScreen.main.bounds.height, alignment: .leading).background(RoundedRectangle(cornerRadius: 25).fill( Color("Color"))).overlay(RoundedRectangle(cornerRadius: 25).stroke(Color("AccentColor"), lineWidth:1.5)).onAppear{
+            messageVM.readAllMessages(chatID: chat.id, userID: userVM.user?.id ?? " ", chatType: "groupChat", groupID: groupID)
+        }
     }
 }
 
@@ -322,11 +340,6 @@ struct NotificationList : View {
                 HStack{
                     Text("Notifications").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold).font(.title2)
                     
-                    if(selectedGroupVM.group?.events?.count == 1){
-                        Text("\(selectedGroupVM.group?.notificationsCount ?? 0) notifications today").foregroundColor(Color.gray).font(.footnote)
-                    }else{
-                        Text("\(selectedGroupVM.group?.notificationsCount ?? 0) notifications today").foregroundColor(Color.gray).font(.footnote)
-                    }
                     
                 }.padding(.leading,10)
                 
@@ -336,21 +349,48 @@ struct NotificationList : View {
             ScrollView(showsIndicators: false){
                 
                 VStack{
-                    ForEach(selectedGroupVM.group?.groupNotifications?.identifiableIndices ?? IdentifiableIndices(base: [GroupNotificationModel()])){ index in
-                        Button {
+                    VStack(alignment: .leading, spacing: 0){
+                        if selectedGroupVM.group?.groupNotifications?.filter{ item in
+                            !(item.usersThatHaveSeen?.contains(userVM.user?.id ?? " ") ?? false)
+                        }.count != 0 {
+                         
+                                
                             
-                        } label: {
-                            GroupNotificationCell(groupNotification: selectedGroupVM.group?.groupNotifications?[index.rawValue] ?? GroupNotificationModel())
-                            
+                        Text("New").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold).font(.headline).padding(.leading)
                         }
                         
+                        ForEach(selectedGroupVM.group?.groupNotifications?.filter{ item in
+                            !(item.usersThatHaveSeen?.contains(userVM.user?.id ?? " ") ?? false) as? Bool ?? false}.identifiableIndices ?? IdentifiableIndices(base: [GroupNotificationModel()]) ){ index in
+                            Button {
+                                
+                            } label: {
+                                GroupNotificationCell(groupNotification: selectedGroupVM.group?.groupNotifications?[index.rawValue] ?? GroupNotificationModel())
+                                
+                            }
+                            
+                        }
                     }
+                    
+                    VStack(alignment: .leading, spacing: 0){
+                        Text("This Week").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold).font(.headline).padding(.leading)
+                        ForEach(selectedGroupVM.group?.groupNotifications?.filter{ item in
+                            (item.usersThatHaveSeen?.contains(userVM.user?.id ?? " ") ?? false) as? Bool ?? false}.identifiableIndices ?? IdentifiableIndices(base: [GroupNotificationModel()]) ){ index in
+                            Button {
+                                
+                            } label: {
+                                GroupNotificationCell(groupNotification: selectedGroupVM.group?.groupNotifications?[index.rawValue] ?? GroupNotificationModel())
+                                
+                            }
+                            
+                        }
+                    }
+                    
                 }
                 
                 
             }
             
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onDisappear{
             
             //ERROR
             

@@ -168,15 +168,15 @@ class ChatRepository : ObservableObject {
                 print("ERROR")
                 return
             }
-            let data = snapshot?.data() as? [String:Any]
-            self.group = Group(dictionary: data ?? [:])
+            let data = snapshot?.data() as [String:Any]
+            self.group = Group(dictionary: data )
         }
     }
    
     
     func createGroupChat(name: String, users: [String], groupID: String, chatID: String){
         
-        let id = UUID().uuidString
+        _ = UUID().uuidString
         
         
         let data = ["name": name,
@@ -184,7 +184,7 @@ class ChatRepository : ObservableObject {
                     "dateCreated":Date(),
                     "users":users, "id":chatID, "chatNameColors":[], "pickedColors":[], "nextColor":0,"groupID":groupID,"chatType":"groupChat"] as [String : Any]
         
-        let chat = ChatModel(dictionary: data)
+        _ = ChatModel(dictionary: data)
         
         COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).setData(data) { (err) in
             if err != nil{

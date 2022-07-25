@@ -36,15 +36,22 @@ class UserRepository : ObservableObject {
     @Published var showNotification : Int = 0 //on value change, send notification
     @Published var userSelectedGroup : Group = Group()
     @Published var finishedFetchingPosts : Bool = false
-
     
     
     private var cancellables : Set<AnyCancellable> = []
     let store = Firestore.firestore()
     let path = "Users"
+    
+    static var shared = UserViewModel()
    
     
     
+    
+    
+    func readUserNotification(userNotification: UserNotificationModel, userID: String){
+        COLLECTION_USER.document(userID).collection("Notifications").document(userNotification.id).updateData(["hasSeen":true])
+        COLLECTION_USER.document(userID).updateData(["userNotificationCount":0])
+    }
     
     func changeUserSelectedGroup(groupID: String, userID: String){
         COLLECTION_USER.document(userID).updateData(["selectedGroup":groupID])
@@ -58,7 +65,6 @@ class UserRepository : ObservableObject {
         if !isActive{
             COLLECTION_USER.document(userID).updateData(["lastActive":Timestamp()])
         }
-        print("user: \(userID) \(isActive ? "is active" : "is inactive")")
        
        
         COLLECTION_USER.document(userID).getDocument(completion: { snapshot, err in
@@ -111,14 +117,7 @@ class UserRepository : ObservableObject {
         
     }
     
-//    func listenToUserGalleryPosts(uid: String){
-//
-//        for groups in self.allUserGroups{
-//
-//        }
-//        let listener = COLLECTION_GALLERY_POSTS.whereField("groupID", in: )
-//    }
-//
+
     
     func listenToUserFollowedGroups(uid: String){
         let listener = COLLECTION_USER.document(uid).addSnapshotListener{ (snapshot, err) in
@@ -157,12 +156,13 @@ class UserRepository : ObservableObject {
     }
 
     func listenToUser(uid: String){
-        
         let listener =  COLLECTION_USER.document(uid).addSnapshotListener { (snapshot, err) in
             if err != nil {
                 print("ERROR - User Not Being Fetched")
                 return
             }
+            
+
             
             
             var data = snapshot?.data() as? [String:Any] ?? [:]
@@ -172,10 +172,20 @@ class UserRepository : ObservableObject {
             
             groupD.enter()
             
+            //fetch user friends list
             self.fetchUserFriendsList(friendsList: data["friendsList"] as? [String] ?? []) { fetchedFriends in
                 data["friendsList"] = fetchedFriends
                 groupD.leave()
             }
+            
+            groupD.enter()
+            
+            //fetch user notifications
+            self.fetchUserNotifications(userID: data["uid"] as? String ?? " ") { fetchedNotifications in
+                data["notifications"] = fetchedNotifications
+                groupD.leave()
+            }
+            
             
             groupD.notify(queue: .main, execute:{
                 self.user = User(dictionary: data)
@@ -187,6 +197,90 @@ class UserRepository : ObservableObject {
         
         firestoreListener.append(listener)
         
+    }
+    
+    
+    func fetchUserNotifications(userID: String, completion: @escaping ([UserNotificationModel]) -> ()) -> () {
+        
+        var notificationsToReturn : [UserNotificationModel] = []
+        COLLECTION_USER.document(userID).collection("Notifications").getDocuments { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            let documents = snapshot!.documents
+            
+            let groupD = DispatchGroup()
+            
+            groupD.enter()
+            
+            for document in documents {
+                var data = document.data() as? [String:Any] ?? [:]
+                
+                groupD.enter()
+                
+                self.fetchUserNotificationCreator(notificationCreatorType: data["notificationType"] as! String, notificationCreatorID: data["notificationCreatorID"] as! String) { fetchedCreator in
+                    data["notificationCreator"] = fetchedCreator
+                    groupD.leave()
+                
+                }
+                
+                
+                
+                groupD.enter()
+                
+                self.fetchUserNotificationGroup(notificationGroupID: data["groupID"] as? String ?? " "){ fetchedGroup in
+                    data["group"] = fetchedGroup
+                    groupD.leave()
+                }
+                
+                
+                groupD.notify(queue: .main, execute: {
+                    notificationsToReturn.append(UserNotificationModel(dictionary: data))
+                } )
+            }
+            
+            groupD.leave()
+            
+            groupD.notify(queue: .main, execute: {
+                return completion(notificationsToReturn)
+            })
+            
+        }
+    }
+    
+    
+    func fetchUserNotificationGroup(notificationGroupID: String, completion: @escaping (Group) ->()) -> () {
+        
+        COLLECTION_GROUP.document(notificationGroupID).getDocument { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            let data = snapshot?.data() as? [String:Any] ?? [:]
+            
+            return completion(Group(dictionary: data))
+            
+        }
+    }
+    
+    func fetchUserNotificationCreator(notificationCreatorType: String, notificationCreatorID: String, completion: @escaping (Any) -> ()) -> (){
+        
+        if notificationCreatorType == "eventCreated"{
+            COLLECTION_USER.document(notificationCreatorID).getDocument { snapshot, err in
+                if err != nil {
+                    print("ERROR")
+                    return
+                }
+                
+                let data = snapshot?.data() as? [String:Any] ?? [:]
+                
+                return completion(User(dictionary: data))
+                
+            }
+        }
     }
     
     func listenToUserGalleryPosts(uid: String){
@@ -448,107 +542,7 @@ class UserRepository : ObservableObject {
     }
     
     
-    
-//
-//    func listenToGroupPolls(uid: String){
-//
-//        var listener : ListenerRegistration?
-//
-//        COLLECTION_GROUP.whereField("users", arrayContains: uid).getDocuments { snapshot, err in
-//            if err != nil {
-//                print("ERROR")
-//                return
-//            }
-//
-//            let documents = snapshot!.documents
-//
-//            for document in documents{
-//                let id = document.get("id") as? String ?? ""
-//                listener = COLLECTION_GROUP.document(id).collection("Polls").addSnapshotListener({ snapshot, err in
-//                    if err != nil {
-//                        print("ERROR")
-//                        return
-//                    }
-//
-//
-//                    guard let documents = snapshot?.documents else {
-//                        print("No document!")
-//                        return
-//                    }
-//
-//                    self.groups = documents.map{ queryDocumentSnapshot -> Group in
-//                        var data = queryDocumentSnapshot.data()
-//
-//                        self.fetchGroupPolls(groupID: data["id"] as? String ?? "") { fetchedPolls in
-//                            data["polls"] = fetchedPolls
-//
-//                        }
-//
-//                        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-//                            for poll in data["polls"] as? [PollModel] ?? []{
-//                                print("poll: \(poll.creator ?? "")")
-//                            }
-//                        }
-//
-//
-//
-//
-//
-//                        print("Fetched Groups!")
-//
-//
-//                        return Group(dictionary: data)
-//
-//
-//                    }
-//
-//
-//
-//                })
-//                self.firestoreListener.append(listener as! ListenerRegistration)
-//            }
-//        }
-//
-//    }
-    
-    
-//    func listenToHomeScreenPosts(uid: String){
-//        COLLECTION_USER.document(uid).getDocument{ snapshot, err in
-//            if err != nil {
-//                print("ERROR")
-//                return
-//            }
-//
-//            var groups = snapshot!.get("groups") as? [String] ?? [" "]
-//            let followedGroups = snapshot!.get("followedGroups") as? [String] ?? [" "]
-//            groups.append(contentsOf: followedGroups)
-//
-//
-//
-//                COLLECTION_GALLERY_POSTS.whereField("groupID", in: groups).addSnapshotListener { snapshot, err in
-//                    if err != nil {
-//                        print("ERROR")
-//                        return
-//                    }
-//                    snapshot?.documentChanges.forEach({ doc in
-//                        if doc.type == .removed{
-//                            let id = doc.document.get("id") as! String
-//                            self.homescreenPosts[id] = ""
-//                        }
-//                    })
-//
-//                    for document in snapshot!.documents {
-//                        self.homescreenPosts[document.get("id") as! String] = "post"
-//
-//                    }
-//
-//
-//
-//                }
-//
-//        }
-//    }
-    
+
   
     func fetchGroupStories(groupID: String, completion: @escaping ([StoryModel]) -> ()){
         
@@ -696,6 +690,7 @@ class UserRepository : ObservableObject {
             
             groupD.notify(queue: .main, execute: {
                 self.groups = groupsToReturn
+                self.finishedFetchingPosts = true
             })
             
             }
@@ -709,13 +704,7 @@ class UserRepository : ObservableObject {
             
         }
         
-    
 
-    
-
-    
-    
-  
     func listenToNetworkChanges(uid: String){
         let connectedRef = Database.database().reference(withPath: ".info/connected")
         connectedRef.observe(.value, with: { snapshot in
@@ -914,7 +903,7 @@ class UserRepository : ObservableObject {
                         "username": username,
                         "nickName": nickName,
                         "uid": user.uid,
-                        "birthday": birthday,"profilePicture":"", "bio":""
+                        "birthday": birthday,"profilePicture":"", "bio":"","isActive":true
                         
             ] as [String : Any]
             
@@ -992,11 +981,8 @@ class UserRepository : ObservableObject {
         store.collection(path).document(uid).getDocument { (snapshot, _) in
             guard let data = snapshot?.data() else {return}
             let user = User(dictionary: data)
-            self.fetchGroup(groupID: user.selectedGroup ?? " ") { fetchedGroup in
-                self.userSelectedGroup = fetchedGroup
-                self.user = user
-            }
-           
+          
+            self.user = user
         }
     }
     func resetPassword(email: String){

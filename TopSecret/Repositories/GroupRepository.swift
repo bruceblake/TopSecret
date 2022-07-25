@@ -181,6 +181,18 @@ class GroupRepository : ObservableObject {
                 }
                 
                
+                var notificationID = UUID().uuidString
+                
+                let notificationData = ["id":notificationID,
+                                        "notificationName": "User Added",
+                                        "notificationTime":Timestamp(),
+                                        "notificationType":"userAdded", "notificationCreatorID":id,
+                                        "usersThatHaveSeen":[]] as [String:Any]
+                COLLECTION_GROUP.document(groupID).collection("Notifications").document(notificationID).setData(notificationData)
+                
+                COLLECTION_GROUP.document(groupID).updateData(["notificationCount":FieldValue.increment((Int64(1)))])
+                
+               
                 
             }
         }
@@ -225,6 +237,18 @@ class GroupRepository : ObservableObject {
                     
                 }
             }
+            var notificationID = UUID().uuidString
+            
+            let notificationData = ["id":notificationID,
+                                    "notificationName": "User Left",
+                                    "notificationTime":Timestamp(),
+                                    "notificationType":"userLeft", "notificationCreatorID":userID,
+                                    "usersThatHaveSeen":[]] as [String:Any]
+            COLLECTION_GROUP.document(groupID).collection("Notifications").document(notificationID).setData(notificationData)
+            
+            COLLECTION_GROUP.document(groupID).updateData(["notificationCount":FieldValue.increment((Int64(1)))])
+            
+            
         }
         
 

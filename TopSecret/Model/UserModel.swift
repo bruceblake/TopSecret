@@ -8,8 +8,14 @@
 import Foundation
 import Firebase
 import SwiftUI
+import MapKit
+import CoreLocation
 
 struct User : Identifiable, Hashable{
+    static func == (lhs: User, rhs: User) -> Bool {
+        return lhs.id == rhs.id
+    }
+    
     var id : String?
     var username: String?
     var email: String?
@@ -22,13 +28,12 @@ struct User : Identifiable, Hashable{
     var blockedAccounts : [String]?
     var userNotificationCount : Int?
     var pendingFriendsList : [String]?
-    var followedGroups : [String]?
     var isActive: Bool?
     var lastActive: Timestamp?
-    var groups: [String]?
-    var selectedGroup : String?
-    var allGroupsToListenTo : [String]?
-    
+    var latitude : Double?
+    var longitude : Double?
+    var notifications : [UserNotificationModel]?
+    var fcmToken : String?
 
 
 init(dictionary: [String:Any]) {
@@ -43,21 +48,20 @@ init(dictionary: [String:Any]) {
     self.friendsList = dictionary["friendsList"] as? [User] ?? []
     self.blockedAccounts = dictionary["blockedAccounts"] as? [String] ?? []
     self.userNotificationCount = dictionary["userNotificationCount"] as? Int ?? 0
-    self.pendingFriendsList = dictionary["pendingFriendsList"] as? [String] ?? []
-    self.followedGroups = dictionary["followedGroups"] as? [String] ?? [" "]
+
     self.isActive = dictionary["isActive"] as? Bool ?? false
     self.lastActive = dictionary["lastActive"] as? Timestamp ?? Timestamp()
-    self.groups = dictionary["groups"] as? [String] ?? [" "]
-    self.selectedGroup = dictionary["selectedGroup"] as? String ?? " "
-    self.allGroupsToListenTo = dictionary["allGroupsToListenTo"] as? [String] ?? []
-    
+
+    self.latitude = dictionary["latitude"] as? Double ?? 0
+    self.longitude = dictionary["longitude"] as? Double ?? 0
+    self.notifications = dictionary["notifications"] as? [UserNotificationModel] ?? []
+    self.fcmToken = dictionary["fcmToken"] as? String ?? " "
  
  }
 
     init(){
         self.id = UUID().uuidString
-        self.followedGroups = [" "]
-        self.groups = [" "]
+      
 
     }
     

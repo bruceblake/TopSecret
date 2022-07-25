@@ -11,12 +11,14 @@ import UIKit
 import SCSDKLoginKit
 import UserNotifications
 import FirebaseMessaging
+import CoreData
 
 @main
 struct TopSecretApp: App {
     
     @UIApplicationDelegateAdaptor(AppDelegate.self) var appDelegate
     
+    let persistenceController = PersistenceController.shared
    
     var body: some Scene {
         

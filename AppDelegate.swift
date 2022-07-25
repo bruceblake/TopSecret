@@ -4,9 +4,11 @@ import SwiftUI
 import Foundation
 import UserNotifications
 import UIKit
+import CoreData
 
 
 class AppDelegate: NSObject, UIApplicationDelegate {
+    
     let gcmMessageIDKey = "gcm.message_id"
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
@@ -43,26 +45,37 @@ class AppDelegate: NSObject, UIApplicationDelegate {
 
       completionHandler(UIBackgroundFetchResult.newData)
     }
+    
+    
+  
 }
 
 
 extension AppDelegate: MessagingDelegate {
+
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
 
       let deviceToken:[String: String] = ["token": fcmToken ?? ""]
         print("Device token: ", deviceToken) // This token can be used for testing notifications on FCM
+        @AppStorage("userID") var uid = " "
+        COLLECTION_USER.document(uid).updateData(["fcmToken":fcmToken ?? " "])
     }
 }
 
 
 @available(iOS 10, *)
 extension AppDelegate : UNUserNotificationCenterDelegate {
+    
+ 
 
   // Receive displayed notifications for iOS 10 devices.
   func userNotificationCenter(_ center: UNUserNotificationCenter,
                               willPresent notification: UNNotification,
     withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void) {
     let userInfo = notification.request.content.userInfo
+      
+      Messaging.messaging().appDidReceiveMessage(userInfo)
+
 
     if let messageID = userInfo[gcmMessageIDKey] {
         print("Message ID: \(messageID)")
@@ -75,7 +88,7 @@ extension AppDelegate : UNUserNotificationCenterDelegate {
   }
 
     func application(_ application: UIApplication, didRegisterForRemoteNotificationsWithDeviceToken deviceToken: Data) {
-
+        Messaging.messaging().apnsToken = deviceToken
     }
 
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
@@ -86,6 +99,8 @@ extension AppDelegate : UNUserNotificationCenterDelegate {
                               didReceive response: UNNotificationResponse,
                               withCompletionHandler completionHandler: @escaping () -> Void) {
     let userInfo = response.notification.request.content.userInfo
+      
+      Messaging.messaging().appDidReceiveMessage(userInfo)
 
     if let messageID = userInfo[gcmMessageIDKey] {
       print("Message ID from userNotificationCenter didReceive: \(messageID)")
@@ -95,4 +110,23 @@ extension AppDelegate : UNUserNotificationCenterDelegate {
 
     completionHandler()
   }
+}
+
+
+struct PersistenceController {
+    
+    static let shared = PersistenceController()
+    
+    let container : NSPersistentContainer
+    
+    init(){
+        container = NSPersistentContainer(name: "User")
+        
+        container.loadPersistentStores { userDescription, error in
+            if let error = error {
+                fatalError("Container load failed: \(error)")
+            }
+        }
+    }
+    
 }

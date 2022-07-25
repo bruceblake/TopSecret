@@ -46,15 +46,16 @@ class UserViewModel : ObservableObject {
     @Published var homescreenGalleryPosts : [GalleryPostModel] = []
     @Published var userSelectedGroup : Group = Group()
     @Published var finishedFetchingPosts : Bool = false
+    @Published var fcmToken : String?
 
 
-
-
+    static let shared = UserViewModel()
+    
     
     private var cancellables : Set<AnyCancellable> = []
     
     init(){
-        
+    
         
     
        
@@ -141,24 +142,30 @@ class UserViewModel : ObservableObject {
         
         
         self.userSession = Auth.auth().currentUser
-        self.fetchUser(userID: userSession?.uid ?? " ") { fetchedUser in
+        
+            
+            self.fetchUser(userID: self.userSession?.uid ?? " ") { fetchedUser in
             self.user = fetchedUser
+                UserDefaults.standard.set(self.userSession?.uid ?? " ", forKey: "userID")
         }
             if self.userSession != nil{
-                self.listenToAll(uid: userSession?.uid ?? " ")
+                self.listenToAll(uid: self.userSession?.uid ?? " ")
 
             }
         
         
         
-      
 
        
      
     }
     
-  
+   
     
+  
+    func readUserNotification(userNotification: UserNotificationModel, userID: String){
+        userRepository.readUserNotification(userNotification: userNotification, userID: userID)
+    }
     //helper function
     
     func deleteAllHomescreenPosts(){
@@ -182,7 +189,6 @@ class UserViewModel : ObservableObject {
     func getIDS(userGroups: [Group]) -> [String]{
         var arr : [String] = [""]
         for group in userGroups{
-            print("groupID: \(group.id)")
             arr.append(group.id)
         }
         return arr

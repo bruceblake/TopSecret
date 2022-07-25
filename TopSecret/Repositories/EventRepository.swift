@@ -12,18 +12,21 @@ import Combine
 class EventRepository : ObservableObject {
     
     
-    func createEvent(groupID: String, eventName: String, eventLocation: String,eventTime: Date, usersVisibleTo: [String],user: User){
+    let shared = UserViewModel.shared
+    let notificationSender = PushNotificationSender()
+    
+    func createEvent(groupID: String, eventName: String, eventLocation: String,eventTime: Date, usersVisibleTo: [User],user: User){
         //TODO
         let id = UUID().uuidString
         
-       
-
+        
+        
         let data = ["groupID": groupID, "eventName" : eventName,
                     "eventLocation" : eventLocation,
                     "eventTime": eventTime,
-                    "usersVisibleTo" : usersVisibleTo, "id":id, "usersAttendingID":[user.id ?? " "]] as [String:Any]
+                    "usersVisibleTo" : [], "id":id, "usersAttendingID":[user.id ?? " "]] as [String:Any]
         
-                
+        
         COLLECTION_GROUP.document(groupID).collection("Events").document(id).setData(data) { (err) in
             if err != nil {
                 print("ERROR \(err!.localizedDescription)")
@@ -42,10 +45,20 @@ class EventRepository : ObservableObject {
         
         COLLECTION_GROUP.document(groupID).updateData(["notificationCount":FieldValue.increment((Int64(1)))])
         
-
+        let userNotificationData = ["id":notificationID,
+                                    "notificationName": "Event Created",
+                                    "notificationTime":Timestamp(),
+                                    "notificationType":"eventCreated", "notificationCreatorID":user.id ?? "USER_ID",
+                                    "hasSeen":false,
+                                    "groupID":groupID] as [String:Any]
         
-//        addUserToVisibilityList(eventID: id, userID: user.id ?? "USER_USERNAME")
-        COLLECTION_GROUP.document(groupID).updateData(["events":FieldValue.arrayUnion([id])])
+        for user in usersVisibleTo {
+            COLLECTION_USER.document(user.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)
+            COLLECTION_USER.document(user.id ?? " ").updateData(["userNotificationCount":FieldValue.increment((Int64(1)))])
+            notificationSender.sendPushNotification(to: user.fcmToken ?? " ", title: "Event Created", body: "An event has been created")
+        }
+        
+        
     }
     
     

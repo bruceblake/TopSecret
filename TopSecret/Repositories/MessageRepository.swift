@@ -137,6 +137,16 @@ class MessageRepository : ObservableObject {
         COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).collection("Messages").document(messageID).setData(["name":user.nickName ?? "","timeStamp":timeStamp, "nameColor":nameColor, "id":messageID,"profilePicture":user.profilePicture ?? "","messageType":messageType,"messageValue":text])
         
         
+        var notificationID = UUID().uuidString
+        
+        let notificationData = ["id":notificationID,
+                                "notificationName": "User Sent A Text",
+                                "notificationTime":Timestamp(),
+                                "notificationType":"userSentAText", "notificationCreatorID":user.id ?? "USER_ID",
+                                "usersThatHaveSeen":[]] as [String:Any]
+        COLLECTION_GROUP.document(groupID).collection("Notifications").document(notificationID).setData(notificationData)
+        
+        COLLECTION_GROUP.document(groupID).updateData(["notificationCount":FieldValue.increment((Int64(1)))])
         
         
     }

@@ -45,12 +45,14 @@ struct EventCell: View {
     
     var body: some View {
         HStack(alignment: .top, spacing: 30){
-            
+            Rectangle().fill(.black).frame(width: 3)
+
             
             VStack{
                 
                 
                 HStack(alignment: .top, spacing: 10){
+                    
                     VStack(alignment: .leading, spacing: 12){
                         
                         

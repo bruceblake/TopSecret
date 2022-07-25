@@ -17,7 +17,7 @@ struct ChatView: View {
     @StateObject var groupVM = GroupViewModel()
     @StateObject var imagePickerVM = ImagePickerViewModel()
     @StateObject private var keyboardHandler = KeyboardGuardian()
-    @StateObject var selectedGroupVM = SelectedGroupViewModel()
+    @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
     
     @State var value: CGFloat = 0
     @State var text = ""
@@ -40,7 +40,7 @@ struct ChatView: View {
     ]
     
     var uid: String
-    
+
     
     
     func getColor(userID: String, groupChat: ChatModel) -> String{
@@ -52,7 +52,6 @@ struct ChatView: View {
                 }
             }
         }
-        print("user: \(userID) : \(ans)")
         return ans
     }
     
@@ -129,7 +128,7 @@ struct ChatView: View {
                             
                             
                             
-                        }.padding(.top,105).padding(.bottom, keyboardHandler.keyboardHeight).animation(.default).padding(.bottom,30).onReceive(messageVM.$scrollToBottom, perform: { _ in
+                        }.padding(.top,UIScreen.main.bounds.height/4).padding(.bottom, keyboardHandler.keyboardHeight).animation(.default).padding(.bottom,30).onReceive(messageVM.$scrollToBottom, perform: { _ in
                             withAnimation(.easeOut(duration: 0.5)) {
                                 scrollViewProxy.scrollTo("Empty", anchor: .bottom)
                             }
@@ -264,6 +263,62 @@ struct ChatView: View {
             
             VStack{
                 
+                HStack{
+                    
+                    Button(action:{
+                        presentationMode.wrappedValue.dismiss()
+                    },label:{
+                        ZStack{
+                            Circle().foregroundColor(Color("Color")).frame(width: 32, height: 32)
+                            
+                            Image(systemName: "chevron.left")
+                                .font(.title3).foregroundColor(FOREGROUNDCOLOR)
+                        }
+                    })
+                    
+                    
+                    
+                    Button(action:{
+                        
+                    },label:{
+                        ZStack{
+                            Circle().foregroundColor(Color("Color")).frame(width: 32, height: 32)
+                            
+                            Image(systemName: "info")
+                                .font(.title3).foregroundColor(FOREGROUNDCOLOR)
+                        }
+                    })
+                    
+                    Spacer()
+                    
+                    Text("\(group.groupName)").foregroundColor(FOREGROUNDCOLOR).font(.largeTitle)
+                    
+                    Spacer()
+                    
+                    Button(action:{
+                        
+                    },label:{
+                        ZStack{
+                            Circle().foregroundColor(Color("Color")).frame(width: 32, height: 32)
+                            
+                            Image(systemName: "video.fill")
+                                .font(.headline).foregroundColor(FOREGROUNDCOLOR)
+                        }
+                    })
+                    
+                    
+                    Button(action:{
+                        
+                    },label:{
+                        ZStack{
+                            Circle().foregroundColor(Color("Color")).frame(width: 32, height: 32)
+                            
+                            Image(systemName: "gear")
+                                .font(.title3).foregroundColor(FOREGROUNDCOLOR)
+                        }
+                    })
+                }.padding(.horizontal).padding(.top,40)
+                
                 
                 ScrollView(.horizontal){
                     HStack(spacing: 0){
@@ -379,7 +434,7 @@ struct ChatView: View {
                                 }).padding()
                                 
                                 
-                              Divider()
+                                Divider()
                                 
                                 
                             }
@@ -387,7 +442,7 @@ struct ChatView: View {
                             Button(action:{
                                 withAnimation(.easeIn(duration: 0.2)){
                                     
-                                   
+                                    
                                     self.showMenu.toggle()
                                 }
                                 
@@ -444,15 +499,16 @@ struct ChatView: View {
                 imagePickerVM.setUp()
                 
                 let groupD = DispatchGroup()
-              
-                groupD.enter()
-                selectedGroupVM.fetchGroup(userID: userVM.user?.id ?? " ", groupID: group.id, completion: { fetched in
-                    groupD.leave()
-                    
-                })
                 
-                groupD.notify(queue: .main, execute: {
+                groupD.enter()
+                
+                selectedGroupVM.fetchGroup(userID: userVM.user?.id ?? " ", groupID: group.id) { fetched in
                     
+                    
+                }
+                groupD.leave()
+                
+                groupD.notify(queue: .main, execute:{
                     messageVM.getPinnedMessage(chatID: selectedGroupVM.group?.chatID ?? "CHAT_ID", groupID: selectedGroupVM.group?.id ?? " ")
                     
                     
@@ -468,22 +524,26 @@ struct ChatView: View {
                         chatVM.getUsersIDList(users: chatVM.usersIdlingList) { users in
                             self.userIDList = users
                         }
-
+                        
                     }
                     
                 })
                 
-           
+                
+                
+                
+                
+                
             }
         
         
         
-     
-    .onDisappear{
-        chatVM.exitChat(userID: uid, chatID: selectedGroupVM.group?.chat?.id ?? "CHAT_ID", chatType: "groupChat", groupID: selectedGroupVM.group?.id ?? " ")
-        chatVM.stopTyping(userID: uid, chatID: selectedGroupVM.group?.chat?.id ?? "CHAT_ID", chatType: "groupChat", groupID: selectedGroupVM.group?.id ?? " ")
-    }
-    
+        
+            .onDisappear{
+                chatVM.exitChat(userID: uid, chatID: selectedGroupVM.group?.chat?.id ?? "CHAT_ID", chatType: "groupChat", groupID: selectedGroupVM.group?.id ?? " ")
+                chatVM.stopTyping(userID: uid, chatID: selectedGroupVM.group?.chat?.id ?? "CHAT_ID", chatType: "groupChat", groupID: selectedGroupVM.group?.id ?? " ")
+            }
+        
     }
 }
 

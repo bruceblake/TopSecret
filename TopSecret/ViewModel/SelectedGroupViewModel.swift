@@ -12,7 +12,9 @@ import Firebase
 class SelectedGroupViewModel : ObservableObject {
     
     @Published var group: Group?
-    
+    @Published var finishedFetchingGroupCountdowns : Bool = false
+    @Published var finishedFetchingGroupEvents : Bool = false
+    @Published var finishedFetchingGroup : Bool = false
     
     
     
@@ -40,12 +42,14 @@ class SelectedGroupViewModel : ObservableObject {
             self.fetchGroupCountdown(groupID: groupID) { fetchedCountdowns in
                 data["countdowns"] = fetchedCountdowns
                 groupD.leave()
+                self.finishedFetchingGroupCountdowns = true
             }
             
             groupD.enter()
             self.fetchGroupEvents(groupID: groupID) { fetchedEvents in
                 data["events"] = fetchedEvents
                 groupD.leave()
+                self.finishedFetchingGroupEvents = true
             }
             
             groupD.enter()
@@ -83,6 +87,7 @@ class SelectedGroupViewModel : ObservableObject {
             
             
             groupD.notify(queue: .main, execute: {
+                self.finishedFetchingGroup = true
                 self.group = Group(dictionary: data )
                 return completion(true)
             })

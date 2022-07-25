@@ -33,8 +33,6 @@ struct Group: Identifiable{
     var following: [String]?
     var bio : String?
     var storyPosts: [StoryModel]?
-    var sharedInterests: [String]?
-    var password : String?
     var events : [EventModel]?
     var countdowns: [CountdownModel]?
     var groupNotifications: [GroupNotificationModel]?
@@ -57,10 +55,9 @@ struct Group: Identifiable{
         self.motd = dictionary["motd"] as? String ?? "Welcome to the group!"
         self.quoteOfTheDay = dictionary["quoteOfTheDay"] as? String ?? ""
         self.followers = dictionary["followers"] as? [String] ?? []
-        self.sharedInterests = dictionary["sharedInterests"] as? [String] ?? []
+  
         self.following = dictionary["following"] as? [String] ?? []
         self.bio = dictionary["bio"] as? String ?? ""
-        self.password = dictionary["password"] as? String ?? ""
         self.events = dictionary["events"] as? [EventModel] ?? []
         self.countdowns = dictionary["countdowns"] as? [CountdownModel] ?? []
         self.groupNotifications = dictionary["groupNotifications"] as? [GroupNotificationModel] ?? []
@@ -70,19 +67,6 @@ struct Group: Identifiable{
         self.ping = dictionary["ping"] as? Bool ?? false
     }
     
-    func hasUserSeenAllStories(userID: String) -> Bool{
-        
-        var hasSeenAll : Bool = true
-        
-        for storyPost in storyPosts!{
-            let usersSeenStory = storyPost.usersSeenStory ?? []
-            if !usersSeenStory.contains(userID){
-                hasSeenAll = false
-            }
-        }
-        
-        return hasSeenAll
-    }
     
     init(){
         self.id = UUID().uuidString

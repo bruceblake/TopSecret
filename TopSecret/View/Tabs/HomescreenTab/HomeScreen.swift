@@ -26,8 +26,13 @@ struct HomeScreen: View {
                 
                 TopBar()
                 
-                
-                ShowGroups(selectedGroup: $selectedGroup, users: $users, openGroupHomescreen: $openGroupHomescreen)
+                if userVM.finishedFetchingPosts{
+                    ShowGroups(selectedGroup: $selectedGroup, users: $users, openGroupHomescreen: $openGroupHomescreen)
+                }else{
+                    ProgressView()
+                    Spacer()
+                }
+             
                 
                 
                 
@@ -37,7 +42,7 @@ struct HomeScreen: View {
             }
             
             
-            NavigationLink(destination: HomeScreenView(group: $selectedGroup, users: $users).environmentObject(selectedGroupVM), isActive: $openGroupHomescreen) {
+            NavigationLink(destination: HomeScreenView(group: $selectedGroup).environmentObject(selectedGroupVM), isActive: $openGroupHomescreen) {
                 EmptyView()
             }
             
@@ -69,17 +74,7 @@ struct ShowGroups : View {
                         
                         let dispatchGroup = DispatchGroup()
                         
-                        dispatchGroup.enter()
-                        self.users.removeAll()
-                        dispatchGroup.leave()
-                        
-                        for userID in group.users ?? [] {
-                            dispatchGroup.enter()
-                            userVM.fetchUser(userID: userID) { fetchedUser in
-                                self.users.append(fetchedUser)
-                                dispatchGroup.leave()
-                            }
-                        }
+                       
                         
                         dispatchGroup.enter()
                         self.selectedGroup = group

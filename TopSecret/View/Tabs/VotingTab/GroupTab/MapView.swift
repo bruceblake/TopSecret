@@ -10,41 +10,15 @@ import MapKit
 import SDWebImageSwiftUI
 
 struct MapView: View {
-    @ObservedObject var locationManager = LocationManager()
     @State private var landmarks: [Landmark] = [Landmark]()
     @State private var search: String = ""
     @State private var tapped: Bool = false
     @Binding var group : Group
-    @Binding var groupUsers : [User]
-    
-    private func getNearByLandmarks() {
-        let request = MKLocalSearch.Request()
-        request.naturalLanguageQuery = search
-        
-        let search = MKLocalSearch(request: request)
-        search.start { (response, error) in
-            if let response = response {
-                let mapItems = response.mapItems
-                self.landmarks = mapItems.map {
-                    Landmark(placemark: $0.placemark)
-                }
-                
-            }
-        }
-    }
-    
-    func calculateOffset() -> CGFloat {
-        if self.landmarks.count > 0 && !self.tapped {
-            return UIScreen.main.bounds.size.height - UIScreen.main.bounds.size.height / 4
-        }
-        else if self.tapped {
-            return 100
-        }else {
-            return UIScreen.main.bounds.size.height
-        }
-    
-    }
-    
+    @EnvironmentObject var userVM: UserViewModel
+    @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
+  
+    @StateObject private var locationManager = LocationManager()
+   
     func convertToBinding(users: [User]) -> Binding<[User]>{
         
         
@@ -53,11 +27,32 @@ struct MapView: View {
     
     
     
+    
+    
     var body: some View {
       
            
             ZStack{
-                MapViewUtility(landmarks: landmarks)
+          
+                Map(coordinateRegion: locationManager.region.getBinding()!, interactionModes: .all, showsUserLocation: true, annotationItems: locationManager.userAnnotations){ annotation in
+                    MapAnnotation(coordinate: annotation.coordinate){
+                        
+                        Button(action:{
+                            
+                        },label:{
+                            WebImage(url: URL(string: annotation.user.profilePicture ?? ""))
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width:40,height:40)
+                                .clipShape(Circle())
+                                .overlay(Circle().stroke(Color("AccentColor"),lineWidth: 2))
+                        })
+                      
+                        
+                    }
+                }.edgesIgnoringSafeArea(.all)
+
+                
 
                 VStack{
                     
@@ -71,25 +66,23 @@ struct MapView: View {
                             
                             //0 -> Binding
                             //1 -> Not Binding
-                            ForEach(self.convertToBinding(users: groupUsers)){ user in
+                            ForEach(selectedGroupVM.group?.realUsers ?? []){ user in
                                 
-                                NavigationLink(destination: UserProfilePage(user: user, isCurrentUser: false), label:{
-                                    
+                                Button(action:{
+                                    locationManager.region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: user.latitude ?? 0, longitude: user.longitude ?? 0), latitudinalMeters: 5000, longitudinalMeters: 5000)
+                                },label:{
                                     VStack(spacing: 5){
-                                        WebImage(url: URL(string: user.wrappedValue.profilePicture ?? " "))
+                                        WebImage(url: URL(string: user.profilePicture ?? " "))
                                             .resizable()
                                             .scaledToFill()
                                             .frame(width:40,height:40)
                                             .clipShape(Circle())
-//                                                .overlay(Circle().stroke(chat.usersIdling.contains(user.id ?? "") ? Color(getColor(userID: user.id ?? "", groupChat: chat)) : Color.gray,lineWidth: 2))
+
                                         
-                                        Text("\(user.wrappedValue.nickName ?? "TOP SECRET USER")").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                                        Text("\(user.nickName ?? "TOP SECRET USER")").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
                                         
-                                        Text("Lukyan's House").foregroundColor(FOREGROUNDCOLOR).font(.caption)
+                                        Text("\(user.latitude ?? 0)").foregroundColor(FOREGROUNDCOLOR).font(.caption)
                                     }
-                                 
-                                    
-                                    
                                 })
                                 
                              
@@ -105,7 +98,12 @@ struct MapView: View {
                 }
               
                 
-            }.frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height).edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+            }.frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height).edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
+               
+                locationManager.setCurrentUser(userID: userVM.user?.id ?? " ")
+                locationManager.setCurrentGroup(groupID: group.id)
+                locationManager.fetchLocations(usersID: group.users ?? [])
+            }
     
         
     }
@@ -114,6 +112,10 @@ struct MapView: View {
    
         
     }
+
+
+
+
 
 //
 //struct MapView_Previews: PreviewProvider {

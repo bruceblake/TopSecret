@@ -12,43 +12,33 @@ import SwiftUI
 struct TopBar : View {
     
     @EnvironmentObject var userVM: UserViewModel
+    @State var user : User = User()
     
     var body : some View {
         
         HStack{
             
+            
+            
+            NavigationLink {
+                SearchView()
+            } label: {
+                ZStack{
+                    Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
+                    
+                    
+                    Image(systemName: "magnifyingglass").foregroundColor(FOREGROUNDCOLOR).font(.title3)
+                    
+                }
+            }.padding(.leading,75)
+            
             Spacer()
             
-            NavigationLink(destination:{
-                UserProfilePage(user: Binding(get: {userVM.user ?? User()}, set: {_ in}), isCurrentUser: true)
-            },label:{
-                
-                
-                WebImage(url: URL(string: userVM.user?.profilePicture ?? " ")).resizable().frame(width: 40, height: 40).clipShape(Circle()).padding(.trailing,30)
-                
-            })
+            Image("FinishedIcon").resizable().scaledToFit().frame(width: 70, height:70)
             
             
-            Image("FinishedIcon").resizable().scaledToFit().frame(width: 70, height:70).padding(.horizontal,60)
-            
-            
-            
-            
-            
-            
-            HStack(spacing: 10){
-                
-                NavigationLink {
-                    SearchView()
-                } label: {
-                    ZStack{
-                        Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
-                        
-                        
-                        Image(systemName: "magnifyingglass").foregroundColor(FOREGROUNDCOLOR).font(.title3)
-                        
-                    }
-                }
+            Spacer()
+             
                 
                 NavigationLink(destination: {
                     CreateGroupView()
@@ -62,16 +52,16 @@ struct TopBar : View {
                         
                     }
                     
-                })
+                }).padding(.trailing,75)
                 
-            }
             
             
             
-            Spacer()
             
             
             
-        }.padding(.horizontal,25).padding(.top,45)
+        }.padding(.top,45).onChange(of: userVM.user ?? User()) { newValue in
+            self.user = newValue
+        }
     }
 }

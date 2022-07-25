@@ -20,7 +20,6 @@ struct HomeScreenView: View {
     @State var goBack = false
     @State var showAddContent = false
     @Binding var group : Group
-    @Binding var users : [User]
     @State var offset : CGSize = .zero
     @State var showProfileView : Bool = false
     @State var showGalleryView : Bool = false
@@ -55,7 +54,7 @@ struct HomeScreenView: View {
                     }).padding(.leading)
                     
 
-                    Text(selectedGroupVM.group?.groupName ?? "TOPSECRET_GROUP_GROUPNAME").font(.title2).fontWeight(.heavy).minimumScaleFactor(0.5)
+                    Text(selectedGroupVM.group?.groupName ?? "GROUP_NAME").font(.title2).fontWeight(.heavy).minimumScaleFactor(0.5)
                     
                     Spacer()
                     
@@ -116,7 +115,7 @@ struct HomeScreenView: View {
                      
                     },label:{
                             VStack{
-                                Text("Chat").fontWeight(.bold)
+                                Text("Gallery").fontWeight(.bold)
                                 Rectangle().frame(width: UIScreen.main.bounds.width/5,height:2)
                             }
                         
@@ -161,13 +160,13 @@ struct HomeScreenView: View {
                     ActivityView(group: $group).tag(0)
                  
                 
-                    ChatView(group: $group, uid: userVM.user?.id ?? " ").tag(1)
+                    Text("Gallery").tag(1)
         
                     
                     Text("Games").tag(2)
 
                     
-                    MapView(group: $group, groupUsers: $users).tag(3)
+                    MapView(group: $group).tag(3)
                     
                         
                     

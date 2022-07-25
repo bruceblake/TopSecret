@@ -146,7 +146,7 @@ struct PollInfoCell: View {
         }.onAppear{
             
         
-            var components = Calendar.current.dateComponents([.day, .month, .year], from: poll.dateCreated?.dateValue() ?? Date())
+            let components = Calendar.current.dateComponents([.day, .month, .year], from: poll.dateCreated?.dateValue() ?? Date())
 
             day = components.day ?? 0
             month = components.month ?? 0
@@ -156,7 +156,7 @@ struct PollInfoCell: View {
             
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).frame(width: 250, height: 25).onReceive(userVM.$pollDurationTimer, perform: { _ in
-            var components = Calendar.current.dateComponents([.day, .hour, .minute, .second], from: Date(), to: poll.endDate?.dateValue() ?? Date())
+            let components = Calendar.current.dateComponents([.day, .hour, .minute, .second], from: Date(), to: poll.endDate?.dateValue() ?? Date())
 
             self.daysRemaining = components.day ?? 0
             self.hoursRemaining = components.hour ?? 0
