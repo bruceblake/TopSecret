@@ -15,19 +15,19 @@ class EventRepository : ObservableObject {
     let shared = UserViewModel.shared
     let notificationSender = PushNotificationSender()
     
-    func createEvent(groupID: String, eventName: String, eventLocation: String,eventTime: Date, usersVisibleTo: [User],user: User){
+    func createEvent(group: Group, eventName: String, eventLocation: String,eventTime: Date, usersVisibleTo: [User],user: User){
         //TODO
         let id = UUID().uuidString
         
         
         
-        let data = ["groupID": groupID, "eventName" : eventName,
+        let data = ["groupID": group.id, "eventName" : eventName,
                     "eventLocation" : eventLocation,
                     "eventTime": eventTime,
                     "usersVisibleTo" : [], "id":id, "usersAttendingID":[user.id ?? " "]] as [String:Any]
         
         
-        COLLECTION_GROUP.document(groupID).collection("Events").document(id).setData(data) { (err) in
+        COLLECTION_GROUP.document(group.id).collection("Events").document(id).setData(data) { (err) in
             if err != nil {
                 print("ERROR \(err!.localizedDescription)")
                 return
@@ -41,21 +41,21 @@ class EventRepository : ObservableObject {
                                 "notificationTime":Timestamp(),
                                 "notificationType":"eventCreated", "notificationCreatorID":user.id ?? "USER_ID",
                                 "usersThatHaveSeen":[]] as [String:Any]
-        COLLECTION_GROUP.document(groupID).collection("Notifications").document(notificationID).setData(notificationData)
+        COLLECTION_GROUP.document(group.id).collection("Notifications").document(notificationID).setData(notificationData)
         
-        COLLECTION_GROUP.document(groupID).updateData(["notificationCount":FieldValue.increment((Int64(1)))])
+        COLLECTION_GROUP.document(group.id).updateData(["notificationCount":FieldValue.increment((Int64(1)))])
         
         let userNotificationData = ["id":notificationID,
                                     "notificationName": "Event Created",
                                     "notificationTime":Timestamp(),
                                     "notificationType":"eventCreated", "notificationCreatorID":user.id ?? "USER_ID",
                                     "hasSeen":false,
-                                    "groupID":groupID] as [String:Any]
+                                    "groupID":group.id] as [String:Any]
         
         for user in usersVisibleTo {
             COLLECTION_USER.document(user.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)
             COLLECTION_USER.document(user.id ?? " ").updateData(["userNotificationCount":FieldValue.increment((Int64(1)))])
-            notificationSender.sendPushNotification(to: user.fcmToken ?? " ", title: "Event Created", body: "An event has been created")
+            notificationSender.sendPushNotification(to: user.fcmToken ?? " ", title: "\(group.groupName)", body: "\(user.nickName ?? " ") created an event!")
         }
         
         

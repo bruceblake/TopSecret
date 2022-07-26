@@ -76,7 +76,7 @@ struct HomeScreenView: View {
                                 Image(systemName: "person.3.fill").foregroundColor(FOREGROUNDCOLOR).font(.title3)
                         }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
                         
-                        NavigationLink(destination: GroupSettingsView(group: group)){
+                        NavigationLink(destination: GroupSettingsView(group: group).environmentObject(selectedGroupVM)){
                             Image(systemName: "gear").foregroundColor(FOREGROUNDCOLOR).font(.title3).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
                         }
                         

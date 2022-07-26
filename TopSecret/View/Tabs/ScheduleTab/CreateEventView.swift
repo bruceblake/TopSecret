@@ -80,7 +80,7 @@ struct CreateEventView: View {
                 Button(action:{
                     
                     print("groupID: \(selectedGroupVM.group?.id ?? " ")")
-                    eventVM.createEvent(groupID: selectedGroupVM.group?.id ?? " ", eventName: eventName, eventLocation: eventLocation, eventTime: eventTime , usersVisibleTo:selectedGroupVM.group?.realUsers ?? [] , user: userVM.user ?? User())
+                    eventVM.createEvent(group: selectedGroupVM.group ?? Group(), eventName: eventName, eventLocation: eventLocation, eventTime: eventTime , usersVisibleTo:selectedGroupVM.group?.realUsers ?? [] , user: userVM.user ?? User())
                     presentationMode.wrappedValue.dismiss()
                 },label:{
                     Text("Create Event").foregroundColor(Color("Foreground"))

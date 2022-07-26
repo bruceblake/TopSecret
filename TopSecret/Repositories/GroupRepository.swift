@@ -14,7 +14,6 @@ class GroupRepository : ObservableObject {
     
     @ObservedObject var chatRepository = ChatRepository()
     @ObservedObject var pollRepository = PollRepository()
-    @ObservedObject var notificationRepository = NotificationRepository()
     @Published var groupChat : ChatModel = ChatModel()
     @Published var usersProfilePictures : [String] = []
     @Published var countdowns : [CountdownModel] = []
@@ -23,6 +22,8 @@ class GroupRepository : ObservableObject {
     @Published var followers : [User] = []
 
     
+    
+    let notificationSender = PushNotificationSender()
     
     func fetchUser(userID: String, completion: @escaping (User) -> ()) -> () {
         COLLECTION_USER.document(userID).getDocument { snapshot, err in
@@ -141,93 +142,60 @@ class GroupRepository : ObservableObject {
         }
     }
     
-
     
-    func joinGroup(groupID: String, username: String){
-        
-        
-        let userQuery = COLLECTION_USER.whereField("username", isEqualTo: username)
-          
-        userQuery.getDocuments { (snapshot, err) in
-            if err != nil {
-                print("ERROR")
-                return
-            }
+    func joinGroup(group: Group, user: User){
+        COLLECTION_GROUP.document(group.id).updateData(["users":FieldValue.arrayUnion([user.id])])
+        COLLECTION_GROUP.document(group.id).updateData(["memberAmount":FieldValue.increment(Int64(1))])
             
-            if snapshot!.documents.isEmpty {
-                print("There are no usernames with this text!")
-            }else{
-                for document in snapshot!.documents{
-                    print("Username: \(document.get("username") as? String ?? "")")
-                }
-            }
-            
-            for document in snapshot!.documents{
-                let data = document.data()
-                let id = data["uid"] as? String ?? ""
-                COLLECTION_GROUP.document(groupID).updateData(["users":FieldValue.arrayUnion([id])])
-                COLLECTION_GROUP.document(groupID).updateData(["memberAmount":FieldValue.increment(Int64(1))])
-                COLLECTION_USER.document(id).updateData(["groups":FieldValue.arrayUnion([groupID])])
-                
-                COLLECTION_GROUP.document(groupID).getDocument { (snapshot, err) in
-                    
-                    let data = snapshot?.data()
-                    let chatID = data?["chatID"] as? String ?? ""
-                    let users = data?["users"] as? [String] ?? []
-                    
-                    self.chatRepository.joinChat(chatID: chatID, userID: id, groupID: groupID)
-          
-                    self.notificationRepository.sendAcceptedGroupInviteNotification(group: Group(dictionary: data ?? [:]), user1: User(dictionary: data ?? [:]), users: users)
-                }
-                
-               
-                var notificationID = UUID().uuidString
-                
-                let notificationData = ["id":notificationID,
-                                        "notificationName": "User Added",
-                                        "notificationTime":Timestamp(),
-                                        "notificationType":"userAdded", "notificationCreatorID":id,
-                                        "usersThatHaveSeen":[]] as [String:Any]
-                COLLECTION_GROUP.document(groupID).collection("Notifications").document(notificationID).setData(notificationData)
-                
-                COLLECTION_GROUP.document(groupID).updateData(["notificationCount":FieldValue.increment((Int64(1)))])
-                
-               
-                
-            }
-        }
-            
-       
+             
+           
+                 
+        self.chatRepository.joinChat(chatID: group.chat?.id ?? " ", userID: user.id ?? " ", groupID: group.id)
 
-       
+             var notificationID = UUID().uuidString
+             
+             let notificationData = ["id":notificationID,
+                                     "notificationName": "User Added",
+                                     "notificationTime":Timestamp(),
+                                     "notificationType":"userAdded", "notificationCreatorID":user.id,
+                                     "usersThatHaveSeen":[]] as [String:Any]
+        
+        COLLECTION_GROUP.document(group.id).collection("Notifications").document(notificationID).setData(notificationData)
+             
+        COLLECTION_GROUP.document(group.id).updateData(["notificationCount":FieldValue.increment((Int64(1)))])
+        
+        for user in group.realUsers ?? [] {
+            notificationSender.sendPushNotification(to: user.fcmToken ?? " ", title: "\(group.groupName)", body: "\(user.nickName ?? " ") has joined \(group.groupName)")
+        }
+        
+      
+             
     }
     
-    func leaveGroup(groupID: String, userID: String){
-        COLLECTION_GROUP.document(groupID).updateData(["memberAmount": FieldValue.increment(Int64(-1))])
-        COLLECTION_GROUP.document(groupID).updateData(["users":FieldValue.arrayRemove([userID])])
+
+    
+ 
+    
+    func leaveGroup(group: Group, user: User){
+        COLLECTION_GROUP.document(group.id).updateData(["memberAmount": FieldValue.increment(Int64(-1))])
+        COLLECTION_GROUP.document(group.id).updateData(["users":FieldValue.arrayRemove([user.id ?? " "])])
         
-        COLLECTION_GROUP.document(groupID).getDocument { (snapshot, err) in
+        COLLECTION_GROUP.document(group.id).getDocument { (snapshot, err) in
             if err != nil{
                 print("ERROR")
                 return
             }
             let groupChatID = snapshot?.get("chatID") as? String ?? " "
-            COLLECTION_USER.document(userID).updateData(["groups":FieldValue.arrayRemove([groupChatID])])
+            COLLECTION_USER.document(user.id ?? " ").updateData(["groups":FieldValue.arrayRemove([groupChatID])])
 
-            self.chatRepository.leaveChat(chatID: groupChatID, userID: userID, groupID: groupID)
+            self.chatRepository.leaveChat(chatID: groupChatID, userID: user.id ?? " ", groupID: group.id)
             
             let users = snapshot?.get("users") as? [String] ?? []
             
             if users.count <= 0{
 
                 
-                COLLECTION_GROUP.document(groupID).collection("Polls").getDocuments { (snapshot, err) in
-                    for document in snapshot!.documents{
-                        let pollID = document.get("id") as! String
-                        COLLECTION_GROUP.document(groupID).collection("Polls").document(pollID).delete()
-                    }
-                }
-                COLLECTION_GROUP.document(groupID).delete() { err in
+                COLLECTION_GROUP.document(group.id).delete() { err in
                     
                     if err != nil {
                         print("Unable to delete document")
@@ -242,12 +210,15 @@ class GroupRepository : ObservableObject {
             let notificationData = ["id":notificationID,
                                     "notificationName": "User Left",
                                     "notificationTime":Timestamp(),
-                                    "notificationType":"userLeft", "notificationCreatorID":userID,
+                                    "notificationType":"userLeft", "notificationCreator9ID":user.id,
                                     "usersThatHaveSeen":[]] as [String:Any]
-            COLLECTION_GROUP.document(groupID).collection("Notifications").document(notificationID).setData(notificationData)
+            COLLECTION_GROUP.document(group.id).collection("Notifications").document(notificationID).setData(notificationData)
             
-            COLLECTION_GROUP.document(groupID).updateData(["notificationCount":FieldValue.increment((Int64(1)))])
-            
+            COLLECTION_GROUP.document(group.id).updateData(["notificationCount":FieldValue.increment((Int64(1)))])
+           
+            for user in group.realUsers ?? []{
+                self.notificationSender.sendPushNotification(to: user.fcmToken ?? " ", title: "\(group.groupName)", body: "\(user.nickName ?? " ") has left \(group.groupName)")
+            }
             
         }
         

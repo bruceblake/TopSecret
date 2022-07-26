@@ -11,6 +11,7 @@ struct GroupSettingsView: View {
     @Environment(\.presentationMode) var dismiss
     @StateObject var groupVM = GroupViewModel()
     @EnvironmentObject var userVM : UserViewModel
+    @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
     @EnvironmentObject var navigationHelper : NavigationHelper
     var group: Group
     
@@ -106,7 +107,7 @@ struct GroupSettingsView: View {
                                 SettingsButtonCell(text: "Leave Group", includeDivider: false,  action:{
                                     
                                     self.navigationHelper.moveToDashboard = true
-                                    groupVM.leaveGroup(groupID: group.id, userID: userVM.user?.id ?? "")
+                                    groupVM.leaveGroup(group: selectedGroupVM.group ?? Group(), user: userVM.user ?? User())
                                     
                                     
                                 }).padding(.bottom,15)

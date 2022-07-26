@@ -12,7 +12,6 @@ import SDWebImageSwiftUI
 struct AddPollView: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject var pollVM : PollViewModel
-    @StateObject var notificationRepository = NotificationRepository()
     @EnvironmentObject var userVM: UserViewModel
     @State var question = ""
     @State var selectedGroup : Group = Group()
@@ -328,7 +327,6 @@ struct AddPollView: View {
                     let id = UUID().uuidString
                     pollVM.createPoll(creator: creator, question: question, group: selectedGroup, pollType: pollTypes[pollTypeChoice], days: selectedDay, hours: selectedHour, minutes: selectedMinute, choices: self.placeChoices(choiceOption: pollTypeChoice, choices: [choice1,choice2,choice3,choice4]), completionType: completionType[completionTypeChoice], users: selectedUsersIDS, id: id)
                   
-                    notificationRepository.sendCreatedPollNotification(user: userVM.user ?? User() , pollID: id, users: selectedGroup.users ?? [], group: selectedGroup)
                   
                 }, label: {
                     Text("Create Poll")   .foregroundColor(Color("Foreground"))

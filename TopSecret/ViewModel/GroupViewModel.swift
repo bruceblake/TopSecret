@@ -113,9 +113,9 @@ class GroupViewModel: ObservableObject {
     
     
     
-    func leaveGroup(groupID: String, userID: String){
+    func leaveGroup(group: Group, user: User){
         
-        groupRepository.leaveGroup(groupID: groupID, userID: userID)
+        groupRepository.leaveGroup(group: group, user: user)
         
         
     }

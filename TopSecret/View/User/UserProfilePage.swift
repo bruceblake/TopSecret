@@ -20,7 +20,6 @@ struct UserProfilePage: View {
     @State var isLoading: Bool = false
     
     @StateObject var chatVM = ChatViewModel()
-    @StateObject var notificationRepository = NotificationRepository()
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var navigationHelper : NavigationHelper
     

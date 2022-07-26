@@ -31,7 +31,6 @@ class UserRepository : ObservableObject {
     @Published var firestoreListener : [ListenerRegistration] = []
     @Published var userNotificationCount : Int = 0
     @Published var groupNotificationCount : [[String:Int]] = []
-    @ObservedObject var notificationRepository = NotificationRepository()
     @Published var currentNotification : NotificationModel?
     @Published var showNotification : Int = 0 //on value change, send notification
     @Published var userSelectedGroup : Group = Group()
@@ -995,7 +994,7 @@ class UserRepository : ObservableObject {
         COLLECTION_USER.document(user.id ?? " ").updateData(["friendsList":FieldValue.arrayUnion([friendID])])
         COLLECTION_USER.document(friendID).updateData(["friendsList":FieldValue.arrayUnion([user.id ?? ""])])
         
-        notificationRepository.sendAcceptedFriendRequestNotification(user1: user, user2: friendID)
+       
         
         
     }
@@ -1004,7 +1003,7 @@ class UserRepository : ObservableObject {
         
         COLLECTION_USER.document(user.id ?? " ").updateData(["pendingFriendsList":FieldValue.arrayRemove([friendID])])
         
-        notificationRepository.sendDeclinedFriendRequestNotification(user1: user, user2: friendID)
+       
     }
     
     

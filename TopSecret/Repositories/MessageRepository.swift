@@ -17,7 +17,6 @@ class MessageRepository : ObservableObject {
     @Published var pinnedMessage : PinnedMessageModel = PinnedMessageModel()
     @Published var scrollToBottom = 0 //used for scrolling based on published changes
     @Published var pushText = 0
-    @ObservedObject var notificationRepository = NotificationRepository()
     
     func readAllMessages(chatID: String, chatType: String, userID: String, groupID: String){
         
@@ -156,7 +155,6 @@ class MessageRepository : ObservableObject {
         //user 1
         COLLECTION_PERSONAL_CHAT.document(chat.id).collection("Messages").document(messageID).setData(["name":user.nickName ?? "","timeStamp":timeStamp, "nameColor":nameColor, "id":messageID,"profilePicture":user.profilePicture ?? "","messageType":messageType,"messageValue":text])
         
-        notificationRepository.sendPersonalChatNotification(user1: user, user2: chat.users[0] == user.id ? chat.users[1] : chat.users[0])
         
         
         self.scrollToBottom += 1

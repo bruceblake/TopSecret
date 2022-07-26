@@ -16,8 +16,9 @@ class EventViewModel: ObservableObject {
     @ObservedObject var eventRepository = EventRepository()
     
     
-    func createEvent(groupID: String, eventName: String, eventLocation: String, eventTime: Date, usersVisibleTo: [User], user: User){
-        eventRepository.createEvent(groupID: groupID, eventName: eventName, eventLocation: eventLocation, eventTime: eventTime, usersVisibleTo: usersVisibleTo, user: user)
+    func createEvent(group: Group, eventName: String, eventLocation: String, eventTime: Date, usersVisibleTo: [User], user: User){
+        eventRepository.createEvent(group: group, eventName: eventName, eventLocation: eventLocation, eventTime: eventTime, usersVisibleTo: usersVisibleTo, user: user)
+        
     }
     
     
