@@ -40,7 +40,7 @@ class EventRepository : ObservableObject {
                                 "notificationName": "Event Created",
                                 "notificationTime":Timestamp(),
                                 "notificationType":"eventCreated", "notificationCreatorID":user.id ?? "USER_ID",
-                                "usersThatHaveSeen":[]] as [String:Any]
+                                "usersThatHaveSeen":[], "actionTypeID":id] as [String:Any]
         COLLECTION_GROUP.document(group.id).collection("Notifications").document(notificationID).setData(notificationData)
         
         COLLECTION_GROUP.document(group.id).updateData(["notificationCount":FieldValue.increment((Int64(1)))])
@@ -50,7 +50,7 @@ class EventRepository : ObservableObject {
                                     "notificationTime":Timestamp(),
                                     "notificationType":"eventCreated", "notificationCreatorID":user.id ?? "USER_ID",
                                     "hasSeen":false,
-                                    "groupID":group.id] as [String:Any]
+                                    "groupID":group.id, "actionTypeID": id] as [String:Any]
         
         for user in usersVisibleTo {
             COLLECTION_USER.document(user.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)

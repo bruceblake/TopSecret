@@ -56,9 +56,8 @@ struct ActivityView: View {
                             HStack(spacing: 7){
                                 
                                 
-                                Text("Today").font(.largeTitle).bold().foregroundColor(FOREGROUNDCOLOR)
                                 
-                                Text(Date(), style: .date).foregroundColor(.gray).fontWeight(.bold).font(.subheadline)
+                                Text(Date(), style: .date).font(.largeTitle).bold().foregroundColor(FOREGROUNDCOLOR)
                                 
                                 
                             }.padding(.leading,10)
@@ -269,7 +268,7 @@ struct HomeCalendarView : View {
                 
             }
             
-            NavigationLink(destination: FullEventView(event: $selectedEvent, group: group), isActive: $openEventView, label: {EmptyView()})
+            NavigationLink(destination: FullEventView(event: selectedEvent, group: group), isActive: $openEventView, label: {EmptyView()})
             
             
         }.onAppear{

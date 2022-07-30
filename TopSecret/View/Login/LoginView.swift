@@ -11,6 +11,7 @@ struct LoginView: View {
     @State var email = ""
     @State var password = ""
     @EnvironmentObject var userAuthVM: UserViewModel
+    @StateObject var userCoreDataVM = UserCoreDataViewModel()
     @State var showForgotPasswordView = false
     @State var beginRegisterView: Bool = false
     @State var value: CGFloat = 0
@@ -66,7 +67,10 @@ struct LoginView: View {
                         
 
                     Button(action: {
-                        userAuthVM.signIn(withEmail: email, password: password)
+                        userAuthVM.signIn(withEmail: email, password: password, completion: { fetchedUser in
+                            userCoreDataVM.addUser(user: fetchedUser)
+                            print("user: \(fetchedUser.username ?? " ")")
+                        })
                     }, label: {
                         Text("Login")   .foregroundColor(Color("Foreground"))
                             .padding(.vertical)
@@ -80,7 +84,6 @@ struct LoginView: View {
                     
                     Spacer()
                 }.offset(y: -self.value)
-                .animation(.spring())
                 .onAppear{
                     NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { (noti) in
                         let value = noti.userInfo![UIResponder.keyboardFrameEndUserInfoKey] as! CGRect

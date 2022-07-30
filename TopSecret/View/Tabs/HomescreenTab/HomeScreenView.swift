@@ -7,8 +7,12 @@
 
 import SwiftUI
 import SDWebImageSwiftUI
+import MediaCore
+import MediaSwiftUI
 
 struct HomeScreenView: View {
+    
+    
     
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var navigationHelper : NavigationHelper
@@ -160,7 +164,7 @@ struct HomeScreenView: View {
                     ActivityView(group: $group).tag(0)
                  
                 
-                    Text("Gallery").tag(1)
+                    GroupGalleryView().tag(1)
         
                     
                     Text("Games").tag(2)
@@ -178,7 +182,7 @@ struct HomeScreenView: View {
                 if(showAddContent){
                     showAddContent.toggle()
                 }
-            }
+            }.disabled(showAddContent)
             
             BottomSheetView(isOpen: $showAddContent, maxHeight: UIScreen.main.bounds.height * 0.45) {
                 
@@ -191,30 +195,7 @@ struct HomeScreenView: View {
             }
          
             
-//            if showGalleryView {
-//                ZStack{
-//                    Color("AccentColor")
-//                    VStack{
-//
-//                        HStack{
-//
-//                            Spacer()
-//                            Button(action:{
-//                    withAnimation(.spring()){
-//                                    showGalleryView.toggle()
-//                                }
-//                                offset = .zero
-//                            },label:{
-//                                Text("X").foregroundColor(FOREGROUNDCOLOR)
-//                            })
-//
-//                            Spacer()
-//                        }.padding(.top,50)
-//
-//                        Text("Gallery")
-//                    }
-//                }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
-//            }
+
             
         
             
@@ -234,122 +215,6 @@ struct HomeScreenView: View {
     
     
 }
-
-
-struct Home : View {
-    
-    @State var openComments : Bool = false
-    @State var selectedGalleryPostComments : [GalleryPostCommentModel] = []
-    @State var selectedGalleryPost : GalleryPostModel = GalleryPostModel()
-
-    
-    func homeScreenPostsAreEmpty(posts: [String:String]) -> Bool{
-        var isEmpty = true
-        for value in posts.values {
-            if value != ""{
-                isEmpty = false
-            }
-            print("value: \(value)")
-        }
-        return isEmpty
-    }
-    
-    
-    @EnvironmentObject var userVM : UserViewModel
-
-    var body: some View {
-        if homeScreenPostsAreEmpty(posts: userVM.homescreenPosts){
-            
-            VStack{
-                Text("Your feed is empty :(")
-                Spacer()
-            }.padding(.top,UIScreen.main.bounds.height/3.5)
-             
-            
-          
-        }else{
-            ScrollView{
-                Rectangle().foregroundColor(.clear).frame(height: UIScreen.main.bounds.height/10)
-                LazyVStack(spacing: 195){
-//                                ForEach(userVM.homescreenPosts.keys.sorted(), id: \.self){ key in
-//                                    HomeScreenPostView(id: key, postType: userVM.homescreenPosts[key] ?? " ", selectedGalleryPost: $selectedGalleryPost, showInfoScreen: $showInfoScreen, openComments: $openComments, selectedGalleryPostComments: $selectedGalleryPostComments)
-//                                }
-                
-                if userVM.finishedFetchingPosts{
-                    ForEach(userVM.homescreenGalleryPosts, id: \.id){ post in
-                        
-                        if post.id != "Comment Manager"{
-                            GalleryPostCell(galleryPost: post, selectedGalleryPost: $selectedGalleryPost, selectedGalleryPostComments: $selectedGalleryPostComments, openComments: $openComments).padding(.top,50)
-                        }
-              
-                    }
-                }else{
-                    VStack{
-                        Spacer()
-                        ProgressView()
-                        Spacer()
-                    }
-                }
-                
-             
-                
-              
-            }
-                Rectangle().foregroundColor(.clear).frame(height: UIScreen.main.bounds.height/3)
-
-            }
-            
-            NavigationLink(isActive: $openComments, destination: {GalleryPostCommentView(galleryPost: $selectedGalleryPost, comments: $selectedGalleryPostComments)}, label: {
-                EmptyView()
-            })
-            
-            
-        }
-    }
-}
-
-
-
-
-//struct HomeScreenPostView : View {
-//
-//
-//    @State var id: String
-//    @State var postType: String
-//    @State var currentPoll: PollModel = PollModel()
-//    @State var currentGroup : Group = Group()
-//    @State var galleryPost: GalleryPostModel = GalleryPostModel()
-//    @Binding var selectedGalleryPost : GalleryPostModel
-//    @State var postCreator: User = User()
-//    @State var isInGroup: Bool = false
-//    @State var isFollowingGroup: Bool = false
-//    @Binding var showInfoScreen : Bool
-//    @Binding var openComments : Bool
-//    @Binding var selectedGalleryPostComments : [GalleryPostCommentModel]
-//    @EnvironmentObject var userVM: UserViewModel
-//
-//
-//
-//
-//    var body : some View {
-//
-//
-//
-//
-//        ZStack{
-//            if postType == "poll"{
-//
-//            }else if postType == "event"{
-//                Text("event")
-//            }else if postType == "post"{
-//                GalleryPostCell(galleryPost: self.galleryPost, selectedGalleryPost: $selectedGalleryPost, group: $currentGroup, user:  $postCreator, isInGroup: $isInGroup, isFollowingGroup: $isFollowingGroup, selectedGalleryPostComments: $selectedGalleryPostComments, openComments: $openComments)
-//            }
-//        }
-//
-//    }
-//}
-
-
 
 
 

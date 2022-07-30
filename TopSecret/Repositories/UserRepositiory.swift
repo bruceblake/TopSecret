@@ -34,8 +34,7 @@ class UserRepository : ObservableObject {
     @Published var currentNotification : NotificationModel?
     @Published var showNotification : Int = 0 //on value change, send notification
     @Published var userSelectedGroup : Group = Group()
-    @Published var finishedFetchingPosts : Bool = false
-    
+    @Published var finishedFetchingGroups : Bool = false
     
     private var cancellables : Set<AnyCancellable> = []
     let store = Firestore.firestore()
@@ -44,8 +43,7 @@ class UserRepository : ObservableObject {
     static var shared = UserViewModel()
    
     
-    
-    
+
     
     func readUserNotification(userNotification: UserNotificationModel, userID: String){
         COLLECTION_USER.document(userID).collection("Notifications").document(userNotification.id).updateData(["hasSeen":true])
@@ -202,7 +200,7 @@ class UserRepository : ObservableObject {
     func fetchUserNotifications(userID: String, completion: @escaping ([UserNotificationModel]) -> ()) -> () {
         
         var notificationsToReturn : [UserNotificationModel] = []
-        COLLECTION_USER.document(userID).collection("Notifications").getDocuments { snapshot, err in
+        COLLECTION_USER.document(userID).collection("Notifications").order(by: "notificationTime", descending: true).getDocuments { snapshot, err in
             if err != nil {
                 print("ERROR")
                 return
@@ -216,10 +214,11 @@ class UserRepository : ObservableObject {
             
             for document in documents {
                 var data = document.data() as? [String:Any] ?? [:]
-                
+                let notificationType = data["notificationType"] as? String ?? ""
+                let notificationGroupID = data["groupID"] as? String ?? ""
                 groupD.enter()
                 
-                self.fetchUserNotificationCreator(notificationCreatorType: data["notificationType"] as! String, notificationCreatorID: data["notificationCreatorID"] as! String) { fetchedCreator in
+                self.fetchUserNotificationCreator(notificationCreatorType: notificationType, notificationCreatorID: data["notificationCreatorID"] as! String) { fetchedCreator in
                     data["notificationCreator"] = fetchedCreator
                     groupD.leave()
                 
@@ -229,10 +228,18 @@ class UserRepository : ObservableObject {
                 
                 groupD.enter()
                 
-                self.fetchUserNotificationGroup(notificationGroupID: data["groupID"] as? String ?? " "){ fetchedGroup in
+                self.fetchUserNotificationGroup(notificationGroupID: notificationGroupID){ fetchedGroup in
                     data["group"] = fetchedGroup
                     groupD.leave()
                 }
+                
+                groupD.enter()
+                
+                self.fetchUserNotificationAction(notificationType: notificationType, groupID: notificationGroupID, userID: userID,notificationActionID: data["actionTypeID"] as? String ?? " "){ fetchedAction in
+                    data["actionType"] = fetchedAction
+                    groupD.leave()
+                }
+                
                 
                 
                 groupD.notify(queue: .main, execute: {
@@ -247,6 +254,75 @@ class UserRepository : ObservableObject {
             })
             
         }
+    }
+    
+    func fetchUserNotificationAction(notificationType: String, groupID: String, userID: String, notificationActionID: String, completion: @escaping (Any) -> ()) -> (){
+        switch notificationType {
+            case "eventCreated":
+            COLLECTION_GROUP.document(groupID).collection("Events").document(notificationActionID).getDocument { snapshot, err in
+                if err != nil {
+                    print("ERROR")
+                    return
+                }
+                
+                var data = snapshot?.data() as? [String:Any] ?? [:]
+                
+                let dp = DispatchGroup()
+                
+                dp.enter()
+                self.fetchEventUsersAttending(usersAttendingID: data["usersAttendingID"] as? [String] ?? [], eventID: notificationActionID, groupID: groupID) { fetchedUsers in
+                    data["usersAttending"] = fetchedUsers
+                    dp.leave()
+                }
+                
+                dp.notify(queue: .main, execute:{
+                    return completion(EventModel(dictionary: data))
+                })
+            }
+            
+        default: break
+            
+        }
+    }
+    
+    
+    func fetchEventUsersAttending(usersAttendingID: [String], eventID: String , groupID: String, completion: @escaping ([User]) -> ()) -> (){
+        COLLECTION_GROUP.document(groupID).collection("Events").document(eventID).getDocument { snapshot, err in
+            
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            var usersToReturn : [User] = []
+            
+            
+            let groupD = DispatchGroup()
+            
+            let data = snapshot?.data() as? [String:Any] ?? [:]
+            let users = data["usersAttendingID"] as? [String] ?? []
+            
+            for user in users {
+                groupD.enter()
+                COLLECTION_USER.document(user).getDocument { userSnapshot, err in
+                    if err != nil {
+                        print("ERROR")
+                        return
+                    }
+                    
+                    let userData = userSnapshot?.data() as? [String:Any] ?? [:]
+                    
+                    usersToReturn.append(User(dictionary: userData))
+                    groupD.leave()
+                }
+            }
+            
+            groupD.notify(queue: .main, execute: {
+                return completion(usersToReturn)
+            })
+            
+        }
+        
+        
     }
     
     
@@ -282,226 +358,9 @@ class UserRepository : ObservableObject {
         }
     }
     
-    func listenToUserGalleryPosts(uid: String){
-        let listener = COLLECTION_GALLERY_POSTS.addSnapshotListener { snapshot, err in
-            if err != nil {
-                print("ERROR")
-                return
-            }
-            
 
-            
-            let dispatchGroup = DispatchGroup()
-            
-            dispatchGroup.enter()
-            self.fetch(documents: snapshot!.documents){ posts in
-                self.homescreenGalleryPosts = posts
-                dispatchGroup.leave()
-            }
-            
-            DispatchQueue.global(qos: .default).async {
-                dispatchGroup.wait()
-                
-                
-                DispatchQueue.main.async {
-                    self.finishedFetchingPosts = true
-                   
-                }
-            }
-            
-            
-         
-        }
-        firestoreListener.append(listener)
-
-    }
-    
  
-    
-
-    
-    func isInGroup(groupID: String, userID: String, completion: @escaping (Bool) -> ()) -> (){
-        var isInGroup = false
-        COLLECTION_USER.document(userID).getDocument { snapshot, err in
-            if err != nil {
-                print("ERROR")
-                return
-            }
-            
-            let groups = snapshot!.get("groups") as? [String] ?? []
-            
-            for group in groups {
-                if group == groupID{
-                    isInGroup = true
-                    return completion(true)
-                }
-            }
-        }
-       return completion(isInGroup)
-    }
-    
-    func isFollowingGroup(groupID: String, userID: String, completion: @escaping (Bool) -> ()) -> (){
-        var isFollowingGroup = false
-        COLLECTION_GROUP.document(groupID).getDocument { snapshot, err in
-            if err != nil {
-                print("ERROR")
-                return
-            }
-            
-            let followers = snapshot!.get("followers") as? [String] ?? []
-            for user in followers {
-                if user == userID{
-                    isFollowingGroup = true
-                    return completion(true)
-                }
-            }
-        }
-        return completion(isFollowingGroup)
-    }
-    
-    
-    func fetch(documents: [QueryDocumentSnapshot], completion: @escaping ([GalleryPostModel]) -> ()) -> (){
-        
-        
-        let dispatchGroup = DispatchGroup()
-
-        dispatchGroup.enter()
-        var galleryPosts : [GalleryPostModel] = []
-
-        
-           for document in documents {
-             
-
-               let groupID = document.get("groupID") as? String ?? " "
-               let creatorID = document.get("creatorID") as? String ?? " "
-               let id = document.get("id") as? String ?? " "
-               let posts = document.get("posts") as? [String] ?? []
-               let description = document.get("description") as? String ?? ""
-               let commentsIDS = document.get("comments") as? [String] ?? []
-               var group : Group = Group()
-               var creator: User = User()
-               var isInGroup = false
-               var isFollowingGroup = true
-               
-               dispatchGroup.enter()
-               self.fetchGroup(groupID: groupID) { fetchedGroup in
-                   group = fetchedGroup
-                   dispatchGroup.leave()
-               }
-               
-//               dispatchGroup.enter()
-//               self.isInGroup(groupID: groupID, userID: self.user?.id ?? " ") { result in
-//                   isInGroup = result
-//                   dispatchGroup.leave()
-//               }
-//
-//               dispatchGroup.enter()
-//               self.isFollowingGroup(groupID: groupID, userID: self.user?.id ?? " ") { result in
-//                   isFollowingGroup = result
-//                   dispatchGroup.leave()
-//               }
-               
-               dispatchGroup.enter()
-               self.fetchUser(userID: creatorID) { fetchedUser in
-                   creator = fetchedUser
-                   dispatchGroup.leave()
-               }
-               
-               
-               
-               dispatchGroup.notify(queue: .main){
-                   print("fetched one post!")
-                   galleryPosts.append(GalleryPostModel(dictionary: ["group":group,"groupID":groupID,"id":id,"creatorID":creatorID,"creator":creator,"isInGroup":isInGroup,"isFollowingGroup":isFollowingGroup,"posts":posts,"description":description,"commentsIDS":commentsIDS]))
-               }
-               
-
-              
-           }
-        dispatchGroup.leave()
-        
-        dispatchGroup.notify(queue: .main){
-            return completion(galleryPosts)
-        }
-   
-        
-        
-    }
-   
-    
-     
-    
-    func listenToUserNotifications(uid: String){
-        
-        let listener = COLLECTION_USER.document(uid).collection("Notifications").order(by: "notificationTime",descending: true).addSnapshotListener { (snapshot, err) in
-            
-        
-            
-            for doc in snapshot!.documentChanges {
-                if doc.type == .added {
-                    
-                    
-                    //getting userNotificationsCount
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                        COLLECTION_USER.document(uid).getDocument { (snapshot, err) in
-                            if err != nil {
-                                print("ERROR")
-                                return
-                            }
-                            
-                            self.userNotificationCount = snapshot?.get("userNotificationCount") as? Int ?? 0
-                            self.groupNotificationCount = snapshot?.get("groupNotificationCount") as? [[String:Int]] ?? []
-                        }
-                    }
-                   
-                    
-                    self.currentNotification = NotificationModel(dictionary: doc.document.data())
-               
-                }
-            }
-            
-            self.notifications = snapshot!.documents.map({ queryDocumentSnapshot -> NotificationModel in
-                let data = queryDocumentSnapshot.data()
-                print("notification: \(queryDocumentSnapshot.get("id") as? String ?? "")")
-               
-
-                return NotificationModel(dictionary: data)
-            })
-            
-            
-            
-            
-        }
-        firestoreListener.append(listener)
-    }
-    
-    func listenToUserChats(uid: String){
-        
-        
-        let listener = COLLECTION_CHAT.whereField("users", arrayContains: uid).addSnapshotListener { (snapshot, err) in
-            
-            
-            
-            guard let documents = snapshot?.documents else {
-                print("No document!")
-                return
-            }
-            
-            
-            
-            self.groupChats = documents.map{ queryDocumentSnapshot -> ChatModel in
-                let data = queryDocumentSnapshot.data()
-         
-                print("Fetched Chats!")
-                
-                return ChatModel(dictionary: data)
-                
-                
-            }
-            
-        }
-        
-        firestoreListener.append(listener)
-    }
+ 
     
    
 
@@ -689,7 +548,7 @@ class UserRepository : ObservableObject {
             
             groupD.notify(queue: .main, execute: {
                 self.groups = groupsToReturn
-                self.finishedFetchingPosts = true
+                self.finishedFetchingGroups = true
             })
             
             }
@@ -702,7 +561,9 @@ class UserRepository : ObservableObject {
 
             
         }
-        
+ 
+ 
+
 
     func listenToNetworkChanges(uid: String){
         let connectedRef = Database.database().reference(withPath: ".info/connected")
@@ -737,52 +598,15 @@ class UserRepository : ObservableObject {
         }
     }
     func listenToAll(uid: String){
-        self.listenToUserChats(uid: uid)
         self.listenToUserGroups(uid: uid)
         self.listenToUser(uid: uid)
         self.listenToNetworkChanges(uid: uid)
         self.listenToPersonalChats(uid: uid)
-        self.listenToUserNotifications(uid: uid)
-        self.listenToUserFollowedGroups(uid: uid)
-//        self.listenToHomeScreenPosts(uid: uid)
-        self.listenToUserGalleryPosts(uid: uid)
-        
-        
+
         
     }
     
-    
- 
-    func fetchUserChats(){
-        //TODO
-        COLLECTION_CHAT.whereField("users", arrayContains: user?.id ?? " ").getDocuments { (snapshot, err) in
-            if err != nil {
-                print("ERROR \(err!.localizedDescription)")
-                return
-            }
-            
-            
-            guard let documents = snapshot?.documents else {
-                print("No document!")
-                return
-            }
-            
-            self.groupChats = documents.map{ queryDocumentSnapshot -> ChatModel in
-                let data = queryDocumentSnapshot.data()
-                
-                
-                
-                
-                
-                return ChatModel(dictionary: data)
-                
-            }
-            
-            print("Fetched User Chats!")
-            
-            
-        }
-    }
+
     func fetchUserGroups(){
         //TODO
         COLLECTION_GROUP.whereField("users", arrayContains: user?.id ?? "").getDocuments { (snapshot, err) in
@@ -798,21 +622,12 @@ class UserRepository : ObservableObject {
             }
             
             self.groups = documents.map{ queryDocumentSnapshot -> Group in
-                let data = queryDocumentSnapshot.data()
-                let chatID = data["chatID"] as? String ?? ""
-                let groupName = data["groupName"] as? String ?? ""
-                let memberAmount = data["memberAmount"] as? Int ?? 0
-                let memberLimit = data["memberLimit"] as? Int ?? 0
-                let users = data["users"] as? [User.ID] ?? []
-                let id = data["id"] as? String ?? ""
-                let groupProfileImage = data["groupProfileImage"] as? String ?? ""
-                let motd = data["motd"] as? String ?? "Welcome to the group!"
-                let quoteOfTheDay = data["quoteOfTheDay"] as? String ?? ""
+                let data = queryDocumentSnapshot.data() as? [String:Any] ?? [:]
+      
                 
                 
                 
-                
-                return Group(dictionary: ["chatID":chatID,"groupName":groupName,"memberAmount":memberAmount,"memberLimit":memberLimit,"users":users,"id":id,"groupProfileImage":groupProfileImage,"motd":motd,"quoteOfTheDay":quoteOfTheDay])
+                return Group(dictionary: data)
                 
             }
             
@@ -821,73 +636,10 @@ class UserRepository : ObservableObject {
             
         }
     }
-    func fetchUserPolls(){
-        //TODO
-        //TODO
-        COLLECTION_POLLS.whereField("users", arrayContains: user?.id ?? "").getDocuments { (snapshot, err) in
-            if err != nil {
-                print("ERROR \(err!.localizedDescription)")
-                return
-            }
-            
-            
-            guard let documents = snapshot?.documents else {
-                print("No document!")
-                return
-            }
-            
-            self.polls = documents.map{ queryDocumentSnapshot -> PollModel in
-                let data = queryDocumentSnapshot.data()
-                
-                
-                
-                
-                
-                return PollModel(dictionary: data)
-                
-            }
-            
-            print("Fetched User Polls!")
-            
-            
-        }
-    }
-    func fetchUserEvents(){
-        //TODO
-        //TODO
-        COLLECTION_EVENTS.whereField("usersVisibleTo", arrayContains: user?.id ?? "").getDocuments { (snapshot, err) in
-            if err != nil {
-                print("ERROR \(err!.localizedDescription)")
-                return
-            }
-            
-            
-            guard let documents = snapshot?.documents else {
-                print("No document!")
-                return
-            }
-            
-            self.events = documents.map{ queryDocumentSnapshot -> EventModel in
-                let data = queryDocumentSnapshot.data()
-                
-                
-                
-                
-                
-                return EventModel(dictionary: data)
-                
-            }
-            
-            print("Fetched User Events!")
-            
-            
-        }
-    }
+   
+   
     func fetchAll(){
-        fetchUserChats()
         fetchUserGroups()
-        fetchUserPolls()
-        fetchUserEvents()
     }
     func createUser(email: String, password: String, username: String, nickName: String, birthday: Date, image:UIImage){
         Auth.auth().createUser(withEmail: email, password: password) { (result, err) in
@@ -926,7 +678,7 @@ class UserRepository : ObservableObject {
             
         }
     }
-    func signIn(withEmail email: String, password: String){
+    func signIn(withEmail email: String, password: String, completion: @escaping (User) -> ()) -> (){
         
         Auth.auth().signIn(withEmail: email, password: password) { [self] (result,err) in
             
@@ -955,8 +707,10 @@ class UserRepository : ObservableObject {
             
             
             self.userSession = result?.user
-            self.fetchUser()
             self.listenToAll(uid: userSession?.uid ?? " ")
+            self.fetchUser(userID: userSession?.uid ?? " ") { fetchedUser in
+                return completion(fetchedUser)
+            }
             
         }
         
@@ -982,6 +736,7 @@ class UserRepository : ObservableObject {
             let user = User(dictionary: data)
           
             self.user = user
+            
         }
     }
     func resetPassword(email: String){

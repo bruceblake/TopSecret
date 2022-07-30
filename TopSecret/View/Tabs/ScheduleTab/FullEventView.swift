@@ -11,7 +11,7 @@ import Firebase
 struct FullEventView : View {
     
   
-    @Binding var event : EventModel
+    var event : EventModel
     var group: Group
     @EnvironmentObject var userVM: UserViewModel
     @StateObject var eventVM = EventViewModel()

@@ -163,7 +163,7 @@ struct GroupCalendarView: View {
                 
             }.padding(.horizontal)
             
-            NavigationLink(destination: FullEventView(event: $selectedEvent, group: group), isActive: $openEventView, label: {EmptyView()})
+            NavigationLink(destination: FullEventView(event: selectedEvent, group: group), isActive: $openEventView, label: {EmptyView()})
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
         

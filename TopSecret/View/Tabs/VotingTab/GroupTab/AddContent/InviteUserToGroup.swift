@@ -110,7 +110,7 @@ struct InviteUserToGroup: View {
                         
                         for user in selectedUsers {
                             dp.enter()
-                            groupVM.joinGroup(groupID: group.id, username: user.username ?? "USERNAME")
+                            groupVM.joinGroup(group: group, user: user)
                             dp.leave()
                         }
                         

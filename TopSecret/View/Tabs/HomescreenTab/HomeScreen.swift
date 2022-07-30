@@ -7,6 +7,7 @@
 
 import SwiftUI
 import SDWebImageSwiftUI
+import RefreshableScrollView
 
 struct HomeScreen: View {
     
@@ -16,38 +17,46 @@ struct HomeScreen: View {
     @State var users: [User] = []
     @StateObject var selectedGroupVM = SelectedGroupViewModel()
     
-    
     var body: some View {
         ZStack{
             Color("Background")
-            
-            
-            VStack{
-                
-                TopBar()
-                
-                if userVM.finishedFetchingPosts{
-                    ShowGroups(selectedGroup: $selectedGroup, users: $users, openGroupHomescreen: $openGroupHomescreen)
-                }else{
-                    ProgressView()
-                    Spacer()
-                }
-             
-                
-                
-                
-                
-                
-                
-            }
-            
-            
+      
+                    VStack{
+                        TopBar()
+                        
+                        
+
+                        if userVM.finishedFetchingGroups{
+                            RefreshableScrollView(height: 20, refreshing: self.$userVM.refreshingGroups){
+                                ShowGroups(selectedGroup: $selectedGroup, users: $users, openGroupHomescreen: $openGroupHomescreen)
+                            }
+                            
+                        }else{
+                            ProgressView()
+                            Spacer()
+                        }
+                        
+                        
+                        
+                    }
+                    
+
             NavigationLink(destination: HomeScreenView(group: $selectedGroup).environmentObject(selectedGroupVM), isActive: $openGroupHomescreen) {
                 EmptyView()
             }
             
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+        
+        
+        
+        
+        
+        
+        
+        
+        
+        
     }
     
 }
@@ -55,6 +64,7 @@ struct HomeScreen: View {
 struct ShowGroups : View {
     
     @EnvironmentObject var userVM: UserViewModel
+    @Environment(\.refresh) private var refresh
     @Binding var selectedGroup : Group
     @Binding var users: [User]
     @Binding var openGroupHomescreen : Bool
@@ -69,22 +79,25 @@ struct ShowGroups : View {
     var body: some View{
         ScrollView(showsIndicators: false){
             VStack(spacing: 30){
-                ForEach(userVM.groups, id: \.id){ group in
-                    Button(action:{
-                        
-                        let dispatchGroup = DispatchGroup()
-                        
-                       
-                        
-                        dispatchGroup.enter()
-                        self.selectedGroup = group
-                        dispatchGroup.leave()
-                        
-                        dispatchGroup.notify(queue: .global(), execute:{
-                            openGroupHomescreen.toggle()
-                        })
-                        
-                    },label:{
+                if userVM.groups.isEmpty{
+                    Text("You have no groups!")
+                }else{
+                    ForEach(userVM.groups, id: \.id){ group in
+                        Button(action:{
+                            
+                            let dispatchGroup = DispatchGroup()
+                            
+                            
+                            
+                            dispatchGroup.enter()
+                            self.selectedGroup = group
+                            dispatchGroup.leave()
+                            
+                            dispatchGroup.notify(queue: .global(), execute:{
+                                openGroupHomescreen.toggle()
+                            })
+                            
+                        },label:{
                             VStack{
                                 VStack(alignment: .leading){
                                     
@@ -92,8 +105,6 @@ struct ShowGroups : View {
                                     
                                     HStack{
                                         Spacer()
-                                        
-                                        
                                     }.padding(50).background(WebImage(url: URL(string: group.groupProfileImage ?? "")).resizable().scaledToFill())
                                     
                                     
@@ -104,13 +115,12 @@ struct ShowGroups : View {
                                             
                                             HStack{
                                                 Text(group.motd)
-                                                    .lineLimit(1)
                                             }.foregroundColor(FOREGROUNDCOLOR)
                                             
                                             HStack{
                                                 Text("\(group.memberAmount) \(group.memberAmount == 1 ? "member" : "members")").foregroundColor(FOREGROUNDCOLOR)
-                                                
-                                                
+
+
                                             }
                                         }
                                         
@@ -122,18 +132,21 @@ struct ShowGroups : View {
                                 
                             }.shadow(color: Color.black, radius: 5).frame(width: width - widthAdd, height: height/heightDivide).padding(.top,30)
                             
-                        
                             
+                            
+                            
+                            
+                        })
                         
-                        
-                    }).disabled(group.groupName == "" || group.groupName == " ")
-                    
+                    }
+
                 }
+                
+               
+                
             }
             
-            
-            
-        }.padding(.top).padding(.bottom,100)
+        }.padding(.top)
     }
 }
 

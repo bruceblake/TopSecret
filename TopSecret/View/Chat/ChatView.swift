@@ -40,7 +40,8 @@ struct ChatView: View {
     ]
     
     var uid: String
-
+    @State var startPos : CGPoint = .zero
+    @State var isSwipping = true
     
     
     func getColor(userID: String, groupChat: ChatModel) -> String{
@@ -493,7 +494,26 @@ struct ChatView: View {
             }
             
             
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).gesture(DragGesture()
+                                                                            .onChanged { gesture in
+            if self.isSwipping {
+                self.startPos = gesture.location
+                self.isSwipping.toggle()
+            }
+            
+        }
+                                                                        
+                                                                            .onEnded({ gesture in
+            let xDist = abs(gesture.location.x - self.startPos.x)
+            
+            if self.startPos.x < gesture.location.x {
+                presentationMode.wrappedValue.dismiss()
+            }
+            
+            self.isSwipping.toggle()
+        })
+        
+        )
         
             .onAppear{
                 imagePickerVM.setUp()

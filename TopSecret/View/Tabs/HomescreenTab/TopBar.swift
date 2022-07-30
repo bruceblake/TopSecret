@@ -30,7 +30,7 @@ struct TopBar : View {
                     Image(systemName: "magnifyingglass").foregroundColor(FOREGROUNDCOLOR).font(.title3)
                     
                 }
-            }.padding(.leading,75)
+            }.padding(.leading,85)
             
             Spacer()
             
@@ -52,7 +52,7 @@ struct TopBar : View {
                         
                     }
                     
-                }).padding(.trailing,75)
+                }).padding(.trailing,85)
                 
             
             

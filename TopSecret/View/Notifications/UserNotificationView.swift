@@ -19,19 +19,14 @@ struct UserNotificationView: View {
             VStack{
                 HStack{
                     
-                    Button(action:{
-                        presentationMode.wrappedValue.dismiss()
-                    },label:{
-                        ZStack{
-                            Circle().foregroundColor(Color("Color")).frame(width:40, height: 40)
-                            
-                            Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR).font(.title3)
-                        }
-                    })
-                    
                     Spacer()
                     
-                    Text("Notifications").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold).font(.title2)
+        
+                    
+
+                    Text("Notifications").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold).font(.largeTitle)
+                    
+                 
                     
                     Spacer()
                 }.padding(.leading).padding(.top,50)
@@ -51,11 +46,9 @@ struct UserNotificationView: View {
                             Text("New").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold).font(.headline).padding(.leading)
                             
                             ForEach(userVM.user?.notifications ?? []){ notification in
-                                Button(action:{
-                                    
-                                },label:{
+                               
                                     UserNotificationCell(userNotification: notification)
-                                })
+                                
                                
                             }
                         }
@@ -77,8 +70,8 @@ struct UserNotificationView: View {
 }
 
 
-//struct UserNotificationView_Previews: PreviewProvider {
-//    static var previews: some View {
-//        UserNotificationView()
-//    }
-//}
+struct UserNotificationView_Previews: PreviewProvider {
+    static var previews: some View {
+        UserNotificationView().environmentObject(UserViewModel()).colorScheme(.dark)
+    }
+}
