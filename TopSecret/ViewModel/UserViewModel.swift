@@ -24,6 +24,7 @@ class UserViewModel : ObservableObject {
     @Published var loginErrorMessage = ""
     
     @Published var groups: [Group] = []
+    @Published var personalChats: [ChatModel] = []
     @Published var isConnected : Bool = false
     @Published var firestoreListener : [ListenerRegistration] = []
     @Published var notifications : [NotificationModel] = []
@@ -160,8 +161,15 @@ class UserViewModel : ObservableObject {
                 groupD.leave()
             }
             
-            groupD.enter()
+          
             
+            groupD.enter()
+            self.fetchUserPersonalChats(personalChats: data["personalChatsID"] as? [String] ?? []) { fetchedChats in
+                data["personalChats"] = fetchedChats
+                groupD.leave()
+            }
+            
+            groupD.enter()
             self.fetchUserBlockedList(blockedList: data["blockedAccountsID"] as? [String] ?? []) { fetchedUsers in
                 data["blockedAccounts"] = fetchedUsers
                 groupD.leave()
@@ -454,6 +462,32 @@ class UserViewModel : ObservableObject {
             return completion(users)
         })
         
+    }
+    
+    func fetchUserPersonalChats(personalChats: [String], completion: @escaping ([ChatModel]) -> ()) -> () {
+        var personalChatsToReturn : [ChatModel] = []
+        var groupD = DispatchGroup()
+        
+        groupD.enter()
+        for chat in personalChats {
+            COLLECTION_PERSONAL_CHAT.document(chat).getDocument { snapshot , err in
+                if err != nil {
+                    print("ERROR")
+                    return
+                }
+                
+                let data = snapshot?.data() as? [String:Any] ?? [:]
+                
+                personalChatsToReturn.append(ChatModel(dictionary: data))
+                groupD.leave()
+            }
+        }
+        
+        groupD.leave()
+        
+        groupD.notify(queue: .main, execute: {
+            return completion(personalChatsToReturn)
+        })
     }
     
     func fetchUserFriendsList(friendsList: [String], completion: @escaping ([User]) -> ()) -> (){
@@ -965,7 +999,22 @@ class UserViewModel : ObservableObject {
         
         COLLECTION_USER.document(friendID ).updateData(["friendsListID":FieldValue.arrayUnion([user?.id ?? " "])])
         
+        let id = UUID().uuidString
+        let chatData = ["dateCreated":Date(),
+                        "usersID":[friendID,user?.id ?? " "],
+                        "id":id,
+                        "chatType":"personal"] as [String:Any]
+        //create personal chat
+        COLLECTION_PERSONAL_CHAT.document(id).setData(chatData){ err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+        }
         
+        COLLECTION_USER.document(self.user?.id ?? " ").updateData(["personalChatsID":FieldValue.arrayUnion([id])])
+        
+        COLLECTION_USER.document(friendID).updateData(["personalChatsID":FieldValue.arrayUnion([id])])
     }
     
     

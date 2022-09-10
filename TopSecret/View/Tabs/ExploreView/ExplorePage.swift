@@ -28,7 +28,7 @@ struct ExplorePage: View {
                 HStack{
                     SearchBar(text: $searchVM.searchText, placeholder: "search for users and groups", onSubmit: {
                       submit()
-                    }, showKeyboard: showSearch)
+                    })
                     
                     Button(action:{
                         withAnimation(.easeOut){

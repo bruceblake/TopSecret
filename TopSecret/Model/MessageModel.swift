@@ -13,17 +13,14 @@ import Firebase
 struct Message : Identifiable{
     var id: String
     var nameColor: String?
+    var messageColor : String
+    var userID : String
     var timeStamp : Timestamp?
     var messageTimeStamp: Timestamp?
     var name : String?
     var messageValue : String?
     var profilePicture: String?
     var messageType: String?
-    var repliedMessageName : String?
-    var repliedMessageValue: String?
-    var repliedMessageProfilePicture: String?
-    var repliedMessageNameColor: String?
-    var repliedMessageTimestamp: Timestamp?
     var edited: Bool?
     
     enum MessageType {
@@ -38,6 +35,7 @@ struct Message : Identifiable{
     
     init(dictionary: [String:Any]){
         self.messageTimeStamp = dictionary["messageTimeStamp"] as? Timestamp ?? Timestamp()
+        self.messageColor = dictionary["messageColor"] as? String ?? ""
         self.timeStamp = dictionary["timeStamp"] as? Timestamp ?? Timestamp()
         self.name = dictionary["name"] as? String ?? " "
         self.profilePicture = dictionary["profilePicture"] as? String ?? " "
@@ -45,18 +43,15 @@ struct Message : Identifiable{
         self.nameColor = dictionary["nameColor"] as? String ?? " "
         self.messageValue = dictionary["messageValue"] as? String ?? ""
         self.messageType = dictionary["messageType"] as? String ?? ""
-        self.repliedMessageName = dictionary["repliedMessageName"] as? String ?? ""
-        self.repliedMessageValue = dictionary["repliedMessageValue"] as? String ?? ""
-        self.repliedMessageProfilePicture = dictionary["repliedMessageProfilePicture"] as? String ?? ""
-        self.repliedMessageNameColor = dictionary["repliedMessageNameColor"] as? String ?? ""
-        self.repliedMessageTimestamp = dictionary["repliedMessageTimestamp"] as? Timestamp ?? Timestamp()
+        self.userID = dictionary["userID"] as? String ?? " "
         self.edited = dictionary["edited"] as? Bool ?? false
     }
     
     
     init(){
         self.id = UUID().uuidString
-        
+        self.userID = UUID().uuidString
+        self.messageColor = "orange"
     }
   
     

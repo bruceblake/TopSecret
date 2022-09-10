@@ -10,6 +10,7 @@ import SwiftUI
 struct FriendsView: View {
     @EnvironmentObject var userVM : UserViewModel
     @StateObject var searchVM = SearchRepository()
+    @StateObject var chatVM = GroupChatViewModel()
     var body: some View {
         ZStack{
             Color("Background")
@@ -21,11 +22,35 @@ struct FriendsView: View {
                 }.padding(.top,50).padding(.horizontal)
                 
                 
+                SearchBar(text: $searchVM.searchText, placeholder: "friends", onSubmit: {
+                    
+                })
                 ScrollView{
                     VStack{
-                        ForEach(userVM.user?.friendsList ?? [], id: \.id){ friend in
-                            UserSearchCell(user: friend, showActivity: false)
+                        
+                if searchVM.searchText == "" {
+                    
+                        ForEach(userVM.user?.personalChats ?? [], id: \.id){ chat in
+                            Button(action:{
+                                
+                            },label:{
+                                Text("\(chat.id)")
+                            })
                         }
+
+                }else{
+                    
+                        ForEach(searchVM.userFriendsReturnedResults, id: \.id){ user in
+                            
+                            Button(action:{
+                                
+                            },label:{
+                                UserSearchCell(user: user, showActivity: false)
+                            })
+    
+                        }
+                    
+                }
                     }
                 }
                 

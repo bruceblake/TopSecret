@@ -190,11 +190,6 @@ class MessageRepository : ObservableObject {
              "profilePicture":replyMessage.profilePicture ?? "",
              "messageType":"replyMessage",
              "messageValue":replyMessage.messageValue ?? "",
-             "repliedMessageValue":replyMessage.repliedMessageValue,
-             "repliedMessageName":replyMessage.repliedMessageName,
-             "repliedMessageProfilePicture":replyMessage.repliedMessageProfilePicture,
-             "repliedMessageTimestamp":replyMessage.repliedMessageTimestamp,
-             "repliedMessageNameColor":replyMessage.repliedMessageNameColor
             ]
             
         )

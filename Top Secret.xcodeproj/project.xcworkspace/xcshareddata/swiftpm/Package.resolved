@@ -204,8 +204,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio-ssl.git",
         "state": {
           "branch": null,
-          "revision": "0265283d3539ced108b9b8287eb3328c9d85acdc",
-          "version": "2.21.0"
+          "revision": "a6f9a034e5903024c6bac4ce2c56b157688d844f",
+          "version": "2.22.0"
         }
       },
       {

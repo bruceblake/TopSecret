@@ -19,6 +19,7 @@ let COLLECTION_POLLS = Firestore.firestore().collection("Polls")
 let COLLECTION_EVENTS = Firestore.firestore().collection("Events")
 let COLLECTION_PERSONAL_CHAT = Firestore.firestore().collection("Personal Chats")
 let COLLECTION_GALLERY_POSTS = Firestore.firestore().collection("Gallery Posts")
+let COLLECTION_JUNCTION_GROUP_USER = Firestore.firestore().collection("Junction_Group_User")
 
 let FOREGROUNDCOLOR : Color = Color("Foreground")
 let BACKGROUNDCOLOR : Color = Color("Background")

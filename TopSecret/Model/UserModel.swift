@@ -39,7 +39,8 @@ struct User : Identifiable, Hashable{
     var fcmToken : String?
     var groupsID : [String]?
     var recentSearches : [String]?
-
+    var personalChatsID : [String]
+    var personalChats : [ChatModel]
 
 init(dictionary: [String:Any]) {
     self.id = dictionary["uid"] as? String ?? " "
@@ -67,13 +68,16 @@ init(dictionary: [String:Any]) {
     self.fcmToken = dictionary["fcmToken"] as? String ?? " "
     self.groupsID = dictionary["groupsID"] as? [String] ?? []
     self.recentSearches = dictionary["recentSearches"] as? [String] ?? []
+    self.personalChatsID = dictionary["personalChatsID"] as? [String] ?? []
+    self.personalChats = dictionary["personalChats"] as? [ChatModel] ?? []
  }
 
     init(){
         self.id = UUID().uuidString
         self.username = "username"
         self.nickName = "nickName" 
-
+        self.personalChatsID = []
+        self.personalChats = []
     }
     
     

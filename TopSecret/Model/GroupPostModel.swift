@@ -17,6 +17,7 @@ struct GroupPostModel : Identifiable {
     var urlPath: String
     var creatorID: String
     var timeStamp : Timestamp
+    var taggedUsers : [String]
     
     
     init(dictionary: [String:Any]){
@@ -26,5 +27,6 @@ struct GroupPostModel : Identifiable {
         self.urlPath = ["urlPath"] as? String ?? ""
         self.creatorID = ["creatorID"] as? String ?? ""
         self.timeStamp = ["timeStamp"] as? Timestamp ?? Timestamp()
+        self.taggedUsers = ["taggedUsers"] as? [String] ?? []
     }
 }

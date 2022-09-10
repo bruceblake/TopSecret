@@ -13,6 +13,8 @@ import Firebase
 class GroupChatViewModel : ObservableObject {
     @Published var groupChat : ChatModel?
     @Published var messages : [Message] = []
+    @Published var text: String = ""
+    @Published var currentChatColor = "green"
     @Published var scrollToBottom = 0
     @Published var usersIdling : [User] = []
     @Published var usersTyping : [User] = []
@@ -77,8 +79,8 @@ class GroupChatViewModel : ObservableObject {
     
     //action
     
-    func sendTextMessage(text: String, user: User, timeStamp: Timestamp, nameColor: String, messageID: String,messageType: String, chatID: String, chatType: String, groupID: String){
-        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).collection("Messages").document(messageID).setData(["name":user.nickName ?? "","timeStamp":timeStamp, "nameColor":nameColor, "id":messageID,"profilePicture":user.profilePicture ?? "","messageType":messageType,"messageValue":text])
+    func sendTextMessage(text: String, user: User, timeStamp: Timestamp, nameColor: String, messageID: String,messageType: String, chatID: String, groupID: String, messageColor: String){
+        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).collection("Messages").document(messageID).setData(["name":user.nickName ?? "","timeStamp":timeStamp, "nameColor":nameColor, "id":messageID,"profilePicture":user.profilePicture ?? "","messageType":messageType,"messageValue":text,"userID":user.id ?? " ", "messageColor":messageColor])
         
         
         let notificationID = UUID().uuidString
@@ -259,19 +261,8 @@ class GroupChatViewModel : ObservableObject {
     
 
     
-    func readLastMessage(chatID: String, groupID: String) -> Message {
-        var messageToReturn : Message = Message()
-        let dp = DispatchGroup()
-        
-        dp.enter()
-        readAllMessages(chatID: chatID, groupID: groupID)
-        dp.leave()
-        
-        dp.notify(queue: .main, execute: {
-            messageToReturn = self.messages.last ?? Message()
-        })
-        
-        return messageToReturn
+    func readLastMessage() -> Message {
+        return self.messages.last ?? Message()
     }
     
     

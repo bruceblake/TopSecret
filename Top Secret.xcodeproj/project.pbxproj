@@ -473,6 +473,7 @@
 			children = (
 				7853519227CA9CC500B10AC0 /* Group Story */,
 				78F8675127C46C5800750F51 /* AddContentView.swift */,
+				78D6B4FF27CF140700D456AE /* GalleryPostLikeListView.swift */,
 				78F8675627C51F7700750F51 /* CreateCountdownView.swift */,
 				7853518827C6863600B10AC0 /* CreateGalleryPostView.swift */,
 				78CB3552286548EC009940C8 /* InviteUserToGroup.swift */,
@@ -510,7 +511,6 @@
 				78F8675327C4839D00750F51 /* GroupProfile */,
 				7818EC7A27C2C57600DFE58F /* CreateGroupView.swift */,
 				629710F826E560FA00A90E61 /* AddContent */,
-				78D6B4FF27CF140700D456AE /* GalleryPostLikeListView.swift */,
 				784D74B52887870E00720401 /* LocationManager.swift */,
 				78B003B728B42647006E6183 /* GroupChatView.swift */,
 			);
@@ -1445,7 +1445,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "Top Secret.entitlements";
-				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_IDENTITY = "Apple Development: Ronald Blake (8AA56WB474)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"TopSecret/Preview Content\"";
 				DEVELOPMENT_TEAM = UV9FN34P25;
@@ -1473,7 +1473,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "Top Secret.entitlements";
-				CODE_SIGN_IDENTITY = "Apple Development";
+				CODE_SIGN_IDENTITY = "Apple Development: Ronald Blake (8AA56WB474)";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"TopSecret/Preview Content\"";
 				DEVELOPMENT_TEAM = UV9FN34P25;

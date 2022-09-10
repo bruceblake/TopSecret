@@ -15,6 +15,8 @@ struct CreateGroupPostView: View {
     @State var openImagePicker: Bool = false
     @State var post = UIImage(named: "Icon")!
     @State var showOverlay : Bool = false
+    @State var showTaggedUsersView: Bool = false
+    @State var selectedUsers: [User] = []
     var body: some View {
         ZStack{
             Color("Background")
@@ -37,6 +39,41 @@ struct CreateGroupPostView: View {
                 }.padding(.top,50)
                 
                 Spacer()
+                
+                Button(action:{
+                    self.showTaggedUsersView.toggle()
+                },label:{
+                    
+                Text("Add Tagged Users")
+                }).fullScreenCover(isPresented: $showTaggedUsersView) {
+                    
+                } content: {
+                    VStack{
+                        ForEach(userVM.user?.friendsList ?? [], id: \.id){ friend in
+                            
+                            Button(action:{
+                                self.selectedUsers.append(friend)
+                            },label:{
+                                UserSearchCell(user: friend, showActivity: false)
+                            })
+                        }
+                        ScrollView(.horizontal){
+                            HStack{
+                                ForEach(selectedUsers){ user in
+                                    Button(action:{
+                                        self.selectedUsers.removeAll { removedUser in
+                                            user.id == removedUser.id
+                                        }
+                                    },label:{
+                                    Text("\(user.nickName ?? " ")")
+                                    })
+                                }
+                            }
+                        }
+                    }
+                }
+
+                
                 
                 Button(action:{
                     self.openImagePicker.toggle()

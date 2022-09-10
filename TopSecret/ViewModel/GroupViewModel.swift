@@ -219,7 +219,11 @@ class GroupViewModel: ObservableObject {
         
     
         COLLECTION_USER.document(users[0]).updateData(["groupsID":FieldValue.arrayUnion([id])])
-
+        for user in users {
+            
+            COLLECTION_JUNCTION_GROUP_USER.document("\(id)\(user)").setData(["groupID":id,
+                                                                             "userID":user]) //groupid , userid
+        }
         
         let chatID = UUID().uuidString
 
@@ -254,7 +258,11 @@ class GroupViewModel: ObservableObject {
         let chatID = UUID().uuidString
         
         COLLECTION_USER.document(users[0]).updateData(["groupsID":FieldValue.arrayUnion([id])])
-
+        for user in users {
+            
+            COLLECTION_JUNCTION_GROUP_USER.document("\(id)\(user)").setData(["groupID":id,
+                                                                             "userID":user]) //groupid , userid
+        }
 
         let data = ["groupName" : groupName,
                     "users" : users ,
