@@ -72,6 +72,7 @@ struct GroupGalleryView: View {
                 }.padding(.top).padding(.bottom,10)
                 
            
+                Spacer()
                 
                 
                 //Gallery

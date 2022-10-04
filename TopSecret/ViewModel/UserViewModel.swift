@@ -479,7 +479,8 @@ class UserViewModel : ObservableObject {
                 let data = snapshot?.data() as? [String:Any] ?? [:]
                 
                 personalChatsToReturn.append(ChatModel(dictionary: data))
-                groupD.leave()
+            
+                
             }
         }
         

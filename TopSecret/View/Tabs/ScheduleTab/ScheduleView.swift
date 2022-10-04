@@ -379,7 +379,7 @@ struct UserCalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitch
            
             
             NavigationLink(isActive: $showSelectedDay) {
-                SelectedDayView(date: date)
+                SelectedDayView(date: date, events: calendarVM.eventsResults)
             } label: {
                 EmptyView()
             }

@@ -282,7 +282,7 @@ struct CalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitcher: 
             }
             
             NavigationLink(isActive: $showSelectedDay) {
-                SelectedDayView(date: date)
+                SelectedDayView(date: date, events: calendarVM.eventsResults)
             } label: {
                 EmptyView()
             }
@@ -313,6 +313,7 @@ struct CalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitcher: 
 
 struct SelectedDayView : View {
     var date : Date
+    var events: [EventModel]
     @Environment(\.presentationMode) var presentationMode
     var body: some View {
         ZStack{
@@ -332,8 +333,44 @@ struct SelectedDayView : View {
                 }.padding(.top,50)
                 
                 Spacer()
-                Text("No Events Today!")
+                VStack(spacing: 7){
+                    ForEach(events, id: \.id){ event in
+                      
+                            if Calendar.current.isDate(event.eventStartTime?.dateValue() ?? Date(), inSameDayAs: date)
+                              {
+                                HStack{
+                                    VStack(alignment: .leading, spacing: 5){
+                                        Text(event.eventName ?? "").font(.title2).bold().foregroundColor(FOREGROUNDCOLOR)
+                                        HStack(alignment: .center){
+                                            Image(systemName: "clock").font(.footnote).foregroundColor(Color.gray)
+                                            Text(event.eventStartTime?.dateValue() ?? Date(), style: .time).font(.headline)
+                                            Text("-").font(.headline)
+                                            Text(event.eventEndTime?.dateValue() ?? Date(), style: .time).font(.headline)
+                                        }.foregroundColor(FOREGROUNDCOLOR)
+                                       
+                                        HStack{
+                                            HStack(alignment: .center){
+                                                Image(systemName: "mappin.and.ellipse").foregroundColor(Color.gray).font(.footnote)
+                                                Text(event.eventLocation ?? "").font(.footnote)
+                                            }
+                                            Text("|")
+                                        Text("4 attending").font(.footnote)
+                                        }.foregroundColor(FOREGROUNDCOLOR.opacity(0.7))
+                                    }
+                                    
+                                 
+                                }
+                            }
+                        
+                        
+                    
+                       
+                    }
+                }
+                
+                    
                 Spacer()
+                
             }
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
     }
