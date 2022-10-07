@@ -129,7 +129,6 @@ class GroupViewModel: ObservableObject {
     func joinGroup(group: Group, user: User){
         COLLECTION_GROUP.document(group.id).updateData(["users":FieldValue.arrayUnion([user.id])])
         COLLECTION_GROUP.document(group.id).updateData(["memberAmount":FieldValue.increment(Int64(1))])
-        COLLECTION_USER.document(user.id ?? " ").updateData(["groupsID":FieldValue.arrayUnion([group.id])])
             
              
            
@@ -163,7 +162,6 @@ class GroupViewModel: ObservableObject {
     func leaveGroup(group: Group, user: User){
         COLLECTION_GROUP.document(group.id).updateData(["memberAmount": FieldValue.increment(Int64(-1))])
         COLLECTION_GROUP.document(group.id).updateData(["users":FieldValue.arrayRemove([user.id ?? " "])])
-        COLLECTION_USER.document(user.id ?? " ").updateData(["groupsID":FieldValue.arrayRemove([group.id])])
 
         
         COLLECTION_GROUP.document(group.id).getDocument { (snapshot, err) in
@@ -218,7 +216,6 @@ class GroupViewModel: ObservableObject {
         
         
     
-        COLLECTION_USER.document(users[0]).updateData(["groupsID":FieldValue.arrayUnion([id])])
         for user in users {
             
             COLLECTION_JUNCTION_GROUP_USER.document("\(id)\(user)").setData(["groupID":id,
@@ -257,7 +254,6 @@ class GroupViewModel: ObservableObject {
         let id = UUID().uuidString
         let chatID = UUID().uuidString
         
-        COLLECTION_USER.document(users[0]).updateData(["groupsID":FieldValue.arrayUnion([id])])
         for user in users {
             
             COLLECTION_JUNCTION_GROUP_USER.document("\(id)\(user)").setData(["groupID":id,

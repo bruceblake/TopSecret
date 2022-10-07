@@ -72,6 +72,8 @@
 		786D0C4327A9BAE400F4D611 /* PollInfoOverlay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786D0C4227A9BAE400F4D611 /* PollInfoOverlay.swift */; };
 		786D0C4927AA219300F4D611 /* NavBar.swift in Sources */ = {isa = PBXBuildFile; fileRef = 786D0C4827AA219300F4D611 /* NavBar.swift */; };
 		787E2DA326FB9CCB00670DA4 /* ChatInfoView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 787E2DA226FB9CCB00670DA4 /* ChatInfoView.swift */; };
+		787F33EA28EE3BBE00D5F798 /* RecentSearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 787F33E928EE3BBE00D5F798 /* RecentSearchViewModel.swift */; };
+		787F33EC28EF0F3F00D5F798 /* RecentSearchModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 787F33EB28EF0F3F00D5F798 /* RecentSearchModel.swift */; };
 		7887955C28760F0700B2FE23 /* FullCountdownView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7887955B28760F0700B2FE23 /* FullCountdownView.swift */; };
 		7887955E2876141500B2FE23 /* CountdownViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7887955D2876141500B2FE23 /* CountdownViewModel.swift */; };
 		788A470727551295003A6232 /* EnterUserProfilePicture.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788A470627551295003A6232 /* EnterUserProfilePicture.swift */; };
@@ -286,6 +288,8 @@
 		786D0C4227A9BAE400F4D611 /* PollInfoOverlay.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PollInfoOverlay.swift; sourceTree = "<group>"; };
 		786D0C4827AA219300F4D611 /* NavBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavBar.swift; sourceTree = "<group>"; };
 		787E2DA226FB9CCB00670DA4 /* ChatInfoView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatInfoView.swift; sourceTree = "<group>"; };
+		787F33E928EE3BBE00D5F798 /* RecentSearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentSearchViewModel.swift; sourceTree = "<group>"; };
+		787F33EB28EF0F3F00D5F798 /* RecentSearchModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecentSearchModel.swift; sourceTree = "<group>"; };
 		7887955B28760F0700B2FE23 /* FullCountdownView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FullCountdownView.swift; sourceTree = "<group>"; };
 		7887955D2876141500B2FE23 /* CountdownViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CountdownViewModel.swift; sourceTree = "<group>"; };
 		788A470627551295003A6232 /* EnterUserProfilePicture.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EnterUserProfilePicture.swift; sourceTree = "<group>"; };
@@ -668,6 +672,7 @@
 				78B593612895CAE9006F5FDF /* GroupGalleryImageModel.swift */,
 				78E550B72898451800CDC240 /* PollOptionModel.swift */,
 				78BBF4E128C773040023354A /* GroupPostModel.swift */,
+				787F33EB28EF0F3F00D5F798 /* RecentSearchModel.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -705,6 +710,7 @@
 				78D2BF1C28B17B8D000F0D00 /* UserCalendarViewModel.swift */,
 				78B003B928B42803006E6183 /* GroupChatViewModel.swift */,
 				78BBF4DF28C771F60023354A /* CreateGroupPostViewModel.swift */,
+				787F33E928EE3BBE00D5F798 /* RecentSearchViewModel.swift */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";
@@ -1146,6 +1152,7 @@
 				7853518B27C6A72F00B10AC0 /* GalleryPostCell.swift in Sources */,
 				78CB3553286548EC009940C8 /* InviteUserToGroup.swift in Sources */,
 				62CE5ADA26DEE44E00AE6ACC /* VotingView.swift in Sources */,
+				787F33EA28EE3BBE00D5F798 /* RecentSearchViewModel.swift in Sources */,
 				78EBBC2D28808D7800095D05 /* HomeCalendarViewModel.swift in Sources */,
 				786BD9FC27CE62C500FDDE1E /* GameView.swift in Sources */,
 				78C7DF79287DDC360099971D /* GroupStoryViewModel.swift in Sources */,
@@ -1153,6 +1160,7 @@
 				78B0928127B2F528003B27A6 /* BlockedAccountsView.swift in Sources */,
 				7817085F270B327C00975014 /* PollViewModel.swift in Sources */,
 				788A470727551295003A6232 /* EnterUserProfilePicture.swift in Sources */,
+				787F33EC28EF0F3F00D5F798 /* RecentSearchModel.swift in Sources */,
 				78D1A75D26DF16D50083FE2C /* ChatView.swift in Sources */,
 				78C574DB27A041F400A7F7AE /* ReplyMessageCell.swift in Sources */,
 				78A3480E27906950006D32D7 /* PollInfoCell.swift in Sources */,
@@ -1445,7 +1453,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "Top Secret.entitlements";
-				CODE_SIGN_IDENTITY = "Apple Development: Ronald Blake (8AA56WB474)";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"TopSecret/Preview Content\"";
 				DEVELOPMENT_TEAM = UV9FN34P25;
@@ -1473,7 +1481,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "Top Secret.entitlements";
-				CODE_SIGN_IDENTITY = "Apple Development: Ronald Blake (8AA56WB474)";
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				DEVELOPMENT_ASSET_PATHS = "\"TopSecret/Preview Content\"";
 				DEVELOPMENT_TEAM = UV9FN34P25;

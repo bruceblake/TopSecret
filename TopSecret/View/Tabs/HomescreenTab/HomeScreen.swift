@@ -15,9 +15,9 @@ struct HomeScreen: View {
     @State var selectedGroup : Group = Group()
     @State var users: [User] = []
     @StateObject var selectedGroupVM = SelectedGroupViewModel()
-    @State var selectedOption = 1
+    @State var selectedOption = 0
     @State var showSearch : Bool = false
-
+    
     var body: some View {
         ZStack{
             Color("Background")

@@ -52,7 +52,7 @@ struct UserProfilePage: View {
                     Button(action:{
                         self.showInfo.toggle()
                     },label:{
-                        Text("...")
+                        Text("...").font(.title3)
                     }).padding(.trailing,10)
                     
                 }.padding(.top,50)
@@ -101,34 +101,7 @@ struct UserProfilePage: View {
                     Spacer()
                     
                 }.padding(.top,10)
-                
-                VStack(alignment: .leading){
-                    HStack{
-                        
-                    Text("Mutuals").font(.body).bold()
-                        Button(action:{
-                            
-                        },label:{
-                            Text("See All").font(.caption)
-                        })
-                    }.padding(10)
-                    VStack(alignment: .leading){
-                        ScrollView(.horizontal, showsIndicators: false){
-                            HStack{
-                                ForEach(user.friendsList ?? [], id: \.id) { friend in
-                                    if friend.id != userVM.user?.id ?? "" || friend.id != user.id ?? ""{
-                                    NavigationLink {
-                                        UserProfilePage(user: friend)
-                                    } label: {
-                                        MutualFriendCell(user: friend, backgroundColor: Color("Color"))
-                                    }
-                                    }
-
-                                }
-                            }
-                        }
-                    }.padding(.horizontal,10)
-                }
+              
                
                 
                     

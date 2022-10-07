@@ -11,8 +11,8 @@ struct ForgotPasswordView: View {
     
     @Binding var showForgotPasswordView: Bool
     @State var email: String = ""
-    @State var isNext: Bool = false
     @EnvironmentObject var userAuthVM: UserViewModel
+    
 
     
     var body: some View {
@@ -29,7 +29,6 @@ struct ForgotPasswordView: View {
                 
                 
                 Button(action: {
-                    self.isNext.toggle()
                     userAuthVM.resetPassword(email: email)
                 }, label: {
                     Text("Next")

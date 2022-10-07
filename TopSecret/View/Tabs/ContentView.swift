@@ -190,7 +190,7 @@ struct Tabs : View {
                             },label:{
                                 
                             ZStack{
-                                Circle().frame(width: 40, height: 40).foregroundColor(Color("AccentColor"))
+                                Circle().frame(width: 50, height: 50).foregroundColor(Color("AccentColor"))
                                 Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 30))
 
                             }
