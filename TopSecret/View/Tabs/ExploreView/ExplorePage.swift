@@ -22,6 +22,7 @@ struct ExplorePage: View {
         searchVM.hasSearched = true
         openSearchedView.toggle()
         recentSearchVM.addToRecentSearches(searchText: searchVM.searchText)
+        
     }
     var body: some View {
         ZStack{
@@ -121,17 +122,7 @@ struct ExplorePage: View {
             } label: {
                 EmptyView()
             }
-            NavigationLink(isActive: $openGroupProfile) {
-                GroupProfileView(group: $selectedGroup, isInGroup: selectedGroup.users?.contains(userVM.user?.id ?? " ") ?? false, showProfileView: $openGroupProfile)
-            } label: {
-                EmptyView()
-            }
-            NavigationLink(isActive: $openUserProfile) {
-                UserProfilePage(user: selectedUser)
-            } label: {
-                EmptyView()
-            }
-
+       
 
             
           
@@ -334,5 +325,16 @@ struct ExplorePageSearchList : View {
             
             
         }
+        NavigationLink(isActive: $openGroupProfile) {
+            GroupProfileView(group: $selectedGroup, isInGroup: selectedGroup.users?.contains(userVM.user?.id ?? " ") ?? false, showProfileView: $openGroupProfile)
+        } label: {
+            EmptyView()
+        }
+        NavigationLink(isActive: $openUserProfile) {
+            UserProfilePage(user: selectedUser)
+        } label: {
+            EmptyView()
+        }
+
     }
 }

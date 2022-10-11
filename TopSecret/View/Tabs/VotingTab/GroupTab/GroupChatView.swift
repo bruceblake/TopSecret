@@ -25,6 +25,7 @@ struct GroupChatView: View {
     @State var keyboardHeight : CGFloat = 0
     @State var showMenu : Bool = false
     @State var openAddContent : Bool = false
+    @State private var scrollViewOffset = CGFloat.zero
     
     func initKeyboardGuardian(){
         NotificationCenter.default.addObserver(forName: UIResponder.keyboardDidShowNotification, object: nil, queue: .main) { data in
@@ -48,67 +49,12 @@ struct GroupChatView: View {
             VStack{
                 
                 //Top Bar
-                HStack{
-                    
-                    Button(action:{
-                        presentationMode.wrappedValue.dismiss()
-                    },label:{
-                        ZStack{
-                            Circle().foregroundColor(Color("Color")).frame(width: 32, height: 32)
-                            
-                            Image(systemName: "chevron.left")
-                                .font(.title3).foregroundColor(FOREGROUNDCOLOR)
-                        }
-                    })
-                    
-                    
-                    
-                    Button(action:{
-                        
-                    },label:{
-                        ZStack{
-                            Circle().foregroundColor(Color("Color")).frame(width: 32, height: 32)
-                            
-                            Image(systemName: "info")
-                                .font(.title3).foregroundColor(FOREGROUNDCOLOR)
-                        }
-                    })
-                    
-                    Spacer()
-                    
-                    Text("\(groupVM.group?.groupName ?? "")").foregroundColor(FOREGROUNDCOLOR).font(.largeTitle)
-                    
-                    Spacer()
-                    
-                    Button(action:{
-                        
-                    },label:{
-                        ZStack{
-                            Circle().foregroundColor(Color("Color")).frame(width: 32, height: 32)
-                            
-                            Image(systemName: "video.fill")
-                                .font(.headline).foregroundColor(FOREGROUNDCOLOR)
-                        }
-                    })
-                    
-                    
-                    Button(action:{
-                        
-                    },label:{
-                        ZStack{
-                            Circle().foregroundColor(Color("Color")).frame(width: 32, height: 32)
-                            
-                            Image(systemName: "gear")
-                                .font(.title3).foregroundColor(FOREGROUNDCOLOR)
-                        }
-                    })
-                }.padding(.horizontal).padding(.top,40)
                 
                 
                 //Active Users
                 VStack{
                 ScrollView(.horizontal){
-                    HStack(spacing: 0){
+                    HStack(spacing: 5){
                         ForEach(chatVM.groupChat?.users ?? [], id: \.id){ user in
                             
                             NavigationLink(destination: UserProfilePage(user: user), label:{
@@ -136,14 +82,14 @@ struct GroupChatView: View {
                     }
                     
                     
-                }
+                }.padding(5)
                 Divider()
             }
                 ZStack(alignment: .bottomTrailing){
                     
                     ScrollView{
                         ScrollViewReader { scrollViewProxy in
-                                VStack{
+                            VStack(spacing: 0){
                                 ForEach(chatVM.messages, id: \.id){ message in
                                     if message.messageType == "text"{
                                         MessageTextCell(showMenu: $showMenu, message: message, chatID: chatID)
@@ -152,7 +98,12 @@ struct GroupChatView: View {
                                     }
                                 }
                                     HStack{Spacer()}.padding(0).id("Empty")
-                                }.padding(5).onReceive(chatVM.$scrollToBottom, perform: { _ in
+                                }.background(GeometryReader{ proxy -> Color in
+                                    DispatchQueue.main.async{
+                                        scrollViewOffset = -proxy.frame(in: .named("scroll")).origin.y
+                                    }
+                                    return Color.clear
+                                }).padding(5).onReceive(chatVM.$scrollToBottom, perform: { _ in
                                     withAnimation(.easeOut(duration: 0.5)){
                                         
                                         self.scrollToBottom(scrollViewProxy: scrollViewProxy)
@@ -163,7 +114,7 @@ struct GroupChatView: View {
                             
                         }
                      
-                    }
+                    }.coordinateSpace(name: "scroll")
                     
                     Button(action:{
                         chatVM.scrollToBottom += 1
@@ -197,10 +148,11 @@ struct GroupChatView: View {
                         chatVM.sendTextMessage(text: chatVM.text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: "green", messageID: UUID().uuidString, messageType: chatVM.readLastMessage().userID == userVM.user?.id ?? " "  ? "followUpUserText" : "text", chatID: chatID, groupID: groupID, messageColor: chatVM.currentChatColor)
                         chatVM.text = ""
                         chatVM.scrollToBottom += 1
+                        
 
                     },label:{
-                        Text("Send").disabled(!(self.chatVM.text != "")).padding(5).background(RoundedRectangle(cornerRadius: 12).fill(Color("Background")))
-                    })
+                        Text("Send").padding(5).background(RoundedRectangle(cornerRadius: 12).fill(Color("Background")))
+                    }).disabled(!(self.chatVM.text != ""))
                 }.padding().padding(.bottom,10)
                 }.background(Color("Color")).offset(y: -self.keyboardHeight)
                 
@@ -236,7 +188,7 @@ struct GroupChatView: View {
                     
             UIApplication.shared.windows.first?.rootViewController?.view.endEditing(true)
                 }
-        }
+            }
     }
 }
 
@@ -331,3 +283,5 @@ struct ResizableTF : UIViewRepresentable {
     
   
 }
+
+

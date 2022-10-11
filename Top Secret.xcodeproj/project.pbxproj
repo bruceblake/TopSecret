@@ -80,6 +80,9 @@
 		788B8F2127D3072F00267030 /* BackCircleButton.swift in Sources */ = {isa = PBXBuildFile; fileRef = 788B8F2027D3072F00267030 /* BackCircleButton.swift */; };
 		788B8F2A27D3AEA100267030 /* SwiftUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 788B8F2927D3AEA100267030 /* SwiftUI.framework */; settings = {ATTRIBUTES = (Weak, ); }; };
 		788B8F3F27D3C09300267030 /* SCSDKCreativeKit.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 788B8F3B27D3BC9000267030 /* SCSDKCreativeKit.xcframework */; };
+		789136C428F58CEA005278E1 /* PlaceModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789136C328F58CEA005278E1 /* PlaceModel.swift */; };
+		789136C628F593DA005278E1 /* LocationSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789136C528F593D9005278E1 /* LocationSearchView.swift */; };
+		789136C828F593FC005278E1 /* LocationSearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789136C728F593FC005278E1 /* LocationSearchViewModel.swift */; };
 		789FC2CB2617DA720021616B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 789FC2CA2617DA720021616B /* Assets.xcassets */; };
 		789FC2E32617DCC80021616B /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 789FC2E22617DCC80021616B /* FirebaseFirestore */; };
 		789FC2E52617DCC80021616B /* FirebaseDatabase in Frameworks */ = {isa = PBXBuildFile; productRef = 789FC2E42617DCC80021616B /* FirebaseDatabase */; };
@@ -97,6 +100,7 @@
 		78A61F0D26B9B79800671021 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78A61F0C26B9B79800671021 /* LoginView.swift */; };
 		78A61F1E26BB19F700671021 /* RegisterEmailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78A61F1D26BB19F700671021 /* RegisterEmailView.swift */; };
 		78A61F2526BB1C7C00671021 /* ForgotPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78A61F2426BB1C7C00671021 /* ForgotPasswordView.swift */; };
+		78A9707E28F351420087B5AE /* Amadeus in Frameworks */ = {isa = PBXBuildFile; productRef = 78A9707D28F351420087B5AE /* Amadeus */; };
 		78ADC64827628105001E831B /* GroupUsersProfilePictureCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78ADC64727628104001E831B /* GroupUsersProfilePictureCell.swift */; };
 		78B003B128B3A30E006E6183 /* FriendsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78B003B028B3A30E006E6183 /* FriendsView.swift */; };
 		78B003B328B3AE7C006E6183 /* FriendCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78B003B228B3AE7C006E6183 /* FriendCell.swift */; };
@@ -296,6 +300,9 @@
 		788B8F2027D3072F00267030 /* BackCircleButton.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackCircleButton.swift; sourceTree = "<group>"; };
 		788B8F2927D3AEA100267030 /* SwiftUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SwiftUI.framework; path = System/Library/Frameworks/SwiftUI.framework; sourceTree = SDKROOT; };
 		788B8F3B27D3BC9000267030 /* SCSDKCreativeKit.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = SCSDKCreativeKit.xcframework; path = Pods/SnapSDK/SCSDKCreativeKit.xcframework; sourceTree = "<group>"; };
+		789136C328F58CEA005278E1 /* PlaceModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceModel.swift; sourceTree = "<group>"; };
+		789136C528F593D9005278E1 /* LocationSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationSearchView.swift; sourceTree = "<group>"; };
+		789136C728F593FC005278E1 /* LocationSearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationSearchViewModel.swift; sourceTree = "<group>"; };
 		789FC2C32617DA700021616B /* Top Secret.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Top Secret.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		789FC2CA2617DA720021616B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		789FC2CD2617DA720021616B /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
@@ -440,6 +447,7 @@
 				788B8F2A27D3AEA100267030 /* SwiftUI.framework in Frameworks */,
 				789FC2E52617DCC80021616B /* FirebaseDatabase in Frameworks */,
 				78D6B53327D2861000D456AE /* SCSDKLoginKit.xcframework in Frameworks */,
+				78A9707E28F351420087B5AE /* Amadeus in Frameworks */,
 				789FC2ED2617DCC80021616B /* FirebaseAuth in Frameworks */,
 				78199CEA28467F7F00335E52 /* MapKit.framework in Frameworks */,
 				788B8F3F27D3C09300267030 /* SCSDKCreativeKit.xcframework in Frameworks */,
@@ -673,6 +681,7 @@
 				78E550B72898451800CDC240 /* PollOptionModel.swift */,
 				78BBF4E128C773040023354A /* GroupPostModel.swift */,
 				787F33EB28EF0F3F00D5F798 /* RecentSearchModel.swift */,
+				789136C328F58CEA005278E1 /* PlaceModel.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -711,6 +720,7 @@
 				78B003B928B42803006E6183 /* GroupChatViewModel.swift */,
 				78BBF4DF28C771F60023354A /* CreateGroupPostViewModel.swift */,
 				787F33E928EE3BBE00D5F798 /* RecentSearchViewModel.swift */,
+				789136C728F593FC005278E1 /* LocationSearchViewModel.swift */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";
@@ -897,6 +907,7 @@
 				78C74CDF27821A690009E08C /* CreateEventView.swift */,
 				78C1B2C02863BEC600A5DE58 /* FullEventView.swift */,
 				7887955B28760F0700B2FE23 /* FullCountdownView.swift */,
+				789136C528F593D9005278E1 /* LocationSearchView.swift */,
 			);
 			path = ScheduleTab;
 			sourceTree = "<group>";
@@ -1006,6 +1017,7 @@
 				78B593592895B09B006F5FDF /* MediaCore */,
 				78B5935B2895B09B006F5FDF /* MediaSwiftUI */,
 				7804D72428B6A7B8004354E9 /* Theo */,
+				78A9707D28F351420087B5AE /* Amadeus */,
 			);
 			productName = TopSecret;
 			productReference = 789FC2C32617DA700021616B /* Top Secret.app */;
@@ -1042,6 +1054,7 @@
 				78D4B97C288AEAFB00036A3B /* XCRemoteSwiftPackageReference "geofire-objc" */,
 				78B593562895AB86006F5FDF /* XCRemoteSwiftPackageReference "Media" */,
 				78DC13C528B57CF7008A20ED /* XCRemoteSwiftPackageReference "Neo4j-Swift" */,
+				78A9707C28F351410087B5AE /* XCRemoteSwiftPackageReference "amadeus-ios" */,
 			);
 			productRefGroup = 789FC2C42617DA700021616B /* Products */;
 			projectDirPath = "";
@@ -1132,6 +1145,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				783A0409284A3B7600308157 /* AppDelegate.swift in Sources */,
+				789136C428F58CEA005278E1 /* PlaceModel.swift in Sources */,
 				78BBF4DE28C76D2F0023354A /* CreateGroupPostView.swift in Sources */,
 				786869C628905A9A00E81D85 /* CustomRefreshView.swift in Sources */,
 				78398335274BD9C800AA9AAD /* ValidationModel.swift in Sources */,
@@ -1151,6 +1165,7 @@
 				78A3E63027CEE242000E9EBD /* GalleryRepository.swift in Sources */,
 				7853518B27C6A72F00B10AC0 /* GalleryPostCell.swift in Sources */,
 				78CB3553286548EC009940C8 /* InviteUserToGroup.swift in Sources */,
+				789136C828F593FC005278E1 /* LocationSearchViewModel.swift in Sources */,
 				62CE5ADA26DEE44E00AE6ACC /* VotingView.swift in Sources */,
 				787F33EA28EE3BBE00D5F798 /* RecentSearchViewModel.swift in Sources */,
 				78EBBC2D28808D7800095D05 /* HomeCalendarViewModel.swift in Sources */,
@@ -1207,6 +1222,7 @@
 				7855923928AD883100CE688C /* UserProfilePage.swift in Sources */,
 				78D1A72126DE98CA0083FE2C /* RegisterPhoneView.swift in Sources */,
 				786869BC288EF4EB00E81D85 /* PushNotificationSender.swift in Sources */,
+				789136C628F593DA005278E1 /* LocationSearchView.swift in Sources */,
 				78A61F1E26BB19F700671021 /* RegisterEmailView.swift in Sources */,
 				78100B40287CBB6500433EC1 /* GroupNotificationCell.swift in Sources */,
 				7818EC8027C2C57600DFE58F /* CreateGroupView.swift in Sources */,
@@ -1542,6 +1558,14 @@
 				minimumVersion = 7.9.1;
 			};
 		};
+		78A9707C28F351410087B5AE /* XCRemoteSwiftPackageReference "amadeus-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/amadeus4dev/amadeus-ios.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
 		78B593562895AB86006F5FDF /* XCRemoteSwiftPackageReference "Media" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/crelies/Media";
@@ -1629,6 +1653,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 789FC2E12617DCC80021616B /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
 			productName = FirebaseMessaging;
+		};
+		78A9707D28F351420087B5AE /* Amadeus */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 78A9707C28F351410087B5AE /* XCRemoteSwiftPackageReference "amadeus-ios" */;
+			productName = Amadeus;
 		};
 		78B593592895B09B006F5FDF /* MediaCore */ = {
 			isa = XCSwiftPackageProductDependency;

@@ -19,16 +19,12 @@ struct UserProfilePage: View {
     
     @Environment(\.presentationMode) var presentationMode
     
-    let columns : [GridItem] = [
-        GridItem(.flexible(), spacing: 0),
-        GridItem(.flexible(), spacing: 0),
-        GridItem(.flexible(), spacing: 0)
-        
-        
-    ]
+  
     var body: some View {
         ZStack{
             Color("Background").zIndex(0)
+                
+            
             VStack{
 
                 HStack{
@@ -57,7 +53,7 @@ struct UserProfilePage: View {
                     
                 }.padding(.top,50)
                     
-                  
+                ScrollView{
                 HStack{
                     
                     Spacer()
@@ -101,7 +97,7 @@ struct UserProfilePage: View {
                     Spacer()
                     
                 }.padding(.top,10)
-              
+                
                
                 
                     
@@ -110,16 +106,8 @@ struct UserProfilePage: View {
                         
                         Spacer()
                         
-                    Button(action:{
-                        
-                    },label:{
-                        VStack{
-                            Text("0").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
-                            Text("Tagged Posts").font(.callout).foregroundColor(.gray)
-                        }
-                    })
+               
                     
-                    Rectangle().frame(width: 1, height: 20).foregroundColor(.gray)
                     
                     
                     NavigationLink(destination: Text("Hello World")){
@@ -132,8 +120,7 @@ struct UserProfilePage: View {
                     
                     
                     
-                    Rectangle().frame(width: 1, height: 20).foregroundColor(.gray)
-                    
+                   Spacer()
                     
                     NavigationLink(destination: UserFriendsListView(user: user)) {
                         VStack{
@@ -155,77 +142,9 @@ struct UserProfilePage: View {
                 
                 
              
-                //Media
-                VStack{
-                    HStack{
-                        
-                        Spacer()
-                        
-                        
-                        Button(action:{
-                            selectedIndex = 0
-                        },label:{
-                            Image(systemName: "square.grid.3x3").font(.title3)
-                    
-                        }).foregroundColor(FOREGROUNDCOLOR)
-                        
-                        Spacer()
-                        
-                        Button(action:{
-                            selectedIndex = 1
-
-                        },label:{
-                                Image(systemName: "square.grid.3x3").font(.title3)
-                        
-                        }).foregroundColor(FOREGROUNDCOLOR)
-                        
-                        Spacer()
-                        Button(action:{
-                            selectedIndex = 2
-
-                        },label:{
-                            
-                                Image(systemName: "square.grid.3x3").font(.title3)
-                        
-                        }).foregroundColor(FOREGROUNDCOLOR)
-                        
-                        Spacer()
-                        
-                        Button(action:{
-                            selectedIndex = 3
-
-                        },label:{
-                            
-                                Image(systemName: "square.grid.3x3").font(.title3)
-                        
-                        }).foregroundColor(FOREGROUNDCOLOR)
-                        
-                        Spacer()
-                    }.padding(.horizontal,30)
-                   
-                }.padding(.vertical)
-                 
                 
-                
-                ScrollView(showsIndicators: false){
-                LazyVGrid(columns: columns, spacing: 1) {
-                    ForEach(0..<12){ index in
-                       
-                            
-                            Image(uiImage: UIImage(named: "Icon")!)
-                                .resizable()
-                                .frame(width: UIScreen.main.bounds.width/3, height: 150)
-                                .aspectRatio(contentMode: .fit)
-                                .overlay(Rectangle().stroke(Color("Color"), lineWidth: 1))
-                        
-
-                        
-                    }
+                    Spacer()
                 }
-            }
-                
-                
-                
                 
             }.zIndex(1).opacity(showInfo ? 0.3 : 1).onTapGesture {
                 if showInfo{
@@ -234,7 +153,7 @@ struct UserProfilePage: View {
                 }
             }.disabled(showInfo)
            
-                
+            
                 
             BottomSheetView(isOpen: $showInfo, maxHeight: UIScreen.main.bounds.height * 0.45 ) {
                 VStack{

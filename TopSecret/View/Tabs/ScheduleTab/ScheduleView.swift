@@ -33,32 +33,7 @@ struct ScheduleView : View {
         ZStack{
             Color("Background")
             VStack{
-                HStack{
-                    Button(action:{
-                        
-                    },label:{
-                        ZStack{
-                            Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
-                            Image(systemName: "clock.arrow.circlepath").font(.title3).foregroundColor(FOREGROUNDCOLOR)
-                        }
-                    })
-                    
-                    Spacer()
-                    Text("Schedule").foregroundColor(FOREGROUNDCOLOR).font(.largeTitle).bold()
-                    
-                    Spacer()
-                       
-                    Button(action:{
-                        
-                    },label:{
-                        ZStack{
-                            Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
-                            Image(systemName: "pencil").font(.title3).foregroundColor(FOREGROUNDCOLOR)
-                        }
-                    })
-                    
-                    
-                }.padding(.top,50).padding(.horizontal)
+         
                 
             
                 UserCalendarWeekListView(calendar: calendar,
@@ -148,7 +123,7 @@ struct ScheduleView : View {
               
                 
                 Spacer()
-            }
+            }.padding(.top, UIScreen.main.bounds.height/6)
         }.frame(width: UIScreen.main.bounds.width)
        
     }

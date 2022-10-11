@@ -15,67 +15,16 @@ struct HomeScreen: View {
     @State var selectedGroup : Group = Group()
     @State var users: [User] = []
     @StateObject var selectedGroupVM = SelectedGroupViewModel()
-    @State var selectedOption = 0
     @State var showSearch : Bool = false
     
     var body: some View {
         ZStack{
             Color("Background")
 
-            if showSearch {
-                ExplorePage(showSearch: $showSearch)
 
-            }else{
-                    
-                    if selectedOption == 0 {
-                       
-                        ShowGroups(selectedGroup: $selectedGroup, users: $users, openGroupHomescreen: $openGroupHomescreen)
-                        
-                    }else{
-                        VStack{
-                            Spacer()
-                            Text("Your Feed")
-                            Spacer()
-                        }.frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-                    }
                 
-                VStack{
-                    TopBar(showSearch: $showSearch)
-                    HStack(spacing: 30){
-                                           Button(action:{
-                                               selectedOption = 0
-                                            
-                                           },label:{
-                                               VStack{
-                                                   
-                                               Text("Your Groups").foregroundColor(selectedOption == 0 ? .white : .gray)
-                                                   Rectangle().frame(width: 40, height: 2).foregroundColor(FOREGROUNDCOLOR).opacity(selectedOption == 0 ? 1 : 0)
-                                               }
-                                           })
-                                           
-                                           Button(action:{
-                                               selectedOption = 1
-                                               
-                                           },label:{
-                                               VStack{
-                                               Text("Your Feed").foregroundColor(selectedOption == 1 ? .white : .gray)
-                                                   Rectangle().frame(width: 40, height: 2).foregroundColor(FOREGROUNDCOLOR).opacity(selectedOption == 1 ? 1 : 0)
-                                               }
-                                           })
-                    }.padding(.horizontal,UIScreen.main.bounds.width/6).padding(.top)
-                 Spacer()
-              
-                    
-
-                   
-                    
-                      
-
-                  
-                    
-
-                    }
-            }
+                    ShowGroups(selectedGroup: $selectedGroup, users: $users, openGroupHomescreen: $openGroupHomescreen)
+                
            
 
 
@@ -212,7 +161,7 @@ struct HomeScreen: View {
 
                 }.padding(.bottom,UIScreen.main.bounds.height/4)
 
-            }.padding(.top, UIScreen.main.bounds.height/4.5).onReceive(userVM.$startFetch) { output in
+            }.padding(.top, UIScreen.main.bounds.height / 6).onReceive(userVM.$startFetch) { output in
                 userVM.refresh()
             }
             .edgesIgnoringSafeArea(.all).navigationBarHidden(true)

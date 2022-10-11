@@ -17,6 +17,7 @@ struct CreateEventView: View {
     @State var selectedGroups : [Group] = []
     @State var openFriendsList : Bool = false
     @State var openGroupsList : Bool = false
+    @State var searchLocationView : Bool = false
     var isGroup : Bool
     @StateObject var eventVM = EventViewModel()
     @Environment(\.presentationMode) var presentationMode
@@ -69,6 +70,23 @@ struct CreateEventView: View {
                             },label:{
                                 Text("Create Location")
                             })
+                            Button(action:{
+                                searchLocationView.toggle()
+                            }, label: {
+                                ZStack{
+                                    Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
+                                    Image(systemName: "magnifyingglass")
+                                    
+                                }
+                            }).fullScreenCover(isPresented: $searchLocationView) {
+                                
+                            } content: {
+                                LocationSearchView()
+                            }
+
+                             
+                            
+
                         }
                         ScrollView(.horizontal){
                             HStack(){

@@ -110,7 +110,7 @@ struct ContentView: View {
 
 
 enum Tab {
-    case home, friends, create, schedule, user
+    case explore, friends, home, schedule, notifications
 }
 
 
@@ -118,6 +118,7 @@ struct Tabs : View {
     @Binding var tabIndex : Tab
     @Binding var selectedGroup : Group
     @State var showTabButtons : Bool = true
+    @State var showSearch: Bool = false
     
     @EnvironmentObject var userVM: UserViewModel
     
@@ -125,23 +126,36 @@ struct Tabs : View {
     
     var body: some View {
         ZStack{
-            
-            ZStack{
-                if tabIndex == .home{
-                    HomeScreen()
-                }else if tabIndex == .friends{
-                   FriendsView()
-                }else if tabIndex == .schedule{
-                    ScheduleView(calendar: Calendar(identifier: .gregorian))
-                }else if tabIndex == .user{
-                    CurrentUserProfilePage()
-                }
-            }.opacity(userVM.showAddContent ? 0.2 : 1).disabled(userVM.showAddContent).onTapGesture {
-                if userVM.showAddContent {
-                    userVM.showAddContent.toggle()
-                    userVM.hideTabButtons.toggle()
+            if showSearch {
+                ExplorePage(showSearch: $showSearch)
+            } else {
+                ZStack{
+                    
+                    
+                    if tabIndex == .home{
+                        HomeScreen()
+                    }else if tabIndex == .friends{
+                       FriendsView()
+                    }else if tabIndex == .schedule{
+                        ScheduleView(calendar: Calendar(identifier: .gregorian))
+                    }else if tabIndex == .notifications{
+                        Text("Hello World")
+                    }else if tabIndex == .explore {
+                        ExplorePage(showSearch: $showSearch)
+                    }
+                    VStack(){
+                        TopBar(showSearch: $showSearch, tabIndex: tabIndex)
+                        Spacer()
+                    }
+                    
+                }.opacity(userVM.showAddContent ? 0.2 : 1).disabled(userVM.showAddContent).onTapGesture {
+                    if userVM.showAddContent {
+                        userVM.showAddContent.toggle()
+                        userVM.hideTabButtons.toggle()
+                    }
                 }
             }
+          
             
          
             
@@ -153,14 +167,14 @@ struct Tabs : View {
                         Button(action:{
                             UIDevice.vibrate()
                             
-                            self.tabIndex = .home
+                            self.tabIndex = .explore
                         },label:{
                                 
-                            Image(systemName: self.tabIndex == .home ? "house.fill" : "house").font(.title)
+                            Image(systemName: "magnifyingglass").font(.title2)
                              
                             
                             
-                        }).foregroundColor(self.tabIndex == .home ? Color("AccentColor") : FOREGROUNDCOLOR)
+                        }).foregroundColor(self.tabIndex == .explore ? Color("AccentColor") : FOREGROUNDCOLOR)
                         Button(action:{
                             UIDevice.vibrate()
                             
@@ -168,7 +182,7 @@ struct Tabs : View {
                         },label:{
                             
                             ZStack{
-                                Image(systemName: self.tabIndex == .friends ? "person.3.fill" : "person.3").font(.title2)
+                                Image(systemName: self.tabIndex == .friends ? "person.2.fill" : "person.2").font(.title2)
                                 
                                 if self.userVM.user?.userNotificationCount ?? 0 != 0 {
                                     ZStack{
@@ -184,18 +198,15 @@ struct Tabs : View {
                         }).foregroundColor(self.tabIndex == .friends ? Color("AccentColor") : FOREGROUNDCOLOR)
 
                         
-                            Button(action:{
-                                userVM.hideTabButtons.toggle()
-                                userVM.showAddContent.toggle()
-                            },label:{
-                                
-                            ZStack{
-                                Circle().frame(width: 50, height: 50).foregroundColor(Color("AccentColor"))
-                                Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 30))
-
-                            }
+                        Button(action:{
+                            UIDevice.vibrate()
                             
-                            })
+                            self.tabIndex = .home
+                        },label:{
+                            Image(systemName: self.tabIndex == .home ?  "house.fill" : "house").font(.title)
+                            
+                        }).foregroundColor(self.tabIndex == .home ? Color("AccentColor") : FOREGROUNDCOLOR)
+                        
                         
                                 
                         
@@ -212,16 +223,12 @@ struct Tabs : View {
                         Button(action:{
                             UIDevice.vibrate()
                             
-                            self.tabIndex = .user
+                            self.tabIndex = .notifications
                         },label:{
-                            WebImage(url: URL(string: userVM.user?.profilePicture ?? " "))
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width:30,height:30)
-                                .clipShape(Circle())
-                                .overlay(Circle().stroke(Color("AccentColor"), lineWidth: self.tabIndex == .user ? 3 : 1))
-                            
-                        }).foregroundColor(self.tabIndex == .user ? Color("AccentColor") : FOREGROUNDCOLOR)
+                        
+                            Image(systemName: self.tabIndex == .schedule ?  "envelope.fill" : "envelope").font(.title2)
+
+                        }).foregroundColor(self.tabIndex == .notifications ? Color("AccentColor") : FOREGROUNDCOLOR)
                         
                         
                     }.frame(width: UIScreen.main.bounds.width).padding().padding(.bottom).background(Color("Color"))

@@ -112,11 +112,11 @@ struct HomeScreenView: View {
                 Spacer()
                 
               
-                PagerTabView(showLabels: true, tint: Color("AccentColor"), selection: $selectedView, labels: ["Home","Gallery","Calendar","Map"]) {
+                PagerTabView(showLabels: true, tint: Color("AccentColor"), selection: $selectedView, labels: ["Home","Chat","Calendar","Map"]) {
                     ActivityView(group: $group, selectedView: $selectedView).pageView(ignoresSafeArea: true, edges: .bottom)
                  
+                    GroupChatView(userID: userVM.user?.id ?? " ", groupID: group.id, chatID: group.chatID ?? " ").environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
                 
-                    GroupGalleryView().pageView(ignoresSafeArea: true, edges: .bottom)
         
                     
                     GroupCalendarView(calendar: Calendar(identifier: .gregorian)).pageView(ignoresSafeArea: true, edges: .bottom)
@@ -217,7 +217,7 @@ struct PagerTabView<Content: View>: View {
                         let newOffset = CGFloat(index) * getScreenBounds().width
                         self.offset = newOffset
                     },label:{
-                        Text(labels[index]).bold().foregroundColor(selection == index || scrollSelection == index ? Color("AccentColor") : FOREGROUNDCOLOR)
+                        Text(labels[index]).font(.headline).bold().foregroundColor(selection == index || scrollSelection == index ? Color("AccentColor") : FOREGROUNDCOLOR)
                     }).pageLabel()
                 }
             }

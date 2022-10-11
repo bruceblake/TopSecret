@@ -11,6 +11,15 @@
         }
       },
       {
+        "package": "Amadeus",
+        "repositoryURL": "https://github.com/amadeus4dev/amadeus-ios.git",
+        "state": {
+          "branch": null,
+          "revision": "d8445e8fe085ed24b6f015e637e35a852a844535",
+          "version": "2.0.0"
+        }
+      },
+      {
         "package": "Bolt",
         "repositoryURL": "https://github.com/Neo4j-Swift/Bolt-swift.git",
         "state": {
@@ -224,6 +233,15 @@
           "branch": null,
           "revision": "fa0fcd43f272a260e7f734f23e6dc55e16fcae0a",
           "version": "1.19.1"
+        }
+      },
+      {
+        "package": "SwiftyJSON",
+        "repositoryURL": "https://github.com/SwiftyJSON/SwiftyJSON.git",
+        "state": {
+          "branch": null,
+          "revision": "2b6054efa051565954e1d2b9da831680026cd768",
+          "version": "4.3.0"
         }
       }
     ]

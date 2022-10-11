@@ -115,7 +115,7 @@ struct ActivityView: View {
                                         
                                         
                                         
-                                        Image(systemName: "bubble.left.fill").foregroundColor(FOREGROUNDCOLOR).font(.title3)
+                                        Image(systemName: "photo.on.rectangle.angled").foregroundColor(FOREGROUNDCOLOR).font(.title3)
                                         
                                       
                                         
