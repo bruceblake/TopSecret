@@ -122,7 +122,7 @@ struct GroupGalleryView: View {
 
         }.onAppear{
             DispatchQueue.main.async {
-                groupGalleryVM.fetchPhotos(userID: userVM.user?.id ?? " ", groupID: selectedGroupVM.group?.id ?? " ")
+                groupGalleryVM.fetchPhotos(userID: userVM.user?.id ?? " ", groupID: selectedGroupVM.group.id)
             }
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).sheet(isPresented: $isShowingPhotoPicker) {

@@ -20,7 +20,6 @@ struct GroupNotificationsView: View {
             VStack{
                 
                 Spacer()
-                NotificationList()
             }
         }.edgesIgnoringSafeArea(.all)
     }

@@ -133,7 +133,7 @@ class GroupViewModel: ObservableObject {
              
            
                  
-        self.chatRepository.joinChat(chatID: group.chat?.id ?? " ", userID: user.id ?? " ", groupID: group.id)
+        self.chatRepository.joinChat(chatID: group.chat.id , userID: user.id ?? " ", groupID: group.id)
 
              var notificationID = UUID().uuidString
              

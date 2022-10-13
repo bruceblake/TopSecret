@@ -216,7 +216,9 @@ struct UserCalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitch
                                 }
                             }
                         }
-                        return Color.clear
+                        
+                       return Color.clear
+                        
                     }.frame(width: 0, height: 0)
                 
                     , alignment: .bottom
@@ -266,7 +268,7 @@ struct UserCalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitch
                             }
                             
                         }
-                        
+                         
                         Spacer()
                       
                        
@@ -341,7 +343,7 @@ struct UserCalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitch
                             VStack{
                             ForEach(calendarVM.eventsResults){ event in
                                 if Calendar.current.isDate(event.eventStartTime?.dateValue() ?? Date(), inSameDayAs: date){
-                                    EventCell(event: event, currentDate: date, isHomescreen: true, action: false)
+                                    EventCell(event: event, currentDate: date, action: false, isHomescreen: true)
                                 }
                             }
                             }

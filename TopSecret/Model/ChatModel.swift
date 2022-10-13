@@ -9,8 +9,8 @@ import Foundation
 import SwiftUI
 
 struct ChatModel : Identifiable {
-    var id: String
-    var name: String?
+    var id: String = UUID().uuidString
+    var name: String = ""
     var memberAmount: Int = 1
     var usersID : [String] = []
     var usersTypingID : [String] = []
@@ -18,11 +18,11 @@ struct ChatModel : Identifiable {
     var users: [User] = []
     var usersTyping : [User] = []
     var usersIdling : [User] = []
-    var dateCreated: Date?
+    var dateCreated: Date = Date()
     var messages : [Message] = [ ]
-    var groupID : String?
-    var chatType : String?
-    var nameColors : [[String:String]]? //first string is the userID, second is the color picked
+    var groupID : String = ""
+    var chatType : String = ""
+    var nameColors : [[String:String]] = [[:]] //first string is the userID, second is the color picked
     var colorPicker : Int?
     
     

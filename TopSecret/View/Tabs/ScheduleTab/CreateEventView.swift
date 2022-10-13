@@ -128,9 +128,9 @@ struct CreateEventView: View {
                         if isGroup{
                             
                                Button(action:{
-                                   selectedGroups.append(selectedGroupVM.group ?? Group())
+                                   selectedGroups.append(selectedGroupVM.group)
                                 },label:{
-                                    Text("\(selectedGroupVM.group?.groupName ?? "")").foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 20).fill(Color("Color")))
+                                    Text("\(selectedGroupVM.group.groupName )").foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 20).fill(Color("Color")))
                                 })
                         }else{
                             HStack(spacing: 15){
@@ -176,8 +176,7 @@ struct CreateEventView: View {
                 
                 Button(action:{
                     
-                    print("groupID: \(selectedGroupVM.group?.id ?? " ")")
-                    eventVM.createEvent(group: selectedGroupVM.group ?? Group(), eventName: eventName, eventLocation: eventLocation, eventStartTime: eventStartTime , eventEndTime: eventEndTime, usersVisibleTo:selectedGroupVM.group?.realUsers ?? [] , user: userVM.user ?? User())
+                    eventVM.createEvent(group: selectedGroupVM.group, eventName: eventName, eventLocation: eventLocation, eventStartTime: eventStartTime , eventEndTime: eventEndTime, usersVisibleTo:selectedGroupVM.group.realUsers , user: userVM.user ?? User())
                     presentationMode.wrappedValue.dismiss()
                 },label:{
                     Text("Create Event").foregroundColor(Color("Foreground"))

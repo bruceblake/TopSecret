@@ -11,7 +11,7 @@ import Firebase
 
 class SelectedGroupViewModel : ObservableObject {
     
-    @Published var group: Group?
+    @Published var group: Group = Group()
     @Published var posts: [GroupPostModel] = []
     @Published var finishedFetchingGroupEvents : Bool = false
     @Published var finishedFetchingGroup : Bool = false

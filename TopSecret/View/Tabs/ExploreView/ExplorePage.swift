@@ -326,7 +326,7 @@ struct ExplorePageSearchList : View {
             
         }
         NavigationLink(isActive: $openGroupProfile) {
-            GroupProfileView(group: $selectedGroup, isInGroup: selectedGroup.users?.contains(userVM.user?.id ?? " ") ?? false, showProfileView: $openGroupProfile)
+            GroupProfileView(group: $selectedGroup, isInGroup: selectedGroup.users.contains(userVM.user?.id ?? " "), showProfileView: $openGroupProfile)
         } label: {
             EmptyView()
         }

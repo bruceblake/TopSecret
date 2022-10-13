@@ -73,7 +73,7 @@ struct HomeScreenView: View {
                     }).padding(.leading)
                     
 
-                    Text(selectedGroupVM.group?.groupName ?? "...").font(.title2).fontWeight(.heavy).minimumScaleFactor(0.5)
+                    Text(selectedGroupVM.group.groupName ).font(.title2).fontWeight(.heavy).minimumScaleFactor(0.5)
                     
                     Spacer()
                     
@@ -115,7 +115,7 @@ struct HomeScreenView: View {
                 PagerTabView(showLabels: true, tint: Color("AccentColor"), selection: $selectedView, labels: ["Home","Chat","Calendar","Map"]) {
                     ActivityView(group: $group, selectedView: $selectedView).pageView(ignoresSafeArea: true, edges: .bottom)
                  
-                    GroupChatView(userID: userVM.user?.id ?? " ", groupID: group.id, chatID: group.chatID ?? " ").environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
+                    GroupChatView(userID: userVM.user?.id ?? " ", groupID: group.id, chatID: group.chat.id).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
                 
         
                     
@@ -145,7 +145,7 @@ struct HomeScreenView: View {
             }.zIndex(3)
             
             if showProfileView{
-                GroupProfileView(group: $group, isInGroup: group.users?.contains(userVM.user?.id ?? " ") ?? false, showProfileView: $showProfileView).zIndex(3)
+                GroupProfileView(group: $group, isInGroup: group.users.contains(userVM.user?.id ?? " "), showProfileView: $showProfileView).zIndex(3)
             }
          
             
@@ -155,7 +155,6 @@ struct HomeScreenView: View {
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
             selectedGroupVM.listenToGroup(userID: userVM.user?.id ?? " ", groupID: group.id) { fetched in
-                print("fetched groupID: \(selectedGroupVM.group?.id ?? " ")")
             }
         }.onDisappear{
             for listener in selectedGroupVM.listeners{

@@ -66,7 +66,7 @@ struct MapView: View {
                             
                             //0 -> Binding
                             //1 -> Not Binding
-                            ForEach(selectedGroupVM.group?.realUsers ?? []){ user in
+                            ForEach(selectedGroupVM.group.realUsers){ user in
                                 
                                 Button(action:{
                                     locationManager.region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: user.latitude ?? 0, longitude: user.longitude ?? 0), latitudinalMeters: 5000, longitudinalMeters: 5000)
