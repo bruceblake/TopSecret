@@ -10,55 +10,48 @@ import SwiftUI
 struct FriendsView: View {
     @EnvironmentObject var userVM : UserViewModel
     @StateObject var searchVM = SearchRepository()
-    @StateObject var chatVM = GroupChatViewModel()
+    @StateObject var personalChatVM : PersonalChatViewModel
+    
+    
+    
+    func sortPersonalChats(userID: String) -> [ChatModel]{
+        let chats = personalChatVM.personalChats
+        
+        return chats.sorted(by: { !($0.lastMessage?.usersThatHaveSeen?.contains(userID) ?? false) &&  ($1.lastMessage?.usersThatHaveSeen?.contains(userID) ?? false)} )
+    }
+    
     var body: some View {
         ZStack{
             Color("Background")
             VStack{
-                HStack{
-                    Spacer()
-                    Text("Friends").font(.title).bold()
-                    Spacer()
-                }.padding(.top,50).padding(.horizontal)
-                
-                
-                SearchBar(text: $searchVM.searchText, placeholder: "friends", onSubmit: {
-                    
-                })
                 ScrollView{
-                    VStack{
-                        
-                if searchVM.searchText == "" {
-                    
-                        ForEach(userVM.user?.personalChats ?? [], id: \.id){ chat in
-                            Button(action:{
-                                
-                            },label:{
-                                Text("\(chat.id)")
-                            })
-                        }
-
-                }else{
-                    
-                        ForEach(searchVM.userFriendsReturnedResults, id: \.id){ user in
+                    VStack(spacing: 0){
+                        if ((userVM.user?.friendsList?.isEmpty ?? false)) {
                             
-                            Button(action:{
-                                
-                            },label:{
-                                UserSearchCell(user: user, showActivity: false)
-                            })
-    
+                            Text("You have 0 friends :(")
+                        }else{
+                            ForEach(self.sortPersonalChats(userID: userVM.user?.id ?? " "), id: \.id){ chat in
+                                NavigationLink {
+                                    PersonalChatView(personalChatVM: personalChatVM, keyboardVM: KeyboardViewModel(), chatID: chat.id)
+                                } label: {
+                                    FriendCell(user: personalChatVM.getPersonalChatUser(chat: chat, userID: userVM.user?.id ?? " "), personalChatVM: personalChatVM, chat: chat)
+                                }
+
+                                }
                         }
+                  
+                    }
                     
                 }
-                    }
-                }
-                
-                
             }
-        }.frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height).edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
-            searchVM.startSearch(searchRequest: "allUsersFriends", id: userVM.user?.id ?? " ")
+            
+          
+
+
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
+            personalChatVM.listenToPersonalChats(userID: userVM.user?.id ?? " ")
         }
+        
     }
 }
 

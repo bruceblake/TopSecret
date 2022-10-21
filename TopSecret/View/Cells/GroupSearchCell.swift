@@ -13,7 +13,7 @@ struct GroupSearchCell: View {
     var body: some View {
         VStack(alignment: .leading){
             HStack(alignment: .center){
-                WebImage(url: URL(string: group.groupProfileImage ?? ""))
+                WebImage(url: URL(string: group.groupProfileImage))
                     .resizable()
                     .scaledToFill()
                     .frame(width:48,height:48)
@@ -23,7 +23,7 @@ struct GroupSearchCell: View {
                 VStack(alignment: .leading){
                     
                     Text("\(group.groupName)").foregroundColor(Color("Foreground"))
-                    Text("\(group.users?.count ?? 0) \(group.users?.count ?? 0 > 1 ? "members" : "member")").foregroundColor(.gray)
+                    Text("\(group.users.count) \(group.users.count > 1 ? "members" : "member")").foregroundColor(.gray)
                     
 
                 }

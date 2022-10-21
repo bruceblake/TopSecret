@@ -14,72 +14,29 @@ struct HomeScreen: View {
     @State var openGroupHomescreen : Bool = false
     @State var selectedGroup : Group = Group()
     @State var users: [User] = []
-    @StateObject var selectedGroupVM = SelectedGroupViewModel()
-    @State var selectedOption = 1
     @State var showSearch : Bool = false
-
+    
     var body: some View {
         ZStack{
             Color("Background")
 
-            if showSearch {
-                ExplorePage(showSearch: $showSearch)
 
-            }else{
-                    
-                    if selectedOption == 0 {
-                       
-                        ShowGroups(selectedGroup: $selectedGroup, users: $users, openGroupHomescreen: $openGroupHomescreen)
-                        
-                    }else{
-                        VStack{
-                            Spacer()
-                            Text("Your Feed")
-                            Spacer()
-                        }.frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
-                    }
-                
+            if userVM.groups.isEmpty{
                 VStack{
-                    TopBar(showSearch: $showSearch)
-                    HStack(spacing: 30){
-                                           Button(action:{
-                                               selectedOption = 0
-                                            
-                                           },label:{
-                                               VStack{
-                                                   
-                                               Text("Your Groups").foregroundColor(selectedOption == 0 ? .white : .gray)
-                                                   Rectangle().frame(width: 40, height: 2).foregroundColor(FOREGROUNDCOLOR).opacity(selectedOption == 0 ? 1 : 0)
-                                               }
-                                           })
-                                           
-                                           Button(action:{
-                                               selectedOption = 1
-                                               
-                                           },label:{
-                                               VStack{
-                                               Text("Your Feed").foregroundColor(selectedOption == 1 ? .white : .gray)
-                                                   Rectangle().frame(width: 40, height: 2).foregroundColor(FOREGROUNDCOLOR).opacity(selectedOption == 1 ? 1 : 0)
-                                               }
-                                           })
-                    }.padding(.horizontal,UIScreen.main.bounds.width/6).padding(.top)
-                 Spacer()
-              
-                    
-
-                   
-                    
-                      
-
-                  
-                    
-
+                    Spacer()
+                    HStack{
+                        Text("You have 0 Groups :(")
                     }
+                    Spacer()
+                }
+            }else{
+                    ShowGroups(selectedGroup: $selectedGroup, users: $users, openGroupHomescreen: $openGroupHomescreen)
             }
+                
            
 
 
-                NavigationLink(destination: HomeScreenView(group: $selectedGroup).environmentObject(selectedGroupVM), isActive: $openGroupHomescreen) {
+                NavigationLink(destination: HomeScreenView(group: $selectedGroup), isActive: $openGroupHomescreen) {
                     EmptyView()
                 }
 
@@ -119,9 +76,6 @@ struct HomeScreen: View {
                 VStack(spacing: 30){
                     
                     if userVM.finishedFetchingGroups {
-                        if userVM.groups.isEmpty{
-                            Text("You have no groups!")
-                        }else{
                             ForEach(userVM.groups, id: \.id){ group in
                                 Button(action:{
 
@@ -182,7 +136,7 @@ struct HomeScreen: View {
 
                         }
 
-                    }else {
+                    else {
                         if userVM.timedOut{
                             ZStack{
                             Button(action:{
@@ -212,7 +166,7 @@ struct HomeScreen: View {
 
                 }.padding(.bottom,UIScreen.main.bounds.height/4)
 
-            }.padding(.top, UIScreen.main.bounds.height/4.5).onReceive(userVM.$startFetch) { output in
+            }.onReceive(userVM.$startFetch) { output in
                 userVM.refresh()
             }
             .edgesIgnoringSafeArea(.all).navigationBarHidden(true)

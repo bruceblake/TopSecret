@@ -250,7 +250,8 @@ class ChatRepository : ObservableObject {
             _ = snapshot?.get("nameColors") as? [[String:String]] ?? [["":""]]
             let nextColor = snapshot?.get("nextColor") as? Int ?? 0
             choice = nextColor
-            COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["nameColors":FieldValue.arrayUnion([[userID:self.colors[nextColor]]])])
+            COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["nameColors":FieldValue.arrayUnion(
+                [[userID:self.colors[nextColor]]])])
             COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["nextColor":FieldValue.increment(Int64(1))])
             
         }

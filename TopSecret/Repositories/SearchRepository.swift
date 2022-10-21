@@ -312,14 +312,14 @@ class SearchRepository : ObservableObject {
             let data = snapshot?.data() as? [String:Any] ?? [:]
             let friendsID = data["friendsListID"] as? [String] ?? []
             
-            
+            groupD.enter()
             for friend in friendsID {
-                groupD.enter()
                 self.fetchUser(userID: friend) { fetchedUser in
                     usersToReturn.append(fetchedUser)
-                    groupD.leave()
                 }
             }
+                                groupD.leave()
+
             
             groupD.notify(queue: .main, execute:{
                 self.userFriendsResults = usersToReturn

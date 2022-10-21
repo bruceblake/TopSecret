@@ -10,10 +10,6 @@ import SwiftUI
 import Combine
 import SCSDKLoginKit
 
-import Theo
-import Bolt
-import PackStream
-
 class UserViewModel : ObservableObject {
     
     
@@ -37,7 +33,6 @@ class UserViewModel : ObservableObject {
     @Published var timedOut : Bool = false
     @Published var startFetch : Bool = false
     @Published var showWarning: Bool = false
-    @Published var client: BoltClient?
     
   
     
@@ -53,53 +48,6 @@ class UserViewModel : ObservableObject {
     
     init(){
         
-        do{
-            
-            self.client = try BoltClient(hostname: "24eda6ad.databases.neo4j.io",
-                                    port: 7687,
-                                    username: "neo4j",
-                                     password: "nxT6qRo-k4gFKAaOmwmYf5OP7j1igZuMCYxlOYU6Au0",
-                                    encrypted: true)
-
-
-
-            var clientConnection = client?.connectSync()
-
-
-
-            switch clientConnection {
-
-
-            case let .failure(error):
-                print("error while connecting: \(error.localizedDescription)")
-
-            case .success(_):
-                print("Connected to neo4j!")
-                
-                
-                let labels = ["User"]
-                let properties : [String:PackProtocol] = ["name":"Bruce"]
-                
-                
-                self.client?.nodesWith(labels: labels, andProperties: properties) { result in
-                    do {
-                        try print("nodes: \(result.get().count)")
-                    }
-                    catch {
-                        print("error")
-                    }
-                }
-
-
-            case .none:
-                print("none")
-            }
-            
-            
-        }
-        catch {
-            print("failed")
-        }
    
         
         
@@ -362,8 +310,8 @@ class UserViewModel : ObservableObject {
             print("Removed listener!")
         }
         
-        userSession = nil
         self.loginErrorMessage = ""
+        userSession = nil
         try? Auth.auth().signOut()
     }
     
@@ -371,14 +319,6 @@ class UserViewModel : ObservableObject {
     //fetch
     
     
-    func addToRecentSearches(searchText: String, uid: String){
-        COLLECTION_USER.document(uid).updateData(["recentSearches":FieldValue.arrayUnion([searchText])])
-    }
-    
-    func removeFromRecentSearches(searchText: String, uid: String){
-        COLLECTION_USER.document(uid).updateData(["recentSearches":FieldValue.arrayRemove([searchText])])
-
-    }
     
     
     func fetchUser(userID: String, completion: @escaping (User) -> ()) -> (){
@@ -849,7 +789,12 @@ class UserViewModel : ObservableObject {
     
     func resetPassword(email: String){
         Auth.auth().sendPasswordReset(withEmail: email) { (err) in
+            if err != nil {
+                print("ERROR: \(err?.localizedDescription)")
+            }
+            
         }
+       
     }
    
     
@@ -946,6 +891,9 @@ class UserViewModel : ObservableObject {
         
         notificationSender.sendPushNotification(to: friend.fcmToken ?? " ", title: "\(friend.username ?? "")", body: "\(friend.nickName ?? "") sent a friend request")
         
+        self.addFriend(friendID: friend.id ?? " ")
+
+        
         let notificationID = UUID().uuidString
         
         let userNotificationData = ["id":notificationID,
@@ -961,9 +909,13 @@ class UserViewModel : ObservableObject {
     }
     
     func acceptFriendRequest(friend: User){
+        
+        
+        //Removing from eachothers pending friends list
         COLLECTION_USER.document(self.user?.id ?? " ").updateData(["pendingFriendsListID":FieldValue.arrayRemove([friend.id ?? " "])])
         
         COLLECTION_USER.document(friend.id ?? " ").updateData(["pendingFriendsListID":FieldValue.arrayRemove([self.user?.id ?? " "])])
+        //END
         
         self.addFriend(friendID: friend.id ?? " ")
         
@@ -995,10 +947,13 @@ class UserViewModel : ObservableObject {
     func addFriend(friendID: String){
         
         
+        //add to eachothers friend list
         COLLECTION_USER.document(self.user?.id ?? " ").updateData(["friendsListID":FieldValue.arrayUnion([friendID])])
         
         
         COLLECTION_USER.document(friendID ).updateData(["friendsListID":FieldValue.arrayUnion([user?.id ?? " "])])
+        //END
+        
         
         let id = UUID().uuidString
         let chatData = ["dateCreated":Date(),
@@ -1012,6 +967,10 @@ class UserViewModel : ObservableObject {
                 return
             }
         }
+        //picks colors
+        COLLECTION_PERSONAL_CHAT.document(id).updateData(["chatColors":FieldValue.arrayUnion(
+            [[user?.id ?? " ":"green"]])])
+        COLLECTION_PERSONAL_CHAT.document(id).updateData(["chatColors":FieldValue.arrayUnion([[friendID:"red"]])])
         
         COLLECTION_USER.document(self.user?.id ?? " ").updateData(["personalChatsID":FieldValue.arrayUnion([id])])
         

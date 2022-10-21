@@ -10,11 +10,12 @@ import SDWebImageSwiftUI
 struct EventCell: View {
     
     var event : EventModel
-    var currentDate : Date
+    var currentDate: Date = Date()
+    var action : Bool
     var isHomescreen : Bool
+    var showBarIndicator : Bool = true
     @EnvironmentObject var userVM: UserViewModel
     @StateObject var eventVM = EventViewModel()
-    var action : Bool
     func getTimeRemaining() -> Int {
         let interval = (event.eventStartTime?.dateValue() ?? Date()) - Date()
         
@@ -44,7 +45,9 @@ struct EventCell: View {
     
     var body: some View {
         HStack(alignment: .top, spacing: 30){
+            if showBarIndicator{
             Rectangle().fill(Color("AccentColor")).frame(width: 3)
+            }
             
 
             

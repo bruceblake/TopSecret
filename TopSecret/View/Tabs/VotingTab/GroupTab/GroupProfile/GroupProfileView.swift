@@ -62,7 +62,7 @@ struct GroupProfileView: View {
                 Text("\(group.groupName)").font(.largeTitle).foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
                 
                 //BIO
-                if(group.users?.contains(userVM.user?.id ?? " ") ?? false){
+                if(group.users.contains(userVM.user?.id ?? " ") ){
                     HStack(alignment: .center){
                         
                         Spacer()

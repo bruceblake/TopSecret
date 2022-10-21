@@ -11,17 +11,18 @@ import Firebase
 
 class SelectedGroupViewModel : ObservableObject {
     
-    @Published var group: Group?
-    @Published var posts: [GroupPostModel] = []
+    @Published var group: Group = Group()
     @Published var finishedFetchingGroupEvents : Bool = false
     @Published var finishedFetchingGroup : Bool = false
     @Published var listeners : [ListenerRegistration] = []
-    
+    @Published var groupFeed : [Any] = []
     
    
     
     
-    
+    func fetchGroupFeed(groupID: String, events: [EventModel], polls: [PollModel]){
+        self.groupFeed = (events + polls)
+    }
     
     func readGroupNotifications(groupID: String, userID: String, notification: GroupNotificationModel){
         
@@ -44,7 +45,6 @@ class SelectedGroupViewModel : ObservableObject {
             var data = snapshot?.data() as? [String:Any] ?? [:]
             
             let groupD = DispatchGroup()
-            
           
                 
             groupD.enter()
@@ -94,14 +94,22 @@ class SelectedGroupViewModel : ObservableObject {
                 groupD.leave()
             }
             
-            self.fetchGroupPosts(groupID: groupID)
+//            self.fetchGroupPosts(groupID: groupID)
+//
+
+                
+
+                
+
             
-            print("posts count: \(self.posts.count)")
-            
+
+           
             
             groupD.notify(queue: .main, execute: {
                 self.finishedFetchingGroup = true
                 self.group = Group(dictionary: data )
+                
+                self.fetchGroupFeed(groupID: groupID, events: self.group.events, polls: self.group.polls)
                 return completion(true)
             })
             
@@ -109,67 +117,66 @@ class SelectedGroupViewModel : ObservableObject {
         }
     }
     
-    func fetchGroupPosts(groupID: String) {
-        
-        
-        COLLECTION_GROUP.document(groupID).collection("Posts").getDocuments { snapshot, err in
-            if err != nil {
-                print("ERROR")
-                return
-            }
-            
-                    var groupD = DispatchGroup()
-
-            guard let documents = snapshot?.documents else {return}
-            
-            var paths = [String]()
-            
-            for doc in documents {
-                groupD.enter()
-                let data = doc.data()
-                var path = data["urlPath"] as? String ?? ""
-                var id = data["id"] as? String ?? ""
-                var timeStamp = data["timeStamp"] as? Timestamp ?? Timestamp()
-                var description = data["description"] as? String ?? ""
-                var creatorID = data["creatorID"] as? String ?? ""
-                let storageRef = Storage.storage().reference()
-                let fileRef = storageRef.child(path)
-
-                fileRef.getData(maxSize: 5 * 1024 * 1024) { data, err in
-                    
-                    if err != nil {
-                        print("ERROR: \(err!.localizedDescription)")
-                        return
-                    }
-                    DispatchQueue.main.async {
-                        guard let image = UIImage(data: data!) else {return}
-                        
-                        
-                                let postImageData = ["id":id, "urlPath":path,"image":image,"creatorID":creatorID,"timeStamp":timeStamp,"description":"test"] as [String:Any]
-                        groupD.leave()
-                        groupD.notify(queue: .main, execute:{
-                            print("id: \(id)")
-                                                self.posts.append(GroupPostModel(dictionary: postImageData))
-
-                        })
-                    }
-                 
-                        
-                         
-    
-                        
-                    
-                    
-                }
-                
-            }
-            
-            
-            
-            
-        }
-   
-    }
+//    func fetchGroupPosts(groupID: String) {
+//
+//
+//        COLLECTION_GROUP.document(groupID).collection("Posts").getDocuments { snapshot, err in
+//            if err != nil {
+//                print("ERROR")
+//                return
+//            }
+//
+//                    var groupD = DispatchGroup()
+//
+//            guard let documents = snapshot?.documents else {return}
+//
+//            var paths = [String]()
+//
+//            for doc in documents {
+//                groupD.enter()
+//                let data = doc.data()
+//                var path = data["urlPath"] as? String ?? ""
+//                var id = data["id"] as? String ?? ""
+//                var timeStamp = data["timeStamp"] as? Timestamp ?? Timestamp()
+//                var description = data["description"] as? String ?? ""
+//                var creatorID = data["creatorID"] as? String ?? ""
+//                let storageRef = Storage.storage().reference()
+//                let fileRef = storageRef.child(path)
+//
+//                fileRef.getData(maxSize: 5 * 1024 * 1024) { data, err in
+//
+//                    if err != nil {
+//                        print("ERROR: \(err!.localizedDescription)")
+//                        return
+//                    }
+//                    DispatchQueue.main.async {
+//                        guard let image = UIImage(data: data!) else {return}
+//
+//
+//                                let postImageData = ["id":id, "urlPath":path,"image":image,"creatorID":creatorID,"timeStamp":timeStamp,"description":"test"] as [String:Any]
+//                        groupD.leave()
+//                        groupD.notify(queue: .main, execute:{
+//                                                self.posts.append(GroupPostModel(dictionary: postImageData))
+//
+//                        })
+//                    }
+//
+//
+//
+//
+//
+//
+//
+//                }
+//
+//            }
+//
+//
+//
+//
+//        }
+//
+//    }
     
     func fetchGroupUsers(usersID: [String], groupID: String, completion: @escaping ([User]) -> ()) -> () {
         var users : [User] = []

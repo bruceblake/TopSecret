@@ -134,7 +134,7 @@ struct GroupResults : View {
                         VStack{
                             ForEach(searchVM.groupReturnedResults, id: \.id){ group in
                                     NavigationLink {
-                                        GroupProfileView(group: $selectedGroup, isInGroup: selectedGroup.users?.contains(userVM.user?.id ?? " ") ?? false, showProfileView: $openGroupProfile)
+                                        GroupProfileView(group: $selectedGroup, isInGroup: selectedGroup.users.contains(userVM.user?.id ?? " "), showProfileView: $openGroupProfile)
                                     } label: {
                                         GroupSearchCell(group: group)
                                     }
@@ -237,7 +237,7 @@ struct TopResults : View {
                         VStack{
                             ForEach(searchVM.groupReturnedResults, id: \.id){ group in
                                     NavigationLink {
-                                        GroupProfileView(group: $selectedGroup, isInGroup: selectedGroup.users?.contains(userVM.user?.id ?? " ") ?? false, showProfileView: $openGroupProfile)
+                                        GroupProfileView(group: $selectedGroup, isInGroup: selectedGroup.users.contains(userVM.user?.id ?? " "), showProfileView: $openGroupProfile)
                                     } label: {
                                         GroupSearchCell(group: group)
                                     }

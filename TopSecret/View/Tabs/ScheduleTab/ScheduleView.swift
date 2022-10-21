@@ -33,32 +33,7 @@ struct ScheduleView : View {
         ZStack{
             Color("Background")
             VStack{
-                HStack{
-                    Button(action:{
-                        
-                    },label:{
-                        ZStack{
-                            Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
-                            Image(systemName: "clock.arrow.circlepath").font(.title3).foregroundColor(FOREGROUNDCOLOR)
-                        }
-                    })
-                    
-                    Spacer()
-                    Text("Schedule").foregroundColor(FOREGROUNDCOLOR).font(.largeTitle).bold()
-                    
-                    Spacer()
-                       
-                    Button(action:{
-                        
-                    },label:{
-                        ZStack{
-                            Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
-                            Image(systemName: "pencil").font(.title3).foregroundColor(FOREGROUNDCOLOR)
-                        }
-                    })
-                    
-                    
-                }.padding(.top,50).padding(.horizontal)
+         
                 
             
                 UserCalendarWeekListView(calendar: calendar,
@@ -241,7 +216,9 @@ struct UserCalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitch
                                 }
                             }
                         }
-                        return Color.clear
+                        
+                       return Color.clear
+                        
                     }.frame(width: 0, height: 0)
                 
                     , alignment: .bottom
@@ -291,7 +268,7 @@ struct UserCalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitch
                             }
                             
                         }
-                        
+                         
                         Spacer()
                       
                        
@@ -366,7 +343,7 @@ struct UserCalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitch
                             VStack{
                             ForEach(calendarVM.eventsResults){ event in
                                 if Calendar.current.isDate(event.eventStartTime?.dateValue() ?? Date(), inSameDayAs: date){
-                                    EventCell(event: event, currentDate: date, isHomescreen: true, action: false)
+                                    EventCell(event: event, currentDate: date, action: false, isHomescreen: true)
                                 }
                             }
                             }

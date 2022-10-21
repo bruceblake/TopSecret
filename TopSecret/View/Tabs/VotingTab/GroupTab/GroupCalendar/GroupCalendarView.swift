@@ -288,12 +288,12 @@ struct CalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitcher: 
             }
 
         }.onReceive(selectedGroupVM.$group, perform: { groupID in
-            calendarVM.startSearch(groupID: selectedGroupVM.group?.id ?? " ", startDay: makeDays(selectedDate: date).prefix(daysInWeek)[0], endDay: makeDays(selectedDate: date).prefix(daysInWeek)[6])
+            calendarVM.startSearch(groupID: selectedGroupVM.group.id, startDay: makeDays(selectedDate: date).prefix(daysInWeek)[0], endDay: makeDays(selectedDate: date).prefix(daysInWeek)[6])
         })
         .onChange(of: date) { newDate in
                                             
 
-            calendarVM.startSearch(groupID: selectedGroupVM.group?.id ?? " ", startDay: makeDays(selectedDate: newDate).prefix(daysInWeek)[0], endDay: makeDays(selectedDate: newDate).prefix(daysInWeek)[6])
+            calendarVM.startSearch(groupID: selectedGroupVM.group.id, startDay: makeDays(selectedDate: newDate).prefix(daysInWeek)[0], endDay: makeDays(selectedDate: newDate).prefix(daysInWeek)[6])
 
             
         }.onAppear{

@@ -15,20 +15,17 @@ struct UserProfilePage: View {
     @EnvironmentObject var userVM: UserViewModel
     @EnvironmentObject var navigationHelper : NavigationHelper
     @State var showInfo : Bool = false
-    @State var selectedIndex : Int = 0 
+    @State var selectedIndex : Int = 0
+    @State var seeProfilePicture: Bool = false
     
     @Environment(\.presentationMode) var presentationMode
     
-    let columns : [GridItem] = [
-        GridItem(.flexible(), spacing: 0),
-        GridItem(.flexible(), spacing: 0),
-        GridItem(.flexible(), spacing: 0)
-        
-        
-    ]
+  
     var body: some View {
         ZStack{
             Color("Background").zIndex(0)
+                
+            
             VStack{
 
                 HStack{
@@ -52,46 +49,60 @@ struct UserProfilePage: View {
                     Button(action:{
                         self.showInfo.toggle()
                     },label:{
-                        Text("...")
+                        Text("...").font(.title3)
                     }).padding(.trailing,10)
                     
                 }.padding(.top,50)
                     
-                  
+                ScrollView{
                 HStack{
                     
                     Spacer()
                     
                     VStack(spacing: 4){
                         Button(action:{
-                            
+                            self.seeProfilePicture.toggle()
                         },label:{
                             WebImage(url: URL(string: user.profilePicture ?? ""))
                                 .resizable()
                                 .scaledToFill()
                                 .frame(width:70,height:70)
                                 .clipShape(Circle())
-                        })
+                        }).fullScreenCover(isPresented: $seeProfilePicture) {
+                            
+                        } content: {
+                                WebImage(url: URL(string: user.profilePicture ?? ""))
+                                    .resizable()
+                                    .scaledToFit()
+                        .onTapGesture{
+                                self.seeProfilePicture.toggle()
+                            }
+                        }
+
                         VStack(spacing: 7){
                             HStack{
                             Text("\(user.nickName ?? "")").font(.headline).bold()
                                 Circle().foregroundColor((user.isActive ?? false) ? Color.green : Color.red).frame(width: 8, height: 8)
                             }
                             
-                            if userVM.user?.pendingFriendsListID?.contains(user.id ?? "") ?? false {
-                            Text("Pending Friend Request").foregroundColor(.gray)
-                            }else if userVM.user?.friendsListID?.contains(user.id ?? "") ?? false{
-                                Text("Friends").foregroundColor(.gray)
-                            }else if userVM.user?.blockedAccountsID?.contains(user.id ?? "") ?? false{
-                                Text("Blocked").foregroundColor(.gray)
+                            if user.id ?? "" != userVM.user?.id ?? " "{
+                                if userVM.user?.pendingFriendsListID?.contains(user.id ?? "") ?? false {
+                                Text("Pending Friend Request").foregroundColor(.gray)
+                                }else if userVM.user?.friendsListID?.contains(user.id ?? "") ?? false{
+                                    Text("Friends").foregroundColor(.gray)
+                                }else if userVM.user?.blockedAccountsID?.contains(user.id ?? "") ?? false{
+                                    Text("Blocked").foregroundColor(.gray)
+                                }
+                                else{
+                                    Button(action:{
+                                        userVM.sendFriendRequest(friend: user)
+                                    },label:{
+                                        Text("Send Friend Request").foregroundColor(FOREGROUNDCOLOR).padding(7).background(Color("AccentColor")).cornerRadius(16)
+                                    })
+                                }
                             }
-                            else{
-                                Button(action:{
-                                    userVM.sendFriendRequest(friend: user)
-                                },label:{
-                                    Text("Send Friend Request").foregroundColor(FOREGROUNDCOLOR).padding(7).background(Color("AccentColor")).cornerRadius(16)
-                                })
-                            }
+                            
+                       
                         }
                        
                     }.padding(.leading)
@@ -102,33 +113,6 @@ struct UserProfilePage: View {
                     
                 }.padding(.top,10)
                 
-                VStack(alignment: .leading){
-                    HStack{
-                        
-                    Text("Mutuals").font(.body).bold()
-                        Button(action:{
-                            
-                        },label:{
-                            Text("See All").font(.caption)
-                        })
-                    }.padding(10)
-                    VStack(alignment: .leading){
-                        ScrollView(.horizontal, showsIndicators: false){
-                            HStack{
-                                ForEach(user.friendsList ?? [], id: \.id) { friend in
-                                    if friend.id != userVM.user?.id ?? "" || friend.id != user.id ?? ""{
-                                    NavigationLink {
-                                        UserProfilePage(user: friend)
-                                    } label: {
-                                        MutualFriendCell(user: friend, backgroundColor: Color("Color"))
-                                    }
-                                    }
-
-                                }
-                            }
-                        }
-                    }.padding(.horizontal,10)
-                }
                
                 
                     
@@ -137,16 +121,8 @@ struct UserProfilePage: View {
                         
                         Spacer()
                         
-                    Button(action:{
-                        
-                    },label:{
-                        VStack{
-                            Text("0").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
-                            Text("Tagged Posts").font(.callout).foregroundColor(.gray)
-                        }
-                    })
+               
                     
-                    Rectangle().frame(width: 1, height: 20).foregroundColor(.gray)
                     
                     
                     NavigationLink(destination: Text("Hello World")){
@@ -159,8 +135,7 @@ struct UserProfilePage: View {
                     
                     
                     
-                    Rectangle().frame(width: 1, height: 20).foregroundColor(.gray)
-                    
+                   Spacer()
                     
                     NavigationLink(destination: UserFriendsListView(user: user)) {
                         VStack{
@@ -182,77 +157,9 @@ struct UserProfilePage: View {
                 
                 
              
-                //Media
-                VStack{
-                    HStack{
-                        
-                        Spacer()
-                        
-                        
-                        Button(action:{
-                            selectedIndex = 0
-                        },label:{
-                            Image(systemName: "square.grid.3x3").font(.title3)
-                    
-                        }).foregroundColor(FOREGROUNDCOLOR)
-                        
-                        Spacer()
-                        
-                        Button(action:{
-                            selectedIndex = 1
-
-                        },label:{
-                                Image(systemName: "square.grid.3x3").font(.title3)
-                        
-                        }).foregroundColor(FOREGROUNDCOLOR)
-                        
-                        Spacer()
-                        Button(action:{
-                            selectedIndex = 2
-
-                        },label:{
-                            
-                                Image(systemName: "square.grid.3x3").font(.title3)
-                        
-                        }).foregroundColor(FOREGROUNDCOLOR)
-                        
-                        Spacer()
-                        
-                        Button(action:{
-                            selectedIndex = 3
-
-                        },label:{
-                            
-                                Image(systemName: "square.grid.3x3").font(.title3)
-                        
-                        }).foregroundColor(FOREGROUNDCOLOR)
-                        
-                        Spacer()
-                    }.padding(.horizontal,30)
-                   
-                }.padding(.vertical)
-                 
                 
-                
-                ScrollView(showsIndicators: false){
-                LazyVGrid(columns: columns, spacing: 1) {
-                    ForEach(0..<12){ index in
-                       
-                            
-                            Image(uiImage: UIImage(named: "Icon")!)
-                                .resizable()
-                                .frame(width: UIScreen.main.bounds.width/3, height: 150)
-                                .aspectRatio(contentMode: .fit)
-                                .overlay(Rectangle().stroke(Color("Color"), lineWidth: 1))
-                        
-
-                        
-                    }
+                    Spacer()
                 }
-            }
-                
-                
-                
                 
             }.zIndex(1).opacity(showInfo ? 0.3 : 1).onTapGesture {
                 if showInfo{
@@ -261,7 +168,7 @@ struct UserProfilePage: View {
                 }
             }.disabled(showInfo)
            
-                
+            
                 
             BottomSheetView(isOpen: $showInfo, maxHeight: UIScreen.main.bounds.height * 0.45 ) {
                 VStack{

@@ -44,9 +44,9 @@ struct GroupNotificationCell: View {
             case "pollCreated":
                 Text("Hello World")
             case "userAdded":
-                UserAddedNotificationCell(groupNotification: groupNotification, groupName: selectedGroupVM.group?.groupName ?? " ",actionTaken: "joined")
+                UserAddedNotificationCell(groupNotification: groupNotification, groupName: selectedGroupVM.group.groupName,actionTaken: "joined")
             case "userLeft":
-                UserAddedNotificationCell(groupNotification: groupNotification, groupName: selectedGroupVM.group?.groupName ?? " ",actionTaken: "left")
+                UserAddedNotificationCell(groupNotification: groupNotification, groupName: selectedGroupVM.group.groupName,actionTaken: "left")
             case "oneHourRemainingEvent":
                 Text("Hello World")
             case "oneHourRemainingCountdown":
