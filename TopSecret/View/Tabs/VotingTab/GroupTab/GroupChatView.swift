@@ -17,6 +17,7 @@ struct GroupChatView: View {
     @EnvironmentObject var userVM: UserViewModel
     @EnvironmentObject var groupVM: SelectedGroupViewModel
     @StateObject var chatVM = GroupChatViewModel()
+    @StateObject var keyboardVM : KeyboardViewModel
     @Environment(\.presentationMode) var presentationMode
     var userID: String
     var groupID: String
@@ -26,7 +27,7 @@ struct GroupChatView: View {
     @State var showMenu : Bool = false
     @State var openAddContent : Bool = false
     @State private var scrollViewOffset = CGFloat.zero
-    
+
     func initKeyboardGuardian(){
         NotificationCenter.default.addObserver(forName: UIResponder.keyboardDidShowNotification, object: nil, queue: .main) { data in
             let height1 = data.userInfo![UIResponder.keyboardFrameEndUserInfoKey] as! NSValue
@@ -43,6 +44,8 @@ struct GroupChatView: View {
         scrollViewProxy.scrollTo("Empty", anchor: .bottom)
     }
     
+    
+    
     var body: some View {
         ZStack{
             Color("Background")
@@ -50,6 +53,7 @@ struct GroupChatView: View {
                 
                 //Top Bar
                 
+            
                 
                 //Active Users
                 VStack{
@@ -142,7 +146,7 @@ struct GroupChatView: View {
                                 Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR)
                             }
                         })
-                        ResizableTF(height: $height, chatVM: chatVM).frame(height: self.height).cornerRadius(12)
+                        ResizableTF(height: $height, chatVM: chatVM, isPersonalChat: false).frame(height: self.height).cornerRadius(12)
                     Spacer()
                     Button(action:{
                         chatVM.sendTextMessage(text: chatVM.text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: "green", messageID: UUID().uuidString, messageType: chatVM.readLastMessage().userID == userVM.user?.id ?? " "  ? "followUpUserText" : "text", chatID: chatID, groupID: groupID, messageColor: chatVM.currentChatColor)
@@ -170,6 +174,7 @@ struct GroupChatView: View {
         }.edgesIgnoringSafeArea(.all)
             .navigationBarHidden(true)
             .onAppear{
+                print("chatID: \(chatID)")
             self.initKeyboardGuardian()
             chatVM.listenToChat(chatID: chatID, groupID: groupID) { completed in
                 print("fetched messages!")
@@ -182,7 +187,9 @@ struct GroupChatView: View {
         }
             .onDisappear{
             chatVM.exitChat(userID: userID, chatID: chatID, groupID: groupID)
-        }
+            }.onReceive(keyboardVM.$selectedView) { output in
+                keyboardVM.hideKeyboard()
+            }
             .onTapGesture {
                 if self.keyboardHeight != 0 {
                     
@@ -192,10 +199,13 @@ struct GroupChatView: View {
     }
 }
 
+
 struct ChatAddContentView : View {
     
-    @StateObject var chatVM: GroupChatViewModel
+    @StateObject var chatVM: GroupChatViewModel = GroupChatViewModel()
+    @StateObject var personalChatVM : PersonalChatViewModel = PersonalChatViewModel()
     @EnvironmentObject var userVM: UserViewModel
+    
     var body: some View {
         ZStack(alignment: .top){
             Color("Color")
@@ -219,7 +229,9 @@ struct ResizableTF : UIViewRepresentable {
    
     
     @Binding var height: CGFloat
-    @StateObject var chatVM: GroupChatViewModel
+    @StateObject var chatVM: GroupChatViewModel = GroupChatViewModel()
+    @StateObject var personalChatVM: PersonalChatViewModel = PersonalChatViewModel()
+    var isPersonalChat : Bool
     
     func makeCoordinator() -> Coordinator {
         return ResizableTF.Coordinator(parent1: self)
@@ -242,8 +254,13 @@ struct ResizableTF : UIViewRepresentable {
         DispatchQueue.main.async{
             self.height = uiView.contentSize.height
             if uiView.text != "" {
+                if isPersonalChat{
+                    uiView.text = personalChatVM.text
+                    uiView.textColor = UIColor(Color("\(personalChatVM.currentChatColor)"))
+                }else{
                 uiView.text = chatVM.text
                 uiView.textColor = UIColor(Color("\(chatVM.currentChatColor)"))
+                }
             }
         }
     }
@@ -256,17 +273,37 @@ struct ResizableTF : UIViewRepresentable {
         }
         
         func textViewDidBeginEditing(_ textView: UITextView) {
-            if self.parent.chatVM.text == ""{
-                textView.text = ""
-                textView.textColor = UIColor(Color("\(parent.chatVM.currentChatColor)"))
+            
+            if self.parent.isPersonalChat{
+                if self.parent.personalChatVM.text == ""{
+                    textView.text = ""
+                    textView.textColor = UIColor(Color("\(parent.personalChatVM.currentChatColor)"))
+                }
+            }else{
+                if self.parent.chatVM.text == ""{
+                    textView.text = ""
+                    textView.textColor = UIColor(Color("\(parent.chatVM.currentChatColor)"))
+                }
             }
+            
+           
+            
         }
         
         func textViewDidEndEditing(_ textView: UITextView) {
-            if self.parent.chatVM.text == ""{
-                textView.text = "message"
-                textView.textColor = .gray
+            
+            if self.parent.isPersonalChat{
+                if self.parent.personalChatVM.text == ""{
+                    textView.text = "message"
+                    textView.textColor = .gray
+                }
+            }else{
+                if self.parent.chatVM.text == ""{
+                    textView.text = "message"
+                    textView.textColor = .gray
+                }
             }
+           
         }
         
         
@@ -276,7 +313,11 @@ struct ResizableTF : UIViewRepresentable {
         func textViewDidChange(_ textView: UITextView) {
             DispatchQueue.main.async{
                 self.parent.height = textView.contentSize.height
+                if self.parent.isPersonalChat{
+                self.parent.personalChatVM.text = textView.text
+                }else{
                 self.parent.chatVM.text = textView.text
+                }
             }
         }
     }

@@ -8,6 +8,7 @@
 import SwiftUI
 import SDWebImageSwiftUI
 import Firebase
+import AVFoundation
 
 struct ActivityView: View {
     
@@ -102,20 +103,9 @@ struct ActivityView: View {
                             
                     }.padding(.top)
                     
-                    VStack(alignment: .leading){
-                        HStack{
-                            Text("MOTD").foregroundColor(FOREGROUNDCOLOR).font(.title2).bold()
-                            Spacer()
-                        }.padding(.leading,10)
-                        HStack{
-                            Spacer()
-                            Text("\(selectedGroupVM.group.motd )").font(.headline).bold()
-                            Spacer()
-                        }
-                    }
-                    
+                   
 
-                    GroupFeed(group: selectedGroupVM.group ?? Group())
+                    GroupFeed().environmentObject(selectedGroupVM)
                     
              
              
@@ -124,9 +114,6 @@ struct ActivityView: View {
                 
             }
             
-            NavigationLink(destination: GroupChatView(userID: userVM.user?.id ?? " ", groupID: group.id ?? " ", chatID: group.chat.id).environmentObject(selectedGroupVM), isActive: $openChat) {
-                EmptyView()
-            }
             
             BottomSheetView(isOpen: $showUsers, maxHeight: UIScreen.main.bounds.height * 0.45){
                 ShowAllUsersVotedView(showUsers: $showUsers, poll: $selectedPoll)
@@ -142,11 +129,23 @@ struct ActivityView: View {
 
 
 struct GroupFeed : View {
-    var group: Group
+    @EnvironmentObject var selectedGroupVM: SelectedGroupViewModel
+    
+  
     var body : some View {
         ZStack{
             Color("Background")
             VStack{
+                if !selectedGroupVM.groupFeed.isEmpty{
+                    ForEach(selectedGroupVM.groupFeed.indices){ i in
+                        if selectedGroupVM.groupFeed[i] is EventModel {
+                            EventCell(event: selectedGroupVM.groupFeed[i] as! EventModel, currentDate: Date(), action: false, isHomescreen: false)
+                        }else if selectedGroupVM.groupFeed[i] is PollModel{
+                            PollCell(poll: selectedGroupVM.groupFeed[i] as! PollModel)
+                        }
+                    }
+                }
+           
                 
             }
         }

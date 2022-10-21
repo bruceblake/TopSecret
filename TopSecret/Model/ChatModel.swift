@@ -24,24 +24,28 @@ struct ChatModel : Identifiable {
     var chatType : String = ""
     var nameColors : [[String:String]] = [[:]] //first string is the userID, second is the color picked
     var colorPicker : Int?
-    
+    var lastMessageID: String?
+    var lastMessage: Message?
+    var usersThatHaveSeenLastMessage : [String]?
     
     init(dictionary:[String:Any]){
         self.id = dictionary["id"] as? String ?? " "
         self.name = dictionary["name"] as? String ?? " "
         self.memberAmount = dictionary["memberAmount"] as? Int ?? 1
         self.users = dictionary["users"] as? [User] ?? []
-        self.usersTyping = dictionary["usersTypingList"] as? [User] ?? []
-        self.usersIdling = dictionary["usersIdlingList"] as? [User] ?? []
+        self.usersTyping = dictionary["usersTyping"] as? [User] ?? []
+        self.usersIdling = dictionary["usersIdling"] as? [User] ?? []
         self.usersID = dictionary["usersID"] as? [String] ?? []
-        self.usersTypingID = dictionary["usersTypingListID"] as? [String] ?? []
-        self.usersIdlingID = dictionary["usersIdlingListID"] as? [String] ?? []
+        self.usersTypingID = dictionary["usersTypingID"] as? [String] ?? []
+        self.usersIdlingID = dictionary["usersIdlingID"] as? [String] ?? []
         self.dateCreated = dictionary["dateCreated"] as? Date ?? Date()
         self.messages = dictionary["messages"] as? [Message] ?? [ ]
         self.groupID = dictionary["groupID"] as? String ?? " "
         self.chatType = dictionary["chatType"] as? String ?? " "
         self.nameColors = dictionary["nameColors"] as? [[String:String]] ?? [["":""]]
         self.colorPicker = dictionary["colorPicker"] as? Int ?? 0
+        self.lastMessage = dictionary["lastMessage"] as? Message ?? Message()
+        self.usersThatHaveSeenLastMessage = dictionary["usersThatHaveSeenLastMessage"] as? [String] ?? []
     }
     init(){
         self.id = UUID().uuidString

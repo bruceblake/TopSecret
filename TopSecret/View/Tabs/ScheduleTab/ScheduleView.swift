@@ -123,7 +123,7 @@ struct ScheduleView : View {
               
                 
                 Spacer()
-            }.padding(.top, UIScreen.main.bounds.height/6)
+            }
         }.frame(width: UIScreen.main.bounds.width)
        
     }

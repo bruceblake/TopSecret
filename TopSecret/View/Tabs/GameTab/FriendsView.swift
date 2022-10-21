@@ -10,17 +10,48 @@ import SwiftUI
 struct FriendsView: View {
     @EnvironmentObject var userVM : UserViewModel
     @StateObject var searchVM = SearchRepository()
-    @StateObject var chatVM = GroupChatViewModel()
+    @StateObject var personalChatVM : PersonalChatViewModel
+    
+    
+    
+    func sortPersonalChats(userID: String) -> [ChatModel]{
+        let chats = personalChatVM.personalChats
+        
+        return chats.sorted(by: { !($0.lastMessage?.usersThatHaveSeen?.contains(userID) ?? false) &&  ($1.lastMessage?.usersThatHaveSeen?.contains(userID) ?? false)} )
+    }
+    
     var body: some View {
         ZStack{
             Color("Background")
             VStack{
-                Text("Hello World")
-                Spacer()
+                ScrollView{
+                    VStack(spacing: 0){
+                        if ((userVM.user?.friendsList?.isEmpty ?? false)) {
+                            
+                            Text("You have 0 friends :(")
+                        }else{
+                            ForEach(self.sortPersonalChats(userID: userVM.user?.id ?? " "), id: \.id){ chat in
+                                NavigationLink {
+                                    PersonalChatView(personalChatVM: personalChatVM, keyboardVM: KeyboardViewModel(), chatID: chat.id)
+                                } label: {
+                                    FriendCell(user: personalChatVM.getPersonalChatUser(chat: chat, userID: userVM.user?.id ?? " "), personalChatVM: personalChatVM, chat: chat)
+                                }
+
+                                }
+                        }
+                  
+                    }
+                    
+                }
             }
-        }.frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height).edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
-            searchVM.startSearch(searchRequest: "allUsersFriends", id: userVM.user?.id ?? " ")
+            
+          
+
+
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
+            personalChatVM.listenToPersonalChats(userID: userVM.user?.id ?? " ")
         }
+        
     }
 }
 

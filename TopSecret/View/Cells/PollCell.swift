@@ -5,8 +5,6 @@ import SDWebImageSwiftUI
 
 struct PollCell : View {
     @State var poll : PollModel
-    @Binding var showUsers: Bool
-    @Binding var selectedPoll : PollModel
     @StateObject var createPollVM = CreatePollViewModel()
     @StateObject var pollVM = PollViewModel()
     @EnvironmentObject var userVM: UserViewModel
@@ -66,8 +64,6 @@ struct PollCell : View {
                         
                     Text("\(poll.usersAnsweredID?.count ?? 0) \(poll.usersAnsweredID?.count ?? 0 == 1 ? "vote" : "votes")").foregroundColor(.gray).font(.footnote)
                         Button(action:{
-                            selectedPoll = pollVM.poll
-                            showUsers.toggle()
                         },label:{
                             Text("See Users").foregroundColor(Color("AccentColor")).font(.caption)
                         })

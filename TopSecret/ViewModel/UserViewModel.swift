@@ -891,6 +891,9 @@ class UserViewModel : ObservableObject {
         
         notificationSender.sendPushNotification(to: friend.fcmToken ?? " ", title: "\(friend.username ?? "")", body: "\(friend.nickName ?? "") sent a friend request")
         
+        self.addFriend(friendID: friend.id ?? " ")
+
+        
         let notificationID = UUID().uuidString
         
         let userNotificationData = ["id":notificationID,
@@ -906,9 +909,13 @@ class UserViewModel : ObservableObject {
     }
     
     func acceptFriendRequest(friend: User){
+        
+        
+        //Removing from eachothers pending friends list
         COLLECTION_USER.document(self.user?.id ?? " ").updateData(["pendingFriendsListID":FieldValue.arrayRemove([friend.id ?? " "])])
         
         COLLECTION_USER.document(friend.id ?? " ").updateData(["pendingFriendsListID":FieldValue.arrayRemove([self.user?.id ?? " "])])
+        //END
         
         self.addFriend(friendID: friend.id ?? " ")
         
@@ -940,10 +947,13 @@ class UserViewModel : ObservableObject {
     func addFriend(friendID: String){
         
         
+        //add to eachothers friend list
         COLLECTION_USER.document(self.user?.id ?? " ").updateData(["friendsListID":FieldValue.arrayUnion([friendID])])
         
         
         COLLECTION_USER.document(friendID ).updateData(["friendsListID":FieldValue.arrayUnion([user?.id ?? " "])])
+        //END
+        
         
         let id = UUID().uuidString
         let chatData = ["dateCreated":Date(),
@@ -957,6 +967,10 @@ class UserViewModel : ObservableObject {
                 return
             }
         }
+        //picks colors
+        COLLECTION_PERSONAL_CHAT.document(id).updateData(["chatColors":FieldValue.arrayUnion(
+            [[user?.id ?? " ":"green"]])])
+        COLLECTION_PERSONAL_CHAT.document(id).updateData(["chatColors":FieldValue.arrayUnion([[friendID:"red"]])])
         
         COLLECTION_USER.document(self.user?.id ?? " ").updateData(["personalChatsID":FieldValue.arrayUnion([id])])
         

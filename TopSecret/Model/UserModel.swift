@@ -41,6 +41,7 @@ struct User : Identifiable, Hashable{
     var recentSearches : [String]?
     var personalChatsID : [String]
     var personalChats : [ChatModel]
+    var personalChatNotificationCount : Int?
 
 init(dictionary: [String:Any]) {
     self.id = dictionary["uid"] as? String ?? " "
@@ -70,6 +71,7 @@ init(dictionary: [String:Any]) {
     self.recentSearches = dictionary["recentSearches"] as? [String] ?? []
     self.personalChatsID = dictionary["personalChatsID"] as? [String] ?? []
     self.personalChats = dictionary["personalChats"] as? [ChatModel] ?? []
+    self.personalChatNotificationCount = dictionary["personalChatNotificationCount"] as? Int ?? 0
  }
 
     init(){

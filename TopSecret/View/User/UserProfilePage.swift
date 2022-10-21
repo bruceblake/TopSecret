@@ -15,7 +15,8 @@ struct UserProfilePage: View {
     @EnvironmentObject var userVM: UserViewModel
     @EnvironmentObject var navigationHelper : NavigationHelper
     @State var showInfo : Bool = false
-    @State var selectedIndex : Int = 0 
+    @State var selectedIndex : Int = 0
+    @State var seeProfilePicture: Bool = false
     
     @Environment(\.presentationMode) var presentationMode
     
@@ -60,34 +61,48 @@ struct UserProfilePage: View {
                     
                     VStack(spacing: 4){
                         Button(action:{
-                            
+                            self.seeProfilePicture.toggle()
                         },label:{
                             WebImage(url: URL(string: user.profilePicture ?? ""))
                                 .resizable()
                                 .scaledToFill()
                                 .frame(width:70,height:70)
                                 .clipShape(Circle())
-                        })
+                        }).fullScreenCover(isPresented: $seeProfilePicture) {
+                            
+                        } content: {
+                                WebImage(url: URL(string: user.profilePicture ?? ""))
+                                    .resizable()
+                                    .scaledToFit()
+                        .onTapGesture{
+                                self.seeProfilePicture.toggle()
+                            }
+                        }
+
                         VStack(spacing: 7){
                             HStack{
                             Text("\(user.nickName ?? "")").font(.headline).bold()
                                 Circle().foregroundColor((user.isActive ?? false) ? Color.green : Color.red).frame(width: 8, height: 8)
                             }
                             
-                            if userVM.user?.pendingFriendsListID?.contains(user.id ?? "") ?? false {
-                            Text("Pending Friend Request").foregroundColor(.gray)
-                            }else if userVM.user?.friendsListID?.contains(user.id ?? "") ?? false{
-                                Text("Friends").foregroundColor(.gray)
-                            }else if userVM.user?.blockedAccountsID?.contains(user.id ?? "") ?? false{
-                                Text("Blocked").foregroundColor(.gray)
+                            if user.id ?? "" != userVM.user?.id ?? " "{
+                                if userVM.user?.pendingFriendsListID?.contains(user.id ?? "") ?? false {
+                                Text("Pending Friend Request").foregroundColor(.gray)
+                                }else if userVM.user?.friendsListID?.contains(user.id ?? "") ?? false{
+                                    Text("Friends").foregroundColor(.gray)
+                                }else if userVM.user?.blockedAccountsID?.contains(user.id ?? "") ?? false{
+                                    Text("Blocked").foregroundColor(.gray)
+                                }
+                                else{
+                                    Button(action:{
+                                        userVM.sendFriendRequest(friend: user)
+                                    },label:{
+                                        Text("Send Friend Request").foregroundColor(FOREGROUNDCOLOR).padding(7).background(Color("AccentColor")).cornerRadius(16)
+                                    })
+                                }
                             }
-                            else{
-                                Button(action:{
-                                    userVM.sendFriendRequest(friend: user)
-                                },label:{
-                                    Text("Send Friend Request").foregroundColor(FOREGROUNDCOLOR).padding(7).background(Color("AccentColor")).cornerRadius(16)
-                                })
-                            }
+                            
+                       
                         }
                        
                     }.padding(.leading)

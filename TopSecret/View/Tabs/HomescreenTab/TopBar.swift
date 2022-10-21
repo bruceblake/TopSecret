@@ -91,19 +91,18 @@ struct TopBar : View {
                 },label:{
                     
                     ZStack{
-                        Circle().foregroundColor(Color("Color")).frame(width: 35, height: 35)
+                        Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
                         
                         
-                        
+                        if tabIndex == .friends {
+                            
+                        Image(systemName: "person.fill.badge.plus").foregroundColor(FOREGROUNDCOLOR).font(.title3)
+                        }else {
                         Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title3)
-                        
-                   
-                        
-                        
-                        
+                        }
+
                     }
-          
-                    
+      
                 }).padding(.trailing)
                 
             

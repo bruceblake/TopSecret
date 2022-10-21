@@ -22,6 +22,7 @@ struct Message : Identifiable{
     var profilePicture: String?
     var messageType: String?
     var edited: Bool?
+    var usersThatHaveSeen : [String]?
     
     enum MessageType {
         case text
@@ -45,6 +46,7 @@ struct Message : Identifiable{
         self.messageType = dictionary["messageType"] as? String ?? ""
         self.userID = dictionary["userID"] as? String ?? " "
         self.edited = dictionary["edited"] as? Bool ?? false
+        self.usersThatHaveSeen = dictionary["usersThatHaveSeen"] as? [String] ?? []
     }
     
     

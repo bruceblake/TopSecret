@@ -17,8 +17,7 @@ struct HomeScreenView: View {
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var navigationHelper : NavigationHelper
     @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
-
-    @State var selectedView : Int = 0
+    @StateObject var keyboardVM = KeyboardViewModel()
     @State var goBack = false
     @State var showAddContent = false
     @Binding var group : Group
@@ -29,6 +28,7 @@ struct HomeScreenView: View {
     
     @Environment(\.presentationMode) var presentationMode
 
+    
             
     var body: some View {
         
@@ -57,10 +57,10 @@ struct HomeScreenView: View {
                                         .font(.title3).foregroundColor(FOREGROUNDCOLOR)
                             }.padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
                             
-                            if self.userVM.user?.userNotificationCount ?? 0 != 0 {
+                            if self.userVM.user?.personalChatNotificationCount ?? 0 != 0 {
                                 ZStack{
                                     Circle().foregroundColor(Color("AccentColor")).frame(width: 20, height: 20)
-                                    Text("\(self.userVM.user?.userNotificationCount ?? 0)").foregroundColor(Color.yellow).font(.body)
+                                    Text("\(self.userVM.user?.personalChatNotificationCount ?? 0)").foregroundColor(Color.yellow).font(.body)
                                 }.offset(x: 20, y: -18)
                             }
                             
@@ -112,17 +112,17 @@ struct HomeScreenView: View {
                 Spacer()
                 
               
-                PagerTabView(showLabels: true, tint: Color("AccentColor"), selection: $selectedView, labels: ["Home","Chat","Calendar","Map"]) {
-                    ActivityView(group: $group, selectedView: $selectedView).pageView(ignoresSafeArea: true, edges: .bottom)
+                PagerTabView(showLabels: true, tint: Color("AccentColor"), selection: $keyboardVM.selectedView, labels: ["Home","Chat","Calendar","Map"]) {
+                    ActivityView(group: $group, selectedView: $keyboardVM.selectedView).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
                  
-                    GroupChatView(userID: userVM.user?.id ?? " ", groupID: group.id, chatID: group.chat.id).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
+                    GroupChatView(keyboardVM: keyboardVM, userID: userVM.user?.id ?? " ", groupID: group.id, chatID: selectedGroupVM.group.chat.id).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
                 
         
                     
-                    GroupCalendarView(calendar: Calendar(identifier: .gregorian)).pageView(ignoresSafeArea: true, edges: .bottom)
+                    GroupCalendarView(calendar: Calendar(identifier: .gregorian)).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
 
                     
-                    MapView(group: $group).pageView(ignoresSafeArea: true, edges: .bottom)
+                    MapView(group: $group).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
                     
                 }.padding(.top)
                     .ignoresSafeArea(.container, edges: .bottom )
@@ -140,7 +140,7 @@ struct HomeScreenView: View {
             
             BottomSheetView(isOpen: $showAddContent, maxHeight: UIScreen.main.bounds.height * 0.45) {
                 
-                    AddContentView(showAddContentView: $showAddContent, group: $group)
+                AddContentView(showAddContentView: $showAddContent, group: $group).environmentObject(selectedGroupVM)
                 
             }.zIndex(3)
             
@@ -160,6 +160,7 @@ struct HomeScreenView: View {
             for listener in selectedGroupVM.listeners{
                 listener.remove()
             }
+            selectedGroupVM.groupFeed = []
         }
         .onTapGesture {
             if showAddContent{

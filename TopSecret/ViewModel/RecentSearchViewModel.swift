@@ -16,6 +16,9 @@ class RecentSearchViewModel : ObservableObject {
     @Published var showSeeAll: Bool = false
     let userDefaults = UserDefaults.standard
     
+    init(){
+        userDefaults.set([], forKey: "recentSearches")
+    }
     
     func fetchSearches(completion: @escaping (Bool) -> ()) -> (){
         self.recentSearches = userDefaults.object(forKey: "recentSearches") as? [String] ?? []
