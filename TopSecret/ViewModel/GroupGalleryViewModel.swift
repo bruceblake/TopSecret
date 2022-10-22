@@ -46,6 +46,8 @@ class GroupGalleryViewModel : ObservableObject {
                     }
                 }
             }
+            
+            self.fetchPhotos(userID: userID, groupID: group.id)
         }
     }
     

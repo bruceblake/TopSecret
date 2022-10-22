@@ -35,73 +35,23 @@ struct ActivityView: View {
                     HStack(alignment: .top){
                             
                           
-                            
-                            NavigationLink(destination: GroupNotificationsView(group: $group).environmentObject(selectedGroupVM)) {
-                                ZStack{
-                                    Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
-                                    
-                                    
-                                    
-                                    Image(systemName: "envelope.fill").foregroundColor(FOREGROUNDCOLOR).font(.title3)
-                                    
-                                 
-                                    
-                                    
-                                }
-                            }.padding(.leading,10)
+                           
                             
                             Spacer()
                             
-                            VStack{
-                                
-                                ZStack{
-                                    Button(action:{
-                                        
-                                    },label:{
-                                        WebImage(url: URL(string: selectedGroupVM.group.groupProfileImage))
-                                                .resizable()
-                                                .scaledToFill()
-                                                .frame(width:70,height:70)
-                                                .clipShape(Circle())
-                                    })
-                                    
-                                    ZStack{
-                                        Circle().foregroundColor(Color("AccentColor")).frame(width: 22, height: 22)
-                                        Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR)
-                                    }.offset(x: 25, y: 25).onTapGesture {
-                                        print("add to group story")
-                                    }
-                                }
-                                
-                                Text("427 views")
-                                
-                            }
                             
-                          Spacer()
-                            
-                            Button(action:{
+                               
                                 
-                         
-                                
-                                self.openChat.toggle()
-                            },label:{
-                                    ZStack{
-                                        Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
-                                        
-                                        
-                                        
-                                        Image(systemName: "photo.on.rectangle.angled").foregroundColor(FOREGROUNDCOLOR).font(.title3)
-                                        
-                                      
-                                        
-                                        
-                                    }
-                                
-                            }).padding(.trailing,10)
+                        Spacer()
 
+                            }.padding(.top)
                             
                             
-                    }.padding(.top)
+                           
+                
+                            
+                            
+                    
                     
                    
 

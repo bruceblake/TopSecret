@@ -23,7 +23,7 @@ struct TopSecretApp: App {
     var body: some Scene {
         
         WindowGroup {
-            ContentView().environmentObject(UserViewModel()).environmentObject(NavigationHelper()).environmentObject(TabViewModel())
+            ContentView().environmentObject(UserViewModel()).environmentObject(TabViewModel())
                 .environmentObject(RegisterValidationViewModel()).environmentObject(SelectedGroupViewModel())
         }
     }

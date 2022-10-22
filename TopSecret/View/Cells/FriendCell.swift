@@ -14,6 +14,27 @@ struct FriendCell: View {
     var chat: ChatModel
     @EnvironmentObject var userVM: UserViewModel
     
+    
+    func getTimeSinceMessage(lastMessageDate: Date) -> String{
+       let interval = (Date() - lastMessageDate)
+        
+        
+        var seconds = interval.second ?? 0
+        var minutes = (seconds / 60)
+        var hours = (minutes / 3600)
+        
+        if seconds < 60{
+            return "\(seconds)s"
+        }else if seconds < 3600  {
+            return "\(minutes)m"
+        }else if seconds < 86400 {
+            return "\(hours)h"
+        }
+        
+        return ""
+        
+    }
+    
     var body: some View {
     
             VStack(alignment: .leading){
@@ -31,29 +52,89 @@ struct FriendCell: View {
                     .scaledToFill()
                     .frame(width:48,height:48)
                     .clipShape(Circle())
-                    VStack(alignment: .leading, spacing: 0){
-                        Text("\(user.nickName ?? "")").foregroundColor(Color("Foreground")).bold()
-                        
-                        HStack{
-                            if chat.usersTypingID.contains(user.id ?? ""){
-                                Text("is typing...").foregroundColor(Color("AccentColor"))
-                            }else{
-                        Text("\( (chat.lastMessage ?? Message() ).messageValue ?? "")")
-                            
-                            
-                            Spacer()
-                            Text("\( (chat.lastMessage ?? Message() ).timeStamp?.dateValue() ?? Date(), style: .time)")
-                        }
-                        }.foregroundColor(.gray)
-                    }
                     
-                    Spacer()
+                    HStack(alignment: .center){
+                        
+                        VStack(alignment: .leading, spacing: 0){
+                            
+                            VStack(alignment: .leading, spacing: 2){
+                            Text("\(user.nickName ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.headline)
+                                
+                            
+                        
+                             
+                            
+                            
+                                HStack(alignment: .center){
+                                if chat.usersTypingID.contains(user.id ?? ""){
+                                    Text("is typing...").foregroundColor(Color("AccentColor"))
+                                }else{
+                           
+                                    if (chat.usersThatHaveSeenLastMessage?.contains(userVM.user?.id ?? "") ?? false ){
+                                        
+                                        Text("\( (chat.lastMessage ?? Message() ).messageValue ?? "")").lineLimit(1).foregroundColor(Color.gray).font(.subheadline
+                                        )
+                                             
+                                    }else{
+                                        Text("\( (chat.lastMessage ?? Message() ).messageValue ?? "")").lineLimit(1).foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+                                    }
+                                      
+                                
+                                    
+                                
+                                
+                               
+                            }
+                            }.foregroundColor(.gray)
+                                
+                                if ((chat.usersThatHaveSeenLastMessage?.contains(userVM.user?.id ?? " ") ?? false)){
+                                  
+                                    
+                                    if (chat.usersThatHaveSeenLastMessage?.contains(user.id ?? "") ?? false){
+                                        HStack(alignment: .center){
+                                            
+                                            Image(systemName: "play").foregroundColor(Color("AccentColor")).font(.caption)
+                                            Text("Read").foregroundColor(Color.gray).font(.subheadline)
+                                           
+                                            Text("\(self.getTimeSinceMessage(lastMessageDate: chat.lastMessage?.timeStamp?.dateValue() ?? Date() ))").font(.footnote).foregroundColor(FOREGROUNDCOLOR)
+                                        }
+                                            
+                                          
+                                        
+                                    }else{
+                                        HStack(alignment: .center){
+                                            
+                                            
+                                            Image(systemName: "play.fill").foregroundColor(Color("AccentColor")).font(.caption)
+                                            
+                                            Text("Delivered").foregroundColor(Color.gray).font(.subheadline)
+                                            
+                                          
+                                            Text("\(self.getTimeSinceMessage(lastMessageDate: chat.lastMessage?.timeStamp?.dateValue() ?? Date() ))").font(.footnote).foregroundColor(FOREGROUNDCOLOR)
+                                            
+                                        }
+                                        
+                                    }
+                                    
+                                  
+                                }
+                            
+                        }
+                            
+                            
+                           
+                                  
+                            }
+                            
+                        }
+                        Spacer()
+                        
+                            
+                
+                
+                    
                 }.padding()
-            }.padding(.horizontal,10).background(Rectangle().stroke(Color("Color"))).onAppear{
-                for user in chat.usersTyping{
-                    print("username: \(user.username ?? " ")")
-                }
-            }
+            }.padding(.horizontal,10).background(Rectangle().stroke(Color("Color")))
     }
 }
 

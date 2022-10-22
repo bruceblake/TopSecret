@@ -45,6 +45,25 @@ struct PersonalChatView : View {
         scrollViewProxy.scrollTo("Empty", anchor: .bottom)
     }
     
+    
+    func getChatColor(userID: String) -> String{
+        var color = ""
+        var nameColors = personalChatVM.chat.nameColors
+        
+        for index in nameColors{
+            var keys = index.map{$0.key}
+            var values = index.map{$0.value}
+            
+            for i in keys.indices {
+                if keys[i] == userID{
+                    color = values[i]
+                }
+            }
+        }
+        
+        return color
+    }
+    
     var body: some View {
         ZStack{
             Color("Background")
@@ -74,6 +93,7 @@ struct PersonalChatView : View {
                                         .scaledToFill()
                                         .frame(width:50,height:50)
                                         .clipShape(Circle())
+                                        .overlay(Circle().stroke(personalChatVM.chat.usersIdlingID.contains(self.getPersonalChatUser().id ?? "") ? Color("AccentColor") : Color.gray, lineWidth: 3))
                     Text("\(getPersonalChatUser().nickName ?? "")").bold().font(.headline)
                         }
                     }.foregroundColor(FOREGROUNDCOLOR)
@@ -97,38 +117,7 @@ struct PersonalChatView : View {
                     .padding(.trailing,10)
                     
                 }.padding(.top,50)
-                VStack{
-                ScrollView(.horizontal){
-                    HStack(spacing: 5){
-                        ForEach(personalChatVM.chat.users ?? [], id: \.id){ user in
-                            
-                            NavigationLink(destination: UserProfilePage(user: user), label:{
-                                
-                                VStack(spacing: 5){
-                                    WebImage(url: URL(string: user.profilePicture ?? ""))
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width:40,height:40)
-                                        .clipShape(Circle())
-                                        .overlay(Circle().stroke(personalChatVM.chat.usersIdlingID.contains(user.id ?? "") ? Color("AccentColor") : Color.gray, lineWidth: 2))
-                                    Text("\(user.nickName ?? "TOP SECRET USER")").foregroundColor(FOREGROUNDCOLOR)
-                                }
-                                
-                                
-                                
-                            }).padding(.leading,5).padding(.top,5)
-                            
-                            
-                            
-                            
-                            
-                        }
-                    }
-                    
-                    
-                }.padding(5)
-                Divider()
-            }
+             
                 
                 ZStack(alignment: .bottomTrailing){
                     
@@ -139,10 +128,11 @@ struct PersonalChatView : View {
                                     
                                     
                                     if message.messageType == "text"{
-                                        MessageTextCell(showMenu: $showMenu, message: message, chatID: personalChatVM.chat.id)
+                                        MessageTextCell(showMenu: $showMenu, message: message, chatID: personalChatVM.chat.id).padding([.leading,.top],5)
                                     }else if message.messageType == "followUpUserText"{
-                                        MessageFollowUpTextCell(showMenu: $showMenu, message: message, chatID: personalChatVM.chat.id)
+                                        MessageFollowUpTextCell(showMenu: $showMenu, message: message, chatID: personalChatVM.chat.id).padding([.leading,.top],5)
                                     }
+                                    
                                 }
                                 
                                 
@@ -175,7 +165,10 @@ struct PersonalChatView : View {
                             
                         }
                      
-                    }.coordinateSpace(name: "scroll")
+                    }.coordinateSpace(name: "scroll").gesture(DragGesture().onChanged { _ in
+                        self.keyboardHeight = 0
+                        UIApplication.shared.windows.forEach { $0.endEditing(false) }
+                    })
                     
                     Button(action:{
                         personalChatVM.scrollToBottom += 1
@@ -206,7 +199,7 @@ struct PersonalChatView : View {
                         ResizableTF(height: $height, personalChatVM: personalChatVM, isPersonalChat: true).frame(height: self.height).cornerRadius(12)
                     Spacer()
                     Button(action:{
-                        personalChatVM.sendTextMessage(text: personalChatVM.text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: "green", messageID: UUID().uuidString, messageType: personalChatVM.getLastMessage().userID == userVM.user?.id ?? " "  ? "followUpUserText" : "text", chatID: personalChatVM.chat.id, messageColor: personalChatVM.currentChatColor)
+                        personalChatVM.sendTextMessage(text: personalChatVM.text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: self.getChatColor(userID: userVM.user?.id ?? " "), messageID: UUID().uuidString, messageType: personalChatVM.getLastMessage().userID == userVM.user?.id ?? " "  ? "followUpUserText" : "text", chatID: personalChatVM.chat.id, messageColor: personalChatVM.currentChatColor)
                         personalChatVM.text = ""
                         personalChatVM.scrollToBottom += 1
 

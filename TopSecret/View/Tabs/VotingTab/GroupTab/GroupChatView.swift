@@ -12,7 +12,6 @@ import UIKit
 import NIOSSL
 import Firebase
 
-
 struct GroupChatView: View {
     @EnvironmentObject var userVM: UserViewModel
     @EnvironmentObject var groupVM: SelectedGroupViewModel
@@ -210,14 +209,13 @@ struct ChatAddContentView : View {
         ZStack(alignment: .top){
             Color("Color")
             VStack{
-                Button(action:{
-                    chatVM.currentChatColor =  chatVM.currentChatColor == "green" ? "red" : "green"
-                },label:{
-                    HStack{
-                        Text("Text Color: ")
-                        Text("\(chatVM.currentChatColor.uppercased())").foregroundColor(Color("\(chatVM.currentChatColor)"))
-                    }
-                }).padding(.vertical,10).frame(width: UIScreen.main.bounds.width/1.2).background(Color("Background")).cornerRadius(15)
+                NavigationLink {
+                    
+                } label: {
+                    Text("Color Wheel")
+                }.padding(.vertical,10).frame(width: UIScreen.main.bounds.width/1.2).background(Color("Background")).cornerRadius(15)
+
+           
             }
             
         }

@@ -16,7 +16,6 @@ import CoreData
 
 struct ContentView: View {
     @EnvironmentObject var userVM : UserViewModel
-    @EnvironmentObject var navigationHelper : NavigationHelper
     @EnvironmentObject var tabVM : TabViewModel
     @StateObject var pollVM = PollViewModel()
     @State var tabIndex : Tab = .home
@@ -192,7 +191,7 @@ struct Tabs : View {
                             },label:{
                                 
                                 ZStack{
-                                    Image(systemName: self.tabIndex == .friends ? "bubble.left.fill" : "bubble.left").font(.title2)
+                                    Image(systemName: self.tabIndex == .friends ? "message.fill" : "message").font(.title2)
                                     
                                     if personalChatVM.getTotalNotifications(userID: userVM.user?.id ?? " ") != 0 {
                                         ZStack{

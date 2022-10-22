@@ -13,7 +13,6 @@ struct UserProfilePage: View {
     var user: User
     @StateObject var chatVM = ChatViewModel()
     @EnvironmentObject var userVM: UserViewModel
-    @EnvironmentObject var navigationHelper : NavigationHelper
     @State var showInfo : Bool = false
     @State var selectedIndex : Int = 0
     @State var seeProfilePicture: Bool = false

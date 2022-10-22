@@ -65,62 +65,7 @@ class PersonalChatViewModel : ObservableObject {
     }
     
     
-    func listenToPersonalChats(userID: String){
-        
-     
-      personalChatListener =  COLLECTION_PERSONAL_CHAT.whereField("usersID", arrayContains: userID).addSnapshotListener { snapshot, err in
-            if err != nil {
-                print("ERROR")
-                return
-            }
-            
-            var chatsToReturn : [ChatModel] = []
-            let groupD = DispatchGroup()
-            
-            
-            let documents = snapshot!.documents
-         
-            groupD.enter()
-            for document in documents{
-                var data = document.data()
-                let usersID = data["usersID"] as? [String] ?? []
-                let lastMessageID = data["lastMessageID"] as? String ?? " "
-                let usersTypingID = data["usersTypingID"] as? [String] ?? []
-                let id = data["id"] as? String ?? " "
-                groupD.enter()
-                  self.fetchChatUsers(users: usersID) { fetchedUsers in
-                data["users"] = fetchedUsers
-                groupD.leave()
-            }
-                groupD.enter()
-                self.fetchLastMessage(chatID: id, messageID: lastMessageID) { fetchedMessage in
-                    data["lastMessage"] = fetchedMessage
-                    groupD.leave()
-                }
-                
-                groupD.enter()
-                self.fetchUsersTyping(chatID: id, usersTypingID: usersTypingID){ fetchedUsers in
-                   data["usersTyping"] = fetchedUsers
-                    groupD.leave()
-                }
-                
-                groupD.enter()
-                COLLECTION_USER.document(userID).updateData(["personalChatNotificationCount":self.getTotalNotifications(userID: userID)])
-                groupD.leave()
-              
-                groupD.notify(queue: .main, execute:{
-                    chatsToReturn.append(ChatModel(dictionary: data))
-                })
-                
-            }
-            groupD.leave()
-            
-            groupD.notify(queue: .main, execute:{
-                self.personalChats = chatsToReturn
-            })
-            
-        }
-    }
+  
     
     func getTotalNotifications(userID: String) -> Int {
         var sum = 0

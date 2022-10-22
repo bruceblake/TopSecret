@@ -38,7 +38,7 @@ struct HomeScreen: View {
 
                 NavigationLink(destination: HomeScreenView(group: $selectedGroup), isActive: $openGroupHomescreen) {
                     EmptyView()
-                }
+                }.environment(\.modalMode, self.$openGroupHomescreen)
 
 
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
@@ -69,7 +69,7 @@ struct HomeScreen: View {
         var width : CGFloat = UIScreen.main.bounds.width
         var height : CGFloat = UIScreen.main.bounds.height
 
-
+        
 
         var body: some View{
             ScrollView(showsIndicators: false){

@@ -15,10 +15,10 @@ struct CurrentUserProfilePage: View {
     @State var isLoading: Bool = false
     @State var switchAccounts : Bool = false
     @State var selectedIndex : Int = 0
+    @State var seeProfilePicture : Bool = false
     
     @StateObject var chatVM = ChatViewModel()
     @EnvironmentObject var userVM : UserViewModel
-    @EnvironmentObject var navigationHelper : NavigationHelper
     
     @Environment(\.presentationMode) var presentationMode
     
@@ -54,14 +54,23 @@ struct CurrentUserProfilePage: View {
                             VStack{
                                 
                                 Button(action:{
-                                    
+                                    self.seeProfilePicture.toggle()
                                 },label:{
                                     WebImage(url: URL(string: userVM.user?.profilePicture ?? ""))
                                         .resizable()
                                         .scaledToFill()
                                         .frame(width:60,height:60)
                                         .clipShape(Circle())
-                                })
+                                }).fullScreenCover(isPresented: $seeProfilePicture) {
+                                    
+                                } content: {
+                                    WebImage(url: URL(string: userVM.user?.profilePicture ?? ""))
+                                            .resizable()
+                                            .scaledToFit()
+                                .onTapGesture{
+                                        self.seeProfilePicture.toggle()
+                                    }
+                                }
                                 
                                 VStack(alignment: .leading, spacing: 5){
                                     

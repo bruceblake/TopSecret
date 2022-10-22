@@ -15,7 +15,7 @@ struct FriendsView: View {
     
     
     func sortPersonalChats(userID: String) -> [ChatModel]{
-        let chats = personalChatVM.personalChats
+        let chats = userVM.personalChats 
         
         return chats.sorted(by: { !($0.lastMessage?.usersThatHaveSeen?.contains(userID) ?? false) &&  ($1.lastMessage?.usersThatHaveSeen?.contains(userID) ?? false)} )
     }
@@ -48,9 +48,7 @@ struct FriendsView: View {
           
 
 
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
-            personalChatVM.listenToPersonalChats(userID: userVM.user?.id ?? " ")
-        }
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
         
     }
 }

@@ -15,7 +15,6 @@ struct HomeScreenView: View {
     
     
     @EnvironmentObject var userVM : UserViewModel
-    @EnvironmentObject var navigationHelper : NavigationHelper
     @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
     @StateObject var keyboardVM = KeyboardViewModel()
     @State var goBack = false
@@ -38,46 +37,41 @@ struct HomeScreenView: View {
             
             VStack{
             
-                HStack{
+           
+                
+                HStack(alignment: .center){
                     
+                   
                     
-                    
-                    
-                    Button(action:{
-                        presentationMode.wrappedValue.dismiss()
-                    },label:{
-                        
-                        
-                        ZStack{
+                    HStack(alignment: .center){
+                        Button(action:{
+                            presentationMode.wrappedValue.dismiss()
+                        },label:{
                             
-                            HStack(spacing: 1){
-                                    Image(systemName: "chevron.left")
-                                        .font(.title3).foregroundColor(FOREGROUNDCOLOR)
-                                    Image(systemName: "house")
-                                        .font(.title3).foregroundColor(FOREGROUNDCOLOR)
-                            }.padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
                             
-                            if self.userVM.user?.personalChatNotificationCount ?? 0 != 0 {
-                                ZStack{
-                                    Circle().foregroundColor(Color("AccentColor")).frame(width: 20, height: 20)
-                                    Text("\(self.userVM.user?.personalChatNotificationCount ?? 0)").foregroundColor(Color.yellow).font(.body)
-                                }.offset(x: 20, y: -18)
+                            ZStack{
+                                
+                                HStack(spacing: 1){
+                                        Image(systemName: "chevron.left")
+                                            .font(.title3).foregroundColor(FOREGROUNDCOLOR)
+                                        Image(systemName: "house")
+                                            .font(.title3).foregroundColor(FOREGROUNDCOLOR)
+                                }.padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
+                                
+                                if self.userVM.user?.personalChatNotificationCount ?? 0 != 0 {
+                                    ZStack{
+                                        Circle().foregroundColor(Color("AccentColor")).frame(width: 20, height: 20)
+                                        Text("\(self.userVM.user?.personalChatNotificationCount ?? 0)").foregroundColor(Color.yellow).font(.body)
+                                    }.offset(x: 20, y: -18)
+                                }
+                                
+                                
                             }
+                           
+                           
+                         
                             
-                            
-                        }
-                       
-                       
-                     
-                        
-                    }).padding(.leading)
-                    
-
-                    Text(selectedGroupVM.group.groupName ).font(.title2).fontWeight(.heavy).minimumScaleFactor(0.5)
-                    
-                    Spacer()
-                    
-                    HStack{
+                        })
                         
                         Button(action:{
                             showAddContent.toggle()
@@ -85,15 +79,44 @@ struct HomeScreenView: View {
                             Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title2)
                         }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
                         
-                        Button(action: {
-                            
+                        
+                        
+                    }.padding(.leading)
+                    
+                    
+                  
+                    
+                    Spacer()
 
-                                withAnimation(.spring()){
-                                    self.showProfileView.toggle()
-                                }
-                        },label:{
-                                Image(systemName: "person.3.fill").foregroundColor(FOREGROUNDCOLOR).font(.title3)
-                        }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
+                
+                            
+                        Text(selectedGroupVM.group.groupName ).font(.title2).fontWeight(.heavy).minimumScaleFactor(0.5)
+                    
+                   
+                    
+                    Spacer()
+                    
+                    HStack{
+                        
+                        NavigationLink {
+                            GroupGalleryView()
+                        } label: {
+                            ZStack{
+                                Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
+                                
+                                
+                                
+                                Image(systemName: "photo.on.rectangle.angled").foregroundColor(FOREGROUNDCOLOR).font(.title3)
+                                
+                              
+                                
+                                
+                            }
+                        }
+
+                 
+                      
+                      
                         
                         NavigationLink(destination: GroupSettingsView().environmentObject(selectedGroupVM)){
                             Image(systemName: "gear").foregroundColor(FOREGROUNDCOLOR).font(.title3).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
@@ -109,9 +132,9 @@ struct HomeScreenView: View {
                     
                 }.padding(.top,60)
                 
+                
                 Spacer()
                 
-              
                 PagerTabView(showLabels: true, tint: Color("AccentColor"), selection: $keyboardVM.selectedView, labels: ["Home","Chat","Calendar","Map"]) {
                     ActivityView(group: $group, selectedView: $keyboardVM.selectedView).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
                  

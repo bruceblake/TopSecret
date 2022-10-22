@@ -33,7 +33,6 @@ class UserViewModel : ObservableObject {
     @Published var timedOut : Bool = false
     @Published var startFetch : Bool = false
     @Published var showWarning: Bool = false
-    
   
     
     static let shared = UserViewModel()
@@ -85,6 +84,142 @@ class UserViewModel : ObservableObject {
     }
     
     //listeners
+    
+    
+    func getTotalNotifications(userID: String) -> Int {
+        var sum = 0
+        for chat in self.personalChats{
+            if !(chat.usersThatHaveSeenLastMessage?.contains(userID) ?? false ){
+                sum += 1
+            }
+        }
+        return sum
+    }
+    
+    
+    
+    func listenToPersonalChats(userID: String){
+        
+        self.firestoreListener.append( COLLECTION_PERSONAL_CHAT.whereField("usersID", arrayContains: userID).addSnapshotListener { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            var chatsToReturn : [ChatModel] = []
+            let groupD = DispatchGroup()
+            
+            
+            let documents = snapshot!.documents
+         
+            groupD.enter()
+            for document in documents{
+                var data = document.data()
+                let usersID = data["usersID"] as? [String] ?? []
+                let lastMessageID = data["lastMessageID"] as? String ?? " "
+                let usersTypingID = data["usersTypingID"] as? [String] ?? []
+                let id = data["id"] as? String ?? " "
+                groupD.enter()
+                  self.fetchChatUsers(users: usersID) { fetchedUsers in
+                data["users"] = fetchedUsers
+                groupD.leave()
+            }
+                groupD.enter()
+                self.fetchLastMessage(chatID: id, messageID: lastMessageID) { fetchedMessage in
+                    data["lastMessage"] = fetchedMessage
+                    groupD.leave()
+                }
+                
+                groupD.enter()
+                self.fetchUsersTyping(chatID: id, usersTypingID: usersTypingID){ fetchedUsers in
+                   data["usersTyping"] = fetchedUsers
+                    groupD.leave()
+                }
+                
+                groupD.enter()
+                COLLECTION_USER.document(userID).updateData(["personalChatNotificationCount":self.getTotalNotifications(userID: userID)])
+                groupD.leave()
+              
+                groupD.notify(queue: .main, execute:{
+                    chatsToReturn.append(ChatModel(dictionary: data))
+                })
+                
+            }
+            groupD.leave()
+            
+            groupD.notify(queue: .main, execute:{
+                self.personalChats = chatsToReturn
+            })
+            
+        }
+                                       )
+    }
+   
+    func fetchLastMessage(chatID: String, messageID: String, completion: @escaping (Message) -> ()) -> () {
+        COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").document(messageID).getDocument { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            let data = snapshot!.data() as? [String:Any] ?? [:]
+            return completion(Message(dictionary: data))
+            
+        }
+    }
+
+    func fetchUsersTyping(chatID: String, usersTypingID: [String], completion: @escaping ([User]) -> ()) -> (){
+        var usersToReturn : [User] = []
+        var groupD = DispatchGroup()
+        
+        for userID in usersTypingID {
+            groupD.enter()
+            COLLECTION_USER.document(userID).getDocument { snapshot, err in
+                if err != nil {
+                   print("ERROR")
+                    return
+                }
+                
+                let data = snapshot?.data() as? [String:Any] ?? [:]
+                
+                usersToReturn.append(User(dictionary: data))
+                groupD.leave()
+            }
+        }
+        groupD.notify(queue: .main, execute: {
+            return completion(usersToReturn)
+        })
+    }
+    
+    func fetchChatUsers(users: [String], completion: @escaping ([User]) -> ()) -> (){
+        var usersToReturn : [User] = []
+        
+        var groupD = DispatchGroup()
+        
+        for userID in users {
+            groupD.enter()
+            COLLECTION_USER.document(userID).getDocument { snapshot, err in
+                if err != nil {
+                    print("ERROR")
+                    return
+                }
+                
+                let data = snapshot?.data() as? [String:Any] ?? [:]
+                
+                usersToReturn.append(User(dictionary: data))
+                groupD.leave()
+            }
+        }
+        
+        groupD.notify(queue: .main, execute: {
+            return completion(usersToReturn)
+        })
+    }
+    
+
+    
+   
+    
     
     func listenToUser(uid: String){
         let listener =  COLLECTION_USER.document(uid).addSnapshotListener { (snapshot, err) in
@@ -783,6 +918,7 @@ class UserViewModel : ObservableObject {
         self.listenToUserGroups(uid: uid)
         self.listenToNetworkChanges(uid: uid)
         self.listenToUser(uid: uid)
+        self.listenToPersonalChats(userID: uid)
         
     }
     
@@ -968,9 +1104,9 @@ class UserViewModel : ObservableObject {
             }
         }
         //picks colors
-        COLLECTION_PERSONAL_CHAT.document(id).updateData(["chatColors":FieldValue.arrayUnion(
+        COLLECTION_PERSONAL_CHAT.document(id).updateData(["nameColors":FieldValue.arrayUnion(
             [[user?.id ?? " ":"green"]])])
-        COLLECTION_PERSONAL_CHAT.document(id).updateData(["chatColors":FieldValue.arrayUnion([[friendID:"red"]])])
+        COLLECTION_PERSONAL_CHAT.document(id).updateData(["nameColors":FieldValue.arrayUnion([[friendID:"red"]])])
         
         COLLECTION_USER.document(self.user?.id ?? " ").updateData(["personalChatsID":FieldValue.arrayUnion([id])])
         
