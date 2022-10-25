@@ -27,6 +27,7 @@ struct GroupGalleryView: View {
     @State var selectedImageToEdit : GroupGalleryImageModel = GroupGalleryImageModel()
     @StateObject var searchRepository = SearchRepository()
     @State var readyToPost : Bool = false
+    @State var selectedOptionIndex : Int = 0
     
     let columns : [GridItem] = [
         GridItem(.flexible(), spacing: 0),
@@ -35,6 +36,8 @@ struct GroupGalleryView: View {
         
         
     ]
+    
+    var options = ["All","Favorites","Videos","Screenshots","Photos"]
     
     var body: some View {
         
@@ -56,13 +59,12 @@ struct GroupGalleryView: View {
                         }
                     }).padding(.leading).padding(.trailing,0)
                     
-                    
+                    Spacer()
               
                     
-                    SearchBar(text: $searchRepository.searchText, placeholder: "Gallery", onSubmit: {})
-                    
+                    Text("\(selectedGroupVM.group.groupName)'s Gallery")
                        
-                    
+                    Spacer()
                     
                     Button(action:{
                         self.picker.toggle()
@@ -77,37 +79,65 @@ struct GroupGalleryView: View {
                     
                 }.padding(.top,50)
                 
-           
-                Spacer()
+                    ScrollView(.horizontal){
+                        HStack{
+                        ForEach(options.indices){ index in
+                            
+                            Spacer()
+                            
+                                Button(action: {
+                                    selectedOptionIndex = index
+                                },label:{
+                                    Text("\(options[index])").foregroundColor(selectedOptionIndex == index ? Color("AccentColor") : FOREGROUNDCOLOR)
+                                })
+                            
+                           
+                        
+                        }
+                        }
+                }
                 
+                if selectedOptionIndex == 0 {
+                    ScrollView(showsIndicators: false){
+                    LazyVGrid(columns: columns, spacing: 1) {
+                        ForEach(groupGalleryVM.retrievedImages, id: \.id){ image in
+                            Button(action:{
+                                self.openImageToEdit.toggle()
+                                self.selectedImageToEdit = image
+                            },label:{
+                                
+                                Image(uiImage: image.image ?? UIImage(named: "Icon")!)
+                                    .resizable()
+                                    .frame(width: UIScreen.main.bounds.width/3, height: 150)
+                                    .aspectRatio(contentMode: .fit)
+                                    .overlay(Rectangle().stroke(Color("Background"), lineWidth: 2))
+                            }).fullScreenCover(isPresented: $openImageToEdit) {
+                                
+                            } content: {
+                                EditGalleryImageView(galleryImage: $selectedImageToEdit)
+                            }
+
+                            
+                        }
+                    }
+                }
+                }else if selectedOptionIndex == 1 {
+                    
+                }else if selectedOptionIndex == 2 {
+                    
+                }
+                else if selectedOptionIndex == 3 {
+                    
+                }else if selectedOptionIndex == 4 {
+                    
+                }
                 
                 //Gallery
                 
                     
                   
                         
-                            ScrollView(showsIndicators: false){
-                            LazyVGrid(columns: columns, spacing: 1) {
-                                ForEach(groupGalleryVM.retrievedImages, id: \.id){ image in
-                                    Button(action:{
-                                    
-                                    },label:{
-                                        
-                                        Image(uiImage: image.image ?? UIImage(named: "Icon")!)
-                                            .resizable()
-                                            .frame(width: UIScreen.main.bounds.width/3, height: 150)
-                                            .aspectRatio(contentMode: .fit)
-                                            .overlay(Rectangle().stroke(Color("Background"), lineWidth: 2))
-                                    }).fullScreenCover(isPresented: $openImageToEdit) {
-                                        
-                                    } content: {
-                                        EditGalleryImageView(galleryImage: $selectedImageToEdit)
-                                    }
-
-                                    
-                                }
-                            }
-                        }
+                           
                         
                         
                     

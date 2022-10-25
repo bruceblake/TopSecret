@@ -38,6 +38,9 @@ struct FriendCell: View {
     var body: some View {
     
             VStack(alignment: .leading){
+                
+                
+                //Message indicator
                 HStack(alignment: .center){
                     
                     if !((chat.usersThatHaveSeenLastMessage?.contains(userVM.user?.id ?? " ") ?? false)){
@@ -47,6 +50,7 @@ struct FriendCell: View {
                     }
                     
                     
+                    //Profile Picture
                 WebImage(url: URL(string: user.profilePicture ?? ""))
                     .resizable()
                     .scaledToFill()
@@ -96,7 +100,7 @@ struct FriendCell: View {
                                             Image(systemName: "play").foregroundColor(Color("AccentColor")).font(.caption)
                                             Text("Read").foregroundColor(Color.gray).font(.subheadline)
                                            
-                                            Text("\(self.getTimeSinceMessage(lastMessageDate: chat.lastMessage?.timeStamp?.dateValue() ?? Date() ))").font(.footnote).foregroundColor(FOREGROUNDCOLOR)
+                                            
                                         }
                                             
                                           
@@ -110,7 +114,7 @@ struct FriendCell: View {
                                             Text("Delivered").foregroundColor(Color.gray).font(.subheadline)
                                             
                                           
-                                            Text("\(self.getTimeSinceMessage(lastMessageDate: chat.lastMessage?.timeStamp?.dateValue() ?? Date() ))").font(.footnote).foregroundColor(FOREGROUNDCOLOR)
+                                          
                                             
                                         }
                                         
@@ -131,7 +135,7 @@ struct FriendCell: View {
                         
                             
                 
-                
+                    Text("\(self.getTimeSinceMessage(lastMessageDate: chat.lastMessage?.timeStamp?.dateValue() ?? Date() ))").font(.subheadline).foregroundColor(Color.gray)
                     
                 }.padding()
             }.padding(.horizontal,10).background(Rectangle().stroke(Color("Color")))

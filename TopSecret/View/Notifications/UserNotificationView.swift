@@ -17,27 +17,7 @@ struct UserNotificationView: View {
         ZStack{
             Color("Background")
             VStack{
-                HStack{
-                    
-                    Button(action:{
-                        presentationMode.wrappedValue.dismiss()
-                    },label:{
-                        ZStack{
-                            Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
-                            Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR)
-                        }
-                    }).padding(.leading,10)
-                    
-        
-                    Spacer()
-
-                    Text("Notifications").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold).font(.largeTitle)
-                    
-                 
-                    
-                    Spacer()
-                }.padding(.leading).padding(.top,50)
-                
+         
                        
                         
                     
@@ -75,7 +55,7 @@ struct UserNotificationView: View {
                 }
             }
             
-        }.frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height).edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear {
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear {
             for notification in userVM.user?.notifications ?? [] {
                 userVM.readUserNotification(userNotification: notification, userID: userVM.user?.id ?? " ")
                 print("notification!")

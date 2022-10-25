@@ -24,8 +24,15 @@ struct HomeScreen: View {
             if userVM.groups.isEmpty{
                 VStack{
                     Spacer()
-                    HStack{
+                    VStack{
                         Text("You have 0 Groups :(")
+                        NavigationLink(destination: {
+                            CreateGroupView()
+                        },label: {
+                            Text("Create A Group").foregroundColor(Color("Foreground"))
+                                .padding(.vertical)
+                                .frame(width: UIScreen.main.bounds.width/2.5).background(Color("AccentColor")).cornerRadius(15)
+                        })
                     }
                     Spacer()
                 }
@@ -164,7 +171,7 @@ struct HomeScreen: View {
                  
 
 
-                }.padding(.bottom,UIScreen.main.bounds.height/4)
+                }.padding(.bottom, UIScreen.main.bounds.height/4)
 
             }.onReceive(userVM.$startFetch) { output in
                 userVM.refresh()

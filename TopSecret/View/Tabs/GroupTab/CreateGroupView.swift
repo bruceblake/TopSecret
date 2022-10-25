@@ -12,7 +12,7 @@ import SDWebImageSwiftUI
 struct CreateGroupView: View {
     
     @EnvironmentObject var userVM : UserViewModel
-
+    @StateObject var searchVM = SearchRepository()
     @Environment(\.presentationMode) var presentationMode
     @StateObject var groupVM = GroupViewModel()
     @State var isShowingPhotoPicker:Bool = false
@@ -20,7 +20,7 @@ struct CreateGroupView: View {
     @State var images : [UIImage] = []
     @State var groupName : String = ""
     @State var selectedUsers : [User] = []
-    @StateObject var searchVM = SearchRepository()
+    @State var showInviteFriends : Bool = false
     
     var body: some View {
         ZStack(alignment: .topLeading){
@@ -42,7 +42,7 @@ struct CreateGroupView: View {
                     
                     Spacer()
                     
-                    Text("Create Group!").fontWeight(.bold).font(.title).padding(.trailing,10)
+                    Text("Create A Group").fontWeight(.bold).font(.title).padding(.trailing,10)
                     
                     Spacer()
                     
@@ -92,175 +92,24 @@ struct CreateGroupView: View {
                         }
                     }.padding(.horizontal)
                     //select users
-                    VStack(alignment: .leading){
-                        Text("Select Users for Group").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
-                        VStack(spacing: 20){
-                            
-                            HStack{
-                                SearchBar(text: $searchVM.searchText, placeholder: "search", onSubmit:{
-                                    searchVM.hasSearched = true
-                                }, backgroundColor: Color("Background"))
-                            }
-                            
-                            
-                            
-                            VStack{
-                                ScrollView(){
-                                    VStack(spacing: 10){
-                                        
-                                        if searchVM.hasSearched{
-                                            VStack(alignment: .leading){
-                                                if !searchVM.searchText.isEmpty && !searchVM.userFriendsReturnedResults.isEmpty{
-                                                    Text("Friends").fontWeight(.bold).foregroundColor(Color("Foreground"))
-                                                }
-                                                ForEach(searchVM.userFriendsReturnedResults, id: \.id){ friend in
-                                                    
-                                                    Button(action:{
-                                                        if selectedUsers.contains(friend){
-                                                            selectedUsers.removeAll { user in
-                                                                friend.id == user.id ?? ""
-                                                            }
-                                                        }else{
-                                                        selectedUsers.append(friend)
-                                                        }
-                                                    },label:{
-                                                        HStack{
-                                                            
-                                                            WebImage(url: URL(string: friend.profilePicture ?? ""))
-                                                                .resizable()
-                                                                .scaledToFill()
-                                                                .frame(width:40,height:40)
-                                                                .clipShape(Circle())
-                                                            
-                                                            VStack(alignment: .leading){
-                                                                Text("\(friend.nickName ?? "")").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
-                                                                Text("@\(friend.username ?? "")").font(.footnote).foregroundColor(.gray)
-                                                            }
-                                                            
-                                                            Spacer()
-                                                            Circle().frame(width: 20, height: 20).foregroundColor(selectedUsers.contains(friend) ? Color("AccentColor") : FOREGROUNDCOLOR)
-                                                            
-                                                       
-                                                        }.padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Background")))
-                                                    })
-                                                  
-
-                                                     
-                                                    
-
-                                                 
-                                                }
-                                                
-                                                VStack(alignment: .leading){
-                                                    if !searchVM.searchText.isEmpty && !searchVM.userReturnedResults.isEmpty{
-                                                        Text("Users").fontWeight(.bold).foregroundColor(Color("Foreground"))
-                                                    }
-                                                    ForEach(searchVM.userReturnedResults, id: \.id){ user in
-                                                        
-                                                        if !(userVM.user?.friendsList?.contains(user) ?? false) {
-                                                            Button(action:{
-                                                                if selectedUsers.contains(user){
-                                                                    selectedUsers.removeAll { selectedUser in
-                                                                        selectedUser.id == user.id ?? ""
-                                                                    }
-                                                                }else{
-                                                                selectedUsers.append(user)
-                                                                }
-                                                            },label:{
-                                                                HStack{
-                                                                    
-                                                                    WebImage(url: URL(string: user.profilePicture ?? ""))
-                                                                        .resizable()
-                                                                        .scaledToFill()
-                                                                        .frame(width:40,height:40)
-                                                                        .clipShape(Circle())
-                                                                    
-                                                                    VStack(alignment: .leading){
-                                                                        Text("\(user.nickName ?? "")").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
-                                                                        Text("@\(user.username ?? "")").font(.footnote).foregroundColor(.gray)
-                                                                    }
-                                                                    
-                                                                    Spacer()
-                                                                    Circle().frame(width: 20, height: 20).foregroundColor(selectedUsers.contains(user) ? Color("AccentColor") : FOREGROUNDCOLOR)
-                                                                    
-                                                               
-                                                                }.padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Background")))
-                                                            })
-                                                        }
-                                                        
-                                                      
-                                                      
-
-                                                         
-                                                        
-
-                                                     
-                                                    }
-                                                }
-                                            }
-                                        }else{
-                                           
-                                            VStack(alignment: .leading){
-                                                VStack(alignment: .leading){
-                                                    Text("Friends").fontWeight(.bold).foregroundColor(Color("Foreground"))
-                                                }
-                                                
-                                            ForEach(userVM.user?.friendsList ?? [], id: \.id){ friend in
-                                                Button(action:{
-                                                    if selectedUsers.contains(friend){
-                                                        selectedUsers.removeAll { user in
-                                                            user.id == friend.id ?? ""
-                                                        }
-                                                    }else{
-                                                    selectedUsers.append(friend)
-                                                    }
-                                                },label:{
-                                                HStack{
-                                                    
-                                                    WebImage(url: URL(string: friend.profilePicture ?? ""))
-                                                        .resizable()
-                                                        .scaledToFill()
-                                                        .frame(width:40,height:40)
-                                                        .clipShape(Circle())
-                                                    
-                                                    VStack(alignment: .leading){
-                                                        Text("\(friend.nickName ?? "")").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
-                                                        Text("@\(friend.username ?? "")").font(.footnote).foregroundColor(.gray)
-                                                    }
-                                                    
-                                                    Spacer()
-                                                    Circle().frame(width: 20, height: 20).foregroundColor(selectedUsers.contains(friend) ? Color("AccentColor") : FOREGROUNDCOLOR)
-                                                    
-                                               
-                                                }.padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Background")))
-                                                })
-                                            
-                                                
-                                            }
-                                                
-                                                
-                                                
-                                                
-                                                
-                                            }
-                                            
-                                            
-                                        }
-                                
-                                        
-                                        
-                                        
-                                    }
-                                        
-                                    
+                        HStack{
+                        Text("Invite Friends to Group").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                            Button(action: {
+                                self.showInviteFriends.toggle()
+                            },label:{
+                                ZStack{
+                                    Circle().frame(width: 35, height: 35).foregroundColor(Color("Color"))
+                                    Image(systemName: "magnifyingglass").foregroundColor(FOREGROUNDCOLOR)
                                 }
+                            }).fullScreenCover(isPresented: $showInviteFriends) {
+                                
+                            } content: {
+                                InviteFriendsToGroupView(selectedUsers: $selectedUsers, searchVM: searchVM)
                             }
                             
-                            
-                           
-                          
-                        }.padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
-                    }.padding(.horizontal)
+                            Spacer()
+                        }.padding(.leading)
+                
                      
                     VStack(alignment: .leading){
                         Text("Selected Users").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
@@ -285,7 +134,7 @@ struct CreateGroupView: View {
                 
              
                 
-                
+                Spacer()
 
             Button(action:{
                 let id = UUID().uuidString
@@ -317,5 +166,211 @@ struct CreateGroupView: View {
 struct CreateGroupView_Previews: PreviewProvider {
     static var previews: some View {
         CreateGroupView()
+    }
+}
+
+
+struct InviteFriendsToGroupView : View {
+    @EnvironmentObject var userVM: UserViewModel
+    @Binding var selectedUsers : [User]
+    @StateObject var searchVM: SearchRepository
+    @Environment(\.presentationMode) var presentationMode
+    
+    var body: some View {
+        ZStack{
+            Color("Color")
+        VStack(spacing: 20){
+            
+            HStack{
+                
+                Button(action:{
+                    presentationMode.wrappedValue.dismiss()
+                },label:{
+                    ZStack{
+                        Circle().frame(width: 40, height: 40).foregroundColor(Color("Background"))
+                        Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR)
+                    }
+                })
+                SearchBar(text: $searchVM.searchText, placeholder: "search", onSubmit:{
+                    searchVM.hasSearched = true
+                }, backgroundColor: Color("Background"))
+            }.padding(.top,50)
+            
+            
+            
+            VStack{
+                ScrollView(){
+                    VStack(spacing: 10){
+                        
+                        if searchVM.hasSearched{
+                            VStack(alignment: .leading){
+                                if !searchVM.searchText.isEmpty && !searchVM.userFriendsReturnedResults.isEmpty{
+                                    Text("Friends").fontWeight(.bold).foregroundColor(Color("Foreground"))
+                                }
+                                ForEach(searchVM.userFriendsReturnedResults, id: \.id){ friend in
+                                    
+                                    Button(action:{
+                                        if selectedUsers.contains(friend){
+                                            selectedUsers.removeAll { user in
+                                                friend.id == user.id ?? ""
+                                            }
+                                        }else{
+                                        selectedUsers.append(friend)
+                                        }
+                                    },label:{
+                                        HStack{
+                                            
+                                            WebImage(url: URL(string: friend.profilePicture ?? ""))
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width:40,height:40)
+                                                .clipShape(Circle())
+                                            
+                                            VStack(alignment: .leading){
+                                                Text("\(friend.nickName ?? "")").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
+                                                Text("@\(friend.username ?? "")").font(.footnote).foregroundColor(.gray)
+                                            }
+                                            
+                                            Spacer()
+                                            Circle().frame(width: 20, height: 20).foregroundColor(selectedUsers.contains(friend) ? Color("AccentColor") : FOREGROUNDCOLOR)
+                                            
+                                       
+                                        }.padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Background")))
+                                    })
+                                  
+
+                                     
+                                    
+
+                                 
+                                }
+                                
+                                VStack(alignment: .leading){
+                                    if !searchVM.searchText.isEmpty && !searchVM.userReturnedResults.isEmpty{
+                                        Text("Users").fontWeight(.bold).foregroundColor(Color("Foreground"))
+                                    }
+                                    ForEach(searchVM.userReturnedResults, id: \.id){ user in
+                                        
+                                        if !(userVM.user?.friendsList?.contains(user) ?? false) {
+                                            Button(action:{
+                                                if selectedUsers.contains(user){
+                                                    selectedUsers.removeAll { selectedUser in
+                                                        selectedUser.id == user.id ?? ""
+                                                    }
+                                                }else{
+                                                selectedUsers.append(user)
+                                                }
+                                            },label:{
+                                                HStack{
+                                                    
+                                                    WebImage(url: URL(string: user.profilePicture ?? ""))
+                                                        .resizable()
+                                                        .scaledToFill()
+                                                        .frame(width:40,height:40)
+                                                        .clipShape(Circle())
+                                                    
+                                                    VStack(alignment: .leading){
+                                                        Text("\(user.nickName ?? "")").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
+                                                        Text("@\(user.username ?? "")").font(.footnote).foregroundColor(.gray)
+                                                    }
+                                                    
+                                                    Spacer()
+                                                    Circle().frame(width: 20, height: 20).foregroundColor(selectedUsers.contains(user) ? Color("AccentColor") : FOREGROUNDCOLOR)
+                                                    
+                                               
+                                                }.padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Background")))
+                                            })
+                                        }
+                                        
+                                      
+                                      
+
+                                         
+                                        
+
+                                     
+                                    }
+                                }
+                            }
+                        }else{
+                           
+                            VStack(alignment: .leading){
+                                VStack(alignment: .leading){
+                                    Text("Friends").fontWeight(.bold).foregroundColor(Color("Foreground"))
+                                }
+                                
+                            ForEach(userVM.user?.friendsList ?? [], id: \.id){ friend in
+                                Button(action:{
+                                    if selectedUsers.contains(friend){
+                                        selectedUsers.removeAll { user in
+                                            user.id == friend.id ?? ""
+                                        }
+                                    }else{
+                                    selectedUsers.append(friend)
+                                    }
+                                },label:{
+                                HStack{
+                                    
+                                    WebImage(url: URL(string: friend.profilePicture ?? ""))
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width:40,height:40)
+                                        .clipShape(Circle())
+                                    
+                                    VStack(alignment: .leading){
+                                        Text("\(friend.nickName ?? "")").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
+                                        Text("@\(friend.username ?? "")").font(.footnote).foregroundColor(.gray)
+                                    }
+                                    
+                                    Spacer()
+                                    Circle().frame(width: 20, height: 20).foregroundColor(selectedUsers.contains(friend) ? Color("AccentColor") : FOREGROUNDCOLOR)
+                                    
+                               
+                                }.padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Background")))
+                                })
+                            
+                                
+                            }
+                                
+                                
+                                
+                                
+                                
+                            }
+                            
+                            
+                        }
+                
+                        
+                        
+                        
+                    }
+                        
+                    
+                }
+            }
+            
+            VStack(alignment: .leading){
+                Text("Selected Users").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                ScrollView(.horizontal){
+                    HStack{
+                        ForEach(selectedUsers, id: \.id){ user in
+                            if user.id == userVM.user?.id ?? "" {
+                                Text("YOU").padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Background")))
+                            }else{
+                                Button(action:{
+                                    searchVM.searchText = user.nickName ?? ""
+                                },label:{
+                            Text(user.nickName ?? "").padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Background")))
+                                })
+                            }
+                        }
+                    }
+                }
+            }.padding(.horizontal)
+           
+          
+        }.padding()
+        }.edgesIgnoringSafeArea(.all)
     }
 }

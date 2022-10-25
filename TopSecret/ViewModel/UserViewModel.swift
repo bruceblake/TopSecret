@@ -629,19 +629,7 @@ class UserViewModel : ObservableObject {
 
 
 
-                groupD.enter()
-
-                self.fetchUserNotificationGroup(notificationGroupID: notificationGroupID){ fetchedGroup in
-                    data["group"] = fetchedGroup
-                    groupD.leave()
-                }
-
-//                groupD.enter()
-//
-//                self.fetchUserNotificationAction(notificationType: notificationType, groupID: notificationGroupID, userID: userID,notificationActionID: data["actionTypeID"] as? String ?? " "){ fetchedAction in
-//                    data["actionType"] = fetchedAction
-//                    groupD.leave()
-//                }
+    
 
 
 

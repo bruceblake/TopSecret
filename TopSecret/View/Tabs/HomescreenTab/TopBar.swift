@@ -77,33 +77,37 @@ struct TopBar : View {
             else if  tabIndex == .schedule {
                 Text("Schedule").bold().font(.title3)
             }
+            else if tabIndex == .notifications {
+                Text("Notifications").bold().font(.title3)
+            }
             
           
             
             
             Spacer()
              
-                
-               Button(action: {
-                 //todo
-                   userVM.hideTabButtons.toggle()
-                   userVM.showAddContent.toggle()
-                },label:{
-                    
-                    ZStack{
-                        Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
-                        
-                        
-                        if tabIndex == .friends {
-                            
-                        Image(systemName: "person.fill.badge.plus").foregroundColor(FOREGROUNDCOLOR).font(.title3)
-                        }else {
-                        Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title3)
-                        }
+                Button(action: {
+                  //todo
+                    userVM.hideTabButtons.toggle()
+                    userVM.showAddContent.toggle()
+                 },label:{
+                     
+                     ZStack{
+                         Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
+                         
+                         
+                         if tabIndex == .friends {
+                             
+                         Image(systemName: "person.fill.badge.plus").foregroundColor(FOREGROUNDCOLOR).font(.title3)
+                         }else {
+                         Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title3)
+                         }
 
-                    }
-      
-                }).padding(.trailing)
+                     }
+       
+                 })
+            .padding(.trailing)
+              
                 
             
             

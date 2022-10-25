@@ -8,6 +8,14 @@
 import SwiftUI
 import SDWebImageSwiftUI
 
+
+//User Notifications
+// - User accepted friend request
+// - User denied friend request
+// - You have been sent a group invitation
+// - You have been sent a event invitation
+// - User has sent you a message
+
 struct UserNotificationCell: View {
     var userNotification : UserNotificationModel
     @EnvironmentObject var userVM: UserViewModel
@@ -137,12 +145,6 @@ struct UserEventCreatedNotificationCell : View {
                 
                 HStack(alignment: .top, spacing: 10){
                     
-                    WebImage(url: URL(string: userNotification.group?.groupProfileImage ?? " "))
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width:50,height:50)
-                        .clipShape(Circle())
-                        .padding(.leading,5)
                     
                     VStack(alignment: .leading){
                         HStack{

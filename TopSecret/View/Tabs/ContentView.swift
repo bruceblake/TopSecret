@@ -140,9 +140,13 @@ struct Tabs : View {
                     }else if tabIndex == .schedule{
                         ScheduleView(calendar: Calendar(identifier: .gregorian))
                     }else if tabIndex == .notifications{
-                        Text("Hello World")
+                        UserNotificationView()
                     }else if tabIndex == .explore {
-                        ExplorePage(showSearch: $showSearch)
+                        VStack{
+                            Spacer()
+                            Text("Explore Page")
+                            Spacer()
+                        }
                     }
                 }
                 }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).opacity(userVM.showAddContent ? 0.2 : 1).disabled(userVM.showAddContent).onTapGesture {
@@ -172,7 +176,7 @@ struct Tabs : View {
                                 self.tabIndex = .explore
                             },label:{
                                     
-                                Image(systemName: "magnifyingglass").font(.title2)
+                                Image(systemName: self.tabIndex == .explore ?  "safari.fill" : "safari").font(.title2)
                                  
                                 
                                 
@@ -228,21 +232,7 @@ struct Tabs : View {
                         }
                         
                       
-                        HStack{
-                            
-                            Spacer()
-                            
-                            Button(action:{
-                                UIDevice.vibrate()
-                                
-                                self.tabIndex = .schedule
-                            },label:{
-                                Image(systemName: self.tabIndex == .schedule ?  "text.book.closed.fill" : "text.book.closed").font(.title2)
-                                
-                            }).foregroundColor(self.tabIndex == .schedule ? Color("AccentColor") : FOREGROUNDCOLOR)
-                            
-                            Spacer()
-                        }
+                     
                    
                         
                         HStack{
@@ -262,6 +252,22 @@ struct Tabs : View {
                             
                             Spacer()
                             
+                        }
+                        
+                        HStack{
+                            
+                            Spacer()
+                            
+                            Button(action:{
+                                UIDevice.vibrate()
+                                
+                                self.tabIndex = .schedule
+                            },label:{
+                                Image(systemName: self.tabIndex == .schedule ?  "text.book.closed.fill" : "text.book.closed").font(.title2)
+                                
+                            }).foregroundColor(self.tabIndex == .schedule ? Color("AccentColor") : FOREGROUNDCOLOR)
+                            
+                            Spacer()
                         }
                         
                         

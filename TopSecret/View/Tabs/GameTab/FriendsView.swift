@@ -17,7 +17,7 @@ struct FriendsView: View {
     func sortPersonalChats(userID: String) -> [ChatModel]{
         let chats = userVM.personalChats 
         
-        return chats.sorted(by: { !($0.lastMessage?.usersThatHaveSeen?.contains(userID) ?? false) &&  ($1.lastMessage?.usersThatHaveSeen?.contains(userID) ?? false)} )
+        return chats.sorted(by: { !($0.usersThatHaveSeenLastMessage?.contains(userID) ?? false) &&  ($1.usersThatHaveSeenLastMessage?.contains(userID) ?? false)} )
     }
     
     var body: some View {

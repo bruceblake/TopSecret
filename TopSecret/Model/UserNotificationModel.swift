@@ -37,10 +37,6 @@ struct UserNotificationModel : Identifiable {
     var notificationType: String?
     var notificationCreatorID: String?
     var notificationCreator : Any?
-    var actionTypeID : String?
-    var actionType : Any?
-    var group: Group?
-    var groupID: String?
     var hasSeen : Bool?
     
     init(dictionary: [String:Any]) {
@@ -51,10 +47,6 @@ struct UserNotificationModel : Identifiable {
         self.notificationCreatorID = dictionary["notificationCreatorID"] as? String ?? "NOTIFICATION_CREATOR"
         self.notificationCreator = dictionary["notificationCreator"] ?? (Any).self
         self.hasSeen = dictionary["hasSeen"] as? Bool ?? false
-        self.group = dictionary["group"] as? Group ?? Group()
-        self.groupID = dictionary["groupID"] as? String ?? " "
-        self.actionTypeID = dictionary["actionTypeID"] as? String ?? " "
-        self.actionType = dictionary["actionType"] ?? (Any).self
     }
     
     init(){
