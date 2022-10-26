@@ -9,12 +9,7 @@ import SwiftUI
 import SDWebImageSwiftUI
 
 
-//User Notifications
-// - User accepted friend request
-// - User denied friend request
-// - You have been sent a group invitation
-// - You have been sent a event invitation
-// - User has sent you a message
+
 
 struct UserNotificationCell: View {
     var userNotification : UserNotificationModel
@@ -26,9 +21,17 @@ struct UserNotificationCell: View {
             
             switch userNotification.notificationType ?? ""{
             case "eventCreated":
+                NavigationLink {
+                    Text("event: \((userNotification.notificationCreator as? EventModel ?? EventModel()).eventName ?? "" ) ")
+                } label: {
                 UserEventCreatedNotificationCell(userNotification: userNotification)
+                }
+
             case "sentFriendRequest":
+               
                 UserSentFriendRequestNotificationCell(userNotification: userNotification)
+                
+
             case "acceptedFriendRequest":
                 UserAcceptedFriendRequestNotificationCell(userNotification: userNotification)
             default:
@@ -89,39 +92,71 @@ struct UserSentFriendRequestNotificationCell : View {
         HStack{
             
             
-            
-            VStack(alignment: .leading, spacing: 8){
-                
-                
-                HStack(alignment: .top, spacing: 10){
+            NavigationLink {
+                UserProfilePage(user: (userNotification.notificationCreator as? User ?? User()) )
+            } label: {
+                VStack(alignment: .leading, spacing: 8){
                     
-                    WebImage(url: URL(string: (userNotification.notificationCreator as? User ?? User()).profilePicture ?? ""))
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width:50,height:50)
-                        .clipShape(Circle())
-                        .padding(.leading,5)
                     
-                    VStack(alignment: .leading){
-                        HStack{
-                            Text("\((userNotification.notificationCreator as? User ?? User()).username ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.title2)
-                            Text("\(userNotification.notificationTime?.dateValue() ?? Date(), style: .time)").foregroundColor(.gray).font(.footnote)
+                    HStack(alignment: .top, spacing: 10){
+                        
+                        WebImage(url: URL(string: (userNotification.notificationCreator as? User ?? User()).profilePicture ?? ""))
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width:50,height:50)
+                            .clipShape(Circle())
+                            .padding(.leading,5)
+                        
+                        VStack(alignment: .leading){
+                            HStack{
+                                Text("\((userNotification.notificationCreator as? User ?? User()).username ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.title3)
+                                Text("\(userNotification.notificationTime?.dateValue() ?? Date(), style: .time)").foregroundColor(.gray).font(.footnote)
+                            }
+                            Text("\((userNotification.notificationCreator as? User ?? User()).nickName ?? " ") sent a friend request").font(.subheadline).foregroundColor(FOREGROUNDCOLOR)
+                            
                         }
-                        Text("\((userNotification.notificationCreator as? User ?? User()).nickName ?? " ") sent a friend request").font(.subheadline)
                         
                     }
                     
                 }
-                
             }
+
+           
             
             Spacer()
             
+            if !(userVM.user?.pendingFriendsListID?.contains((userNotification.notificationCreator as? User ?? User()).id ?? " ") ?? false) {
+                
+            HStack{
             Button(action:{
                 userVM.acceptFriendRequest(friend: (userNotification.notificationCreator as? User ?? User()))
             },label:{
-                Text("Accept Friend Request")
+              
+                ZStack{
+                    Rectangle().frame(width: 60, height: 30).foregroundColor(Color.green)
+                    
+                    Image(systemName: "checkmark").foregroundColor(FOREGROUNDCOLOR)
+                }            })
+                
+                
+            Button(action:{
+                userVM.denyFriendRequest(friend: (userNotification.notificationCreator as? User ?? User()))
+            },label:{
+                ZStack{
+                    Rectangle().frame(width: 60, height: 30).foregroundColor(Color.green)
+                    
+                    Image(systemName: "xmark").foregroundColor(FOREGROUNDCOLOR)
+                }
+                
+               
             })
+            }.padding(.trailing)
+            }
+            
+            else if  (userVM.user?.friendsListID?.contains((userNotification.notificationCreator as? User ?? User()).id ?? " ") ?? false){
+                Text("Friends").foregroundColor(.gray).font(.subheadline).padding(.trailing,10)
+            }
+            
             
             
             
@@ -136,48 +171,33 @@ struct UserEventCreatedNotificationCell : View {
     
     var body: some View {
         
-        HStack{
-            
-            
-            
+
             VStack(alignment: .leading, spacing: 8){
                 
                 
                 HStack(alignment: .top, spacing: 10){
                     
+                    WebImage(url: URL(string: (userNotification.notificationCreator as? EventModel ?? EventModel()).creator?.profilePicture ?? ""))
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width:50,height:50)
+                        .clipShape(Circle())
+                        .padding(.leading, 5)
+                    
                     
                     VStack(alignment: .leading){
                         HStack{
-                            Text("\((userNotification.notificationCreator as? User ?? User()).username ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.title2)
+                            Text("\((userNotification.notificationCreator as? EventModel ?? EventModel()).creator?.username ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.title3)
                             Text("\(userNotification.notificationTime?.dateValue() ?? Date(), style: .time)").foregroundColor(.gray).font(.footnote)
                         }
-                        Text("\((userNotification.notificationCreator as? User ?? User()).nickName ?? " ") created an event").font(.subheadline)
+                        Text("\((userNotification.notificationCreator as? EventModel ?? EventModel()).creator?.nickName ?? " ") created an event").font(.subheadline).foregroundColor(FOREGROUNDCOLOR)
                         
                     }
-                    
-                    
-                    
-                    
+
                 }
-                
-                
-                
-                
-                
-                
-                
+
             }
             
-            Spacer()
-            
-            
-            
-            
-            
-            
-            
-            
-        }
     }
     
 }

@@ -17,6 +17,8 @@ struct EventModel : Identifiable{
     var usersVisibleTo : [String]?
     var usersAttendingID : [String]?
     var usersAttending : [User]?
+    var creatorID: String?
+    var creator : User?
   
     
     init(dictionary: [String:Any]) {
@@ -28,6 +30,8 @@ struct EventModel : Identifiable{
         self.usersVisibleTo = dictionary["usersVisibleTo"] as? [String] ?? []
         self.usersAttendingID = dictionary["usersAttendingID"] as? [String] ?? []
         self.usersAttending = dictionary["usersAttending"] as? [User] ?? []
+        self.creatorID = dictionary["creatorID"] as? String ?? " "
+        self.creator = dictionary["creator"] as? User ?? User()
         
     }
     

@@ -617,11 +617,10 @@ class UserViewModel : ObservableObject {
             
             for document in documents {
                 var data = document.data() as? [String:Any] ?? [:]
-                let notificationType = data["notificationType"] as? String ?? " "
-                let notificationGroupID = data["groupID"] as? String ?? " "
+                var notificationType = data["notificationType"] as? String ?? " "
                 groupD.enter()
 
-                self.fetchUserNotificationCreator(notificationCreatorType: notificationType, notificationCreatorID: data["notificationCreatorID"] as? String ?? " ") { fetchedCreator in
+                self.fetchUserNotificationCreator(notificationType: notificationType, notificationCreatorID: data["notificationCreatorID"] as? String ?? " ") { fetchedCreator in
                     data["notificationCreator"] = fetchedCreator
                     groupD.leave()
 
@@ -647,64 +646,61 @@ class UserViewModel : ObservableObject {
         }
     }
     
-    func fetchUserNotificationAction(notificationType: String, groupID: String, userID: String, notificationActionID: String, completion: @escaping (Any) -> ()) -> (){
-        switch notificationType {
-        case "eventCreated":
-            COLLECTION_GROUP.document(groupID).collection("Events").document(notificationActionID).getDocument { snapshot, err in
-                if err != nil {
-                    print("ERROR")
-                    return
-                }
+  
+    func fetchNotificationEvent(eventID: String, completion: @escaping (EventModel) -> ()) -> (){
+        COLLECTION_EVENTS.document(eventID).getDocument { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
                 
-                var data = snapshot?.data() as? [String:Any] ?? [:]
-                
-                let dp = DispatchGroup()
-                
-                dp.enter()
-                self.fetchEventUsersAttending(usersAttendingID: data["usersAttendingID"] as? [String] ?? [], eventID: notificationActionID, groupID: groupID) { fetchedUsers in
-                    data["usersAttending"] = fetchedUsers
-                    dp.leave()
-                }
-                
-                dp.notify(queue: .main, execute:{
-                    return completion(EventModel(dictionary: data))
-                })
             }
             
-        default: break
+            var groupD = DispatchGroup()
+            var data = snapshot?.data() as? [String:Any] ?? [:]
+            var creatorID = data["creatorID"] as? String ?? " "
             
+            groupD.enter()
+            self.fetchUser(userID: creatorID) { fetchedUser in
+                data["creator"] = fetchedUser
+                groupD.leave()
+            }
+            
+            groupD.notify(queue: .main, execute: {
+            return completion(EventModel(dictionary: data))
+            })
         }
     }
     
-    
-    func fetchUserNotificationGroup(notificationGroupID: String, completion: @escaping (Group) ->()) -> () {
-        
-        COLLECTION_GROUP.document(notificationGroupID).getDocument { snapshot, err in
+    func fetchNotificationUser(userID: String, completion: @escaping (User) -> ()) -> () {
+        COLLECTION_USER.document(userID).getDocument { snapshot, err in
             if err != nil {
                 print("ERROR")
                 return
             }
             
-            let data = snapshot?.data() as? [String:Any] ?? [:]
+            var data = snapshot?.data() as? [String:Any] ?? [:]
             
-            return completion(Group(dictionary: data))
-            
+            return completion(User(dictionary: data))
         }
     }
+   
     
-    func fetchUserNotificationCreator(notificationCreatorType: String, notificationCreatorID: String, completion: @escaping (Any) -> ()) -> (){
+    func fetchUserNotificationCreator(notificationType: String, notificationCreatorID: String, completion: @escaping (Any) -> ()) -> (){
         
-            COLLECTION_USER.document(notificationCreatorID).getDocument { snapshot, err in
-                if err != nil {
-                    print("ERROR")
-                    return
-                }
-                
-                let data = snapshot?.data() as? [String:Any] ?? [:]
-                
-                return completion(User(dictionary: data))
-                
+    switch notificationType {
+        case "eventCreated":
+            self.fetchNotificationEvent(eventID: notificationCreatorID){ fetchedEvent in
+                return completion(fetchedEvent)
             }
+    case "sentFriendRequest", "":
+            self.fetchNotificationUser(userID: notificationCreatorID){ fetchedUser in
+                return completion(fetchedUser)
+            }
+    default:
+        print("Not a valid notification yet!")
+    }
+        
+        
         
     }
     
@@ -1015,7 +1011,6 @@ class UserViewModel : ObservableObject {
         
         notificationSender.sendPushNotification(to: friend.fcmToken ?? " ", title: "\(friend.username ?? "")", body: "\(friend.nickName ?? "") sent a friend request")
         
-        self.addFriend(friendID: friend.id ?? " ")
 
         
         let notificationID = UUID().uuidString

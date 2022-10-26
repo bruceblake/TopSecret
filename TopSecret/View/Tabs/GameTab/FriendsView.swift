@@ -40,7 +40,7 @@ struct FriendsView: View {
                                 }
                         }
                   
-                    }
+                    }.padding(.bottom, UIScreen.main.bounds.height/4)
                     
                 }
             }

@@ -25,7 +25,7 @@ struct UserNotificationView: View {
                 ScrollView(showsIndicators: false){
                     
                     VStack(alignment: .leading, spacing: 0){
-                        VStack(spacing: 10){
+                        VStack(alignment: .leading, spacing: 10){
                             
                             
                             HStack{
@@ -37,11 +37,8 @@ struct UserNotificationView: View {
                             
                             ForEach(userVM.user?.notifications ?? []){ notification in
                                
-                                Button(action:{
                                     
-                                },label:{
-                                    UserNotificationCell(userNotification: notification)
-                                })
+                                    UserNotificationCell(userNotification: notification).padding(.horizontal)
                                 Divider()
 
                             }
@@ -49,7 +46,7 @@ struct UserNotificationView: View {
                         
                         
                         
-                    }
+                    }.padding(.bottom, UIScreen.main.bounds.height/5)
                     
                     
                 }

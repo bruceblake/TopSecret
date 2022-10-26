@@ -287,7 +287,7 @@ class SearchRepository : ObservableObject {
             .combineLatest($userGroupResults)
             .map(self.filterUserGroupsResults)
             .sink { [self](returnedResults) in
-                userGroupReturnedResults = returnedResults as? [Group] ?? []
+                userGroupReturnedResults = returnedResults 
                 
             }
             .store(in: &self.cancellables)

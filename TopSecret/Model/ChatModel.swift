@@ -27,6 +27,7 @@ struct ChatModel : Identifiable {
     var lastMessageID: String?
     var lastMessage: Message?
     var usersThatHaveSeenLastMessage : [String]?
+    var lastActionDate: Date?
     
     init(dictionary:[String:Any]){
         self.id = dictionary["id"] as? String ?? " "
@@ -46,6 +47,7 @@ struct ChatModel : Identifiable {
         self.colorPicker = dictionary["colorPicker"] as? Int ?? 0
         self.lastMessage = dictionary["lastMessage"] as? Message ?? Message()
         self.usersThatHaveSeenLastMessage = dictionary["usersThatHaveSeenLastMessage"] as? [String] ?? []
+        self.lastActionDate = dictionary["lastActionDate"] as? Date ?? Date()
     }
     init(){
         self.id = UUID().uuidString

@@ -16,19 +16,16 @@ struct UserNotificationModel : Identifiable {
     
     
     
-    
-    //User:
-    
-    //you have been invited to a group
-    //you have been private messaged
-    //you have been blocked
-    //your friend request has been accepted
-    //your friend request has been denied
-    //you are being private called
-    //you have been kicked from a group
+    //User Notifications
+    // - User accepted friend request
+    // - User denied friend request
+    // - You have been sent a group invitation
+    // - You have been sent a event invitation
+    // - User has sent you a message
+    // - You have been kicked from group
     
     
-    //Groups:
+    
     
     
     var id: String = UUID().uuidString

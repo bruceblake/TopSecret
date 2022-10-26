@@ -21,17 +21,20 @@ struct FriendCell: View {
         
         var seconds = interval.second ?? 0
         var minutes = (seconds / 60)
-        var hours = (minutes / 3600)
-        
+        var hours = (minutes / 60)
+        var days = (hours / 24)
+        var time = ""
         if seconds < 60{
-            return "\(seconds)s"
+            time = "\(seconds)s"
         }else if seconds < 3600  {
-            return "\(minutes)m"
+            time = "\(minutes)m"
         }else if seconds < 86400 {
-            return "\(hours)h"
+            time = "\(hours)h"
+        }else if seconds < 604800 {
+            time = "\(days)d"
         }
-        
-        return ""
+                    
+        return time
         
     }
     
@@ -135,7 +138,7 @@ struct FriendCell: View {
                         
                             
                 
-                    Text("\(self.getTimeSinceMessage(lastMessageDate: chat.lastMessage?.timeStamp?.dateValue() ?? Date() ))").font(.subheadline).foregroundColor(Color.gray)
+                    Text("\(self.getTimeSinceMessage(lastMessageDate: chat.lastActionDate ?? Date() ))").font(.subheadline).foregroundColor(Color.gray)
                     
                 }.padding()
             }.padding(.horizontal,10).background(Rectangle().stroke(Color("Color")))

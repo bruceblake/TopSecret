@@ -30,7 +30,8 @@ class EventViewModel: ObservableObject {
                     "eventEndTime":eventEndTime,
                     "usersVisibleTo" : usersVisibleTo.map({ user in
             return user.id ?? " "
-        }), "id":id, "usersAttendingID":[user.id ?? " "]] as [String:Any]
+        }), "id":id, "usersAttendingID":[user.id ?? " "],
+                    "creatorID":user.id ?? " "] as [String:Any]
         
         COLLECTION_EVENTS.document(id).setData(data) { (err) in
             if err != nil {
@@ -60,9 +61,8 @@ class EventViewModel: ObservableObject {
         let userNotificationData = ["id":notificationID,
                                     "notificationName": "Event Created",
                                     "notificationTime":Timestamp(),
-                                    "notificationType":"eventCreated", "notificationCreatorID":user.id ?? "USER_ID",
-                                    "hasSeen":false,
-                                    "groupID":group.id, "actionTypeID": id] as [String:Any]
+                                    "notificationType":"eventCreated", "notificationCreatorID":id,
+                                    "hasSeen":false] as [String:Any]
         
         for user in usersVisibleTo {
             COLLECTION_USER.document(user.id ?? " ").updateData(["events":FieldValue.arrayUnion([id])])

@@ -426,13 +426,20 @@ class SelectedGroupViewModel : ObservableObject {
        
             for document in documents {
                 var data = document.data()
-                
-                
+                var id = data["id"] as? String ?? " "
+                var usersAttendingID = data["usersAttendingID"] as? [String] ?? []
+                var creatorID = data["creatorID"] as? String ?? " "
                 groupD.enter()
                 
-                self.fetchEventUsersAttending(usersAttendingID: data["usersAttendingID"] as? [String] ?? [], eventID: data["id"] as? String ?? " ", groupID: groupID) { fetchedUsers in
+                self.fetchEventUsersAttending(usersAttendingID: usersAttendingID, eventID: id, groupID: groupID) { fetchedUsers in
                     data["usersAttending"] = fetchedUsers
                 
+                    groupD.leave()
+                }
+                
+                groupD.enter()
+                self.fetchUser (userID: creatorID){ fetchedUser in
+                    data["creator"] = fetchedUser
                     groupD.leave()
                 }
                 
