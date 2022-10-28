@@ -109,6 +109,8 @@ struct CreateGroupView: View {
                             
                             Spacer()
                         }.padding(.leading)
+                    
+                    Spacer()
                 
                      
                     VStack(alignment: .leading){
@@ -134,7 +136,6 @@ struct CreateGroupView: View {
                 
              
                 
-                Spacer()
 
             Button(action:{
                 let id = UUID().uuidString
@@ -367,7 +368,7 @@ struct InviteFriendsToGroupView : View {
                         }
                     }
                 }
-            }.padding(.horizontal)
+            }.padding()
            
           
         }.padding()

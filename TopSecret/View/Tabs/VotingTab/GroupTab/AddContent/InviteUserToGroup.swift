@@ -112,7 +112,7 @@ struct InviteUserToGroup: View {
                         
                         for user in selectedUsers {
                             dp.enter()
-                            groupVM.joinGroup(group: group, user: user)
+                            groupVM.sendGroupInvitation(group: group, friend: user, userID: self.userVM.user?.id ?? " ")
                             dp.leave()
                         }
                         

@@ -32,8 +32,11 @@ struct UserNotificationModel : Identifiable {
     var notificationName : String?
     var notificationTime : Timestamp?
     var notificationType: String?
+    var actionType : String?
     var notificationCreatorID: String?
     var notificationCreator : Any?
+    var action: Any?
+    var actionID: String?
     var hasSeen : Bool?
     
     init(dictionary: [String:Any]) {
@@ -42,8 +45,11 @@ struct UserNotificationModel : Identifiable {
         self.notificationTime = dictionary["notificationTime"] as? Timestamp ?? Timestamp()
         self.notificationType = dictionary["notificationType"] as? String ?? "NOTIFICATION_TYPE"
         self.notificationCreatorID = dictionary["notificationCreatorID"] as? String ?? "NOTIFICATION_CREATOR"
+        self.action = dictionary["action"] ?? (Any).self
+        self.actionID = dictionary["actionID"] as? String ?? ""
         self.notificationCreator = dictionary["notificationCreator"] ?? (Any).self
         self.hasSeen = dictionary["hasSeen"] as? Bool ?? false
+        self.actionType = dictionary["actionType"] as? String ?? ""
     }
     
     init(){

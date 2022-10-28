@@ -31,6 +31,7 @@ struct User : Identifiable, Hashable{
     var userNotificationCount : Int?
     var pendingFriendsList : [User]?
     var pendingFriendsListID : [String]?
+    var pendingGroupInvitationID : [String]?
     var isActive: Bool?
     var lastActive: Timestamp?
     var latitude : Double?
@@ -72,6 +73,7 @@ init(dictionary: [String:Any]) {
     self.personalChatsID = dictionary["personalChatsID"] as? [String] ?? []
     self.personalChats = dictionary["personalChats"] as? [ChatModel] ?? []
     self.personalChatNotificationCount = dictionary["personalChatNotificationCount"] as? Int ?? 0
+    self.pendingGroupInvitationID = dictionary["pendingGroupInvitationID"] as? [String] ?? []
  }
 
     init(){

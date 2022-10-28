@@ -37,7 +37,6 @@ struct GroupGalleryView: View {
         
     ]
     
-    var options = ["All","Favorites","Videos","Screenshots","Photos"]
     
     var body: some View {
         
@@ -80,20 +79,38 @@ struct GroupGalleryView: View {
                 }.padding(.top,50)
                 
                     ScrollView(.horizontal){
-                        HStack{
-                        ForEach(options.indices){ index in
+                        HStack(spacing: 20 ){
+                            Button(action:{
+                                selectedOptionIndex = 0
+                            },label:{
+                                Text("All").foregroundColor(selectedOptionIndex == 0 ? Color("AccentColor") : FOREGROUNDCOLOR)
+                            })
                             
-                            Spacer()
+                            Button(action:{
+                                selectedOptionIndex = 1
+                            },label:{
+                                Text("Favorites").foregroundColor(selectedOptionIndex == 1 ? Color("AccentColor") : FOREGROUNDCOLOR)
+                            })
                             
-                                Button(action: {
-                                    selectedOptionIndex = index
-                                },label:{
-                                    Text("\(options[index])").foregroundColor(selectedOptionIndex == index ? Color("AccentColor") : FOREGROUNDCOLOR)
-                                })
+                            Button(action:{
+                                selectedOptionIndex = 2
+                            },label:{
+                                Text("Videos").foregroundColor(selectedOptionIndex == 2 ? Color("AccentColor") : FOREGROUNDCOLOR)
+                            })
                             
-                           
-                        
-                        }
+                            Button(action:{
+                                selectedOptionIndex = 3
+                            },label:{
+                                Text("Photos").foregroundColor(selectedOptionIndex == 3 ? Color("AccentColor") : FOREGROUNDCOLOR)
+                            })
+                            
+                            Button(action:{
+                                selectedOptionIndex = 4
+                            },label:{
+                                Text("Screenshots").foregroundColor(selectedOptionIndex == 4 ? Color("AccentColor") : FOREGROUNDCOLOR)
+                            })
+                            
+                            
                         }
                 }
                 

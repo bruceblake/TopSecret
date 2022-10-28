@@ -123,6 +123,44 @@ class GroupViewModel: ObservableObject {
     }
     
    
+    func sendGroupInvitation(group: Group, friend: User, userID: String){
+        
+        COLLECTION_USER.document(friend.id ?? " ").updateData(["pendingGroupInvitationID":FieldValue.arrayUnion([group.id])])
+        
+      
+        let notificationID = UUID().uuidString
+        
+        let userNotificationData = ["id":notificationID,
+            "notificationName": "Group Invitation",
+            "notificationTime":Timestamp(),
+                                    "notificationType":"sentGroupInvitation","notificationCreatorID":userID,
+            "hasSeen":false,
+                                    "actionTypeID": group.id] as [String:Any]
+        
+        COLLECTION_USER.document(friend.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)
+        COLLECTION_USER.document(friend.id ?? " ").updateData(["userNotificationCount":FieldValue.increment((Int64(1)))])
+    }
+    
+    func acceptGroupInvitation(group: Group, user: User){
+        COLLECTION_USER.document(user.id ?? " ").updateData(["pendingGroupInvitationID":FieldValue.arrayRemove([group.id])])
+        
+        joinGroup(group: group, user: user)
+        
+        let notificationID = UUID().uuidString
+        
+        let userNotificationData = ["id":notificationID,
+                                    "notificationName": "",
+                                    "notificationTime":Timestamp(),
+                                    "notificationType":"acceptedGroupInvitation", "notificationCreatorID":user.id ?? "USER_ID",
+                                    "hasSeen":false,
+                                    "actionTypeID":group.id] as [String:Any]
+        
+        
+        COLLECTION_USER.document(user.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)
+        COLLECTION_USER.document(user.id ?? " ").updateData(["userNotificationCount":FieldValue.increment((Int64(1)))])
+        
+        
+    }
     
    
     

@@ -30,9 +30,9 @@ struct UserNotificationView: View {
                             
                             HStack{
                                 
-                            Text("New").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold).font(.headline).padding(.leading)
+                            Text("New").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold).font(.headline)
                                 Spacer()
-                            }
+                            }.padding(.leading)
                             
                             
                             ForEach(userVM.user?.notifications ?? []){ notification in

@@ -28,16 +28,96 @@ struct UserNotificationCell: View {
                 }
 
             case "sentFriendRequest":
-               
                 UserSentFriendRequestNotificationCell(userNotification: userNotification)
-                
-
             case "acceptedFriendRequest":
                 UserAcceptedFriendRequestNotificationCell(userNotification: userNotification)
+            case "sentGroupInvitation":
+                UserSentGroupInvitationNotificationCell(userNotification: userNotification)
+//            case "acceptedGroupInvitation":
+//                UserAcceptedGroupInvitationNotificationCell(userNotification: userNotification)
             default:
                 Text("Notification")
             }
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+    }
+}
+
+
+struct UserSentGroupInvitationNotificationCell : View {
+    @EnvironmentObject var userVM: UserViewModel
+    @StateObject var groupVM = GroupViewModel()
+    var userNotification : UserNotificationModel
+    var body: some View {
+        HStack{
+            
+            
+            NavigationLink {
+                UserProfilePage(user: (userNotification.notificationCreator as? User ?? User()) )
+            } label: {
+                VStack(alignment: .leading, spacing: 8){
+                    
+                    
+                    HStack(alignment: .top, spacing: 10){
+                        
+                        WebImage(url: URL(string: (userNotification.action as? Group ?? Group()).groupProfileImage ))
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width:50,height:50)
+                            .clipShape(Circle())
+                            .padding(.leading,5)
+                        
+                        VStack(alignment: .leading){
+                            HStack{
+                                Text("\((userNotification.action as? Group ?? Group()).groupName )").foregroundColor(FOREGROUNDCOLOR).bold().font(.title3)
+                                Text("\(userNotification.notificationTime?.dateValue() ?? Date(), style: .time)").foregroundColor(.gray).font(.footnote)
+                            }
+                            Text("\((userNotification.notificationCreator as? User ?? User()).nickName ?? " ") invited you to \( (userNotification.action as? Group ?? Group()).groupName ) ").font(.subheadline).foregroundColor(FOREGROUNDCOLOR)
+                            
+                        }
+                        
+                    }
+                    
+                }
+            }
+
+           
+            
+            Spacer()
+            
+            if (userVM.user?.pendingGroupInvitationID?.contains((userNotification.action as? Group ?? Group()).id ) ?? false) {
+                
+            HStack{
+            Button(action:{
+                groupVM.acceptGroupInvitation(group: userNotification.action as? Group ?? Group(), user: self.userVM.user ?? User())
+            },label:{
+              
+                ZStack{
+                    Rectangle().frame(width: 60, height: 30).foregroundColor(Color.green)
+                    
+                    Image(systemName: "checkmark").foregroundColor(FOREGROUNDCOLOR)
+                }            })
+                
+                
+            Button(action:{
+//                userVM.denyFriendRequest(friend: (userNotification.notificationCreator as? User ?? User()))
+            },label:{
+                ZStack{
+                    Rectangle().frame(width: 60, height: 30).foregroundColor(Color.green)
+                    
+                    Image(systemName: "xmark").foregroundColor(FOREGROUNDCOLOR)
+                }
+                
+               
+            })
+            }.padding(.trailing)
+            }
+            
+           
+            
+            
+            
+            
+        }
     }
 }
 
