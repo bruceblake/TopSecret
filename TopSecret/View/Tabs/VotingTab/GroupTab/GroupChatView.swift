@@ -254,7 +254,7 @@ struct ResizableTF : UIViewRepresentable {
             if uiView.text != "" {
                 if isPersonalChat{
                     uiView.text = personalChatVM.text
-                    uiView.textColor = UIColor(Color("\(personalChatVM.currentChatColor)"))
+                    uiView.textColor = UIColor(FOREGROUNDCOLOR)
                 }else{
                 uiView.text = chatVM.text
                 uiView.textColor = UIColor(Color("\(chatVM.currentChatColor)"))
@@ -270,17 +270,18 @@ struct ResizableTF : UIViewRepresentable {
             self.parent = parent1
         }
         
+        
         func textViewDidBeginEditing(_ textView: UITextView) {
             
             if self.parent.isPersonalChat{
                 if self.parent.personalChatVM.text == ""{
                     textView.text = ""
-                    textView.textColor = UIColor(Color("\(parent.personalChatVM.currentChatColor)"))
+                    textView.textColor = UIColor(FOREGROUNDCOLOR)
                 }
             }else{
                 if self.parent.chatVM.text == ""{
                     textView.text = ""
-                    textView.textColor = UIColor(Color("\(parent.chatVM.currentChatColor)"))
+                    textView.textColor = UIColor(FOREGROUNDCOLOR)
                 }
             }
             

@@ -34,6 +34,10 @@ struct Group: Identifiable{
     var groupNotifications: [GroupNotificationModel] = []
     var unreadGroupNotification: [GroupNotificationModel] = []
     var notificationsCount : Int = 0
+    var followersID: [String]?
+    var followers: [User]?
+    
+
     
     init(dictionary: [String:Any]){
         self.id = dictionary["id"] as? String ?? UUID().uuidString
@@ -52,6 +56,8 @@ struct Group: Identifiable{
         self.groupNotifications = dictionary["groupNotifications"] as? [GroupNotificationModel] ?? []
         self.storyPosts = dictionary["storyPosts"] as? [StoryModel] ?? []
         self.notificationsCount = dictionary["notificationsCount"] as? Int ?? 0
+        self.followersID = dictionary["followersID"] as? [String] ?? []
+        self.followers = dictionary["followers"] as? [User] ?? []
     }
     
     

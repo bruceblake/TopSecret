@@ -35,7 +35,7 @@ struct UserNotificationView: View {
                             }.padding(.leading)
                             
                             
-                            ForEach(userVM.user?.notifications ?? []){ notification in
+                            ForEach(userVM.notifications){ notification in
                                
                                     
                                     UserNotificationCell(userNotification: notification).padding(.horizontal)

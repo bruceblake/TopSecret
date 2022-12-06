@@ -293,7 +293,7 @@ struct UserCalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitch
                                 
                               
                                     
-                                    if offset < 0 {
+                                    if offset < 160 {
                                         
                                         return AnyView (
                                             HStack{

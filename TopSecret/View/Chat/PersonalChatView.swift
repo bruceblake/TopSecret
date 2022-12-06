@@ -130,7 +130,7 @@ struct PersonalChatView : View {
                                     if message.messageType == "text"{
                                         MessageTextCell(showMenu: $showMenu, message: message, chatID: personalChatVM.chat.id).padding([.leading,.top],5)
                                     }else if message.messageType == "followUpUserText"{
-                                        MessageFollowUpTextCell(showMenu: $showMenu, message: message, chatID: personalChatVM.chat.id).padding([.leading,.top],5)
+                                        MessageFollowUpTextCell(showMenu: $showMenu, message: message, chatID: personalChatVM.chat.id).padding(.leading,5)
                                     }
                                     
                                 }
@@ -222,16 +222,14 @@ struct PersonalChatView : View {
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
             self.initKeyboardGuardian()
+            UITableView.appearance().keyboardDismissMode = .onDrag
+
             personalChatVM.listenToChat(chatID: chatID)
             personalChatVM.fetchAllMessages(chatID: chatID, userID: userVM.user?.id ?? " ")
             personalChatVM.readLastMessage(chatID: chatID, userID: userVM.user?.id ?? " ")
             personalChatVM.openChat(userID: userVM.user?.id ?? " ", chatID: chatID)
             DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
                 personalChatVM.scrollToBottom += 1
-            }
-        }.onTapGesture {
-            if self.keyboardHeight != 0 {
-                UIApplication.shared.windows.first?.rootViewController?.view.endEditing(true)
             }
         }.onDisappear{
             personalChatVM.removeListeners()

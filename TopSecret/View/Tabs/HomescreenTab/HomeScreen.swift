@@ -11,41 +11,60 @@ import SDWebImageSwiftUI
 struct HomeScreen: View {
 
     @EnvironmentObject var userVM: UserViewModel
-    @State var openGroupHomescreen : Bool = false
-    @State var selectedGroup : Group = Group()
-    @State var users: [User] = []
+   
     @State var showSearch : Bool = false
+    @State var selectedViewOption = 1
     
     var body: some View {
         ZStack{
             Color("Background")
 
 
-            if userVM.groups.isEmpty{
-                VStack{
-                    Spacer()
-                    VStack{
-                        Text("You have 0 Groups :(")
-                        NavigationLink(destination: {
-                            CreateGroupView()
-                        },label: {
-                            Text("Create A Group").foregroundColor(Color("Foreground"))
-                                .padding(.vertical)
-                                .frame(width: UIScreen.main.bounds.width/2.5).background(Color("AccentColor")).cornerRadius(15)
-                        })
+            ZStack(alignment: .top){
+                    
+                  
+                    
+                    if selectedViewOption == 0 {
+                        YourGroupsView()
+                    }else{
+                        YourFeedView()
                     }
+                
+                HStack(){
+                    
                     Spacer()
+                    Button(action:{
+                        selectedViewOption = 0
+                    },label:{
+                        VStack(spacing: 5){
+                            Text("Your Groups").foregroundColor(selectedViewOption == 0 ? FOREGROUNDCOLOR : Color.gray)
+                            Rectangle().frame(width: 50, height: 2).foregroundColor(selectedViewOption == 0 ? FOREGROUNDCOLOR : Color.clear)
+                        }
+                    })
+                    
+                    
+                    Button(action:{
+                        selectedViewOption = 1
+                    },label:{
+                        VStack(spacing: 5){
+                            Text("Your Feed").foregroundColor(selectedViewOption == 1 ? FOREGROUNDCOLOR : Color.gray)
+                            Rectangle().frame(width: 40, height: 2).foregroundColor(selectedViewOption == 1 ? FOREGROUNDCOLOR : Color.clear)
+                        }
+                    })
+                    
+                    Spacer()
+                    
                 }
-            }else{
-                    ShowGroups(selectedGroup: $selectedGroup, users: $users, openGroupHomescreen: $openGroupHomescreen)
-            }
+                
+                    
+                }
+//                    ShowGroups(selectedGroup: $selectedGroup, users: $users, openGroupHomescreen: $openGroupHomescreen)
+            
                 
            
 
 
-                NavigationLink(destination: HomeScreenView(group: $selectedGroup), isActive: $openGroupHomescreen) {
-                    EmptyView()
-                }.environment(\.modalMode, self.$openGroupHomescreen)
+             
 
 
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
@@ -62,6 +81,32 @@ struct HomeScreen: View {
         }
 
     }
+
+
+struct YourGroupsView : View {
+    
+    var body: some View {
+        ScrollView{
+            VStack{
+                Spacer()
+                Text("Your Groups")
+                Spacer()
+            }
+        }
+      
+    }
+}
+
+struct YourFeedView : View {
+    
+    var body: some View {
+        VStack{
+            Spacer()
+            Text("Your Feed")
+            Spacer()
+        }
+    }
+}
 
     struct ShowGroups : View {
 

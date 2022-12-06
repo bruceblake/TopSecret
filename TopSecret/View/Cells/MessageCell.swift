@@ -26,9 +26,16 @@ struct MessageTextCell: View {
                 VStack(alignment: .leading, spacing: 0){
                     
                     HStack(spacing: 3){
-                            Image(systemName: "chevron.left").foregroundColor(Color("\(message.nameColor ?? "")")).frame(width:2).padding(.horizontal,5)
-                            Text("\(message.name ?? "")").foregroundColor(Color("\(message.nameColor ?? "")"))
+                        if message.userID == userVM.user?.id ?? ""{
+                            Image(systemName: "chevron.left").foregroundColor(Color("AccentColor")).frame(width:2).padding(.horizontal,5)
+                            Text("M").foregroundColor(Color("AccentColor"))
+                        }else{
+                            Image(systemName: "chevron.left").foregroundColor(Color("blue")).frame(width:2).padding(.horizontal,5)
+                            Text("\(message.name ?? "")").foregroundColor(Color("blue"))
+                        }
+                         
                             Spacer()
+                        
                         }.padding(.top,3)
                     
                     
@@ -37,10 +44,10 @@ struct MessageTextCell: View {
                         HStack{
                             
                             HStack(spacing: 3){
-                                Rectangle().foregroundColor(Color("\(message.nameColor ?? "")")).frame(width:2).padding(.horizontal,5)
+                                Rectangle().foregroundColor(Color("\(message.userID == userVM.user?.id ?? " " ? "AccentColor" : "blue")")).frame(width:2).padding(.horizontal,5)
 
                                 HStack{
-                                    Text("\(message.messageValue ?? "")").foregroundColor(Color("\(message.messageColor)")).lineLimit(5)
+                                    Text("\(message.messageValue ?? "")").foregroundColor(FOREGROUNDCOLOR).lineLimit(5)
                                     if message.edited ?? false{
                                         Text("(edited)").foregroundColor(.gray).font(.footnote)
                                     }
@@ -200,10 +207,10 @@ struct MessageFollowUpTextCell : View {
                       HStack(alignment: .center){
                           HStack(spacing: 3){
                               
-                              Rectangle().foregroundColor(Color("\(message.nameColor ?? "")")).frame(width:2).padding(.horizontal,5)
+                              Rectangle().foregroundColor(Color("\(message.userID == userVM.user?.id ?? " " ? "AccentColor" : "blue")")).frame(width:2).padding(.horizontal,5)
                               
                               HStack{
-                                  Text("\(message.messageValue ?? "")").foregroundColor(Color("\(message.messageColor)")).lineLimit(5)
+                                  Text("\(message.messageValue ?? "")").foregroundColor(FOREGROUNDCOLOR).lineLimit(5)
                                   if message.edited ?? false{
                                       Text("(edited)").foregroundColor(.gray).font(.footnote)
                                   }

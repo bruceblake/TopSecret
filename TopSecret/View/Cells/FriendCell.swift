@@ -33,8 +33,11 @@ struct FriendCell: View {
         }else if seconds < 604800 {
             time = "\(days)d"
         }
-                    
+        if time == "0s"{
+            return "now"
+        }else{
         return time
+        }
         
     }
     
@@ -138,7 +141,7 @@ struct FriendCell: View {
                         
                             
                 
-                    Text("\(self.getTimeSinceMessage(lastMessageDate: chat.lastActionDate ?? Date() ))").font(.subheadline).foregroundColor(Color.gray)
+                    Text("\(self.getTimeSinceMessage(lastMessageDate: chat.lastActionDate?.dateValue() ?? Date() ))").font(.subheadline).foregroundColor(Color.gray)
                     
                 }.padding()
             }.padding(.horizontal,10).background(Rectangle().stroke(Color("Color")))

@@ -29,12 +29,9 @@ struct CurrentUserProfilePage: View {
         
         ZStack{
             Color("Background").zIndex(0)
-            ScrollView{
                 VStack{
-                    
-                    HStack{
+                    HStack(alignment: .top){
                         
-                        VStack{
                             
                         Button(action:{
                             presentationMode.wrappedValue.dismiss()
@@ -44,13 +41,27 @@ struct CurrentUserProfilePage: View {
                                 Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR)
                             }
                         })
-                            Spacer()
-                        }
+                          
                         
                         Spacer()
+
+                            
+                            NavigationLink(destination:{
+                               SettingsMenuView()
+                            },label:{
+                            ZStack{
+                                Circle().frame(width: 35, height: 35).foregroundColor(Color("Color"))
+                                Image(systemName: "gear").foregroundColor(FOREGROUNDCOLOR)
+                            }
+                            })
+                        
+                        
+                        
+                    }.padding(.top,60).padding(.horizontal).zIndex(1)
+
+                    ScrollView{
                         
                         //pfp username nickname
-                        HStack(spacing: 5){
                             VStack{
                                 
                                 Button(action:{
@@ -93,77 +104,22 @@ struct CurrentUserProfilePage: View {
                                 
                                 
                             }.padding(5).padding(.leading)
-                            
-                        }
-                        
-                        
-                        
-                        
-                        
-                        Spacer()
-                        VStack{
-                            
-                            NavigationLink(destination:{
-                               SettingsMenuView()
-                            },label:{
-                            ZStack{
-                                Circle().frame(width: 35, height: 35).foregroundColor(Color("Color"))
-                                Image(systemName: "gear").foregroundColor(FOREGROUNDCOLOR)
-                            }
-                            })
-                        
-                            Spacer()
-                        }
-                        
-                    }.padding(.top,60).padding(.horizontal)
-                    
+
                     
                     HStack{
-                        
-                        
-                        
-                        
-                        
+      
                         Spacer()
-                        
-                        
-                        
-                        
-                        
-                        
+
                         Button(action:{
                             self.showEditPage.toggle()
                         },label:{
                             Text("Edit Profile").font(.body).padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color"))).foregroundColor(FOREGROUNDCOLOR)
                         }).frame(maxWidth: .infinity)
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
+
                         Spacer()
-                        
-                        
-                        
+    
                     }
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
+
                     //User Info
                     HStack(spacing: 25){
                         
@@ -197,24 +153,26 @@ struct CurrentUserProfilePage: View {
                         
                     }.padding(.vertical)
                     
-                    Text("\(userVM.user?.bio ?? "")").frame(width: UIScreen.main.bounds.width - 20).multilineTextAlignment(.center)
+                        
+                        Text("\(userVM.user?.bio ?? "")").frame(width: UIScreen.main.bounds.width - 20).multilineTextAlignment(.center)
+                        
+                        
+                        ScheduleView(calendar: Calendar(identifier: .gregorian))
+                        
+                        
+                        
+                    Text("You joined Top Secret on \(userVM.user?.dateCreated?.dateValue() ?? Date(), style: .date)").font(.footnote).foregroundColor(.gray).padding()
+                        
+                    }.zIndex(2)
+            
                     
                     
-                    
-                    
-                    Spacer()
-                    
-                    
-                    
-                    
-                    
-                    
-                }.zIndex(1).opacity(switchAccounts ? 0.2 : 1)
-            }
+                }.zIndex(3).opacity(switchAccounts ? 0.2 : 1)
+            
             
             ZStack{
                 Color.clear
-            }.zIndex(2).frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height).onTapGesture {
+            }.zIndex(4).frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height).onTapGesture {
                 
                 userVM.hideTabButtons.toggle()
                 switchAccounts.toggle()
@@ -229,12 +187,12 @@ struct CurrentUserProfilePage: View {
             
             BottomSheetView(isOpen: $switchAccounts, maxHeight: UIScreen.main.bounds.height * 0.40) {
                 SwitchAccountsView()
-            }.zIndex(3)
+            }.zIndex(5)
             
-            NavigationLink(destination:  UserEditProfilePageView(showEditPage: $showEditPage), isActive: $showEditPage) {
-                EmptyView()
-            }
-            
+//            NavigationLink(destination:  UserEditProfilePageView(showEditPage: $showEditPage), isActive: $showEditPage) {
+//                EmptyView()
+//            }
+//
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
         
         

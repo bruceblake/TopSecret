@@ -11,7 +11,7 @@ import SDWebImageSwiftUI
 struct EnterUserProfilePicture: View {
     
     @State var isShowingPhotoPicker:Bool = false
-    @State var avatarImage = UIImage(named: "Icon")!
+    @State var avatarImage = UIImage(named: "topbarlogo")!
     @State var isNext: Bool = false
     @EnvironmentObject var registerVM : RegisterValidationViewModel
     @State var images : [UIImage] = []
@@ -22,18 +22,22 @@ struct EnterUserProfilePicture: View {
             VStack{
                 Spacer()
                 Text("Enter a profile picture!").foregroundColor(FOREGROUNDCOLOR)
-                Button(action:{
-                    isShowingPhotoPicker.toggle()
-                },label:{
-                    Image(uiImage: avatarImage)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width:100,height:100)
-                        .clipShape(Circle())
-                        .padding()
-                }).fullScreenCover(isPresented: $isShowingPhotoPicker, content: {
-                    ImagePicker(avatarImage: $avatarImage, allowsEditing: true)
-                })
+                ZStack{
+                    Circle().foregroundColor(Color("Color")).frame(width: 175, height: 175)
+                    Button(action:{
+                        isShowingPhotoPicker.toggle()
+                    },label:{
+                        Image(uiImage: avatarImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width:200,height:200)
+                            .clipShape(Circle())
+                            .padding()
+                    }).fullScreenCover(isPresented: $isShowingPhotoPicker, content: {
+                        ImagePicker(avatarImage: $avatarImage, allowsEditing: true)
+                    })
+                }
+              
                 
         Button(action: {
                     self.isNext.toggle()

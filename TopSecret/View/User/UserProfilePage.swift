@@ -10,7 +10,7 @@ import SDWebImageSwiftUI
 
 struct UserProfilePage: View {
     
-    var user: User
+    @State var user: User
     @StateObject var chatVM = ChatViewModel()
     @EnvironmentObject var userVM: UserViewModel
     @State var showInfo : Bool = false
@@ -18,6 +18,8 @@ struct UserProfilePage: View {
     @State var seeProfilePicture: Bool = false
     
     @Environment(\.presentationMode) var presentationMode
+    
+  
     
   
     var body: some View {
@@ -48,118 +50,131 @@ struct UserProfilePage: View {
                     Button(action:{
                         self.showInfo.toggle()
                     },label:{
-                        Text("...").font(.title3)
+                        Image(systemName: "ellipsis").font(.title3)
                     }).padding(.trailing,10)
                     
                 }.padding(.top,50)
                     
                 ScrollView{
-                HStack{
-                    
-                    Spacer()
-                    
-                    VStack(spacing: 4){
-                        Button(action:{
-                            self.seeProfilePicture.toggle()
-                        },label:{
-                            WebImage(url: URL(string: user.profilePicture ?? ""))
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width:70,height:70)
-                                .clipShape(Circle())
-                        }).fullScreenCover(isPresented: $seeProfilePicture) {
+                    VStack{
+                        HStack{
                             
-                        } content: {
-                                WebImage(url: URL(string: user.profilePicture ?? ""))
-                                    .resizable()
-                                    .scaledToFit()
-                        .onTapGesture{
-                                self.seeProfilePicture.toggle()
-                            }
-                        }
-
-                        VStack(spacing: 7){
-                            HStack{
-                            Text("\(user.nickName ?? "")").font(.headline).bold()
-                                Circle().foregroundColor((user.isActive ?? false) ? Color.green : Color.red).frame(width: 8, height: 8)
-                            }
+                            Spacer()
                             
-                            if user.id ?? "" != userVM.user?.id ?? " "{
-                                if userVM.user?.pendingFriendsListID?.contains(user.id ?? "") ?? false {
-                                Text("Pending Friend Request").foregroundColor(.gray)
-                                }else if userVM.user?.friendsListID?.contains(user.id ?? "") ?? false{
-                                    Text("Friends").foregroundColor(.gray)
-                                }else if userVM.user?.blockedAccountsID?.contains(user.id ?? "") ?? false{
-                                    Text("Blocked").foregroundColor(.gray)
+                            VStack(spacing: 4){
+                                Button(action:{
+                                    self.seeProfilePicture.toggle()
+                                },label:{
+                                    WebImage(url: URL(string: user.profilePicture ?? ""))
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width:70,height:70)
+                                        .clipShape(Circle())
+                                }).fullScreenCover(isPresented: $seeProfilePicture) {
+                                    
+                                } content: {
+                                    WebImage(url: URL(string: user.profilePicture ?? ""))
+                                        .resizable()
+                                        .scaledToFit()
+                                        .onTapGesture{
+                                            self.seeProfilePicture.toggle()
+                                        }
                                 }
-                                else{
-                                    Button(action:{
-                                        userVM.sendFriendRequest(friend: user)
-                                    },label:{
-                                        Text("Send Friend Request").foregroundColor(FOREGROUNDCOLOR).padding(7).background(Color("AccentColor")).cornerRadius(16)
-                                    })
+                                
+                                VStack(spacing: 7){
+                                    HStack{
+                                        Text("\(user.nickName ?? "")").font(.headline).bold()
+                                        Circle().foregroundColor((user.isActive ?? false) ? Color.green : Color.red).frame(width: 8, height: 8)
+                                    }
+                                    
+                                    if user.id ?? "" != userVM.user?.id ?? " "{
+                                        
+                                        if userVM.user?.pendingFriendsListID?.contains(user.id ?? " ") ?? false {
+                                            VStack{
+                                                Text("Pending Friend Request").foregroundColor(.gray)
+                                                
+                                                
+                                            }
+                                        }else if userVM.user?.friendsListID?.contains(user.id ?? " ") ?? false{
+                                            Text("Friends").foregroundColor(.gray)
+                                        }else if userVM.user?.blockedAccountsID?.contains(user.id ?? "") ?? false{
+                                            Text("Blocked").foregroundColor(.gray)
+                                        }
+                                        else{
+                                            Button(action:{
+                                                userVM.sendFriendRequest(friend: user){ finished in
+                                                    userVM.fetchUser(userID: user.id ?? " ") { fetchedUser in
+                                                        self.user = fetchedUser
+                                                    }
+                                                }
+                                             
+                                            },label:{
+                                                Text("Send Friend Request").foregroundColor(FOREGROUNDCOLOR).padding(7).background(Color("AccentColor")).cornerRadius(16)
+                                            })
+                                        }
+                                        
+                                    }
+                                    
+                                    
+                                }
+                                
+                            }.padding(.leading)
+                            
+                            
+                            
+                            Spacer()
+                            
+                        }.padding(.top,10)
+                        
+                        
+                        
+                        
+                        //User Info
+                        HStack(spacing: 25){
+                            
+                            Spacer()
+                            
+                            
+                            
+                            
+                            
+                            NavigationLink(destination: Text("Hello World")){
+                                
+                                VStack{
+                                    Text("\(user.groupsID?.count ?? 0)").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
+                                    Text("Groups").font(.callout).foregroundColor(.gray)
                                 }
                             }
                             
-                       
-                        }
-                       
-                    }.padding(.leading)
-                    
-                   
-                    
-                    Spacer()
-                    
-                }.padding(.top,10)
-                
-               
-                
-                    
-                //User Info
-                HStack(spacing: 25){
+                            
+                            
+                            Spacer()
+                            
+                            NavigationLink(destination: UserFriendsListView(user: user)) {
+                                VStack{
+                                    Text("\(user.friendsList?.count ?? 0)").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
+                                    Text("Friends").font(.callout).foregroundColor(.gray)
+                                }
+                            }
+                            
+                            
+                            
+                            
+                            
+                            
+                            Spacer()
+                            
+                        }.padding(.vertical)
+                        
+                        Text("\(user.bio ?? "")").frame(width: UIScreen.main.bounds.width - 20).multilineTextAlignment(.center)
+                        
                         
                         Spacer()
-                        
-               
-                    
-                    
-                    
-                    NavigationLink(destination: Text("Hello World")){
-                        
-                        VStack{
-                            Text("\(user.groupsID?.count ?? 0)").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
-                            Text("Groups").font(.callout).foregroundColor(.gray)
-                        }
+                        Text("\(user.username ?? " ") joined Top Secret on \(userVM.user?.dateCreated?.dateValue() ?? Date(), style: .date)").font(.footnote).foregroundColor(.gray).padding()
                     }
                     
-                    
-                    
-                   Spacer()
-                    
-                    NavigationLink(destination: UserFriendsListView(user: user)) {
-                        VStack{
-                            Text("\(user.friendsList?.count ?? 0)").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
-                            Text("Friends").font(.callout).foregroundColor(.gray)
-                        }
-                    }
-                  
-                        
-                        
-             
-                      
-                        
-                        Spacer()
-                        
-                    }.padding(.vertical)
-                
-                Text("\(user.bio ?? "")").frame(width: UIScreen.main.bounds.width - 20).multilineTextAlignment(.center)
-                
-                
-             
-                
-                    Spacer()
                 }
-                
+               
             }.zIndex(1).opacity(showInfo ? 0.3 : 1).onTapGesture {
                 if showInfo{
                     
@@ -188,9 +203,17 @@ struct UserProfilePage: View {
                             
                         Button(action:{
                             if userVM.user?.friendsList?.contains(user) ?? false {
-                                userVM.removeFriend(friendID: user.id ?? " ")
+                                userVM.removeFriend(friendID: user.id ?? " ") { finished in
+                                    userVM.fetchUser(userID: user.id ?? " ") { fetchedUser in
+                                        self.user = fetchedUser
+                                    }
+                                }
                             } else {
-                                userVM.addFriend(friendID: user.id ?? " ")
+                                userVM.sendFriendRequest(friend: user){ finished in
+                                    userVM.fetchUser(userID: user.id ?? " "){ fetchedUser in
+                                        self.user = fetchedUser
+                                    }
+                                }
                             }
                             
                         },label:{

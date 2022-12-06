@@ -15,7 +15,7 @@ struct CreateStoryPostView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var userVM: UserViewModel
     
-    @State var avatarImage = UIImage(named: "Icon")!
+    @State var avatarImage = UIImage(named: "topbarlogo")!
     @State var selectedGroup : Group = Group()
     @State var showImageSendView: Bool = false
     @State var posts : [UIImage] = []

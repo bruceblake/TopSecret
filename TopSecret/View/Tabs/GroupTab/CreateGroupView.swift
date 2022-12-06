@@ -16,7 +16,7 @@ struct CreateGroupView: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject var groupVM = GroupViewModel()
     @State var isShowingPhotoPicker:Bool = false
-    @State var avatarImage = UIImage(named: "Icon")!
+    @State var avatarImage = UIImage(named: "topbarlogo")!
     @State var images : [UIImage] = []
     @State var groupName : String = ""
     @State var selectedUsers : [User] = []

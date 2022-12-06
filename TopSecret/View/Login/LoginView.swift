@@ -32,10 +32,10 @@ struct LoginView: View {
                     
                     
                     //Icon and Name
-                    VStack{
+                    VStack(spacing: 0){
                         
                         
-                        Image("FinishedIcon").resizable().aspectRatio(contentMode: .fit).frame(width: 150, height: 150)
+                        Image("topbarlogo").resizable().frame(width: 200, height: 200)
                         Text("Top Secret")
                             .font(.largeTitle)
                             .fontWeight(.bold)

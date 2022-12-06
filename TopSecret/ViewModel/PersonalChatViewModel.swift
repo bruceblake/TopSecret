@@ -178,7 +178,9 @@ class PersonalChatViewModel : ObservableObject {
             
             COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["usersThatHaveSeenLastMessage":[user.id ?? " "]])
             
-            COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["lastActionDate":Date()])
+            COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["lastActionDate":Timestamp()])
+            
+           
           
             self.notificationSender.sendPushNotification(to: self.getPersonalChatUser(chat: self.chat, userID: user.id ?? " ").fcmToken ?? " ", title: self.getPersonalChatUser(chat: self.chat, userID: user.id ?? " ").nickName ?? " ", body: text)
         })
@@ -209,7 +211,7 @@ class PersonalChatViewModel : ObservableObject {
             var data = snapshot?.data() as? [String:Any] ?? [:]
             var usersThatHaveSeen = data["usersThatHaveSeenLastMessage"] as? [String] ?? []
             if !usersThatHaveSeen.contains(userID){
-        COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["lastActionDate":Date()])
+        COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["lastActionDate":Timestamp()])
                 
                 COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["usersThatHaveSeenLastMessage":FieldValue.arrayUnion([userID])])
             }

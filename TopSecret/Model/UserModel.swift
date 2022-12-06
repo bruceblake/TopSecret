@@ -43,6 +43,10 @@ struct User : Identifiable, Hashable{
     var personalChatsID : [String]
     var personalChats : [ChatModel]
     var personalChatNotificationCount : Int?
+    var dateCreated : Timestamp?
+    var groupsFollowingID: [String]?
+    var groupsFollowing: [Group]?
+    var hasUnreadMessages : Bool?
 
 init(dictionary: [String:Any]) {
     self.id = dictionary["uid"] as? String ?? " "
@@ -74,7 +78,12 @@ init(dictionary: [String:Any]) {
     self.personalChats = dictionary["personalChats"] as? [ChatModel] ?? []
     self.personalChatNotificationCount = dictionary["personalChatNotificationCount"] as? Int ?? 0
     self.pendingGroupInvitationID = dictionary["pendingGroupInvitationID"] as? [String] ?? []
- }
+    self.dateCreated = dictionary["dateCreated"] as? Timestamp ?? Timestamp()
+    self.groupsFollowingID = dictionary["groupsFollowingID"] as? [String] ?? []
+    self.groupsFollowing = dictionary["groupsFollowing"] as? [Group] ?? []
+    self.hasUnreadMessages = dictionary["hasUnreadMessages"] as? Bool ?? false
+ 
+}
 
     init(){
         self.id = UUID().uuidString

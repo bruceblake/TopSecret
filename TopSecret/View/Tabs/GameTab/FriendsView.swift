@@ -24,11 +24,17 @@ struct FriendsView: View {
         ZStack{
             Color("Background")
             VStack{
+                VStack(spacing: 5){
+                    HStack{
+                        Text("\(userVM.personalChats.count) \(userVM.personalChats.count > 1 ? "friends" : "friend")").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
+                        Spacer()
+                    }
+                }.padding(.horizontal,30)
                 ScrollView{
                     VStack(spacing: 0){
-                        if ((userVM.user?.friendsList?.isEmpty ?? false)) {
+                        if ((userVM.personalChats.isEmpty ?? false)) {
                             
-                            Text("You have 0 friends :(")
+                            Text("You have 0 friends")
                         }else{
                             ForEach(self.sortPersonalChats(userID: userVM.user?.id ?? " "), id: \.id){ chat in
                                 NavigationLink {

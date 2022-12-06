@@ -13,7 +13,7 @@ struct CreateGroupPostView: View {
     var group: Group
     @EnvironmentObject var userVM: UserViewModel
     @State var openImagePicker: Bool = false
-    @State var post = UIImage(named: "Icon")!
+    @State var post = UIImage(named: "topbarlogo")!
     @State var showOverlay : Bool = false
     @State var showTaggedUsersView: Bool = false
     @State var selectedUsers: [User] = []

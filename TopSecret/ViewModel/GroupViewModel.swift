@@ -135,7 +135,7 @@ class GroupViewModel: ObservableObject {
             "notificationTime":Timestamp(),
                                     "notificationType":"sentGroupInvitation","notificationCreatorID":userID,
             "hasSeen":false,
-                                    "actionTypeID": group.id] as [String:Any]
+                                    "actionTypeID": group.id, "actionType":"openGroup"] as [String:Any]
         
         COLLECTION_USER.document(friend.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)
         COLLECTION_USER.document(friend.id ?? " ").updateData(["userNotificationCount":FieldValue.increment((Int64(1)))])

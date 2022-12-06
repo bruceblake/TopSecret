@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct ExplorePage: View {
-    @StateObject var searchVM = SearchRepository()
+    @ObservedObject var searchVM = SearchRepository()
     @StateObject var recentSearchVM = RecentSearchViewModel()
     @EnvironmentObject var userVM : UserViewModel
     @State var selectedGroup : Group = Group()
@@ -29,7 +29,7 @@ struct ExplorePage: View {
             Color("Background")
             VStack{
                 HStack{
-                    SearchBar(text: $searchVM.searchText, placeholder: "search for users and groups", onSubmit: {
+                    SearchBar(text: $searchVM.searchText, placeholder: "search for friends and groups", onSubmit: {
                       submit()
                     })
                     
@@ -162,7 +162,7 @@ struct ExplorePage: View {
 struct ShowAllRecentSearchView : View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject var recentSearchVM : RecentSearchViewModel
-    @StateObject var searchVM : SearchRepository
+    @ObservedObject var searchVM : SearchRepository
     @EnvironmentObject var userVM: UserViewModel
     @State var openSearchedView: Bool = false
 
@@ -232,7 +232,7 @@ struct ShowAllRecentSearchView : View {
 
 struct ExplorePageSearchList : View {
     @EnvironmentObject var userVM: UserViewModel
-    @StateObject var searchVM : SearchRepository
+    @ObservedObject var searchVM : SearchRepository
     @StateObject var recentSearchVM : RecentSearchViewModel
     @State var selectedGroup : Group = Group()
     @State var selectedUser : User = User()
@@ -288,12 +288,6 @@ struct ExplorePageSearchList : View {
                         },label:{
                             UserSearchCell(user: user, showActivity: false)
                         })
-                      
-
-                         
-                        
-
-                     
                     }
                 }
                 
@@ -326,7 +320,7 @@ struct ExplorePageSearchList : View {
             
         }
         NavigationLink(isActive: $openGroupProfile) {
-            GroupProfileView(group: $selectedGroup, isInGroup: selectedGroup.users.contains(userVM.user?.id ?? " "), showProfileView: $openGroupProfile)
+            GroupProfileView(group: selectedGroup, isInGroup: selectedGroup.users.contains(userVM.user?.id ?? " "))
         } label: {
             EmptyView()
         }

@@ -20,7 +20,6 @@ struct CreateUsername: View {
             VStack{
                 Text("Create Your Username").foregroundColor(Color("Foreground")).font(.largeTitle).fontWeight(.bold).padding(.horizontal)
                 
-                Text("Create a unique username").font(.headline)
                 
                 Text("Remeber, you can only change your username once every two weeks").padding(.bottom,20).font(.footnote).foregroundColor(Color("Foreground").opacity(0.5)).padding(.horizontal,20).padding(.top,10)
                 

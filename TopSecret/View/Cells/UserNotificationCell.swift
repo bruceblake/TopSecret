@@ -52,7 +52,7 @@ struct UserSentGroupInvitationNotificationCell : View {
             
             
             NavigationLink {
-                UserProfilePage(user: (userNotification.notificationCreator as? User ?? User()) )
+                GroupProfileView(group: userNotification.action as? Group ?? Group(), isInGroup: (userNotification.action as? Group ?? Group()).users.contains(userVM.user?.id ?? " "))
             } label: {
                 VStack(alignment: .leading, spacing: 8){
                     
@@ -205,7 +205,7 @@ struct UserSentFriendRequestNotificationCell : View {
             
             Spacer()
             
-            if !(userVM.user?.pendingFriendsListID?.contains((userNotification.notificationCreator as? User ?? User()).id ?? " ") ?? false) {
+            if (userVM.user?.pendingFriendsListID?.contains((userNotification.notificationCreator as? User ?? User()).id ?? " ") ?? false) {
                 
             HStack{
             Button(action:{
@@ -213,7 +213,7 @@ struct UserSentFriendRequestNotificationCell : View {
             },label:{
               
                 ZStack{
-                    Rectangle().frame(width: 60, height: 30).foregroundColor(Color.green)
+                    RoundedRectangle(cornerRadius: 12).frame(width: 30, height: 30).foregroundColor(Color.green)
                     
                     Image(systemName: "checkmark").foregroundColor(FOREGROUNDCOLOR)
                 }            })
@@ -223,7 +223,7 @@ struct UserSentFriendRequestNotificationCell : View {
                 userVM.denyFriendRequest(friend: (userNotification.notificationCreator as? User ?? User()))
             },label:{
                 ZStack{
-                    Rectangle().frame(width: 60, height: 30).foregroundColor(Color.green)
+                    RoundedRectangle(cornerRadius: 12).frame(width: 30, height: 30).foregroundColor(Color.red)
                     
                     Image(systemName: "xmark").foregroundColor(FOREGROUNDCOLOR)
                 }

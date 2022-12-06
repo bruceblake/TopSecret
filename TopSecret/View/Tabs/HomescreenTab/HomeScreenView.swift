@@ -73,12 +73,23 @@ struct HomeScreenView: View {
                             
                         })
                         
-                        Button(action:{
-                            showAddContent.toggle()
-                        },label:{
-                            Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title2)
-                        }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
+                        NavigationLink {
+                            GroupGalleryView()
+                        } label: {
+                            ZStack{
+                                Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
+                                
+                                
+                                
+                                Image(systemName: "photo.on.rectangle.angled").foregroundColor(FOREGROUNDCOLOR).font(.title3)
+                                
+                              
+                                
+                                
+                            }
+                        }
                         
+               
                         
                         
                     }.padding(.leading)
@@ -98,29 +109,22 @@ struct HomeScreenView: View {
                     
                     HStack{
                         
-                        NavigationLink {
-                            GroupGalleryView()
-                        } label: {
-                            ZStack{
-                                Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
-                                
-                                
-                                
-                                Image(systemName: "photo.on.rectangle.angled").foregroundColor(FOREGROUNDCOLOR).font(.title3)
-                                
-                              
-                                
-                                
-                            }
-                        }
 
-                 
-                      
-                      
+                        Button(action:{
+                            showAddContent.toggle()
+                        },label:{
+                            Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title2)
+                        }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
                         
-                        NavigationLink(destination: GroupSettingsView().environmentObject(selectedGroupVM)){
-                            Image(systemName: "gear").foregroundColor(FOREGROUNDCOLOR).font(.title3).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
-                        }
+                      
+                        NavigationLink(destination: GroupProfileView(group: selectedGroupVM.group, isInGroup: true)){
+                                                    Image(systemName: "person").foregroundColor(FOREGROUNDCOLOR).font(.title3).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
+                                                }
+                        
+//                        NavigationLink(destination: GroupSettingsView().environmentObject(selectedGroupVM)){
+//                            Image(systemName: "gear").foregroundColor(FOREGROUNDCOLOR).font(.title3).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
+//                        }
+                        
                         
                         
                         
@@ -166,10 +170,6 @@ struct HomeScreenView: View {
                 AddContentView(showAddContentView: $showAddContent, group: $group).environmentObject(selectedGroupVM)
                 
             }.zIndex(3)
-            
-            if showProfileView{
-                GroupProfileView(group: $group, isInGroup: group.users.contains(userVM.user?.id ?? " "), showProfileView: $showProfileView).zIndex(3)
-            }
          
             
 
