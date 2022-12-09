@@ -130,7 +130,7 @@ struct ExplorePage: View {
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
             
-            searchVM.startSearch(searchRequest: "allUsersAndGroups", id: userVM.user?.id ?? " ")
+            searchVM.startSearch(searchRequest: "allUsersFriendsAndGroups", id: userVM.user?.id ?? " ")
             let dp = DispatchGroup()
             
             dp.enter()
@@ -273,23 +273,7 @@ struct ExplorePageSearchList : View {
                     }.background(Color("Color")).cornerRadius(12).padding(.horizontal)
                 }
                 
-                VStack(alignment: .leading){
-                    if !searchVM.searchText.isEmpty && !searchVM.userReturnedResults.isEmpty{
-                        Text("Users").fontWeight(.bold).foregroundColor(Color("Foreground")).padding(.leading)
-                    }
-                    ForEach(searchVM.userReturnedResults, id: \.id){ user in
-                        
-                        Button(action:{
-                            self.selectedUser = user
-                            openUserProfile.toggle()
-                            searchVM.searchText = user.username ?? ""
-                            searchVM.hasSearched = true
-                            recentSearchVM.addToRecentSearches(searchText: searchVM.searchText)
-                        },label:{
-                            UserSearchCell(user: user, showActivity: false)
-                        })
-                    }
-                }
+              
                 
                 VStack(alignment: .leading){
                     if !searchVM.searchText.isEmpty && !searchVM.userFriendsReturnedResults.isEmpty{

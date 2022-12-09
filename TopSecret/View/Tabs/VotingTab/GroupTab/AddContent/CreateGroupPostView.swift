@@ -33,45 +33,49 @@ struct CreateGroupPostView: View {
                         }
                     })
                     
+                    Spacer()
                     Text("Create Post")
                     
                     Spacer()
-                }.padding(.top,50)
+                    
+                    Circle().frame(width: 40, height: 40).foregroundColor(Color.clear)
+
+                }.padding(.top,50).padding(.horizontal,10)
                 
                 Spacer()
                 
-                Button(action:{
-                    self.showTaggedUsersView.toggle()
-                },label:{
-                    
-                Text("Add Tagged Users")
-                }).fullScreenCover(isPresented: $showTaggedUsersView) {
-                    
-                } content: {
-                    VStack{
-                        ForEach(userVM.user?.friendsList ?? [], id: \.id){ friend in
-                            
-                            Button(action:{
-                                self.selectedUsers.append(friend)
-                            },label:{
-                                UserSearchCell(user: friend, showActivity: false)
-                            })
-                        }
-                        ScrollView(.horizontal){
-                            HStack{
-                                ForEach(selectedUsers){ user in
-                                    Button(action:{
-                                        self.selectedUsers.removeAll { removedUser in
-                                            user.id == removedUser.id
-                                        }
-                                    },label:{
-                                    Text("\(user.nickName ?? " ")")
-                                    })
-                                }
-                            }
-                        }
-                    }
-                }
+//                Button(action:{
+//                    self.showTaggedUsersView.toggle()
+//                },label:{
+//
+//                Text("Add Tagged Users")
+//                }).fullScreenCover(isPresented: $showTaggedUsersView) {
+//
+//                } content: {
+//                    VStack{
+//                        ForEach(userVM.user?.friendsList ?? [], id: \.id){ friend in
+//
+//                            Button(action:{
+//                                self.selectedUsers.append(friend)
+//                            },label:{
+//                                UserSearchCell(user: friend, showActivity: false)
+//                            })
+//                        }
+//                        ScrollView(.horizontal){
+//                            HStack{
+//                                ForEach(selectedUsers){ user in
+//                                    Button(action:{
+//                                        self.selectedUsers.removeAll { removedUser in
+//                                            user.id == removedUser.id
+//                                        }
+//                                    },label:{
+//                                    Text("\(user.nickName ?? " ")")
+//                                    })
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
 
                 
                 
@@ -85,6 +89,8 @@ struct CreateGroupPostView: View {
                 }).fullScreenCover(isPresented: $openImagePicker, content: {
                     ImagePicker(avatarImage: $post, allowsEditing: true)
                 })
+                
+                
                 Spacer()
                 Button(action:{
                     createPostVM.createPost(image: post, userID: userVM.user?.id ?? " ", group: group)

@@ -14,7 +14,7 @@ class UserViewModel : ObservableObject {
     
     
     let notificationSender = PushNotificationSender()
-   //firebase
+    //firebase
     @Published var userSession : FirebaseAuth.User?
     @Published var isConnected : Bool = false
     @Published var firestoreListener : [ListenerRegistration] = []
@@ -25,7 +25,7 @@ class UserViewModel : ObservableObject {
     @Published var groups: [Group] = []
     @Published var personalChats: [ChatModel] = []
     @Published var notifications : [UserNotificationModel] = []
-    
+    @Published var feed : [Any] = []
     
     
     @Published var userNotificationCount : Int = 0
@@ -38,7 +38,7 @@ class UserViewModel : ObservableObject {
     @Published var startFetch : Bool = false
     @Published var showWarning: Bool = false
     @Published var hasUnreadMessages : Bool = false
-  
+    
     
     static let shared = UserViewModel()
     
@@ -52,9 +52,9 @@ class UserViewModel : ObservableObject {
     
     init(){
         
-   
+        
         //please work
-       let dp = DispatchGroup()
+        let dp = DispatchGroup()
         dp.enter()
         self.removeListeners()
         self.userSession = Auth.auth().currentUser
@@ -80,7 +80,7 @@ class UserViewModel : ObservableObject {
     func refresh(){
         DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
             if !self.finishedFetchingGroups && !self.timedOut{
-            self.timedOut = true
+                self.timedOut = true
                 self.startFetch = false
             }
         }
@@ -99,6 +99,88 @@ class UserViewModel : ObservableObject {
         return sum
     }
     
+    func fetchGroup(groupID: String, completion: @escaping (Group) -> ()) -> () {
+        COLLECTION_GROUP.document(groupID).getDocument { snapshot, err in
+            if err != nil{
+                print("ERROR")
+                return
+            }
+            var data = snapshot?.data() as? [String:Any] ?? [:]
+            
+            return completion(Group(dictionary: data))
+        }
+    }
+    
+    func fetchMedia(urlPath: String, completion: @escaping (UIImage) -> ()) -> (){
+        let storageRef = Storage.storage().reference()
+        let fileRef = storageRef.child(urlPath)
+        
+        fileRef.getData(maxSize: 5 * 1024 * 1024) { data, err in
+            if err != nil {
+                print("ERROR")
+            }
+            
+            if let image = UIImage(data: data!){
+                return completion(image)
+            }
+        }
+    }
+    
+    func listenToFeed(){
+        self.firestoreListener.append(
+            COLLECTION_POSTS.addSnapshotListener({ snapshot, err in
+                if err != nil {
+                    print("ERROR")
+                    return
+                }
+                
+                var feedToReturn : [Any] = []
+                
+                let groupD = DispatchGroup()
+                
+                
+                let documents = snapshot!.documents
+                
+                groupD.enter()
+                for document in documents{
+                    var data = document.data() as? [String:Any] ?? [:]
+                    var creatorID = data["creatorID"] as? String ?? " "
+                    var groupID = data["groupID"] as? String ?? " "
+                    var urlPath = data["urlPath"] as? String ?? ""
+                    groupD.enter()
+                    self.fetchUser(userID: creatorID) { fetchedUser in
+                        data["creator"] = fetchedUser
+                        groupD.leave()
+                    }
+                    
+                    groupD.enter()
+                    self.fetchGroup(groupID: groupID) { fetchedGroup in
+                        data["group"] = fetchedGroup
+                        groupD.leave()
+                    }
+                    
+                    groupD.enter()
+                    self.fetchMedia(urlPath: urlPath) { fetchedImage in
+                        data["image"] = fetchedImage
+                        groupD.leave()
+                    }
+                    
+                    groupD.notify(queue: .main, execute:{
+                        feedToReturn.append(GroupPostModel(dictionary: data))
+                    })
+               
+                }
+                groupD.leave()
+                
+                groupD.notify(queue: .main, execute: {
+                    self.feed = feedToReturn
+                })
+            })
+            
+        
+        
+        )
+    }
     
     func listenToNotifications(userID: String){
         self.firestoreListener.append(
@@ -1007,6 +1089,7 @@ class UserViewModel : ObservableObject {
         self.listenToUser(uid: uid)
         self.listenToPersonalChats(userID: uid)
         self.listenToNotifications(userID: uid)
+        self.listenToFeed()
     }
     
     
@@ -1138,6 +1221,17 @@ class UserViewModel : ObservableObject {
         })
     }
     
+    func unsendFriendRequest(friend: User, completion: @escaping (Bool) -> ()) -> (){
+        let dp = DispatchGroup()
+        dp.enter()
+        COLLECTION_USER.document(self.user?.id ?? " ").updateData(["pendingFriendsListID":FieldValue.arrayRemove([friend.id ?? " "])])
+        
+        COLLECTION_USER.document(friend.id ?? " ").updateData(["pendingFriendsListID":FieldValue.arrayRemove([user?.id ?? " "])])
+        dp.leave()
+        dp.notify(queue: .main, execute: {
+            return completion(true)
+        })
+    }
     
     
     func acceptFriendRequest(friend: User){

@@ -43,7 +43,7 @@ struct UserFriendsListView: View {
                 if searchVM.searchText == "" {
                     ScrollView{
                         VStack(alignment: .leading){
-                            Text("Friends")
+                            Text("Friends").font(.body).bold().padding([.leading,.top],10)
 
                             ForEach(user.friendsList ?? []){ friend in
                                 NavigationLink {

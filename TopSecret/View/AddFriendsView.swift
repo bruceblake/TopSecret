@@ -9,7 +9,7 @@ import SwiftUI
 
 struct AddFriendsView: View {
     @Environment(\.presentationMode) var presentationMode
-    @ObservedObject var searchVM = SearchRepository()
+    @StateObject var searchVM = SearchRepository()
     var body: some View {
         ZStack{
             Color("Background")
@@ -34,7 +34,7 @@ struct AddFriendsView: View {
                 SearchBar(text: $searchVM.searchText, placeholder: "search for users", onSubmit: {
                     //todo
                 })
-                
+                 
                 AddFriendsSearchList(searchVM: searchVM)
             }
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
@@ -45,22 +45,31 @@ struct AddFriendsView: View {
 
 
 struct AddFriendsSearchList : View {
-    @ObservedObject var searchVM : SearchRepository
+    @StateObject var searchVM : SearchRepository
+    @EnvironmentObject var userVM: UserViewModel
+    
+   
     var body: some View {
         ScrollView{
             VStack{
                 VStack(alignment: .leading){
-                    HStack{
-                        Text("Users").bold().padding(.leading,10)
-                        Spacer()
+                    if !searchVM.searchText.isEmpty && !searchVM.userReturnedResults.isEmpty{
+                        HStack{
+                            Text("Users").bold().padding(.leading,10)
+                            Spacer()
+                        }
                     }
+                   
                     VStack{
-                        ForEach(searchVM.userReturnedResults, id: \.id){ user in
+                        ForEach(searchVM.userReturnedResults){ user in
+                            if user.id ?? "" != userVM.user?.id ?? ""{
                             Button(action:{
                                 
                             },label:{
+
                                 UserAddSearchCell(user: user)
                             })
+                            }
                         }
                     }
                  
@@ -74,13 +83,15 @@ struct UserAddSearchCell : View {
     var user: User
     @EnvironmentObject var userVM: UserViewModel
     @State var isLoading: Bool = false
+    @State var isFriends: Bool = false
+    @State var isPendingFriendRequest : Bool = false
     var body: some View {
         VStack(alignment: .leading){
             HStack(alignment: .center){
                 WebImage(url: URL(string: user.profilePicture ?? ""))
                     .resizable()
                     .scaledToFill()
-                    .frame(width:48,height:48)
+                    .frame(width:40,height:40)
                     .clipShape(Circle())
                 
                 VStack(alignment: .leading, spacing: 0){
@@ -90,66 +101,122 @@ struct UserAddSearchCell : View {
                 
                 Spacer()
                 
-                
-                if user.friendsListID?.contains(userVM.user?.id ?? " ") ?? false {
+                //if you two are not friends
+                if isFriends {
                     HStack{
-                            Button(action:{
-                                isLoading = true
-                                userVM.sendFriendRequest(friend: user) { finished in
-                                   isLoading = !finished
-                                }
-                            },label:{
-                                if isLoading{
-                                    ProgressView().font(.caption).foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("AccentColor")))
-                                }else{
-                                Text("Send Friend Request").font(.caption).foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("AccentColor")))
-                                }
-                            })
-                           
-                 
-                        
-                       
-                            Button(action:{
-                                
-                            },label:{
-                                Image(systemName: "xmark").font(.caption).foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
-                            })
+                        Text("Chat")
+                        Button(action:{
                             
-                    }
+                        },label:{
+                            Image(systemName: "message")
+                        })
+                    }.font(.caption).foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
                 }
                 
-                if user.pendingFriendsListID?.contains(userVM.user?.id ?? " ") ?? false{
+                else if isPendingFriendRequest{
                     HStack{
-                            Button(action:{
-                                isLoading = true
-                                userVM.sendFriendRequest(friend: user) { finished in
-                                   isLoading = !finished
-                                }
-                            },label:{
+                           
                                 if isLoading{
                                     ProgressView().font(.caption).foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("AccentColor")))
                                 }else{
-                                Text("Send Friend Request").font(.caption).foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("AccentColor")))
+                                    Text("Pending Friend Request").font(.caption).foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color.gray))
                                 }
-                            })
+                            
                            
                  
                         
                        
                             Button(action:{
-                                
+                                isLoading = true
+                                userVM.unsendFriendRequest(friend: user) { finished in
+                                    if finished {
+                                        userVM.fetchUser(userID: user.id ?? " ") { fetchedUser in
+                                            if fetchedUser.friendsListID?.contains(userVM.user?.id ?? " ") ?? false {
+                                                self.isFriends = true
+                                                self.isPendingFriendRequest = false
+                                            }else if fetchedUser.pendingFriendsListID?.contains(userVM.user?.id ?? " ") ?? false {
+                                                self.isPendingFriendRequest = true
+                                                self.isFriends = false
+                                            }else{
+                                                self.isFriends = false
+                                                self.isPendingFriendRequest = false
+                                            }
+                                            self.isLoading = false
+                                        }
+                                      
+                                    }
+                                }
                             },label:{
                                 Image(systemName: "xmark").font(.caption).foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
-                            })
+                            }).disabled(isLoading)
                             
                     }
                     
+                }else {
+                    HStack{
+                            Button(action:{
+                                isLoading = true
+                                userVM.sendFriendRequest(friend: user) { finished in
+                                    if finished {
+                                        userVM.fetchUser(userID: user.id ?? " ") { fetchedUser in
+                                            if fetchedUser.friendsListID?.contains(userVM.user?.id ?? " ") ?? false {
+                                                self.isFriends = true
+                                                self.isPendingFriendRequest = false
+                                            }else if fetchedUser.pendingFriendsListID?.contains(userVM.user?.id ?? " ") ?? false {
+                                                self.isPendingFriendRequest = true
+                                                self.isFriends = false
+                                            }else{
+                                                self.isFriends = false
+                                                self.isPendingFriendRequest = false
+                                            }
+                                            self.isLoading = false
+                                        }
+                                       
+                                    }
+                                }
+                            },label:{
+                                HStack(spacing: 5){
+                                    if isLoading{
+                                        ProgressView()
+                                    }
+                                    Text("Send Friend Request")
+                                }.font(.caption).foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("AccentColor")))
+                            
+                                
+                            }).disabled(isLoading)
+                           
+                 
+                        
+                       
+                            Button(action:{
+                                
+                            },label:{
+                                Image(systemName: "xmark").font(.caption).foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
+                            }).disabled(isLoading)
+                            
+                    }
+                  
                 }
-              
+                
+             
                 
                 
             }.padding(.horizontal,10)
             Divider()
+        }.onAppear{
+            userVM.fetchUser(userID: user.id ?? " ") { fetchedUser in
+                if fetchedUser.friendsListID?.contains(userVM.user?.id ?? " ") ?? false {
+                    self.isFriends = true
+                    self.isPendingFriendRequest = false
+                }else if fetchedUser.pendingFriendsListID?.contains(userVM.user?.id ?? " ") ?? false {
+                    self.isPendingFriendRequest = true
+                    self.isFriends = false
+                }else{
+                    self.isFriends = false
+                    self.isPendingFriendRequest = false
+                }
+                self.isLoading = false
+            }
         }
     }
 }

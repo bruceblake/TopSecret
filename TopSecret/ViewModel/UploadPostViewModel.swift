@@ -20,7 +20,7 @@ class UploadPostViewModel: ObservableObject {
     
     func uploadPost(caption: String, groupName: String) {
         guard let user =  vm.user else { return }
-        let docRef = COLLECTION_POST.document()
+        let docRef = COLLECTION_POSTS.document()
         
         let data: [String: Any] = ["uid": user.id,
                                    "caption": caption,

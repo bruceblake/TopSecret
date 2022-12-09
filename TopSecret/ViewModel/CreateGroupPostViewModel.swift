@@ -33,8 +33,8 @@ class CreateGroupPostViewModel : ObservableObject {
         
         let uploadTask = fileRef.putData(imageData!, metadata: nil) { metadata, err in
             if err == nil && metadata != nil {
-                let data = ["id":postID,"urlPath":path,"creatorID":userID,"timeStamp":Timestamp()] as? [String : Any] ?? [:]
-                COLLECTION_GROUP.document(group.id).collection("Posts").document(postID).setData(data) { err in
+                let data = ["id":postID,"urlPath":path,"creatorID":userID,"timeStamp":Timestamp(),"groupID":group.id] as? [String : Any] ?? [:]
+                COLLECTION_POSTS.document(postID).setData(data) { err in
                     if err == nil {
                         DispatchQueue.main.async{
                             print("Uploaded Post!")

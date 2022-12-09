@@ -146,7 +146,6 @@ struct Tabs : View {
                     }else if tabIndex == .friends{
                         FriendsView(personalChatVM: personalChatVM)
                     }else if tabIndex == .groups{
-//                        ScheduleView(calendar: Calendar(identifier: .gregorian))
                         GroupsView()
                     }else if tabIndex == .notifications{
                         UserNotificationView()
@@ -212,7 +211,7 @@ struct Tabs : View {
                                     ZStack{
                                         Image(systemName: self.tabIndex == .friends ? "message.fill" : "message").font(.system(size: 20))
                                         
-                                        if !checkIfUserHasUnreadChats() {
+                                        if !checkIfUserHasUnreadChats() && !userVM.personalChats.isEmpty{
                                             Circle().foregroundColor(Color("AccentColor")).frame(width: 14, height: 14)
                                         .offset(x: 13, y: -10)
                                         }
@@ -238,6 +237,7 @@ struct Tabs : View {
                                 
                                 self.tabIndex = .home
                                 userVM.removeListeners()
+                                userVM.listenToFeed()
                             },label:{
                                 VStack(spacing: 5){
                                     

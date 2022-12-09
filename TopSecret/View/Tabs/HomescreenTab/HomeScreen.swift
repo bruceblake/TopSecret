@@ -30,7 +30,7 @@ struct HomeScreen: View {
                         YourFeedView()
                     }
                 
-                HStack(){
+                HStack(spacing: 20){
                     
                     Spacer()
                     Button(action:{
@@ -98,13 +98,16 @@ struct YourGroupsView : View {
 }
 
 struct YourFeedView : View {
+    @EnvironmentObject var userVM: UserViewModel
     
     var body: some View {
-        VStack{
-            Spacer()
-            Text("Your Feed")
-            Spacer()
-        }
+        ScrollView(showsIndicators: false){
+            VStack(spacing: 15){
+                 ForEach(userVM.feed.indices){ feedItemIndex in
+                    GroupPostCell(post: userVM.feed[feedItemIndex] as? GroupPostModel ?? GroupPostModel())
+                }
+            }.padding(.top,40)
+        }.padding(.bottom,UIScreen.main.bounds.height / 8)
     }
 }
 
