@@ -23,7 +23,9 @@ struct HomeScreenView: View {
     @State var offset : CGSize = .zero
     @State var showProfileView : Bool = false
     @State var showGalleryView : Bool = false
-
+    @State var shareType : String = ""
+    @State var selectedOptionIndex = 0
+    var options = ["Home","Chat","Calendar","Map","Games"]
     
     @Environment(\.presentationMode) var presentationMode
 
@@ -139,20 +141,63 @@ struct HomeScreenView: View {
                 
                 Spacer()
                 
-                PagerTabView(showLabels: true, tint: Color("AccentColor"), selection: $keyboardVM.selectedView, labels: ["Home","Chat","Calendar","Map"]) {
-                    ActivityView(group: $group, selectedView: $keyboardVM.selectedView).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
-                 
-                    GroupChatView(keyboardVM: keyboardVM, userID: userVM.user?.id ?? " ", groupID: group.id, chatID: selectedGroupVM.group.chat.id).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
+                ScrollView(.horizontal, showsIndicators: false){
+                    HStack(spacing: 10){
+                        ForEach(0..<options.count){ index in
+                            Button(action:{
+                                withAnimation{
+                                selectedOptionIndex = index
+                                }
+                            },label:{
+                                VStack{
+                                    Text(options[index]).foregroundColor(selectedOptionIndex == index ? Color("AccentColor") : FOREGROUNDCOLOR)
+                                    if selectedOptionIndex == index{
+                                        Rectangle().frame(width: UIScreen.main.bounds.width / 5, height: 3).foregroundColor(Color("AccentColor"))
+                                    }else{
+                                        Rectangle().frame(width: UIScreen.main.bounds.width / 5, height: 3).foregroundColor(Color.clear)
+                                    }
+                                }
+                            })
+                        }
+                    }
+                }.padding(.horizontal,10)
                 
-        
+                switch selectedOptionIndex{
+                    case 0:
+                    ActivityView(group: group, selectedView: $keyboardVM.selectedView, shareType: $shareType).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
+                case 1:
+                    
+                       GroupChatView(keyboardVM: keyboardVM, userID: userVM.user?.id ?? " ").environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
+                   
+                case 2:
                     
                     GroupCalendarView(calendar: Calendar(identifier: .gregorian)).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
-
+                case 3:
                     
                     MapView(group: $group).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
+                case 4:
                     
-                }.padding(.top)
-                    .ignoresSafeArea(.container, edges: .bottom )
+                    GamesView().environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
+                default:
+                    Text("Unknown")
+                }
+//
+//                PagerTabView(showLabels: true, tint: Color("AccentColor"), selection: $keyboardVM.selectedView, labels: ["Home","Chat","Calendar","Map","Games"]) {
+//                    ActivityView(group: group, selectedView: $keyboardVM.selectedView, shareType: $shareType).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
+//
+//                    GroupChatView(keyboardVM: keyboardVM, userID: userVM.user?.id ?? " ").environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
+//
+//
+//
+//                    GroupCalendarView(calendar: Calendar(identifier: .gregorian)).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
+//
+//
+//                    MapView(group: $group).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
+//
+//                    GamesView().environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
+//
+//                }.padding(.top)
+//                    .ignoresSafeArea(.container, edges: .bottom )
            
                 
               
@@ -176,15 +221,7 @@ struct HomeScreenView: View {
             
         
             
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
-            selectedGroupVM.listenToGroup(userID: userVM.user?.id ?? " ", groupID: group.id) { fetched in
-            }
-        }.onDisappear{
-            for listener in selectedGroupVM.listeners{
-                listener.remove()
-            }
-            selectedGroupVM.groupFeed = []
-        }
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
         .onTapGesture {
             if showAddContent{
             self.showAddContent.toggle()
@@ -230,21 +267,24 @@ struct PagerTabView<Content: View>: View {
     var body: some View{
         VStack(spacing: 0){
             if showLabels{
-                
-            HStack{
-                
-                ForEach(0..<labels.count, id: \.self){ index in
-                    Button(action:{
-                        selection = index
-                        scrollSelection = index
-                        let newOffset = CGFloat(index) * getScreenBounds().width
-                        self.offset = newOffset
-                    },label:{
-                        Text(labels[index]).font(.headline).bold().foregroundColor(selection == index || scrollSelection == index ? Color("AccentColor") : FOREGROUNDCOLOR)
-                    }).pageLabel()
+                ScrollView(.horizontal, showsIndicators: false){
+                    HStack(spacing: 30){
+                        ForEach(0..<labels.count, id: \.self){ index in
+                            Button(action:{
+                                selection = index
+                                scrollSelection = index
+                                let newOffset = CGFloat(index) * getScreenBounds().width
+                                self.offset = newOffset
+                            },label:{
+                                Text(labels[index]).font(.headline).bold().foregroundColor(selection == index || scrollSelection == index ? Color("AccentColor") : FOREGROUNDCOLOR)
+                            }).pageLabel()
+                        }
+                    
+                       .foregroundColor(tint)
+                    }.padding(.horizontal)
+                     
                 }
-            }
-               .foregroundColor(tint)
+       
             
             
             RoundedRectangle(cornerRadius: 16)

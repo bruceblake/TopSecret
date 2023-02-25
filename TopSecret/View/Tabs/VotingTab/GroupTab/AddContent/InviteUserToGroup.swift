@@ -29,20 +29,25 @@ struct InviteUserToGroup: View {
                     Button(action:{
                         presentationMode.wrappedValue.dismiss()
                     },label:{
-                        Text("Back")
-                    }).padding(.leading,10)
+                        ZStack{
+                            Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
+                            Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR)
+                        }
+                    })
                     
                     Spacer()
                     
-                    Text("Invite Friend").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold).font(.largeTitle)
+                    Text("Invite Friend To Group").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold).font(.headline)
                     
                     Spacer()
+                    
+                    Circle().frame(width: 40, height: 40).foregroundColor(Color.clear)
 
-                }.padding(.top,50)
+                }.padding(.top,50).padding(.horizontal)
                 
                 Spacer()
                 VStack{
-                    Text("Enter Username").fontWeight(.bold).font(.largeTitle).foregroundColor(FOREGROUNDCOLOR)
+         
                     SearchBar(text: $searchRepository.searchText, onSubmit: {
                         
                     })
@@ -61,12 +66,11 @@ struct InviteUserToGroup: View {
                                 }.padding(10).background(RoundedRectangle(cornerRadius: 15).fill(Color("AccentColor")))
                             }
                         }
-                    }.padding(.top,10)
+                    }.padding(10)
                     
 
                     
                     
-                    Spacer()
                     
                     VStack{
                         ForEach(searchRepository.userReturnedResults){ user in
@@ -86,16 +90,16 @@ struct InviteUserToGroup: View {
                                         WebImage(url: URL(string: user.profilePicture ?? ""))
                                             .resizable()
                                             .scaledToFill()
-                                            .frame(width:48,height:48)
+                                            .frame(width:40,height:40)
                                             .clipShape(Circle())
                                         
                                         Text("\(user.username ?? "")").foregroundColor(FOREGROUNDCOLOR)
                                         
                                         Spacer()
                                         
-                                        Image(systemName: selectedUsers.contains(user) ? "checkmark.circle.fill" : "circle").font(.title)
+                                        Image(systemName: selectedUsers.contains(user) ? "checkmark.circle.fill" : "circle").font(.title).foregroundColor(FOREGROUNDCOLOR)
                                         
-                                    }.padding(.horizontal,10).padding(.vertical)
+                                    }.padding(.horizontal,10)
                                     Divider()
                                 }
                                 }
@@ -122,8 +126,10 @@ struct InviteUserToGroup: View {
                             presentationMode.wrappedValue.dismiss()
                         }
                     },label:{
-                        Text( selectedUsers.count <= 1 ? "Add User To Group!" : "Add Users To Group!")
-                    })
+                        Text( selectedUsers.count <= 1 ? "Add User To Group!" : "Add Users To Group!").foregroundColor(Color("Foreground"))
+                            .padding(.vertical)
+                            .frame(width: UIScreen.main.bounds.width/1.5).background(Color("AccentColor")).cornerRadius(15)
+                    }).padding(.vertical)
                     
                     Spacer()
                 }

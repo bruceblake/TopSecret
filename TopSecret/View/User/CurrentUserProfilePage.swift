@@ -129,7 +129,7 @@ struct CurrentUserProfilePage: View {
                         NavigationLink(destination: Text("Hello World")){
                             
                             VStack{
-                                Text("\(userVM.user?.groupsID?.count ?? 0)").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
+                                Text("\(userVM.groups.count)").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
                                 Text("Groups").font(.callout).foregroundColor(.gray)
                             }
                         }

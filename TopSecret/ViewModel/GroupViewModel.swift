@@ -131,11 +131,12 @@ class GroupViewModel: ObservableObject {
         let notificationID = UUID().uuidString
         
         let userNotificationData = ["id":notificationID,
-            "notificationName": "Group Invitation",
-            "notificationTime":Timestamp(),
-                                    "notificationType":"sentGroupInvitation","notificationCreatorID":userID,
+            "name": "Group Invitation",
+            "timeStamp":Timestamp(),
+            "type":"sentGroupInvitation",
+            "userID":userID,
             "hasSeen":false,
-                                    "actionTypeID": group.id, "actionType":"openGroup"] as [String:Any]
+            "groupID":group.id] as [String:Any]
         
         COLLECTION_USER.document(friend.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)
         COLLECTION_USER.document(friend.id ?? " ").updateData(["userNotificationCount":FieldValue.increment((Int64(1)))])
@@ -148,12 +149,14 @@ class GroupViewModel: ObservableObject {
         
         let notificationID = UUID().uuidString
         
-        let userNotificationData = ["id":notificationID,
-                                    "notificationName": "",
-                                    "notificationTime":Timestamp(),
-                                    "notificationType":"acceptedGroupInvitation", "notificationCreatorID":user.id ?? "USER_ID",
-                                    "hasSeen":false,
-                                    "actionTypeID":group.id] as [String:Any]
+        let userNotificationData = [
+            "id":notificationID,
+            "name": "acceptedGroupInvitation",
+            "timeStamp":Timestamp(),
+            "type":"acceptedGroupInvitation",
+            "userID":user.id ?? "USER_ID",
+            "hasSeen":false,
+            "groupID":group.id] as [String:Any]
         
         
         COLLECTION_USER.document(user.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)
@@ -167,18 +170,18 @@ class GroupViewModel: ObservableObject {
     func joinGroup(group: Group, user: User){
         COLLECTION_GROUP.document(group.id).updateData(["users":FieldValue.arrayUnion([user.id])])
         COLLECTION_GROUP.document(group.id).updateData(["memberAmount":FieldValue.increment(Int64(1))])
-            
+        COLLECTION_USER.document(user.id ?? "").updateData(["groupsID":FieldValue.arrayUnion([group.id])])
              
            
                  
-        self.chatRepository.joinChat(chatID: group.chat.id , userID: user.id ?? " ", groupID: group.id)
+        self.chatRepository.joinChat(chatID: group.chatID ?? " " , userID: user.id ?? " ", groupID: group.id)
 
              var notificationID = UUID().uuidString
              
              let notificationData = ["id":notificationID,
-                                     "notificationName": "User Added",
-                                     "notificationTime":Timestamp(),
-                                     "notificationType":"userAdded", "notificationCreatorID":user.id,
+                                     "name": "User Added",
+                                     "timeStamp":Timestamp(),
+                                     "type":"userAdded", "userID":user.id,
                                      "usersThatHaveSeen":[]] as [String:Any]
         
         COLLECTION_GROUP.document(group.id).collection("Notifications").document(notificationID).setData(notificationData)
@@ -189,7 +192,7 @@ class GroupViewModel: ObservableObject {
             notificationSender.sendPushNotification(to: user.fcmToken ?? " ", title: "\(group.groupName)", body: "\(user.nickName ?? " ") has joined \(group.groupName)")
         }
         
-      
+        
              
     }
     
@@ -201,6 +204,7 @@ class GroupViewModel: ObservableObject {
         COLLECTION_GROUP.document(group.id).updateData(["memberAmount": FieldValue.increment(Int64(-1))])
         COLLECTION_GROUP.document(group.id).updateData(["users":FieldValue.arrayRemove([user.id ?? " "])])
 
+        COLLECTION_USER.document(user.id ?? "").updateData(["groupsID":FieldValue.arrayRemove([group.id])])
         
         COLLECTION_GROUP.document(group.id).getDocument { (snapshot, err) in
             if err != nil{
@@ -208,7 +212,7 @@ class GroupViewModel: ObservableObject {
                 return
             }
             let groupChatID = snapshot?.get("chatID") as? String ?? " "
-            COLLECTION_USER.document(user.id ?? " ").updateData(["groupCount":FieldValue.increment(Int64(-1))])
+            
 
             self.chatRepository.leaveChat(chatID: groupChatID, userID: user.id ?? " ", groupID: group.id)
             
@@ -253,11 +257,8 @@ class GroupViewModel: ObservableObject {
     func createGroup(groupName: String, dateCreated: Date, users: [String], image: UIImage, id: String){
         
         
-    
-        for user in users {
-            
-            COLLECTION_JUNCTION_GROUP_USER.document("\(id)\(user)").setData(["groupID":id,
-                                                                             "userID":user]) //groupid , userid
+        for user in users{
+            COLLECTION_USER.document(user).updateData(["groupsID":FieldValue.arrayUnion([id])])
         }
         
         let chatID = UUID().uuidString
@@ -275,6 +276,8 @@ class GroupViewModel: ObservableObject {
             self.persistImageToStorage(groupID: id,image: image)
         }
         
+        COLLECTION_GAMES.document(id).collection("Lobby").document("Lobby").setData(["playersID": [], "playersReady":[]])
+        
      
 
         chatRepository.createGroupChat(name: groupName, users: users, groupID: id, chatID: chatID)
@@ -285,11 +288,13 @@ class GroupViewModel: ObservableObject {
     
     func createGroup(groupName: String, dateCreated: Date, users: [String], image: UIImage, completion: @escaping (ChatModel) -> ()) -> (){
         
-        
-
-        
-        
         let id = UUID().uuidString
+
+        for user in users{
+            COLLECTION_USER.document(user).updateData(["groupsID":FieldValue.arrayUnion([id])])
+        }
+        
+        
         let chatID = UUID().uuidString
         
         for user in users {
@@ -311,6 +316,8 @@ class GroupViewModel: ObservableObject {
             self.persistImageToStorage(groupID: id,image: image)
         }
       
+        COLLECTION_GAMES.document(id).collection("Lobby").document("Lobby").setData(["playersID": [], "playersReady":[]])
+        
 
         chatRepository.createGroupChat(name: groupName, users: users, groupID: id, chatID: chatID ,completion: { chat in
             return completion(chat)

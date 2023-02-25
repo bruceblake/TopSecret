@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CustomDatePicker: View {
     @EnvironmentObject var userVM: UserViewModel
+    @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
     @Binding var currentDate: Date
     @Binding var group : Group
     
@@ -79,7 +80,7 @@ struct CustomDatePicker: View {
             
             LazyVGrid(columns: columns, spacing: 10){
                 ForEach(extractDate()){ value in
-                    CardView(eventList: group.events ?? [],value: value, selectedDay: selectedDay, completion: { day in
+                    CardView(eventList: selectedGroupVM.events ?? [] ,value: value, selectedDay: selectedDay, completion: { day in
                         
                        
                         selectedDay = day

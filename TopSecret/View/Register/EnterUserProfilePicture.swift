@@ -50,7 +50,7 @@ struct EnterUserProfilePicture: View {
                 }).padding()
                 
                 NavigationLink(
-                    destination: CreatePassword(),
+                    destination: PickInterestsView(),
                     isActive: $isNext,
                     label: {
                         EmptyView()

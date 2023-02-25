@@ -11,7 +11,7 @@ import Firebase
 
 
 
-struct Group: Identifiable{
+struct Group: Identifiable {
     
    
     
@@ -24,19 +24,16 @@ struct Group: Identifiable{
     var memberLimit: Int = 0
     var users: [String] = []
     var realUsers: [User] = []
-    var polls : [PollModel] = []
-    var chat: ChatModel = ChatModel()
     var groupProfileImage: String = ""
     var quoteOfTheDay: String = ""
     var bio : String = ""
-    var storyPosts: [StoryModel] = []
-    var events : [EventModel] = []
     var groupNotifications: [GroupNotificationModel] = []
     var unreadGroupNotification: [GroupNotificationModel] = []
     var notificationsCount : Int = 0
     var followersID: [String]?
     var followers: [User]?
-    
+    var chatID: String?
+    var interests: [String]?
 
     
     init(dictionary: [String:Any]){
@@ -46,18 +43,17 @@ struct Group: Identifiable{
         self.memberAmount = dictionary["memberAmount"] as? Int ?? 0
         self.users = dictionary["users"] as? [String] ?? []
         self.realUsers = dictionary["realUsers"] as? [User] ?? []
-        self.chat = dictionary["chat"] as? ChatModel ?? ChatModel()
-        self.polls = dictionary["polls"] as? [PollModel] ?? []
         self.groupProfileImage = dictionary["groupProfileImage"] as? String ?? " "
         self.motd = dictionary["motd"] as? String ?? "Welcome to the group!"
         self.quoteOfTheDay = dictionary["quoteOfTheDay"] as? String ?? ""
         self.bio = dictionary["bio"] as? String ?? ""
-        self.events = dictionary["events"] as? [EventModel] ?? []
         self.groupNotifications = dictionary["groupNotifications"] as? [GroupNotificationModel] ?? []
-        self.storyPosts = dictionary["storyPosts"] as? [StoryModel] ?? []
         self.notificationsCount = dictionary["notificationsCount"] as? Int ?? 0
         self.followersID = dictionary["followersID"] as? [String] ?? []
         self.followers = dictionary["followers"] as? [User] ?? []
+        self.interests = dictionary["interests"] as? [String] ?? []
+        self.chatID = dictionary["chatID"] as? String ?? " "
+        
     }
     
     
@@ -69,3 +65,8 @@ struct Group: Identifiable{
     
     
 }
+
+
+
+
+

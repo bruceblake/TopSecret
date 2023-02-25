@@ -18,34 +18,54 @@ class EventViewModel: ObservableObject {
 
     let notificationSender = PushNotificationSender()
 
-    func createEvent(group: Group, eventName: String, eventLocation: String,eventStartTime: Date, eventEndTime: Date, usersVisibleTo: [User],user: User){
+    func createEvent(group: Group, eventName: String, eventLocation: String,eventStartTime: Date, eventEndTime: Date, usersVisibleTo: [User],user: User, image: UIImage){
         //TODO
         let id = UUID().uuidString
         
         
+        let storageRef = Storage.storage().reference()
+        let postID = UUID().uuidString
         
-        let data = ["groupID": group.id, "eventName" : eventName,
-                    "eventLocation" : eventLocation,
-                    "eventStartTime": eventStartTime,
-                    "eventEndTime":eventEndTime,
-                    "usersVisibleTo" : usersVisibleTo.map({ user in
-            return user.id ?? " "
-        }), "id":id, "usersAttendingID":[user.id ?? " "],
-                    "creatorID":user.id ?? " "] as [String:Any]
         
-        COLLECTION_EVENTS.document(id).setData(data) { (err) in
-            if err != nil {
-                print("ERROR \(err!.localizedDescription)")
-                return
+        let imageData = image.jpegData(compressionQuality: 0.1)
+        
+        guard imageData != nil else {return}
+        
+        let path = "EventImages/\(group.groupName)/\(postID).jpg"
+        let fileRef = storageRef.child(path)
+        
+        
+        
+        let uploadTask = fileRef.putData(imageData!, metadata: nil) { metadata, err in
+            if err == nil && metadata != nil {
+                let data = ["groupID": group.id, "eventName" : eventName,
+                            "eventLocation" : eventLocation,
+                            "eventStartTime": eventStartTime,
+                            "eventEndTime":eventEndTime,
+                            "usersVisibleTo" : usersVisibleTo.map({ user in
+                    return user.id ?? " "
+                }), "id":id, "usersAttendingID":[user.id ?? " "],
+                            "creatorID":user.id ?? " ", "timeStamp":Timestamp(), "urlPath":path] as [String:Any]
+                
+                COLLECTION_EVENTS.document(id).setData(data) { (err) in
+                    if err != nil {
+                        print("ERROR \(err!.localizedDescription)")
+                        return
+                    }
+                }
+                
+                COLLECTION_GROUP.document(group.id).collection("Events").document(id).setData(data) { (err) in
+                    if err != nil {
+                        print("ERROR \(err!.localizedDescription)")
+                        return
+                    }
+                }
             }
+            
+            
         }
         
-        COLLECTION_GROUP.document(group.id).collection("Events").document(id).setData(data) { (err) in
-            if err != nil {
-                print("ERROR \(err!.localizedDescription)")
-                return
-            }
-        }
+      
         
         var notificationID = UUID().uuidString
         
@@ -68,7 +88,7 @@ class EventViewModel: ObservableObject {
             COLLECTION_USER.document(user.id ?? " ").updateData(["events":FieldValue.arrayUnion([id])])
             COLLECTION_USER.document(user.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)
             COLLECTION_USER.document(user.id ?? " ").updateData(["userNotificationCount":FieldValue.increment((Int64(1)))])
-            notificationSender.sendPushNotification(to: user.fcmToken ?? " ", title: "\(group.groupName)", body: "\(user.nickName ?? " ") created an event!")
+            self.notificationSender.sendPushNotification(to: user.fcmToken ?? " ", title: "\(group.groupName)", body: "\(user.nickName ?? " ") created an event!")
         }
         
         

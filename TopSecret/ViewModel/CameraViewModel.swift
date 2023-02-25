@@ -10,6 +10,16 @@ import AVFoundation
 import SwiftUI
 
 
+struct Photo: Identifiable, Equatable{
+    public var id: String
+    public var originalData: Data
+    
+    public init(id: String = UUID().uuidString, originalData: Data) {
+            self.id = id
+            self.originalData = originalData
+        }
+}
+
 class CameraViewModel : NSObject, ObservableObject, AVCapturePhotoCaptureDelegate, AVCaptureFileOutputRecordingDelegate {
     @Published var photoHasBeenTaken = false
     @Published var session = AVCaptureSession()
@@ -18,18 +28,20 @@ class CameraViewModel : NSObject, ObservableObject, AVCapturePhotoCaptureDelegat
     @Published var photoOutput = AVCapturePhotoOutput()
     @Published var videoOutput = AVCaptureMovieFileOutput()
     
+    @Published var flashMode: AVCaptureDevice.FlashMode = .off
     @Published var preview: AVCaptureVideoPreviewLayer!
     
     @Published var hasSavedPhoto = false
     @Published var pictureData = Data(count: 0)
     
-    @Published var cameraPosition : AVCaptureDevice.Position = .back
+    @Published var cameraPosition : AVCaptureDevice.Position = .front
     
     @Published var isRecording : Bool = false
     @Published var previewURL: URL?
     @Published var showVideoPreview = false
     @Published var recordedDuration: CGFloat = 0
     @Published var maxDuration : CGFloat = 20
+    
     
     func checkPermission(){
         
@@ -60,16 +72,16 @@ class CameraViewModel : NSObject, ObservableObject, AVCapturePhotoCaptureDelegat
             
             self.session.beginConfiguration()
             
-//            let cameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: cameraPosition)
-//            let videoInput = try AVCaptureDeviceInput(device: cameraDevice!)
-//            let audioDevice = AVCaptureDevice.default(for: .audio)
-//            let audioInput = try AVCaptureDeviceInput(device: audioDevice!)
+            let cameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: cameraPosition)
+            let videoInput = try AVCaptureDeviceInput(device: cameraDevice!)
+            let audioDevice = AVCaptureDevice.default(for: .audio)
+            let audioInput = try AVCaptureDeviceInput(device: audioDevice!)
             
-//            if self.session.canAddInput(videoInput) && self.session.canAddInput(audioInput){
-//                self.session.addInput(videoInput)
-//                self.session.addInput(audioInput)
-//
-//            }
+            if self.session.canAddInput(videoInput) && self.session.canAddInput(audioInput){
+                self.session.addInput(videoInput)
+                self.session.addInput(audioInput)
+
+            }
             
             if self.session.canAddOutput(self.videoOutput) && self.session.canAddOutput(self.photoOutput){
                 self.session.addOutput(self.photoOutput)
@@ -109,8 +121,30 @@ class CameraViewModel : NSObject, ObservableObject, AVCapturePhotoCaptureDelegat
     }
     
     func flipCamera(){
-     
-       
+        let dp = DispatchGroup()
+        
+        DispatchQueue.global(qos: .background).async{
+            dp.enter()
+            self.session.stopRunning()
+            DispatchQueue.main.async{
+                dp.enter()
+                if self.cameraPosition == .back{
+                self.cameraPosition = .front
+                }else{
+                    self.cameraPosition = .back
+                }
+                dp.leave()
+                dp.notify(queue: .main, execute:{
+                self.setUp()
+                })
+            }
+            dp.leave()
+            dp.notify(queue: .global(qos: .background), execute:{
+                self.session.startRunning()
+            })
+            
+        }
+        
     }
     
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {

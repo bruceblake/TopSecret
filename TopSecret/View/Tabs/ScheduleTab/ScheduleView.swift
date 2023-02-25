@@ -323,7 +323,7 @@ struct UserCalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitch
                                                 Spacer()
 
                                                 
-                                                Text(date, style: .date).foregroundColor(FOREGROUNDCOLOR).font(.headline).padding(.leading)
+                                                Text(date, style: .date).foregroundColor(FOREGROUNDCOLOR).font(.subheadline).padding(.leading)
                                                 
 
                                                 
@@ -342,9 +342,9 @@ struct UserCalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitch
                             
                             VStack{
                             ForEach(calendarVM.eventsResults){ event in
-                                if Calendar.current.isDate(event.eventStartTime?.dateValue() ?? Date(), inSameDayAs: date){
-                                    EventCell(event: event, currentDate: date, action: false, isHomescreen: true)
-                                }
+//                                if Calendar.current.isDate(event.eventStartTime?.dateValue() ?? Date(), inSameDayAs: date){
+//                                    EventCell(event: event, currentDate: date, action: false, isHomescreen: true)
+//                                }
                             }
                             }
                             

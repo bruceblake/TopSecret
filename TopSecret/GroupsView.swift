@@ -19,8 +19,7 @@ struct GroupsView: View {
             
             
             if userVM.groups.isEmpty{
-                
-                
+              
                 VStack{
                     Spacer()
                     VStack{

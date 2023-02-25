@@ -21,9 +21,6 @@ class ChatRepository : ObservableObject {
 
     
     var colors: [String] = ["green","red","blue","orange","purple","teal"]
-
-    
-    
     
     //this is for chat info tab
     func getUsers(usersID: [String]){

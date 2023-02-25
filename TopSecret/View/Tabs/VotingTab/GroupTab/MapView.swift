@@ -19,7 +19,7 @@ struct MapView: View {
     @State var followUser : Bool = false
     @State var selectedUser : User = User()
     
-    @ObservedObject private var locationManager = LocationManager()
+    @StateObject private var locationManager = LocationManager()
     
     func convertToBinding(users: [User]) -> Binding<[User]>{
         
@@ -34,11 +34,13 @@ struct MapView: View {
     var body: some View {
         
         
-        ZStack{
+        ZStack(alignment: .bottomTrailing){
             
-            Map(coordinateRegion: locationManager.region.getBinding()!, interactionModes: .all, showsUserLocation: true, annotationItems: locationManager.userAnnotations){ annotation in
+            
+            //map start
+            Map(coordinateRegion: $locationManager.region , interactionModes: .all, showsUserLocation: true, annotationItems: locationManager.userAnnotations){ annotation in
                 MapAnnotation(coordinate: annotation.coordinate){
-                    
+
                     Button(action:{
                         locationManager.region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: annotation.user.latitude ?? 0, longitude: annotation.user.longitude ?? 0), latitudinalMeters: 5000, longitudinalMeters: 5000)
                         self.selectedUser = annotation.user
@@ -51,44 +53,52 @@ struct MapView: View {
                             .clipShape(Circle())
                             .overlay(Circle().stroke(Color("AccentColor"),lineWidth: 2))
                     })
-                    
-                    
+
+
                 }
             }.edgesIgnoringSafeArea(.all)
             
             
-            
-            VStack{
-                
-                
-                
-                
-                Spacer()
+      
                 
                 ScrollView(){
                     VStack(spacing: 20){
-                        HStack(alignment: .top){
-                            VStack(alignment: .leading){
-                                HStack{
-                                    Text("Location Sharing").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 14))
-                                    Text("On").foregroundColor(Color.green).font(.system(size: 14))
-                                }
-                                Text("5629 Hobsons Choice Loop").lineLimit(1).foregroundColor(FOREGROUNDCOLOR).font(.system(size: 12))
+                        VStack{
+                            HStack(alignment: .top){
+                                VStack(alignment: .leading){
+                                    HStack(spacing: 3){
+                                        Text("Location Sharing").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 14))
+                                        Text("On").foregroundColor(Color.green).font(.system(size: 14))
+                                    }
+                                    Text("5629 Hobsons Choice Loop").lineLimit(1).foregroundColor(Color.gray).font(.system(size: 12))
+                                    
+                            
                                 Text("you have been location sharing since 8:09 am").lineLimit(1).foregroundColor(FOREGROUNDCOLOR).font(.system(size: 12))
+                             
+                                    
+                                }
+                                
+                                Spacer()
+                                
+                                Button(action:{
+                                    
+                                },label:{
+                                    Image(systemName: "gear").foregroundColor(FOREGROUNDCOLOR)
+                                })
                             }
-                            
-                            Spacer()
-                            
-                            Button {
-                                //todo
-                            } label: {
-                                Text("Stop Sharing Location").padding(10).font(.system(size: 12)).foregroundColor(FOREGROUNDCOLOR).background(RoundedRectangle(cornerRadius: 12).fill(Color("AccentColor")))
-                            }
+                          
+                                    
+                                
+                                
+                                
+                               
+                                
                             
                         }
+
                         //0 -> Binding
                         //1 -> Not Binding
-                       
+
                         ForEach(selectedGroupVM.group.realUsers){ user in
                             VStack{
                                 Divider()
@@ -103,35 +113,35 @@ struct MapView: View {
                                         .scaledToFill()
                                         .frame(width:40,height:40)
                                         .clipShape(Circle())
-                                    
+
                                     VStack(alignment: .leading, spacing: 1){
                                         Text("\(user.id ?? "" == userVM.user?.id ?? "" ? "Me" : "\(user.nickName ?? "")")").foregroundColor(FOREGROUNDCOLOR).font(.caption).bold()
                                         Text("Bruce's House").foregroundColor(FOREGROUNDCOLOR).font(.caption)
                                         Text("Since 8:09 am").foregroundColor(FOREGROUNDCOLOR).font(.caption)
                                     }
-                                    
+
                                     Spacer()
                                 }
                             })
                             }
-                            
-                            
-                            
-                            
-                            
+
+
+
+
+
                         }
                     }
                     
                     
                 }.padding().background(RoundedRectangle(cornerRadius: 12).fill(Color("Color"))).frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height/3)
                 
-            }
             
+
             NavigationLink(destination: SelectedUserMapView(user: $selectedUser, followUser: $followUser, locationManager: locationManager), isActive: $followUser) {
                 EmptyView()
             }
             
-        }.frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height).edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
             
             locationManager.setCurrentUser(userID: userVM.user?.id ?? " ")
             locationManager.setCurrentGroup(groupID: group.id)

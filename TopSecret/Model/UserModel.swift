@@ -47,8 +47,10 @@ struct User : Identifiable, Hashable{
     var groupsFollowingID: [String]?
     var groupsFollowing: [Group]?
     var hasUnreadMessages : Bool?
+    var appIconBadgeNumber : Int?
 
 init(dictionary: [String:Any]) {
+    self.appIconBadgeNumber = dictionary["appIconBadgeNumber"] as? Int ?? 0
     self.id = dictionary["uid"] as? String ?? " "
     self.username = dictionary["username"] as? String ?? " "
     self.email = dictionary["email"] as? String ?? " "

@@ -39,10 +39,6 @@ class GroupChatViewModel : ObservableObject {
     
     func openChat(userID: String, chatID: String, groupID: String){
         COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).collection("UsersIdling").document(userID).setData(["user":userID])
-            
-        
-        
-        
     }
     
     func exitChat(userID: String, chatID: String, groupID: String){
@@ -56,7 +52,6 @@ class GroupChatViewModel : ObservableObject {
     
     func readAllMessages(chatID: String, groupID: String){
         
-        readAllMessagesListener?.remove()
         
         readAllMessagesListener = COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).collection("Messages").order(by: "timeStamp", descending: false).addSnapshotListener { snapshot, err in
             if err != nil {
@@ -80,7 +75,7 @@ class GroupChatViewModel : ObservableObject {
     //action
     
     func sendTextMessage(text: String, user: User, timeStamp: Timestamp, nameColor: String, messageID: String,messageType: String, chatID: String, groupID: String, messageColor: String){
-        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).collection("Messages").document(messageID).setData(["name":user.nickName ?? "","timeStamp":timeStamp, "nameColor":nameColor, "id":messageID,"profilePicture":user.profilePicture ?? "","messageType":messageType,"messageValue":text,"userID":user.id ?? " ", "messageColor":messageColor])
+        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).collection("Messages").document(messageID).setData(["name":user.nickName ?? "","timeStamp":timeStamp, "nameColor":nameColor, "id":messageID,"profilePicture":user.profilePicture ?? "","type":messageType,"value":text,"userID":user.id ?? " ", "messageColor":messageColor])
         
         
         let notificationID = UUID().uuidString
@@ -125,9 +120,7 @@ class GroupChatViewModel : ObservableObject {
     func listenToChat(chatID: String, groupID: String, completion: @escaping (Bool) -> ()) -> (){
         
         
-        self.listenToUsersIdling(chatID: chatID, groupID: groupID)
         
-        chatListener?.remove()
         
         chatListener = COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).addSnapshotListener { snapshot, err in
             if err != nil {
@@ -148,12 +141,6 @@ class GroupChatViewModel : ObservableObject {
                 groupD.leave()
             }
             
-            
-           
-            
-          
-            
-            
             groupD.notify(queue: .main, execute: {
                 self.groupChat = ChatModel(dictionary: data)
                 return completion(true)
@@ -164,7 +151,6 @@ class GroupChatViewModel : ObservableObject {
     }
     
     func listenToUsersIdling(chatID: String, groupID: String){
-        usersIdlingListener?.remove()
         
     usersIdlingListener  = COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).collection("UsersIdling").addSnapshotListener({ snapshot, err in
             if err != nil {

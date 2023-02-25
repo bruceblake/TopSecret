@@ -170,9 +170,9 @@ struct UserProfilePage: View {
                         
                         
                         Spacer()
-                        Text("\(user.username ?? " ") joined Top Secret on \(userVM.user?.dateCreated?.dateValue() ?? Date(), style: .date)").font(.footnote).foregroundColor(.gray).padding()
                     }
-                    
+                    Spacer()
+                    Text("\(user.username ?? " ") joined Top Secret on \(userVM.user?.dateCreated?.dateValue() ?? Date(), style: .date)").font(.footnote).foregroundColor(.gray)
                 }
                
             }.zIndex(1).opacity(showInfo ? 0.3 : 1).onTapGesture {

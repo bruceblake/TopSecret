@@ -38,11 +38,11 @@ struct CreatePollView: View {
                         
                         Spacer()
                         
-                        Text("Create A Poll")
+                        Text("Create A Poll").foregroundColor(FOREGROUNDCOLOR).font(.title2).bold()
                         
                         Spacer()
                         
-                        
+                        Circle().foregroundColor(Color.clear).frame(width: 40, height: 40)
                     })
                 }.padding(.top,50)
                 
@@ -80,11 +80,13 @@ struct CreatePollView: View {
                                                                                                  PollOptionModel(dictionary: ["id":UUID().uuidString,"choice":choice4,"pickedUsers":[]])                                                       ], groupID: group.id ?? " ", question: question, usersVisibleToID: group.users ?? [])
                         presentationMode.wrappedValue.dismiss()
                     },label:{
-                        Text("Create Poll")
-                    })
+                        Text("Create Poll").foregroundColor(Color("Foreground"))
+                            .padding(.vertical)
+                            .frame(width: UIScreen.main.bounds.width/1.5).background(Color("AccentColor")).cornerRadius(15)
+                    }).padding(.bottom,30)
                   
                     
-                }.padding(.vertical,10)
+                }
                 
                 
                 

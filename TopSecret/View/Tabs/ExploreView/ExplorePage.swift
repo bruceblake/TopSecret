@@ -130,7 +130,7 @@ struct ExplorePage: View {
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
             
-            searchVM.startSearch(searchRequest: "allUsersFriendsAndGroups", id: userVM.user?.id ?? " ")
+            searchVM.startSearch(searchRequest: "allUserFriendsAndGroups", id: userVM.user?.id ?? " ")
             let dp = DispatchGroup()
             
             dp.enter()
@@ -148,13 +148,14 @@ struct ExplorePage: View {
             
             
             
-        }.frame(width: UIScreen.main.bounds.width).onReceive(recentSearchVM.$recentSearches) { addedSearch in
-            if recentSearchVM.recentSearches.count >= 4 {
-                recentSearchVM.showSeeAll = true
-            }else{
-                recentSearchVM.showSeeAll = false
-            }
-        }
+        }.frame(width: UIScreen.main.bounds.width)
+//            .onReceive(recentSearchVM.$recentSearches) { addedSearch in
+//            if recentSearchVM.recentSearches.count >= 4 {
+//                recentSearchVM.showSeeAll = true
+//            }else{
+//                recentSearchVM.showSeeAll = false
+//            }
+//        }
     }
 }
 
@@ -241,18 +242,18 @@ struct ExplorePageSearchList : View {
     
     var body: some View {
         ScrollView(){
-            if !searchVM.searchText.isEmpty && searchVM.groupReturnedResults.isEmpty && searchVM.userReturnedResults.isEmpty{
+            if !searchVM.searchText.isEmpty && searchVM.userGroupReturnedResults.isEmpty && searchVM.userFriendsReturnedResults.isEmpty{
                 Text("There are no results for \(searchVM.searchText)")
             }
             VStack(alignment: .leading){
               
                 
                 VStack(alignment: .leading){
-                    if !searchVM.searchText.isEmpty && !searchVM.groupReturnedResults.isEmpty{
+                    if !searchVM.searchText.isEmpty && !searchVM.userGroupReturnedResults.isEmpty{
                         Text("Groups").fontWeight(.bold).foregroundColor(Color("Foreground")).padding(.leading)
                     }
                     VStack{
-                        ForEach(searchVM.groupReturnedResults, id: \.id){ group in
+                        ForEach(searchVM.userGroupReturnedResults, id: \.id){ group in
                             Button(action:{
                                 self.selectedGroup = group
                                 openGroupProfile.toggle()

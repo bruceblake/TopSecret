@@ -13,36 +13,42 @@ struct GroupProfileView: View {
     var group : Group
     var isInGroup : Bool
     @EnvironmentObject var userVM : UserViewModel
+    @StateObject var groupProfileVM = GroupProfileViewModel()
     @Environment(\.presentationMode) var presentationMode
     @State var selectedView = 0
+    var options = ["Posts","Polls","Achievments","About Us"]
+    let columns : [GridItem] = [
+        GridItem(.flexible(), spacing: 0),
+        GridItem(.flexible(), spacing: 0),
+        GridItem(.flexible(), spacing: 0)
+        
+        
+    ]
     
-   
+    
+    
     var body: some View {
-      
+        
         ZStack{
             Color("Background")
             VStack{
-                VStack(spacing: 4){
-                    HStack(alignment: .top){
-                        Button(action:{
-                            presentationMode.wrappedValue.dismiss()
-                        },label:{
-                            ZStack{
-                                Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
-                                Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR)
-                            }
-                        })
-                        
-                        Spacer()
-                        
-                        WebImage(url: URL(string: group.groupProfileImage))
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width:80,height:80)
-                                            .clipShape(Circle())
-                        Spacer()
-                        
-                        if isInGroup {
+                HStack(alignment: .top){
+                    Button(action:{
+                        presentationMode.wrappedValue.dismiss()
+                    },label:{
+                        ZStack{
+                            Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
+                            Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR)
+                        }
+                    })
+                    
+                    Spacer()
+                    
+                    
+                    Text("\(group.groupName)").foregroundColor(FOREGROUNDCOLOR).font(.title3).bold()
+                    Spacer()
+                    
+                    if isInGroup {
                         Button(action:{
                             presentationMode.wrappedValue.dismiss()
                         },label:{
@@ -51,7 +57,7 @@ struct GroupProfileView: View {
                                 Image(systemName: "gear").foregroundColor(FOREGROUNDCOLOR)
                             }
                         })
-                        }else{
+                    }else{
                         Button(action:{
                             presentationMode.wrappedValue.dismiss()
                         },label:{
@@ -60,26 +66,34 @@ struct GroupProfileView: View {
                                 Image(systemName: "ellipsis").foregroundColor(FOREGROUNDCOLOR)
                             }
                         })
-                        }
-
-                    }.padding(.top,50).padding(.horizontal)
+                    }
                     
-                    VStack{
-                        Text("\(group.groupName)").font(.title2).bold().foregroundColor(FOREGROUNDCOLOR)
-                        Text("\(group.bio)").font(.body).foregroundColor(FOREGROUNDCOLOR)
+                }.padding(.top,50).padding(.horizontal)
+                ScrollView{
+                    
+                
+                    VStack(spacing: 0){
+                    HStack{
+                        
+                        
+                        WebImage(url: URL(string: group.groupProfileImage))
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width:80,height:80)
+                            .clipShape(Circle())
                         
                         HStack(alignment: .center){
                             HStack{
                                 
-                            Spacer()
-                            
-                            VStack(spacing: 3){
-                                Text("20").foregroundColor(FOREGROUNDCOLOR).bold().font(.system(size: 20))
-                                Text("Posts").foregroundColor(Color.gray).font(.system(size: 16))
-                            }
+                                Spacer()
+                                
+                                VStack(spacing: 3){
+                                    Text("\(groupProfileVM.posts.count)").foregroundColor(FOREGROUNDCOLOR).bold().font(.system(size: 20))
+                                    Text("Posts").foregroundColor(Color.gray).font(.system(size: 16))
+                                }
                                 
                                 Spacer()
-                        }
+                            }
                             HStack{
                                 Divider().frame(width: 2, height: 30)
                                 
@@ -92,7 +106,7 @@ struct GroupProfileView: View {
                                 
                                 Divider().frame(width: 2, height: 30)
                             }
-                         
+                            
                             
                             HStack{
                                 Spacer()
@@ -103,10 +117,9 @@ struct GroupProfileView: View {
                                 
                                 Spacer()
                             }
-                         
+                            
                         }
-                    }
-                    
+                    }.padding(.horizontal)
                     
                     if isInGroup{
                         
@@ -127,19 +140,67 @@ struct GroupProfileView: View {
                                 Text("Follow").padding(10).foregroundColor(FOREGROUNDCOLOR).background(RoundedRectangle(cornerRadius: 12).fill(Color("AccentColor")))
                             }).padding(10)
                         }
-                  
                         
+                        
+                    }
+                    Text("\(group.bio)").font(.body).foregroundColor(FOREGROUNDCOLOR)
+                    
+                }
+                
+                VStack{
+                    ScrollView(.horizontal){
+                        HStack(spacing: 30){
+                            ForEach(0..<options.count){ i in
+                                Button(action:{
+                                    selectedView = i
+                                },label:{
+                                    Text(options[i]).foregroundColor(selectedView == i ? Color("AccentColor") : FOREGROUNDCOLOR).font(.system(size: 18))
+                                })
+                            }
+                            
+                        }
+                    }.padding(.horizontal)
+                  
+                    switch selectedView{
+                    case 0:
+                        LazyVGrid(columns: columns, spacing: 1) {
+                            ForEach(groupProfileVM.posts, id: \.id){ post in
+                                Button(action:{
+                                    
+                                },label:{
+                                    
+                                    Image(uiImage: post.image ?? UIImage(named: "Icon")!)
+                                        .resizable()
+                                        .frame(width: UIScreen.main.bounds.width/3, height: 150)
+                                        .aspectRatio(contentMode: .fit)
+                                        .overlay(Rectangle().stroke(Color("Background"), lineWidth: 2))
+                                })
+                                
+                                
+                            }
+                        }
+                        
+                    case 1:
+                        Text("Hello World")
+                    case 2:
+                        Text("Hello World")
+                    case 3:
+                        Text("Hello World")
+                    default:
+                        Text("Hello World")
                     }
                     
                 }
-               
-                
-                Spacer()
                 
             }
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
-            
-            
+                
+            }
+        
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
+            groupProfileVM.fetchPosts(userID: userVM.user?.id ?? " ", groupID: group.id)
+        }
+        
+        
     }
 }
 

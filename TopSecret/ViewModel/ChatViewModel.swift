@@ -119,7 +119,7 @@ class ChatViewModel : ObservableObject {
                     print("Users do not have a personal chat!")
                     let id = UUID().uuidString
 
-                    let data = ["users":[user1, user2],"id":id,"chatType":"personal"] as [String : Any]
+                    let data = ["users":[user1, user2],"id":id,"chatType":"personal","lastMessageID":"NO_MESSAGE"] as [String : Any]
 
                     let chat = ChatModel(dictionary: data)
 

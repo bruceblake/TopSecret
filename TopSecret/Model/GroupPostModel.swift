@@ -20,7 +20,11 @@ struct GroupPostModel : Identifiable {
     var groupID: String?
     var group: Group?
     var timeStamp : Timestamp?
-    
+    var likedListID: [String]?
+    var likedList: [User]?
+    var dislikedListID: [String]?
+    var dislikedList: [User]?
+    var commentsCount: Int?
     
     init(dictionary: [String:Any]){
         self.id = dictionary["id"] as? String ?? "FUCK"
@@ -32,9 +36,15 @@ struct GroupPostModel : Identifiable {
         self.timeStamp = dictionary["timeStamp"] as? Timestamp ?? Timestamp()
         self.groupID = dictionary["groupID"] as? String ?? ""
         self.group = dictionary["group"] as? Group ?? Group()
+        self.likedListID = dictionary["likedListID"] as? [String] ?? []
+        self.likedList = dictionary["likedList"] as? [User] ?? []
+        self.dislikedListID = dictionary["dislikedListID"] as? [String] ?? []
+        self.dislikedList = dictionary["dislikedList"] as? [User] ?? []
+        self.commentsCount = dictionary["commentsCount"] as? Int ?? 0
     }
     
     init(){
         self.id = UUID().uuidString
+        
     }
 }

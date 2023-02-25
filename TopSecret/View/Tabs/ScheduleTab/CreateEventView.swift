@@ -18,6 +18,8 @@ struct CreateEventView: View {
     @State var openFriendsList : Bool = false
     @State var openGroupsList : Bool = false
     @State var searchLocationView : Bool = false
+    @State var openImagePicker: Bool = false
+    @State var image = UIImage(named: "topbarlogo")!
     var isGroup : Bool
     @StateObject var eventVM = EventViewModel()
     @Environment(\.presentationMode) var presentationMode
@@ -51,140 +53,157 @@ struct CreateEventView: View {
                 }.padding(.top,50)
                 
                 
-                VStack(spacing: 20){
-                    //Event Name
+                ScrollView{
                     
-                    VStack(alignment: .leading){
-                        Text("Event Name").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
-                        VStack{
-                            CustomTextField(text: $eventName, placeholder: "Event Name", isPassword: false, isSecure: false, hasSymbol: false, symbol: "")
-                        }
-                    }.padding(.horizontal)
                     
-                    VStack(alignment: .leading){
-                        HStack{
-                        Text("Event Location").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
-                            
-                            Button(action:{
+                    VStack(spacing: 20){
+                        //Event Name
+                        
+                        VStack(alignment: .leading){
+                            Text("Event Name").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                            VStack{
+                                CustomTextField(text: $eventName, placeholder: "Event Name", isPassword: false, isSecure: false, hasSymbol: false, symbol: "")
+                            }
+                        }.padding(.horizontal)
+                        
+                        VStack(alignment: .leading){
+                            HStack{
+                                Text("Event Location").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
                                 
+                                Button(action:{
+                                    
+                                },label:{
+                                    Text("Create Location")
+                                })
+                                Button(action:{
+                                    searchLocationView.toggle()
+                                }, label: {
+                                    ZStack{
+                                        Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
+                                        Image(systemName: "magnifyingglass")
+                                        
+                                    }
+                                }).fullScreenCover(isPresented: $searchLocationView) {
+                                    
+                                } content: {
+                                    LocationSearchView()
+                                }
+                                
+                                
+                                
+                                
+                            }
+                            ScrollView(.horizontal){
+                                HStack(){
+                                    Button(action:{
+                                        if eventLocation == "The White House"{
+                                            eventLocation = ""
+                                        }else{
+                                            eventLocation = "The White House"
+                                        }
+                                    },label:{
+                                        Text("The White House").foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 20).fill(eventLocation == "The White House" ? Color("AccentColor") : Color("Color")))
+                                    })
+                                }
+                            }
+                            
+                        }.padding(.horizontal)
+                        
+                        VStack(alignment: .leading){
+                            Text("Event Start Time").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                            HStack{
+                                DatePicker("", selection: $eventStartTime)
+                                Spacer()
+                            }
+                        }.padding(.horizontal)
+                        
+                        VStack(alignment: .leading){
+                            Text("Event End Time").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                            HStack{
+                                DatePicker("", selection: $eventEndTime)
+                                Spacer()
+                            }
+                        }.padding(.horizontal)
+                        
+                        VStack(alignment: .leading){
+                            Text("Visible To").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                            
+                            HStack{
+                                Spacer()
+                                if isGroup{
+                                    
+                                    Button(action:{
+                                        selectedGroups.append(selectedGroupVM.group)
+                                    },label:{
+                                        Text("\(selectedGroupVM.group.groupName )").foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 20).fill(Color("Color")))
+                                    })
+                                }else{
+                                    HStack(spacing: 15){
+                                        Button(action:{
+                                            withAnimation(.easeIn){
+                                                self.openFriendsList.toggle()
+                                            }
+                                        },label:{
+                                            Text("Add Friends")
+                                        }).fullScreenCover(isPresented: $openFriendsList) {
+                                            
+                                        } content: {
+                                            AddFriendsToEventView(isOpen: $openFriendsList)
+                                        }
+                                        
+                                        
+                                        Button(action:{
+                                            withAnimation(.easeIn){
+                                                self.openGroupsList.toggle()
+                                            }
+                                        },label:{
+                                            Text("Add Groups")
+                                        }).fullScreenCover(isPresented: $openGroupsList) {
+                                            
+                                        } content: {
+                                            //                                    AddGroupsToEventView()
+                                            Text("Hello World")
+                                        }
+                                    }
+                                }
+                                
+                                Spacer()
+                                
+                            }
+                        }.padding(.horizontal)
+                        
+                        VStack(alignment: .leading){
+                            Text("Event Picture").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                            Button(action:{
+                                self.openImagePicker.toggle()
                             },label:{
-                                Text("Create Location")
+                                Image(uiImage: image)
+                                    .resizable()
+                                    .scaledToFit().frame(width: UIScreen.main.bounds.width - 20).cornerRadius(12)
+                            }).fullScreenCover(isPresented: $openImagePicker, content: {
+                                ImagePicker(avatarImage: $image, allowsEditing: true)
                             })
-                            Button(action:{
-                                searchLocationView.toggle()
-                            }, label: {
-                                ZStack{
-                                    Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
-                                    Image(systemName: "magnifyingglass")
-                                    
-                                }
-                            }).fullScreenCover(isPresented: $searchLocationView) {
-                                
-                            } content: {
-                                LocationSearchView()
-                            }
-
-                             
                             
-
-                        }
-                        ScrollView(.horizontal){
-                            HStack(){
-                               Button(action:{
-                                   if eventLocation == "The White House"{
-                                       eventLocation = ""
-                                   }else{
-                                    eventLocation = "The White House"
-                                   }
-                                },label:{
-                                    Text("The White House").foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 20).fill(eventLocation == "The White House" ? Color("AccentColor") : Color("Color")))
-                                })
-                            }
-                        }
+                        }.padding(.horizontal)
                         
-                    }.padding(.horizontal)
+                    }.padding(.vertical,10)
                     
-                    VStack(alignment: .leading){
-                        Text("Event Start Time").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
-                        HStack{
-                            DatePicker("", selection: $eventStartTime)
-                            Spacer()
-                        }
-                    }.padding(.horizontal)
                     
-                    VStack(alignment: .leading){
-                        Text("Event End Time").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
-                        HStack{
-                            DatePicker("", selection: $eventEndTime)
-                            Spacer()
-                        }
-                    }.padding(.horizontal)
-                    
-                    VStack(alignment: .leading){
-                        Text("Visible To").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                    Button(action:{
                         
-                        HStack{
-                            Spacer()
-                        if isGroup{
-                            
-                               Button(action:{
-                                   selectedGroups.append(selectedGroupVM.group)
-                                },label:{
-                                    Text("\(selectedGroupVM.group.groupName )").foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 20).fill(Color("Color")))
-                                })
-                        }else{
-                            HStack(spacing: 15){
-                                Button(action:{
-                                    withAnimation(.easeIn){
-                                        self.openFriendsList.toggle()
-                                    }
-                                },label:{
-                                    Text("Add Friends")
-                                }).fullScreenCover(isPresented: $openFriendsList) {
-                                
-                                } content: {
-                                    AddFriendsToEventView(isOpen: $openFriendsList)
-                                }
-
-                                
-                                Button(action:{
-                                    withAnimation(.easeIn){
-                                        self.openGroupsList.toggle()
-                                    }
-                                },label:{
-                                    Text("Add Groups")
-                                }).fullScreenCover(isPresented: $openGroupsList) {
-                                    
-                                } content: {
-//                                    AddGroupsToEventView()
-                                    Text("Hello World")
-                                }
-                            }
-                        }
-                         
-                            Spacer()
-                            
-                        }
-                    }.padding(.horizontal)
-                    
-                    
-                }.padding(.vertical,10)
+                        eventVM.createEvent(group: selectedGroupVM.group, eventName: eventName, eventLocation: eventLocation, eventStartTime: eventStartTime , eventEndTime: eventEndTime, usersVisibleTo:selectedGroupVM.group.realUsers , user: userVM.user ?? User(), image: image)
+                        presentationMode.wrappedValue.dismiss()
+                    },label:{
+                        Text("Create Event").foregroundColor(Color("Foreground"))
+                            .padding(.vertical)
+                            .frame(width: UIScreen.main.bounds.width/1.5).background(Color("AccentColor")).cornerRadius(15)
+                    })
+                }
                 
                 
                 
+              
                 
-                
-                Button(action:{
-                    
-                    eventVM.createEvent(group: selectedGroupVM.group, eventName: eventName, eventLocation: eventLocation, eventStartTime: eventStartTime , eventEndTime: eventEndTime, usersVisibleTo:selectedGroupVM.group.realUsers , user: userVM.user ?? User())
-                    presentationMode.wrappedValue.dismiss()
-                },label:{
-                    Text("Create Event").foregroundColor(Color("Foreground"))
-                        .padding(.vertical)
-                        .frame(width: UIScreen.main.bounds.width/1.5).background(Color("AccentColor")).cornerRadius(15)
-                })
-                
-                Spacer()
                 
             }
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)

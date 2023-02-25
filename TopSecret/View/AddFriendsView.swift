@@ -9,7 +9,11 @@ import SwiftUI
 
 struct AddFriendsView: View {
     @Environment(\.presentationMode) var presentationMode
+    @State var openChat: Bool = false
+    @State var selectedChatID = ""
     @StateObject var searchVM = SearchRepository()
+    @StateObject var personalChatVM = PersonalChatViewModel()
+    @ObservedObject var keyboardVM = KeyboardViewModel()
     var body: some View {
         ZStack{
             Color("Background")
@@ -35,8 +39,12 @@ struct AddFriendsView: View {
                     //todo
                 })
                  
-                AddFriendsSearchList(searchVM: searchVM)
+                AddFriendsSearchList(searchVM: searchVM, openChat: $openChat, selectedChatID: $selectedChatID)
             }
+            
+            NavigationLink(destination: PersonalChatView(personalChatVM: personalChatVM, keyboardVM: keyboardVM, chatID: selectedChatID), isActive: $openChat, label: {
+                EmptyView()
+            })
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
             searchVM.startSearch(searchRequest: "allUsers", id: "")
         }
@@ -47,6 +55,8 @@ struct AddFriendsView: View {
 struct AddFriendsSearchList : View {
     @StateObject var searchVM : SearchRepository
     @EnvironmentObject var userVM: UserViewModel
+    @Binding var openChat: Bool
+    @Binding var selectedChatID: String
     
    
     var body: some View {
@@ -67,7 +77,7 @@ struct AddFriendsSearchList : View {
                                 
                             },label:{
 
-                                UserAddSearchCell(user: user)
+                                UserAddSearchCell(user: user, selectedChatID: $selectedChatID, openChat: $openChat)
                             })
                             }
                         }
@@ -85,7 +95,16 @@ struct UserAddSearchCell : View {
     @State var isLoading: Bool = false
     @State var isFriends: Bool = false
     @State var isPendingFriendRequest : Bool = false
+    @Binding var selectedChatID : String
+    @Binding var openChat: Bool
+
+    
+    func getPersonalChatID(friendID: String) -> String {
+        return userVM.personalChats.first(where: {$0.usersID.contains(friendID)})?.id ?? " "
+    }
+    
     var body: some View {
+        
         VStack(alignment: .leading){
             HStack(alignment: .center){
                 WebImage(url: URL(string: user.profilePicture ?? ""))
@@ -103,14 +122,22 @@ struct UserAddSearchCell : View {
                 
                 //if you two are not friends
                 if isFriends {
-                    HStack{
-                        Text("Chat")
-                        Button(action:{
-                            
-                        },label:{
-                            Image(systemName: "message")
+                    Button(action:{
+                        let dp = DispatchGroup()
+                        dp.enter()
+                        self.selectedChatID = self.getPersonalChatID(friendID: user.id ?? "")
+                        dp.leave()
+                        dp.notify(queue: .main, execute:{
+                            self.openChat.toggle()
+                            print("id is: \(selectedChatID)")
                         })
-                    }.font(.caption).foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
+                    },label:{
+                        HStack{
+                                Text("Chat")
+                                Image(systemName: "message")
+                        }.font(.caption).foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
+                    })
+                
                 }
                 
                 else if isPendingFriendRequest{
@@ -186,13 +213,6 @@ struct UserAddSearchCell : View {
                             }).disabled(isLoading)
                            
                  
-                        
-                       
-                            Button(action:{
-                                
-                            },label:{
-                                Image(systemName: "xmark").font(.caption).foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
-                            }).disabled(isLoading)
                             
                     }
                   
@@ -203,7 +223,11 @@ struct UserAddSearchCell : View {
                 
             }.padding(.horizontal,10)
             Divider()
-        }.onAppear{
+            
+        }
+             
+            
+        .onAppear{
             userVM.fetchUser(userID: user.id ?? " ") { fetchedUser in
                 if fetchedUser.friendsListID?.contains(userVM.user?.id ?? " ") ?? false {
                     self.isFriends = true

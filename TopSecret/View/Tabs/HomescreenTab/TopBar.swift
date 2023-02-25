@@ -15,11 +15,12 @@ struct TopBar : View {
     @State var user : User = User()
     @State var selectedColorIndex : Int = 0
     @Binding var showSearch : Bool
+    @EnvironmentObject var shareVM: ShareViewModel
     var tabIndex : Tab
 
     var body : some View {
 
-        HStack(alignment: .center){
+        HStack(alignment: .top){
             
             HStack(alignment: .top, spacing: 5){
                 
@@ -58,19 +59,16 @@ struct TopBar : View {
             Spacer()
             
             if tabIndex == .home {
-                Button(action:{
-                },label:{
-                    Image("topbarlogo").resizable().frame(width: 100, height: 100)
-                })
+                Text("Top Secret").bold().font(.title2)
             }
             else if tabIndex == .friends{
-                Text("Friends").bold().font(.title3)
+                Text("Friends").bold().font(.title2)
             }
             else if  tabIndex == .groups {
-                Text("Groups").bold().font(.title3)
+                Text("Groups").bold().font(.title2)
             }
             else if tabIndex == .notifications {
-                Text("Notifications").bold().font(.title3)
+                Text("Notifications").bold().font(.title2)
             }
             
           
@@ -80,6 +78,26 @@ struct TopBar : View {
              
              
             HStack(alignment: .top){
+                
+                Button(action: {
+                  //todo
+                    userVM.hideTabButtons.toggle()
+                    userVM.showAddContent.toggle()
+                    userVM.hideBackground.toggle()
+                 },label:{
+                     
+                     ZStack{
+                         Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
+                         
+                         
+                             
+                        
+                         Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title3)
+                         
+
+                     }
+       
+                 })
                 
                 Button(action:{
                     withAnimation(.easeIn){
@@ -98,24 +116,7 @@ struct TopBar : View {
                     }
                 })
                 
-                Button(action: {
-                  //todo
-                    userVM.hideTabButtons.toggle()
-                    userVM.showAddContent.toggle()
-                 },label:{
-                     
-                     ZStack{
-                         Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
-                         
-                         
-                             
-                        
-                         Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title3)
-                         
-
-                     }
-       
-                 })
+               
             }
             .padding(.trailing)
               

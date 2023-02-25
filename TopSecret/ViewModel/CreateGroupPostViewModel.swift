@@ -17,14 +17,14 @@ class CreateGroupPostViewModel : ObservableObject {
         case finishedUpload
     }
     
-    @Published var uploadStatus = UploadStatus.startedUpload
+    @Published var uploadStatus = UploadStatus.notStartedUpload
     
-    func createPost(image: UIImage, userID: String, group: Group){
+    func createPost(image: UIImage, userID: String, group: Group, description: String){
         let storageRef = Storage.storage().reference()
         let postID = UUID().uuidString
         
         
-        let imageData = image.jpegData(compressionQuality: 0.1)
+        let imageData = image.jpegData(compressionQuality: 1)
         
         guard imageData != nil else {return}
         
@@ -33,7 +33,10 @@ class CreateGroupPostViewModel : ObservableObject {
         
         let uploadTask = fileRef.putData(imageData!, metadata: nil) { metadata, err in
             if err == nil && metadata != nil {
-                let data = ["id":postID,"urlPath":path,"creatorID":userID,"timeStamp":Timestamp(),"groupID":group.id] as? [String : Any] ?? [:]
+                let data = ["id":postID,"urlPath":path,"creatorID":userID,"timeStamp":Timestamp(),"groupID":group.id, "description": description] as? [String : Any] ?? [:]
+                
+                //place in POSTS collection
+                //place inside Group's POSTS collection
                 COLLECTION_POSTS.document(postID).setData(data) { err in
                     if err == nil {
                         DispatchQueue.main.async{
@@ -42,6 +45,15 @@ class CreateGroupPostViewModel : ObservableObject {
                         }
                     }
                     
+                }
+                
+                COLLECTION_GROUP.document(group.id).collection("Posts").document(postID).setData(data) { err in
+                    if err == nil {
+                        DispatchQueue.main.async{
+                            print("Uploaded Post!")
+                            self.uploadStatus = .finishedUpload
+                        }
+                    }
                 }
             }
         }

@@ -39,15 +39,15 @@ struct VideoPreview : View {
     var body: some View {
         ZStack{
             
-            GeometryReader { proxy in
-                let size = proxy.size
-                VideoPlayer(player: AVPlayer(url: url))
-                    .aspectRatio(contentMode: .fill)
-                    .frame(width: size.width, height: size.height)
-                    .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
-                
-                
-            }
+//            GeometryReader { proxy in
+//                let size = proxy.size
+//                VideoPlayer(player: AVPlayer(url: url))
+//                    .aspectRatio(contentMode: .fill)
+//                    .frame(width: size.width, height: size.height)
+//                    .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
+//                
+//                
+//            }
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
     }
 }

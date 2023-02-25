@@ -28,9 +28,10 @@ final class LocationManager : NSObject, ObservableObject, CLLocationManagerDeleg
            locationManager.distanceFilter = kCLDistanceFilterNone
            locationManager.requestWhenInUseAuthorization()
             locationManager.requestAlwaysAuthorization()
-           locationManager.startUpdatingLocation()
+           locationManager.stopUpdatingLocation()
            locationManager.delegate = self
-        locationManager.requestLocation()
+            locationManager.requestLocation()
+        
 
        }
     
@@ -54,7 +55,7 @@ final class LocationManager : NSObject, ObservableObject, CLLocationManagerDeleg
               guard let location = locations.last else { return }
               DispatchQueue.main.async {
                   self.userLocation = location
-//                  self.region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude), latitudinalMeters: 0.03, longitudinalMeters: 0.03)
+                  self.region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude), latitudinalMeters: 0.03, longitudinalMeters: 0.03)
                   let latitude = location.coordinate.latitude
                   let longitude = location.coordinate.longitude
                   
@@ -66,9 +67,6 @@ final class LocationManager : NSObject, ObservableObject, CLLocationManagerDeleg
                           print("ERROR")
                           return
                       }
-                      
-                      var value = snapshot?.get("ping") as? Bool ?? false
-                      COLLECTION_GROUP.document(self.groupID).updateData(["ping":value == true ? false : true])
                       
                   }
                   

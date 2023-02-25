@@ -17,6 +17,7 @@ struct CreateGroupPostView: View {
     @State var showOverlay : Bool = false
     @State var showTaggedUsersView: Bool = false
     @State var selectedUsers: [User] = []
+    @State var description : String = ""
     var body: some View {
         ZStack{
             Color("Background")
@@ -34,7 +35,7 @@ struct CreateGroupPostView: View {
                     })
                     
                     Spacer()
-                    Text("Create Post")
+                    Text("Create Post").font(.headline).bold()
                     
                     Spacer()
                     
@@ -42,7 +43,6 @@ struct CreateGroupPostView: View {
 
                 }.padding(.top,50).padding(.horizontal,10)
                 
-                Spacer()
                 
 //                Button(action:{
 //                    self.showTaggedUsersView.toggle()
@@ -78,27 +78,39 @@ struct CreateGroupPostView: View {
 //                }
 
                 
-                
-                Button(action:{
-                    self.openImagePicker.toggle()
-                },label:{
-                    Image(uiImage: post)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width:UIScreen.main.bounds.width,height:100)
-                }).fullScreenCover(isPresented: $openImagePicker, content: {
-                    ImagePicker(avatarImage: $post, allowsEditing: true)
-                })
-                
+                VStack{
+                    Button(action:{
+                        self.openImagePicker.toggle()
+                    },label:{
+                        Image(uiImage: post)
+                            .resizable()
+                            .scaledToFit().frame(width: UIScreen.main.bounds.width - 20).cornerRadius(12)
+                    }).fullScreenCover(isPresented: $openImagePicker, content: {
+                        ImagePicker(avatarImage: $post, allowsEditing: true)
+                    })
+                    
+                    VStack{
+                        HStack{
+                            Text("Write a description").padding(.leading,10)
+                            Spacer()
+                        }
+                   
+                        TextField("description", text: $description).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color"))).padding(.horizontal,10)
+                        
+                    }
+                    
+                }
+               
                 
                 Spacer()
                 Button(action:{
-                    createPostVM.createPost(image: post, userID: userVM.user?.id ?? " ", group: group)
+                    createPostVM.createPost(image: post, userID: userVM.user?.id ?? " ", group: group, description: description)
                 },label:{
-                    Text("Create Post")
-                })
+                    Text(createPostVM.uploadStatus == .startedUpload ? "Uploading Post" : "Create Post").foregroundColor(Color("Foreground"))
+                        .padding(.vertical)
+                        .frame(width: UIScreen.main.bounds.width/1.5).background(Color("AccentColor")).cornerRadius(15)
+                }).padding(.bottom,30).disabled(createPostVM.uploadStatus == .startedUpload)
                 
-                Spacer()
             }
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onReceive(createPostVM.$uploadStatus) { uploadStatus in
             if uploadStatus == .finishedUpload{

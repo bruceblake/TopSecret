@@ -71,17 +71,8 @@ struct ContentView: View {
             }
             
         }
-        .edgesIgnoringSafeArea(.all).navigationBarHidden(true).onReceive(userVM.$userNotificationCount) { count in
-            if count != 0{
-                self.showNotification = true
-                DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: {
-                    withAnimation(.easeOut(duration: 1)){
-                        self.showNotification = false
-                    }
-                })
-            }
-            
-        }.onChange(of: scenePhase) { newPhase in
+        .edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+        .onChange(of: scenePhase) { newPhase in
             if newPhase == .active {
                 if userVM.userSession != nil{
                     userVM.setUserActivity(isActive: true, userID: userVM.user?.id ?? " ", completion: { fetchedUser in
@@ -119,17 +110,15 @@ struct Tabs : View {
     @State var showTabButtons : Bool = true
     @State var showSearch: Bool = false
     @StateObject var personalChatVM = PersonalChatViewModel()
+    @StateObject var feedVM = FeedViewModel()
     @EnvironmentObject var userVM: UserViewModel
+    @EnvironmentObject var shareVM: ShareViewModel
+    @State var selectedPost: GroupPostModel = GroupPostModel()
+    @State var selectedPoll: PollModel = PollModel()
+    @State var selectedEvent: EventModel = EventModel()
+    @State var shareType : String = ""
     
-    func checkIfUserHasUnreadChats() -> Bool {
-        let chats = userVM.personalChats
-        for chat in chats {
-            if chat.usersThatHaveSeenLastMessage?.contains(userVM.user?.id ?? " ") ?? false {
-                return true
-            }
-        }
-        return false
-    }
+   
     
     var body: some View {
         ZStack{
@@ -142,7 +131,7 @@ struct Tabs : View {
                         TopBar(showSearch: $showSearch, tabIndex: tabIndex)
 
                     if tabIndex == .home{
-                        HomeScreen()
+                        HomeScreen(feedVM: feedVM,selectedPost: $selectedPost, selectedPoll: $selectedPoll, selectedEvent: $selectedEvent, shareType: $shareType)
                     }else if tabIndex == .friends{
                         FriendsView(personalChatVM: personalChatVM)
                     }else if tabIndex == .groups{
@@ -150,19 +139,46 @@ struct Tabs : View {
                     }else if tabIndex == .notifications{
                         UserNotificationView()
                     }else if tabIndex == .discover {
+                        DiscoverView()
+                    }
+                }
+                }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).opacity(userVM.hideBackground ? 0.2 : 1).disabled(userVM.hideBackground)
+                    .overlay{
+                        if shareVM.showShareMenu{
+                      
+
                         VStack{
                             Spacer()
-                            Text("Coming Soon")
-                            Spacer()
+                            ShowShareMenu(selectedPost: $selectedPost, selectedPoll: $selectedPoll, selectedEvent: $selectedEvent, shareType: $shareType)
+                        }
+                         
+                        
+                    }
+
+
+
+        }
+                    .onTapGesture {
+                        
+                        if userVM.hideBackground{
+                            withAnimation{
+                                userVM.hideBackground.toggle()
+                                if userVM.hideTabButtons{
+                                    userVM.hideTabButtons.toggle()
+                                }
+                            }
+                           
+                        }
+                        if shareVM.showShareMenu{
+                            withAnimation{
+                                shareVM.showShareMenu.toggle()
+                            }
+                        }
+                        if userVM.showAddContent{
+                            self.userVM.showAddContent.toggle()
                         }
                     }
-                }
-                }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).opacity(userVM.showAddContent ? 0.2 : 1).disabled(userVM.showAddContent).onTapGesture {
-                    if userVM.showAddContent {
-                        userVM.showAddContent.toggle()
-                        userVM.hideTabButtons.toggle()
-                    }
-                }
+                
             }
           
             
@@ -201,8 +217,6 @@ struct Tabs : View {
                                 UIDevice.vibrate()
                                 
                                 self.tabIndex = .friends
-                                userVM.removeListeners()
-                                userVM.listenToPersonalChats(userID: userVM.user?.id ?? " ")
                             },label:{
                                 
                                 VStack(spacing: 5){
@@ -211,8 +225,12 @@ struct Tabs : View {
                                     ZStack{
                                         Image(systemName: self.tabIndex == .friends ? "message.fill" : "message").font(.system(size: 20))
                                         
-                                        if !checkIfUserHasUnreadChats() && !userVM.personalChats.isEmpty{
-                                            Circle().foregroundColor(Color("AccentColor")).frame(width: 14, height: 14)
+                                        if userVM.unreadChatsCount >= 1{
+                                            ZStack{
+                                                Circle().foregroundColor(Color.red).frame(width: 18, height: 18)
+                                                Text("\(userVM.getUnreadChatCount())").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 12))
+                                            }
+                                           
                                         .offset(x: 13, y: -10)
                                         }
                                               
@@ -227,7 +245,7 @@ struct Tabs : View {
                                 
                                 
                                 
-                            }).foregroundColor(self.tabIndex == .friends ? Color("AccentColor") : FOREGROUNDCOLOR).padding(.horizontal,10)
+                            }).foregroundColor(self.tabIndex == .friends ? Color("AccentColor") : FOREGROUNDCOLOR).padding(.horizontal,10).buttonStyle(.plain)
 
                         
                     
@@ -236,8 +254,6 @@ struct Tabs : View {
                                 UIDevice.vibrate()
                                 
                                 self.tabIndex = .home
-                                userVM.removeListeners()
-                                userVM.listenToFeed()
                             },label:{
                                 VStack(spacing: 5){
                                     
@@ -260,8 +276,6 @@ struct Tabs : View {
                                 UIDevice.vibrate()
                                 
                                 self.tabIndex = .groups
-                                userVM.removeListeners()
-                                userVM.listenToUserGroups(uid: userVM.user?.id ?? " ")
                             },label:{
                                 VStack(spacing: 5){
                                     
@@ -281,8 +295,6 @@ struct Tabs : View {
                                 UIDevice.vibrate()
                                 
                                 self.tabIndex = .notifications
-                                userVM.removeListeners()
-                                userVM.listenToNotifications(userID: userVM.user?.id ?? " ")
                             },label:{
                                 VStack(spacing: 5){
                                     Image(systemName: self.tabIndex == .notifications ?  "envelope.fill" : "envelope").font(.system(size: 20))
@@ -305,7 +317,12 @@ struct Tabs : View {
             }
             
             
-        }.edgesIgnoringSafeArea(.all)
+        }.edgesIgnoringSafeArea(.all).onReceive(userVM.$showAddContent) { output in
+            if !output && userVM.hideBackground{
+                userVM.hideBackground.toggle()
+                userVM.hideTabButtons.toggle()
+            }
+        }
     }
 }
 

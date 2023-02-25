@@ -19,8 +19,6 @@ struct GroupChatView: View {
     @StateObject var keyboardVM : KeyboardViewModel
     @Environment(\.presentationMode) var presentationMode
     var userID: String
-    var groupID: String
-    var chatID: String
     @State var height: CGFloat = 20
     @State var keyboardHeight : CGFloat = 0
     @State var showMenu : Bool = false
@@ -28,15 +26,19 @@ struct GroupChatView: View {
     @State private var scrollViewOffset = CGFloat.zero
 
     func initKeyboardGuardian(){
-        NotificationCenter.default.addObserver(forName: UIResponder.keyboardDidShowNotification, object: nil, queue: .main) { data in
+        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification , object: nil, queue: .main) { data in
             let height1 = data.userInfo![UIResponder.keyboardFrameEndUserInfoKey] as! NSValue
-            
-            self.keyboardHeight = height1.cgRectValue.height - 20
+            withAnimation(.easeOut(duration: 0.25)){
+                self.keyboardHeight = height1.cgRectValue.height - 20
+            }
         }
         
-        NotificationCenter.default.addObserver(forName: UIResponder.keyboardDidHideNotification, object: nil, queue: .main) { _ in
-            self.keyboardHeight = 0
+        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { _ in
+            withAnimation(.easeOut(duration: 0.25)){
+                self.keyboardHeight = 0
+            }
         }
+
     }
     
     func scrollToBottom(scrollViewProxy: ScrollViewProxy){
@@ -94,10 +96,10 @@ struct GroupChatView: View {
                         ScrollViewReader { scrollViewProxy in
                             VStack(spacing: 0){
                                 ForEach(chatVM.messages, id: \.id){ message in
-                                    if message.messageType == "text"{
-                                        MessageTextCell(showMenu: $showMenu, message: message, chatID: chatID)
-                                    }else if message.messageType == "followUpUserText"{
-                                        MessageFollowUpTextCell(showMenu: $showMenu, message: message, chatID: chatID)
+                                    if message.type == "text"{
+                                        MessageTextCell(message: message, chatID: groupVM.group.chatID ?? " ")
+                                    }else if message.type == "followUpUserText"{
+                                        MessageFollowUpTextCell(message: message, chatID: groupVM.group.chatID ?? " ")
                                     }
                                 }
                                     HStack{Spacer()}.padding(0).id("Empty")
@@ -117,7 +119,9 @@ struct GroupChatView: View {
                             
                         }
                      
-                    }.coordinateSpace(name: "scroll")
+                    }.coordinateSpace(name: "scroll").simultaneousGesture(DragGesture().onChanged { _ in
+                        UIApplication.shared.keyWindow?.endEditing(true)
+                    })
                     
                     Button(action:{
                         chatVM.scrollToBottom += 1
@@ -148,7 +152,7 @@ struct GroupChatView: View {
                         ResizableTF(height: $height, chatVM: chatVM, isPersonalChat: false).frame(height: self.height).cornerRadius(12)
                     Spacer()
                     Button(action:{
-                        chatVM.sendTextMessage(text: chatVM.text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: "green", messageID: UUID().uuidString, messageType: chatVM.readLastMessage().userID == userVM.user?.id ?? " "  ? "followUpUserText" : "text", chatID: chatID, groupID: groupID, messageColor: chatVM.currentChatColor)
+                        chatVM.sendTextMessage(text: chatVM.text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: "green", messageID: UUID().uuidString, messageType: chatVM.readLastMessage().userID == userVM.user?.id ?? " "  ? "followUpUserText" : "text",chatID: groupVM.group.chatID ?? " ", groupID: groupVM.group.id, messageColor: chatVM.currentChatColor)
                         chatVM.text = ""
                         chatVM.scrollToBottom += 1
                         
@@ -173,19 +177,19 @@ struct GroupChatView: View {
         }.edgesIgnoringSafeArea(.all)
             .navigationBarHidden(true)
             .onAppear{
-                print("chatID: \(chatID)")
-            self.initKeyboardGuardian()
-            chatVM.listenToChat(chatID: chatID, groupID: groupID) { completed in
-                print("fetched messages!")
-            }
-            chatVM.readAllMessages(chatID: chatID, groupID: groupID)
-            chatVM.openChat(userID: userID, chatID: chatID, groupID: groupID)
+                self.initKeyboardGuardian()
+                    chatVM.listenToChat(chatID: groupVM.group.chatID ?? " ", groupID: groupVM.group.id) { completed in
+                    print("fetched messages!")
+                }
+                chatVM.readAllMessages(chatID: groupVM.group.chatID ?? " ", groupID: groupVM.group.id)
+                chatVM.openChat(userID: userID ,chatID: groupVM.group.chatID ?? " ", groupID: groupVM.group.id)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1){
                 chatVM.scrollToBottom += 1
+     
                 }
         }
             .onDisappear{
-            chatVM.exitChat(userID: userID, chatID: chatID, groupID: groupID)
+            chatVM.exitChat(userID: userID, chatID: groupVM.group.chatID ?? " ", groupID: groupVM.group.id)
             }.onReceive(keyboardVM.$selectedView) { output in
                 keyboardVM.hideKeyboard()
             }

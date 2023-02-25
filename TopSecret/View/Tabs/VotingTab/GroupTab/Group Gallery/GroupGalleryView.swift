@@ -10,6 +10,7 @@ import Photos
 import MediaCore
 import MediaSwiftUI
 import PhotosUI
+import SDWebImageSwiftUI
 
 
 
@@ -36,6 +37,10 @@ struct GroupGalleryView: View {
         
         
     ]
+    
+    func getHStackCount(numberOfImages: Int) -> Int{
+        return Int(ceil(Double(numberOfImages/3)))
+    }
     
     
     var body: some View {
@@ -78,6 +83,7 @@ struct GroupGalleryView: View {
                     
                 }.padding(.top,50)
                 
+                VStack{
                     ScrollView(.horizontal){
                         HStack(spacing: 20 ){
                             Button(action:{
@@ -111,33 +117,40 @@ struct GroupGalleryView: View {
                             })
                             
                             
-                        }
+                        }.padding(.horizontal)
+                    }
+                    Divider()
                 }
+                   
+                
                 
                 if selectedOptionIndex == 0 {
+         
                     ScrollView(showsIndicators: false){
-                    LazyVGrid(columns: columns, spacing: 1) {
-                        ForEach(groupGalleryVM.retrievedImages, id: \.id){ image in
-                            Button(action:{
-                                self.openImageToEdit.toggle()
-                                self.selectedImageToEdit = image
-                            },label:{
-                                
-                                Image(uiImage: image.image ?? UIImage(named: "Icon")!)
-                                    .resizable()
-                                    .frame(width: UIScreen.main.bounds.width/3, height: 150)
-                                    .aspectRatio(contentMode: .fit)
-                                    .overlay(Rectangle().stroke(Color("Background"), lineWidth: 2))
-                            }).fullScreenCover(isPresented: $openImageToEdit) {
-                                
-                            } content: {
-                                EditGalleryImageView(galleryImage: $selectedImageToEdit)
-                            }
-
+                        
+                       
+                        
+                        LazyVGrid(columns: columns,spacing: 1) {
                             
+                           
+                            ForEach(groupGalleryVM.retrievedImages, id: \.id){ image in
+                                Button(action:{
+                                    self.openImageToEdit.toggle()
+                                    self.selectedImageToEdit = image
+                                },label:{
+                                    GalleryThumbnailImage(image: image.image ?? UIImage(named: "Icon")!, creator: image.creator ?? User())
+                                  
+                                }).fullScreenCover(isPresented: $openImageToEdit) {
+                                    
+                                } content: {
+                                    EditGalleryImageView(galleryImage: $selectedImageToEdit)
+                                }
+                                
+                                
+                            }
                         }
                     }
-                }
+                    
                 }else if selectedOptionIndex == 1 {
                     
                 }else if selectedOptionIndex == 2 {
@@ -179,6 +192,40 @@ struct GroupGalleryView: View {
         
         
         
+    }
+    
+}
+
+
+struct GalleryThumbnailImage : View {
+    var image: UIImage
+    var creator: User
+    var body: some View{
+        ZStack{
+            Color("Color").overlay(
+                ZStack{
+                    Image(uiImage: image ?? UIImage(named: "Icon")!)
+                        .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    VStack{
+                        Spacer()
+                        HStack{
+                            Spacer()
+                            WebImage(url: URL(string: creator.profilePicture ?? ""))
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width:20,height:20)
+                                .clipShape(Circle())
+                        }
+                    }
+                }
+                
+            ).clipped()
+            
+       
+            
+         
+        }.edgesIgnoringSafeArea(.all).frame(width: UIScreen.main.bounds.width/3, height: 200)
     }
 }
 
@@ -237,7 +284,7 @@ struct MultipleAssetPicker : UIViewControllerRepresentable {
                         
                         
                         self.parent.images.append(image1 as! UIImage)
-                        self.parent.groupGalleryVM.uploadPhoto(image: image1 as! UIImage, userID: self.parent.userID, group: self.parent.selectedGroupVM.group)
+                        self.parent.groupGalleryVM.uploadPhoto(image: image1 as! UIImage, userID: self.parent.userID, group: self.parent.selectedGroupVM.group, isPrivate: false)
                     }
                 }else{
                     print("Cannot be loaded")

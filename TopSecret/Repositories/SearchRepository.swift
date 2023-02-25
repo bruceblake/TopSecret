@@ -328,8 +328,10 @@ class SearchRepository : ObservableObject {
             
             groupD.enter()
             for friend in friendsID {
+                groupD.enter()
                 self.fetchUser(userID: friend) { fetchedUser in
                     usersToReturn.append(fetchedUser)
+                    groupD.leave()
                 }
             }
                                 groupD.leave()
@@ -337,6 +339,7 @@ class SearchRepository : ObservableObject {
             
             groupD.notify(queue: .main, execute:{
                 self.userFriendsResults = usersToReturn
+                print("count: \(self.userFriendsResults.count)")
             })
             
         }
@@ -352,7 +355,6 @@ class SearchRepository : ObservableObject {
             .map(self.filterFriendsResults)
             .sink { [self](returnedResults) in
                 userFriendsReturnedResults = returnedResults as? [User] ?? []
-                
             }
             .store(in: &self.cancellables)
         

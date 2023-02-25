@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct FriendsView: View {
+    
+    
+    //problem: must store each friends text field text in friendsview
     @EnvironmentObject var userVM : UserViewModel
     @StateObject var searchVM = SearchRepository()
     @StateObject var personalChatVM : PersonalChatViewModel
@@ -24,15 +27,31 @@ struct FriendsView: View {
         ZStack{
             Color("Background")
             VStack{
-                VStack(spacing: 5){
+                VStack(alignment: .leading, spacing: 3){
                     HStack{
                         Text("\(userVM.personalChats.count) \(userVM.personalChats.count > 1 ? "friends" : "friend")").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
                         Spacer()
                     }
+                    HStack(spacing: 3){
+                        Text("4 friend requests").foregroundColor(Color.gray)
+                        Button(action:{
+                            
+                        },label:{
+                            Text("See all").foregroundColor(FOREGROUNDCOLOR).padding(.horizontal,10).background(RoundedRectangle(cornerRadius: 12).fill(Color("AccentColor")))
+                        })
+                    }
+                    
+//                    HStack{
+//
+//                        Text("0 incoming requests").padding(5).padding(.horizontal,5).background(RoundedRectangle(cornerRadius: 12).fill(Color.red))
+//
+//                        Text("0 outgoing requests").padding(5).padding(.horizontal,5).background(RoundedRectangle(cornerRadius: 12).fill(Color.red))
+//
+//                    }
                 }.padding(.horizontal,30)
                 ScrollView{
                     VStack(spacing: 0){
-                        if ((userVM.personalChats.isEmpty ?? false)) {
+                        if ((userVM.personalChats.isEmpty )) {
                             
                             Text("You have 0 friends")
                         }else{

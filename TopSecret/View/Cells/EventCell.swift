@@ -9,75 +9,168 @@ import SwiftUI
 import SDWebImageSwiftUI
 struct EventCell: View {
     
-    var event : EventModel
-    var currentDate: Date = Date()
-    var action : Bool
-    var isHomescreen : Bool
-    var showBarIndicator : Bool = true
+   @State var event : EventModel
+    @Binding var selectedEvent: EventModel
     @EnvironmentObject var userVM: UserViewModel
+    @EnvironmentObject var shareVM: ShareViewModel
+    @Binding var shareType: String
+
     @StateObject var eventVM = EventViewModel()
-    func getTimeRemaining() -> Int {
-        let interval = (event.eventStartTime?.dateValue() ?? Date()) - Date()
-        
-        return interval.hour ?? 0
+    
+    
+    func userHasLiked() -> Bool{
+        return event.likedListID?.contains(userVM.user?.id ?? "") ?? false
     }
     
-    
-    func isCurrentHour(date: Date) -> Bool{
-        let calendar = Calendar.current
-        
-        let hour = calendar.component(.hour, from: date)
-        
-        let currentHour = calendar.component(.hour, from: Date())
-        
-        return hour == currentHour
+    func userHasDisliked() -> Bool{
+        return event.dislikedListID?.contains(userVM.user?.id ?? "") ?? false
+
     }
-    
-    func getZIndex(index: Int) -> Int{
-        if index == 1 {
-            return 2
-        }else{
-            return index
-        }
-    }
-    
-    
     
     var body: some View {
-        HStack(alignment: .top, spacing: 30){
-            if showBarIndicator{
-            Rectangle().fill(Color("AccentColor")).frame(width: 3)
-            }
-            
 
-            
+
+        ZStack{
+            Color("Color")
             VStack{
-                HStack{
-                    VStack(alignment: .leading, spacing: 5){
-                        Text(event.eventName ?? "").font(.title2).bold().foregroundColor(FOREGROUNDCOLOR)
-                        HStack(alignment: .center){
-                            Image(systemName: "clock").font(.footnote).foregroundColor(Color.gray)
-                            Text(event.eventStartTime?.dateValue() ?? Date(), style: .time).font(.headline)
-                            Text("-").font(.headline)
-                            Text(event.eventEndTime?.dateValue() ?? Date(), style: .time).font(.headline)
-                        }.foregroundColor(FOREGROUNDCOLOR)
-                       
-                        HStack{
-                            HStack(alignment: .center){
-                                Image(systemName: "mappin.and.ellipse").foregroundColor(Color.gray).font(.footnote)
-                                Text(event.eventLocation ?? "").font(.footnote)
+                HStack(alignment: .top){
+                    HStack(alignment: .center){
+                        ZStack(alignment: .bottomTrailing){
+                            
+                            NavigationLink(destination: GroupProfileView(group: event.group ?? Group(), isInGroup: event.group?.users.contains(userVM.user?.id ?? " ") ?? false)) {
+                                WebImage(url: URL(string: event.group?.groupProfileImage ?? "")).resizable().frame(width: 40, height: 40).clipShape(Circle())
                             }
-                            Text("|")
-                        Text("4 attending").font(.footnote)
-                        }.foregroundColor(FOREGROUNDCOLOR.opacity(0.7))
+                            
+                            NavigationLink(destination: UserProfilePage(user: event.creator ?? User())) {
+                                WebImage(url: URL(string: event.creator?.profilePicture ?? "")).resizable().frame(width: 18, height: 18).clipShape(Circle())
+                            }.offset(x: 3, y: 2)
+                            
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 1){
+                            HStack{
+                                Text("\(event.group?.groupName ?? "" )").font((.system(size: 15))).bold()
+                                Text("\(event.timeStamp?.dateValue() ?? Date(), style: .time)").font(.system(size: 12))
+                                
+                            }
+                            
+                            HStack(spacing: 3){
+                                Text("created by").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 12))
+                                NavigationLink(destination: UserProfilePage(user: event.creator ?? User())) {
+                                    Text("\(event.creator?.username ?? "")").foregroundColor(Color.gray).font(.system(size: 12))
+                                }
+                            }
+                            
+                        }
                     }
                     
-                 
+                    Spacer()
+                    
+                    Button(action:{
+                        
+                    },label:{
+                        Image(systemName: "ellipsis").foregroundColor(FOREGROUNDCOLOR)
+                    }).padding(5)
+                }.padding([.horizontal,.top],5)
+                
+                VStack(spacing: 1){
+                    Text("\(event.eventName ?? "")").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 15))
+                    Divider()
                 }
-            }.foregroundColor(self.isCurrentHour(date: event.eventStartTime?.dateValue() ?? Date()) ? FOREGROUNDCOLOR : .gray).padding(15).frame(maxWidth: .infinity, alignment: .leading).background(RoundedRectangle(cornerRadius: 25).fill(isHomescreen ? Color("Color") : Color("Background"))).overlay(RoundedRectangle(cornerRadius: 25).stroke(Color("AccentColor"), lineWidth: self.isCurrentHour(date: event.eventStartTime?.dateValue() ?? Date()) ? 1.5 : 0))
-            
-        }.frame(maxWidth: .infinity, alignment: .leading).padding()
-        
+                
+                        HStack{
+                            
+                            VStack(alignment: .leading, spacing: 10){
+                                HStack(){
+                                    Image(systemName: "clock").font(.headline).foregroundColor(Color.gray)
+                                    Text(event.eventStartTime?.dateValue() ?? Date(), style: .time).font(.subheadline).bold()
+                                    Text("-").font(.subheadline).bold()
+                                    Text(event.eventEndTime?.dateValue() ?? Date(), style: .time).font(.subheadline).bold()
+                                }.foregroundColor(FOREGROUNDCOLOR)
+                                    
+                                    HStack(alignment: .center){
+                                        Image(systemName: "calendar").font(.headline).foregroundColor(Color.gray)
+                                        Text(event.eventStartTime?.dateValue() ?? Date(), style: .date).font(.subheadline).bold()
+
+                                    }
+                                    
+                                    HStack(alignment: .center){
+                                        Image(systemName: "mappin.and.ellipse").foregroundColor(Color.gray).font(.headline)
+                                        Text(event.eventLocation ?? "").font(.subheadline).bold()
+                                    }
+                                Button(action:{
+                                    
+                                },label:{
+                                    Text("RSVP").foregroundColor(FOREGROUNDCOLOR).padding(5).padding(.horizontal).background(RoundedRectangle(cornerRadius: 12).fill(Color("AccentColor")))
+                                })
+                            }
+                          
+                         
+                            Spacer()
+                            
+                            
+                            Image(uiImage: event.image ?? UIImage()).resizable().scaledToFit().cornerRadius(16).frame(width: 100, height: 175).padding(.trailing)
+                        }.padding(.horizontal)
+                        
+                        
+                    
+                   
+                
+               
+               
+                    
+                    
+
+                
+                //bottom bar
+                HStack{
+                    Text("4 friends attending")
+                    Spacer()
+                    
+                    HStack(alignment: .top, spacing: 20){
+                        Button(action:{
+                            userVM.updateGroupEventLike(eventID: event.id ?? " ", userID: userVM.user?.id ?? " ", actionToLike: true) { list in
+                               
+                                self.event.likedListID = list[0]
+                                self.event.dislikedListID = list[1]
+                            }
+                        },label:{
+                            VStack(spacing: 1){
+                                Image(systemName: self.userHasLiked() ? "heart.fill" :  "heart").foregroundColor(self.userHasLiked() ? Color("AccentColor") : FOREGROUNDCOLOR).font(.system(size: 22))
+                                Text("\(event.likedListID?.count ?? 0)").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 14))
+                            }
+                        })
+                        
+                        Button(action:{
+                            userVM.updateGroupEventLike(eventID: event.id ?? " ", userID: userVM.user?.id ?? " ", actionToLike: false) { list in
+                                self.event.likedListID = list[0]
+                                self.event.dislikedListID = list[1]
+                            }
+                        },label:{
+                            VStack(spacing: 1){
+                                Image(systemName: self.userHasDisliked() ? "heart.slash.fill" :  "heart.slash").foregroundColor(self.userHasDisliked() ? Color("AccentColor") :  FOREGROUNDCOLOR).font(.system(size: 20))
+                                Text("\(event.dislikedListID?.count ?? 0)").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 14))
+                            }
+                        })
+
+                        
+                            Button(action:{
+                                withAnimation{
+                                    self.selectedEvent = event
+                                    self.shareType = "event"
+                                    shareVM.showShareMenu.toggle()
+                                    userVM.hideBackground.toggle()
+                                    userVM.hideTabButtons.toggle()
+                                }
+                            },label:{
+                                Image(systemName: "arrowshape.turn.up.right").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 22))
+                            })
+                 
+                    }.padding(.trailing,5)
+                    
+                }.padding([.horizontal,.bottom],5)
+            }
+        }.cornerRadius(16)
         
     }
 }

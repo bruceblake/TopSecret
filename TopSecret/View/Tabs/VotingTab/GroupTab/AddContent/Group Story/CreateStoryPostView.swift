@@ -39,7 +39,7 @@ struct CreateStoryPostView: View {
             GeometryReader{ proxy in
                 let size = proxy.size
                 Color("Background")
-//                CameraPreview(size: size).environmentObject(cameraVM)
+                CameraPreview(size: size).environmentObject(cameraVM)
                 
                 ZStack(alignment: .leading){
                     Rectangle()
@@ -165,7 +165,9 @@ struct CreateStoryPostView: View {
             }
         }.onChange(of: self.avatarImage) { _ in
             self.showEditStory.toggle()
-        }
+        }.onTapGesture(count: 2, perform: {
+            cameraVM.flipCamera()
+        })
     }
 }
 
