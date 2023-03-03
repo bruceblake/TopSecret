@@ -110,7 +110,6 @@ struct Tabs : View {
     @State var showTabButtons : Bool = true
     @State var showSearch: Bool = false
     @StateObject var personalChatVM = PersonalChatViewModel()
-    @StateObject var feedVM = FeedViewModel()
     @EnvironmentObject var userVM: UserViewModel
     @EnvironmentObject var shareVM: ShareViewModel
     @State var selectedPost: GroupPostModel = GroupPostModel()
@@ -131,7 +130,7 @@ struct Tabs : View {
                         TopBar(showSearch: $showSearch, tabIndex: tabIndex)
 
                     if tabIndex == .home{
-                        HomeScreen(feedVM: feedVM,selectedPost: $selectedPost, selectedPoll: $selectedPoll, selectedEvent: $selectedEvent, shareType: $shareType)
+                        HomeScreen(selectedPost: $selectedPost, selectedPoll: $selectedPoll, selectedEvent: $selectedEvent, shareType: $shareType)
                     }else if tabIndex == .friends{
                         FriendsView(personalChatVM: personalChatVM)
                     }else if tabIndex == .groups{

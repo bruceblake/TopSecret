@@ -73,8 +73,6 @@ extension AppDelegate: MessagingDelegate {
                 COLLECTION_USER.document(uid).updateData(["fcmToken":fcmToken ?? " "])
             }
         }
-      let deviceToken:[String: String] = ["token": fcmToken ?? ""]
-        print("Device token: ", deviceToken) // This token can be used for testing notifications on FCM
     }
 }
 

@@ -14,7 +14,7 @@ import SwiftUIPullToRefresh
 struct HomeScreen: View {
     
     @EnvironmentObject var userVM: UserViewModel
-    @StateObject var feedVM : FeedViewModel
+    @ObservedObject var feedVM = FeedViewModel()
     @State var showSearch : Bool = false
     @State var selectedViewOption = 0
     @EnvironmentObject var shareVM: ShareViewModel
@@ -31,36 +31,44 @@ struct HomeScreen: View {
             ZStack(alignment: .top){
                 
                 
+                VStack{
                 
-                if selectedViewOption == 0 {
-                    YourGroupsView(feedVM: feedVM, selectedPost: $selectedPost,  selectedPoll: $selectedPoll,selectedEvent: $selectedEvent, shareType: $shareType)
-                }else{
-                    YourFeedView(feedVM: feedVM, selectedPost: $selectedPost,  selectedPoll: $selectedPoll, selectedEvent: $selectedEvent, shareType: $shareType)
+                    
+                    if selectedViewOption == 0 {
+                        YourGroupsView(feedVM: feedVM, selectedPost: $selectedPost,  selectedPoll: $selectedPoll,selectedEvent: $selectedEvent, shareType: $shareType)
+                    }else{
+                        YourFeedView(feedVM: feedVM, selectedPost: $selectedPost,  selectedPoll: $selectedPoll, selectedEvent: $selectedEvent, shareType: $shareType)
+                    }
                 }
+              
+                    
+                  
+                    
+                    HStack(spacing: 60){
+                        
+                        Button(action:{
+                            selectedViewOption = 0
+                        },label:{
+                            VStack(spacing: 5){
+                                Text("Your Groups").foregroundColor(selectedViewOption == 0 ? FOREGROUNDCOLOR : Color.gray)
+                                Rectangle().frame(width: 50, height: 2).foregroundColor(selectedViewOption == 0 ? FOREGROUNDCOLOR : Color.clear)
+                            }
+                        })
+                        
+                        
+                        Button(action:{
+                            selectedViewOption = 1
+                        },label:{
+                            VStack(spacing: 5){
+                                Text("Your Feed").foregroundColor(selectedViewOption == 1 ? FOREGROUNDCOLOR : Color.gray)
+                                Rectangle().frame(width: 40, height: 2).foregroundColor(selectedViewOption == 1 ? FOREGROUNDCOLOR : Color.clear)
+                            }
+                        })
+                        
+                        
+                    }
                 
-                HStack(spacing: 60){
-                    
-                    Button(action:{
-                        selectedViewOption = 0
-                    },label:{
-                        VStack(spacing: 5){
-                            Text("Your Groups").foregroundColor(selectedViewOption == 0 ? FOREGROUNDCOLOR : Color.gray)
-                            Rectangle().frame(width: 50, height: 2).foregroundColor(selectedViewOption == 0 ? FOREGROUNDCOLOR : Color.clear)
-                        }
-                    })
-                    
-                    
-                    Button(action:{
-                        selectedViewOption = 1
-                    },label:{
-                        VStack(spacing: 5){
-                            Text("Your Feed").foregroundColor(selectedViewOption == 1 ? FOREGROUNDCOLOR : Color.gray)
-                            Rectangle().frame(width: 40, height: 2).foregroundColor(selectedViewOption == 1 ? FOREGROUNDCOLOR : Color.clear)
-                        }
-                    })
-                    
-                    
-                }
+               
                 
                 
             }
@@ -72,7 +80,11 @@ struct HomeScreen: View {
            
             
             
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
+            if !feedVM.hasFetched{
+            feedVM.fetchAll(userID: userVM.user?.id ?? " ")
+            }
+        }
             
         
         
@@ -92,7 +104,7 @@ struct HomeScreen: View {
 
 struct YourGroupsView : View {
     @EnvironmentObject var userVM: UserViewModel
-    @StateObject var feedVM : FeedViewModel
+    @ObservedObject var feedVM : FeedViewModel
     @Binding var selectedPost: GroupPostModel
     @Binding var selectedPoll: PollModel
     @Binding var selectedEvent: EventModel
@@ -104,18 +116,49 @@ struct YourGroupsView : View {
             return userVM.groups.contains(where: {$0.id == item.groupID ?? ""})
         }
     }
+    
+//    private var combinedGroupsFilter: [StoryModel] {
+//
+//    }
 
     var body: some View {
         
         RefreshableScrollView {
-            await feedVM.fetchAll()
+            await feedVM.fetchAll(userID: userVM.user?.id ?? " ")
         } progress: { state in
-            ProgressView()
+            Image(systemName: "arrow.up").foregroundColor(Color("AccentColor"))
         } content: {
+            
             VStack(spacing: 15){
                 if feedVM.isLoading{
                     ProgressView()
                 }
+                
+                VStack(alignment: .leading){
+                    ScrollView(.horizontal){
+                        HStack(spacing: 5){
+                            
+                            VStack(alignment: .center){
+                                ZStack{
+                                    Circle().foregroundColor(Color("AccentColor")).frame(width: 40, height: 40)
+                                    Image(systemName: "plus")
+                                }
+                                Text("Add to story").foregroundColor(FOREGROUNDCOLOR).font(.caption)
+                            }
+                            
+//                            ForEach(combinedGroupsFilter, id: \.id){ item in
+//
+//                            }
+                            
+                            
+                         
+                         
+                            
+                        }
+                    }.padding(.leading,25)
+                    Divider()
+                }.padding(.top)
+                
                 ForEach(groupsFilter, id: \.id){ item in
                     switch item.itemType {
                     case .event:
@@ -130,7 +173,7 @@ struct YourGroupsView : View {
                     
                 }
                 
-            }.padding(.top,40)
+            }.padding(.top)
         .padding(.bottom,UIScreen.main.bounds.height / 8)
         }
 
@@ -175,13 +218,13 @@ struct YourFeedView : View {
                 }
                 Spacer()
             }.onAppear{
-                feedVM.fetchAll()
+                feedVM.fetchAll(userID: userVM.user?.id ?? " ")
             }
         }else{
             RefreshableScrollView {
-                await feedVM.fetchAll()
+                await feedVM.fetchAll(userID: userVM.user?.id ?? " ")
             } progress: { state in
-               ProgressView()
+                Image(systemName: "arrow.up").foregroundColor(Color("AccentColor"))
             } content: {
                 
                             VStack(spacing: 15){

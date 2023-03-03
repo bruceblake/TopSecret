@@ -8,6 +8,7 @@
 import Foundation
 import AVFoundation
 import SwiftUI
+import Photos
 
 
 struct Photo: Identifiable, Equatable{
@@ -34,7 +35,7 @@ class CameraViewModel : NSObject, ObservableObject, AVCapturePhotoCaptureDelegat
     @Published var hasSavedPhoto = false
     @Published var pictureData = Data(count: 0)
     
-    @Published var cameraPosition : AVCaptureDevice.Position = .front
+    @Published var cameraPosition : AVCaptureDevice.Position = .back
     
     @Published var isRecording : Bool = false
     @Published var previewURL: URL?
@@ -89,6 +90,7 @@ class CameraViewModel : NSObject, ObservableObject, AVCapturePhotoCaptureDelegat
 
             }
             self.session.commitConfiguration()
+            
         }
         catch{
             print(error.localizedDescription)
@@ -120,32 +122,6 @@ class CameraViewModel : NSObject, ObservableObject, AVCapturePhotoCaptureDelegat
         }
     }
     
-    func flipCamera(){
-        let dp = DispatchGroup()
-        
-        DispatchQueue.global(qos: .background).async{
-            dp.enter()
-            self.session.stopRunning()
-            DispatchQueue.main.async{
-                dp.enter()
-                if self.cameraPosition == .back{
-                self.cameraPosition = .front
-                }else{
-                    self.cameraPosition = .back
-                }
-                dp.leave()
-                dp.notify(queue: .main, execute:{
-                self.setUp()
-                })
-            }
-            dp.leave()
-            dp.notify(queue: .global(qos: .background), execute:{
-                self.session.startRunning()
-            })
-            
-        }
-        
-    }
     
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         if error != nil {
@@ -168,6 +144,38 @@ class CameraViewModel : NSObject, ObservableObject, AVCapturePhotoCaptureDelegat
         print("Saved Photo!")
         
     }
+    
+    func requestAuthorization(completion: @escaping ()->Void) {
+            if PHPhotoLibrary.authorizationStatus() == .notDetermined {
+                PHPhotoLibrary.requestAuthorization { (status) in
+                    DispatchQueue.main.async {
+                        completion()
+                    }
+                }
+            } else if PHPhotoLibrary.authorizationStatus() == .authorized{
+                completion()
+            }
+        }
+
+
+
+    func saveVideoToAlbum(_ outputURL: URL, _ completion: ((Error?) -> Void)?) {
+            requestAuthorization {
+                PHPhotoLibrary.shared().performChanges({
+                    let request = PHAssetCreationRequest.forAsset()
+                    request.addResource(with: .video, fileURL: outputURL, options: nil)
+                }) { (result, error) in
+                    DispatchQueue.main.async {
+                        if let error = error {
+                            print(error.localizedDescription)
+                        } else {
+                            print("Saved successfully")
+                        }
+                        completion?(error)
+                    }
+                }
+            }
+        }
 
 
     func startRecording(){

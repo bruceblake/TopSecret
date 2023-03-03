@@ -18,7 +18,7 @@ class UserViewModel : ObservableObject {
     //firebase
     @Published var userSession : FirebaseAuth.User?
     @Published var isConnected : Bool = false
-    @Published var firestoreListener : [ListenerRegistration] = []
+    @Published var firestoreListeners : [ListenerRegistration] = []
     
     @Published var user : User?
     @Published var loginErrorMessage = ""
@@ -44,17 +44,8 @@ class UserViewModel : ObservableObject {
     let monitor = NWPathMonitor()
     let queue = DispatchQueue(label: "Monitor")
     @Published private(set) var connected: Bool = false
-    
-    //have 1 badgeCount
-    //have 1 notificationCount
-    //have 1 personalChatCount
-    //
-    
-    
+    @Published var userListener : ListenerRegistration?
     static let shared = UserViewModel()
-    
-    
-    
     let store = Firestore.firestore()
     let path = "Users"
     
@@ -69,20 +60,25 @@ class UserViewModel : ObservableObject {
         self.removeListeners()
         self.checkConnection()
         self.userSession = Auth.auth().currentUser
+      
         UserDefaults.standard.set("\(self.userSession?.uid ?? " ")", forKey: "userID")
         dp.leave()
         dp.notify(queue: .main, execute: {
             self.listenToAll(uid: self.userSession?.uid ?? " ")
-            print("id: \(self.userSession?.uid ?? " ")")
         })
         
     }
     
     func checkConnection() {
-        monitor.pathUpdateHandler = { path in
+        DispatchQueue.main.async{
+            self.monitor.pathUpdateHandler = { path in
+                DispatchQueue.main.async{
             self.connected = (path.status == .satisfied)
+                }
         }
-        monitor.start(queue: queue)
+            self.monitor.start(queue: self.queue)
+      
+        }
     }
     
     func followGroup(groupID: String, userID: String){
@@ -143,7 +139,7 @@ class UserViewModel : ObservableObject {
     }
     
     func listenToNotifications(userID: String){
-        self.firestoreListener.append(
+        self.firestoreListeners.append(
         
             COLLECTION_USER.document(userID).collection("Notifications").order(by: "timeStamp", descending: true).addSnapshotListener({ snapshot, err in
                 if err != nil {
@@ -210,7 +206,7 @@ class UserViewModel : ObservableObject {
     
     func listenToPersonalChats(userID: String){
         
-        self.firestoreListener.append( COLLECTION_PERSONAL_CHAT.whereField("usersID", arrayContains: userID).addSnapshotListener { snapshot, err in
+        self.firestoreListeners.append( COLLECTION_PERSONAL_CHAT.whereField("usersID", arrayContains: userID).addSnapshotListener { snapshot, err in
             if err != nil {
                 print("ERROR")
                 return
@@ -333,7 +329,7 @@ class UserViewModel : ObservableObject {
     
     
     func listenToUser(uid: String){
-        COLLECTION_USER.document(uid).addSnapshotListener { (snapshot, err) in
+        self.userListener = COLLECTION_USER.document(uid).addSnapshotListener { (snapshot, err) in
             
             
             if err != nil {
@@ -344,7 +340,11 @@ class UserViewModel : ObservableObject {
             
             
             
+            
+            
             var data = snapshot?.data() as? [String:Any] ?? [:]
+            let usersLoggedInCount = data["usersLoggedInCount"] as? Int ?? 0
+           print("usersLoggedInCount: \(usersLoggedInCount)")
             var appIconBadgeNumber = data["appIconBadgeNumber"] as? Int ?? 0
             
             let groupD = DispatchGroup()
@@ -385,7 +385,7 @@ class UserViewModel : ObservableObject {
     
       func listenToUserGroups(uid: String){
           
-          self.firestoreListener.append( COLLECTION_GROUP.whereField("users", arrayContains: uid).addSnapshotListener { (snapshot, err) in
+          self.firestoreListeners.append( COLLECTION_GROUP.whereField("users", arrayContains: uid).addSnapshotListener { (snapshot, err) in
               
               if err != nil {
                   print("ERROR! find")
@@ -408,7 +408,6 @@ class UserViewModel : ObservableObject {
               
               for document in documents {
                   groupD.enter()
-                  print("dick")
                   var data = document.data()
 //                  self.fetchGroupNotifications(groupID: document.documentID) { fetchedNotifications in
 //                      data["groupNotifications"] = fetchedNotifications
@@ -482,10 +481,7 @@ class UserViewModel : ObservableObject {
                 }
             }
             
-            
-            
-            
-            let dp = DispatchGroup()
+       let dp = DispatchGroup()
             dp.enter()
             withAnimation(.spring()){
                 self.userSession = result?.user
@@ -493,9 +489,15 @@ class UserViewModel : ObservableObject {
             }
             
             dp.notify(queue: .main, execute:{
-                self.listenToUser(uid: self.userSession?.uid ?? " ")
-                print("user: \(self.user?.username ?? " ")")
+                self.listenToAll(uid: self.userSession?.uid ?? " ")
+                COLLECTION_USER.document(self.userSession?.uid ?? " ").updateData(["usersLoggedInCount":FieldValue.increment(Int64(1))])
+                self.fetchUser(userID: self.userSession?.uid ?? " ") { fetchedUser in
+                    return completion(fetchedUser)
+                }
             })
+            
+            
+          
 
             
         }
@@ -504,7 +506,7 @@ class UserViewModel : ObservableObject {
 
     
     
-    func createUser(email:String,username:String,nickName:String,birthday: Date, password: String, profilePicture: UIImage, completion: @escaping (Bool) -> ()) -> (){
+    func createUser(email:String,username:String,nickName:String,birthday: Date, password: String, profilePicture: UIImage, interests: [String], completion: @escaping (Bool) -> ()) -> (){
             Auth.auth().createUser(withEmail: email, password: password) { (result, err) in
                 if let err = err{
                     print("DEBUG: ERROR: \(err.localizedDescription)")
@@ -520,6 +522,7 @@ class UserViewModel : ObservableObject {
                             "nickName": nickName,
                             "uid": user.uid,
                             "birthday": birthday,"profilePicture":"", "bio":"","isActive":true,"dateCreated":Timestamp()
+                            ,"interests":interests
                             
                 ] as [String : Any]
                 
@@ -553,17 +556,40 @@ class UserViewModel : ObservableObject {
         }
     
     func removeListeners(){
-        for listener in firestoreListener{
+        for listener in firestoreListeners{
             listener.remove()
         }
     }
     
+    func printListenersCount(){
+        print("listener count: \(firestoreListeners.count)")
+    }
+    
     func signOut(){
+        let dp = DispatchGroup()
         
-        
-        self.loginErrorMessage = ""
-        userSession = nil
-        try? Auth.auth().signOut()
+        dp.enter()
+   
+      COLLECTION_USER.document(self.userSession?.uid ?? " ").getDocument { snapshot, err in
+             if err != nil {
+                 print("ERROR")
+                 return
+             }
+             
+             let data = snapshot?.data() as? [String:Any] ?? [:]
+             let usersLoggedInCount = data["usersLoggedInCount"] as? Int ?? 0
+             print("uid: \(self.userSession?.uid ?? " ")")
+             print("usersLoggedInCount: \(usersLoggedInCount)")
+        }
+
+        dp.leave()
+        dp.notify(queue: .main, execute:{
+            self.loginErrorMessage = ""
+            try? Auth.auth().signOut()
+            self.userListener?.remove()
+            self.userSession = nil
+            print("logging out!")
+        })
         self.removeListeners()
     }
     

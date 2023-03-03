@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import SwiftUI
 import Photos
 import Firebase
 
@@ -14,6 +15,7 @@ import Firebase
 struct StoryModel : Identifiable {
     var id : String = UUID().uuidString
     var URL: String?
+    var image: UIImage?
     var groupID: String?
     var creatorID: String?
     var dateCreated: Timestamp?
@@ -27,6 +29,7 @@ struct StoryModel : Identifiable {
         self.usersSeenStory = dictionary["usersSeenStory"] as? [String] ?? []
         self.dateCreated = dictionary["dateCreated"] as? Timestamp ?? Timestamp()
         self.id = dictionary["id"] as? String ?? ""
+        self.image = dictionary["image"] as? UIImage ?? UIImage()
     }
     
     init(){

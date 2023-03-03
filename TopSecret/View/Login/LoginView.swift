@@ -10,7 +10,7 @@ import SwiftUI
 struct LoginView: View {
     @State var email = ""
     @State var password = ""
-    @EnvironmentObject var userAuthVM: UserViewModel
+    @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var validationVM : RegisterValidationViewModel
     @StateObject var userCoreDataVM = UserCoreDataViewModel()
     @State var showForgotPasswordView = false
@@ -45,7 +45,7 @@ struct LoginView: View {
                     
                     VStack(spacing: 10){
                         
-                        Text(userAuthVM.loginErrorMessage).foregroundColor(.red)
+                        Text(userVM.loginErrorMessage).foregroundColor(.red)
                         
                         //Text Fields
                         VStack(spacing: 20){
@@ -72,7 +72,7 @@ struct LoginView: View {
                             let dp = DispatchGroup()
                             self.showContentScreen.toggle()
                             dp.enter()
-                            userAuthVM.signIn(withEmail: email, password: password, completion: { fetchedUser in
+                            userVM.signIn(withEmail: email, password: password, completion: { fetchedUser in
                                 userCoreDataVM.addUser(user: fetchedUser)
                                 dp.leave()
                             })

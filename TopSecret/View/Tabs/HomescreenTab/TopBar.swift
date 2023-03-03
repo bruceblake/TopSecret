@@ -59,7 +59,11 @@ struct TopBar : View {
             Spacer()
             
             if tabIndex == .home {
-                Text("Top Secret").bold().font(.title2)
+                Button(action:{
+                    print(userVM.printListenersCount())
+                },label:{
+                    Text("Top Secret").bold().font(.title2).foregroundColor(FOREGROUNDCOLOR)
+                })
             }
             else if tabIndex == .friends{
                 Text("Friends").bold().font(.title2)

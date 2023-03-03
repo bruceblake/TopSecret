@@ -37,7 +37,7 @@ struct FriendsView: View {
                         Button(action:{
                             
                         },label:{
-                            Text("See all").foregroundColor(FOREGROUNDCOLOR).padding(.horizontal,10).background(RoundedRectangle(cornerRadius: 12).fill(Color("AccentColor")))
+                            Text("See all").foregroundColor(Color("AccentColor"))
                         })
                     }
                     

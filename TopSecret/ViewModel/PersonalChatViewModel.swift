@@ -147,10 +147,10 @@ class PersonalChatViewModel : ObservableObject {
          DispatchQueue.main.async{
              self.isLoading = true
          }
-         print("last document: \(lastSnapshot!.get("value") as? String ?? "")")
          
-        
-        COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").order(by: "timeStamp", descending: true).start(afterDocument: lastSnapshot!).limit(to: 20).getDocuments { (snapshot, error) in
+        print("added listener")
+        COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").order(by: "timeStamp", descending: true).start(afterDocument: lastSnapshot!).limit(to: 20).addSnapshotListener { (snapshot, error) in
+            
             if let error = error {
                 print("Error fetching messages: \(error)")
                 self.isLoading = false
@@ -159,60 +159,70 @@ class PersonalChatViewModel : ObservableObject {
             
             var messagesToAppend : [Message] = []
             let dp = DispatchGroup()
-            var documents = snapshot!.documents
-            
             dp.enter()
-            for document in documents {
-                dp.enter()
-                var data = document.data()
-                let id = data["id"] as? String ?? ""
-                let type = data["type"] as? String ?? ""
-                let value = data["value"] as? String ?? ""
-                let repliedMessageID = data["repliedMessageID"] as? String ?? ""
-                if type == "repliedMessage"{
+            if self.messages.count > 0 {
+                
+                snapshot?.documentChanges.forEach({ doc in
                     dp.enter()
-                    self.fetchReplyMessages(chatID: chatID, messageID: repliedMessageID) { fetchedReplyMessage in
-                        data["repliedMessage"] = fetchedReplyMessage
-                        dp.leave()
+                    var data = doc.document.data()
+                    let id = data["id"] as? String ?? ""
+                    let type = data["type"] as? String ?? ""
+                    let value = data["value"] as? String ?? ""
+                    let repliedMessageID = data["repliedMessageID"] as? String ?? ""
+                    if type == "repliedMessage"{
+                        dp.enter()
+                        self.fetchReplyMessages(chatID: chatID, messageID: repliedMessageID) { fetchedReplyMessage in
+                            data["repliedMessage"] = fetchedReplyMessage
+                            dp.leave()
+                        }
                     }
-                }
-                if type == "postMessage"{
-                    dp.enter()
-                    self.fetchPost(postID: value){ fetchedPost in
-                        data["post"] = fetchedPost
-                        dp.leave()
+                    if type == "postMessage"{
+                        dp.enter()
+                        self.fetchPost(postID: value){ fetchedPost in
+                            data["post"] = fetchedPost
+                            dp.leave()
+                        }
                     }
-                }
-                if type == "pollMessage"{
-                    dp.enter()
-                    
-                    self.fetchPoll(pollID: value){ fetchedPoll in
-                        data["poll"] = fetchedPoll
-                        dp.leave()
+                    if type == "pollMessage"{
+                        dp.enter()
+                        
+                        self.fetchPoll(pollID: value){ fetchedPoll in
+                            data["poll"] = fetchedPoll
+                            dp.leave()
+                        }
                     }
-                }
-                if type == "eventMessage"{
-                    dp.enter()
-                    
-                    self.fetchEvent(eventID: value){ fetchedEvent in
-                        data["event"] = fetchedEvent
-                        dp.leave()
+                    if type == "eventMessage"{
+                        dp.enter()
+                        
+                        self.fetchEvent(eventID: value){ fetchedEvent in
+                            data["event"] = fetchedEvent
+                            dp.leave()
+                        }
                     }
-                }
-                dp.leave()
-                dp.notify(queue: .main, execute:{
-                    if !self.messages.contains(where: {$0.id == id}){
-                        messagesToAppend.append(Message(dictionary: data))
-                    }
+                    dp.leave()
+                    dp.notify(queue: .main, execute:{
+                        if doc.type == .added {
+                            if !messagesToAppend.contains(where: {$0.id == id}){
+                                messagesToAppend.append(Message(dictionary: data))
+                            }
+                        }else if doc.type == .removed{
+                            messagesToAppend.removeAll(where: {$0.id == id})
+                        }else if let index = messagesToAppend.firstIndex(where: {$0.id == id}) {
+                            messagesToAppend[index] = Message(dictionary: data)
+                        }
+                       
+                    })
                 })
             }
+               
+            
             dp.leave()
             dp.notify(queue: .main, execute: {
-               
-                    self.messages.insert(contentsOf: messagesToAppend.reversed(), at: 0)
+              
+                self.messages.insert(contentsOf: messagesToAppend.reversed(), at: 0)
                     self.isLoading = false
-                   
-                
+             
+
                
             })
         }
@@ -226,8 +236,6 @@ class PersonalChatViewModel : ObservableObject {
         //how to paginate
         //1. listen to newest 20 messages [20,19,18,17,...,0]
         //2. fetch 20 starting after the 20th
-     
-        self.messages.removeAll()
         self.chatListener = COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").order(by: "timeStamp", descending: true).limit(to: 20).addSnapshotListener { snapshot, err in
             if err != nil {
                 print(err!.localizedDescription)
@@ -287,7 +295,6 @@ class PersonalChatViewModel : ObservableObject {
                         }else if let index = self.messages.firstIndex(where: {$0.id == id}) {
                             self.messages[index] = Message(dictionary: data)
                         }
-                        print("value: \(data["value"] as? String ?? ""), time: \( (data["timeStamp"] as? Timestamp ?? Timestamp()).dateValue()) ")
                     })
                     
                     
@@ -568,8 +575,15 @@ class PersonalChatViewModel : ObservableObject {
                 print("ERROR")
                 return
             }
+            
             let groupD = DispatchGroup()
+            
             var data = snapshot?.data() as? [String:Any] ?? [:]
+            var id = data["id"] as? String ?? "deleted"
+            if id == "deleted"{
+                let deletedPostData = ["id":id] as! [String:Any]
+                return completion(GroupPostModel(dictionary: deletedPostData))
+            }
             var creatorID = data["creatorID"] as? String ?? " "
             var groupID = data["groupID"] as? String ?? " "
             var urlPath = data["urlPath"] as? String ?? " "
@@ -585,7 +599,6 @@ class PersonalChatViewModel : ObservableObject {
                 groupD.leave()
             }
             
-            print("url: \(urlPath)")
             groupD.enter()
             self.fetchMedia(urlPath: urlPath) { fetchedImage in
                 data["image"] = fetchedImage

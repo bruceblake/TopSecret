@@ -215,12 +215,10 @@ struct PersonalChatView : View {
                         
                         
                     }, progress: { state in
-                        if state == .loading{
-                            ProgressView()
-                        }
-                        
+                            Image(systemName: "arrow.up")
+                                                
                     }) {
-                        LazyVStack(spacing: 0){
+                        VStack(spacing: 0){
                             if personalChatVM.isLoading{
                                 ProgressView()
                             }
@@ -228,11 +226,7 @@ struct PersonalChatView : View {
                                 
                                 
                                 MessageCell(message: personalChatVM.messages[index], selectedMessage: $selectedMessage,
-                                            showOverlay: $showOverlay, personalChatVM: personalChatVM).onAppear{
-                                    if index == 0{
-                                        print("seen top")
-                                    }
-                                }
+                                            showOverlay: $showOverlay, personalChatVM: personalChatVM)
                                 
                                 
                             }

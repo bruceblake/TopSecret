@@ -75,13 +75,12 @@ struct MessageTextCell: View {
             VStack(alignment: .leading, spacing: 0){
                 
                 HStack(spacing: 3){
-                    if message.userID == userVM.user?.id ?? ""{
-                        Image(systemName: "chevron.left").foregroundColor(Color("AccentColor")).frame(width:2).padding(.horizontal,5)
-                        Text("Me").foregroundColor(Color("AccentColor"))
-                    }else{
-                        Image(systemName: "chevron.left").foregroundColor(Color("blue")).frame(width:2).padding(.horizontal,5)
-                        Text("\(message.name ?? "")").foregroundColor(Color("blue"))
-                    }
+                        Image(systemName: "chevron.left").foregroundColor(message.userID == userVM.user?.id ?? "" ? Color("AccentColor") : Color("blue"))
+                        .frame(width:2).padding(.horizontal,5)
+                        Text("\(message.userID == userVM.user?.id ?? "" ? "Me"  : message.name ?? "")").foregroundColor(message.userID == userVM.user?.id ?? "" ? Color("AccentColor") : Color("blue"))
+                    
+                    
+            
                     
                     Spacer()
                     
@@ -217,15 +216,34 @@ struct MessagePollCell: View {
     }
 }
 
+struct MediaPreferenceKey: PreferenceKey {
+    typealias Value = CGFloat
+    
+    static var defaultValue: CGFloat = .zero
+    
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat){
+        value = nextValue()
+    }
+}
+
+extension View {
+    
+    func updateRectangleHeight(_ size: CGFloat) -> some View{
+        preference(key: MediaPreferenceKey.self, value: size)
+    }
+}
+
 struct MessagePostCell : View {
     @EnvironmentObject var userVM: UserViewModel
     var message: Message
     @State var selectedPost: GroupPostModel = GroupPostModel()
     var chatID: String
     @State var shareType : String = ""
+    @State var rectangleHeight : CGFloat = .zero
 
     
     var body: some View {
+        
         ZStack{
             VStack(alignment: .leading, spacing: 2){
                 HStack(spacing: 3){
@@ -241,12 +259,48 @@ struct MessagePostCell : View {
                     
                 }.padding(.top,3)
                     HStack(spacing: 3){
-                        Rectangle().foregroundColor(Color("\(message.userID == userVM.user?.id ?? " " ? "AccentColor" : "blue")")).frame(width:2).padding(.horizontal,5)
                         
-                        NavigationLink(destination: FullScreenGroupPostView(post: message.post ?? GroupPostModel() )) {
-                            GroupPostCell(post: message.post ?? GroupPostModel(), selectedPost: $selectedPost, shareType: $shareType
-                            ).frame(width: UIScreen.main.bounds.width/1.25)
+                        Rectangle().foregroundColor(Color("\(message.userID == userVM.user?.id ?? " " ? "AccentColor" : "blue")")).frame(width:2, height: rectangleHeight).padding(.horizontal,5)
+                        
+                        
+                        
+                        if (message.post?.id ?? "") == "deleted" {
+                            Button(action:{
+                                //leave this empty
+                            },label:{
+                                ZStack{
+                                    Color("Color").blur(radius: 30)
+                                    VStack{
+                                        Spacer()
+                                            Text("Post has been deleted").foregroundColor(Color.gray.opacity(0.5))
+
+                                        Spacer()
+                                    }
+                                }
+                                .frame(width: UIScreen.main.bounds.width/1.5, height: 300).cornerRadius(12).updateRectangleHeight(CGFloat(300))
+                            })
+                        }else{
+                            NavigationLink(destination: FullScreenGroupPostView(post: message.post ?? GroupPostModel() )) {
+                               
+                                    GroupPostCell(post: message.post ?? GroupPostModel(), selectedPost: $selectedPost, shareType: $shareType, hideControls: true
+                                    ).overlay(
+                                        GeometryReader { geo in
+                                            Color.clear.preference(key: MediaPreferenceKey.self, value: geo.size.height)
+                                        }
+                                    )
+                                
+                                    
+                                
+                            
+                                
+                               
+                                
+                       
+                                    .frame(width: UIScreen.main.bounds.width/1.5).cornerRadius(12)
+                            }
                         }
+                      
+                      
                      
                         
                         Spacer()
@@ -256,6 +310,8 @@ struct MessagePostCell : View {
                 
             }
       
+        }.onPreferenceChange(MediaPreferenceKey.self){
+            self.rectangleHeight = $0
         }
         
     }

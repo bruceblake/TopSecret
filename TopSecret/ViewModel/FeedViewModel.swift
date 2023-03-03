@@ -14,28 +14,15 @@ class FeedViewModel: ObservableObject {
     @Published var polls: [PollModel] = []
     @Published var events: [EventModel] = []
     @Published var feed: [FeedItemObjectModel] = []
+    @Published var stories: [StoryModel] = []
     @Published var isLoading : Bool = true
-    
+    @Published var hasFetched: Bool = false
     @Published var firestoreListener : [ListenerRegistration] = []
     
     
-    init(){
+ 
+    
    
-        let dp = DispatchGroup()
-        dp.enter()
-            self.removeListeners()
-        dp.leave()
-        
-        dp.notify(queue: .main, execute: {
-            self.fetchAll()
-        })
-         
-        
-         
-        
-     
-      
-    }
     
     func parseIntoFeedObject(feedItem: Any) -> FeedItemObjectModel? {
         if let event = feedItem as? EventModel  {
@@ -66,7 +53,7 @@ class FeedViewModel: ObservableObject {
     }
     
     
-    func fetchAll(){
+    func fetchAll(userID: String){
         DispatchQueue.main.async{
             self.isLoading = true
         }
@@ -87,6 +74,11 @@ class FeedViewModel: ObservableObject {
             dp.leave()
         })
         
+//        dp.enter()
+//        func fetchStories(userID: String, completion: { fetchedStories in
+//            self.stories = fetchedStories
+//            dp.leave()
+//        })
        
         
         dp.notify(queue: .main, execute: {
@@ -104,6 +96,7 @@ class FeedViewModel: ObservableObject {
             
             self.feed = sortedFeed.uniqued()
             self.isLoading = false
+            self.hasFetched = true
         })
         
     
@@ -115,6 +108,10 @@ class FeedViewModel: ObservableObject {
         for listener in self.firestoreListener{
             listener.remove()
         }
+    }
+    
+    func fetchStories(userID: String, completion: @escaping ([StoryModel]) -> ()) -> () {
+       
     }
     
     func fetchMedia(urlPath: String, completion: @escaping (UIImage) -> ()) -> (){

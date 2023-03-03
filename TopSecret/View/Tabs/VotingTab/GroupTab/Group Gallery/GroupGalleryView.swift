@@ -246,7 +246,7 @@ struct MultipleAssetPicker : UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> PHPickerViewController {
         var config = PHPickerConfiguration()
         
-        config.selectionLimit = 0
+        config.selectionLimit = 1
         let picker = PHPickerViewController(configuration: config)
         picker.delegate = context.coordinator
         return picker
@@ -272,6 +272,7 @@ struct MultipleAssetPicker : UIViewControllerRepresentable {
         func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
             
             parent.picker.toggle()
+            
             for img in results {
                 
                 if img.itemProvider.canLoadObject(ofClass: UIImage.self){
@@ -290,6 +291,7 @@ struct MultipleAssetPicker : UIViewControllerRepresentable {
                     print("Cannot be loaded")
                 }
             }
+            
         }
     }
 }

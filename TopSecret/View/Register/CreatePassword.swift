@@ -9,6 +9,7 @@ import SwiftUI
 
 struct CreatePassword: View {
     @State var password: String = ""
+    @State var interests: [String]
     @State var showErrorMessage:Bool = false
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var registerVM : RegisterValidationViewModel
@@ -40,7 +41,7 @@ struct CreatePassword: View {
 
                         dp.enter()
 
-                        userVM.createUser(email: registerVM.email, username: registerVM.username, nickName: registerVM.nickName,  birthday: registerVM.birthday, password: registerVM.password, profilePicture: registerVM.userProfileImage, completion: { userCreated in
+                        userVM.createUser(email: registerVM.email, username: registerVM.username, nickName: registerVM.nickName,  birthday: registerVM.birthday, password: registerVM.password, profilePicture: registerVM.userProfileImage, interests: interests, completion: { userCreated in
                             if userCreated{
                                 dp.leave()
                             }
@@ -109,8 +110,3 @@ struct CreateUserOverlay : View {
     }
 }
 
-struct CreatePassword_Previews: PreviewProvider {
-    static var previews: some View {
-        CreatePassword().preferredColorScheme(.dark).environmentObject(UserViewModel())
-    }
-}

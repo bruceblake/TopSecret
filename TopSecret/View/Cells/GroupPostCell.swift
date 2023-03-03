@@ -15,6 +15,7 @@ struct GroupPostCell : View {
     @State var showEditScreen: Bool = false
     @Binding var shareType: String
     @EnvironmentObject var shareVM : ShareViewModel
+    var hideControls : Bool = false
     private var moreLessText: String {
         if !truncated {
             return ""
@@ -122,40 +123,42 @@ struct GroupPostCell : View {
                             }
                         }
                     }
-                    
-                    
                     Spacer()
-                    Menu(content:{
-                        Button(action:{
-                            self.selectedPost = post
-                            self.showEditScreen.toggle()
-                            userVM.hideBackground.toggle()
+
+                    if !self.hideControls{
+                        Menu(content:{
+                            Button(action:{
+                                self.selectedPost = post
+                                self.showEditScreen.toggle()
+                                userVM.hideBackground.toggle()
+                                
+                            },label:{
+                                Text("Edit")
+                            })
                             
+                            Button(action:{
+                                withAnimation{
+                                    self.selectedPost = post
+                                    shareVM.showShareMenu.toggle()
+                                    userVM.hideTabButtons.toggle()
+                                    userVM.hideBackground.toggle()
+                                }
+                                
+                            },label:{
+                                Text("Share")
+                            })
+                            Button(action:{
+                                self.selectedPost = post
+                                userVM.deletePost(postID: post.id ?? "")
+                            },label:{
+                                Text("Delete")
+                            })
                         },label:{
-                            Text("Edit")
+                            Image(systemName: "ellipsis").foregroundColor(FOREGROUNDCOLOR).padding(5)
                         })
                         
-                        Button(action:{
-                            withAnimation{
-                                self.selectedPost = post
-                                shareVM.showShareMenu.toggle()
-                                userVM.hideTabButtons.toggle()
-                                userVM.hideBackground.toggle()
-                            }
-                            
-                        },label:{
-                            Text("Share")
-                        })
-                        Button(action:{
-                            self.selectedPost = post
-                            userVM.deletePost(postID: post.id ?? "")
-                        },label:{
-                            Text("Delete")
-                        })
-                    },label:{
-                        Image(systemName: "ellipsis").foregroundColor(FOREGROUNDCOLOR).padding(5)
-                    })
-                    
+                    }
+                  
                     
                 }.padding([.horizontal,.top],5)
                 
@@ -169,67 +172,70 @@ struct GroupPostCell : View {
                         ExpandableText(post.description ?? "", lineLimit: 2, username: post.creator?.username ?? "")
                         
                     }
-                    
-                    
-                    
                     Spacer()
+
                     
-                    HStack(alignment: .top, spacing: 15){
+                    if !self.hideControls{
                         
-                        
-                        
-                        
-                        Button(action:{
-                            userVM.updateGroupPostLike(postID: post.id ?? " ", userID: userVM.user?.id ?? " ", actionToLike: true) { list in
-                                if !(post.likedListID?.contains(userVM.user?.id ?? "") ?? false){
-                                    self.showLikeAnimation()
+                        HStack(alignment: .top, spacing: 15){
+                            
+                            
+                            
+                            
+                            
+                            Button(action:{
+                                userVM.updateGroupPostLike(postID: post.id ?? " ", userID: userVM.user?.id ?? " ", actionToLike: true) { list in
+                                    if !(post.likedListID?.contains(userVM.user?.id ?? "") ?? false){
+                                        self.showLikeAnimation()
+                                    }
+                                    self.post.likedListID = list[0]
+                                    self.post.dislikedListID = list[1]
                                 }
-                                self.post.likedListID = list[0]
-                                self.post.dislikedListID = list[1]
-                            }
-                        },label:{
-                            VStack(spacing: 1){
-                                Image(systemName: self.userHasLiked() ? "heart.fill" :  "heart").foregroundColor(self.userHasLiked() ? Color("AccentColor") : FOREGROUNDCOLOR).font(.system(size: 22))
-                                Text("\(post.likedListID?.count ?? 0)").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 14))
-                            }
-                        })
-                        
-                        Button(action:{
-                            userVM.updateGroupPostLike(postID: post.id ?? " ", userID: userVM.user?.id ?? " ", actionToLike: false) { list in
-                                self.post.likedListID = list[0]
-                                self.post.dislikedListID = list[1]
-                            }
-                        },label:{
-                            VStack(spacing: 1){
-                                Image(systemName: self.userHasDisliked() ? "heart.slash.fill" :  "heart.slash").foregroundColor(self.userHasDisliked() ? Color("AccentColor") :  FOREGROUNDCOLOR).font(.system(size: 20))
-                                Text("\(post.dislikedListID?.count ?? 0)").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 14))
-                            }
-                        })
-                        
-                        Button(action:{
-                            self.showComments.toggle()
-                        },label:{
-                            VStack(spacing: 1){
-                                Image(systemName: "message").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 20))
-                                Text("\(post.commentsCount ?? 0)").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 14))
-                            }
-                        })
-                        
-                        Button(action:{
-                            withAnimation{
-                                self.selectedPost = post
-                                self.shareType = "post"
-                                shareVM.showShareMenu.toggle()
-                                userVM.hideBackground.toggle()
-                                userVM.hideTabButtons.toggle()
-                            }
-                        },label:{
-                                Image(systemName: "arrowshape.turn.up.right").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 22))
-                        })
-                        
-                        
-                        
-                    }.padding(.trailing,5)
+                            },label:{
+                                VStack(spacing: 1){
+                                    Image(systemName: self.userHasLiked() ? "heart.fill" :  "heart").foregroundColor(self.userHasLiked() ? Color("AccentColor") : FOREGROUNDCOLOR).font(.system(size: 22))
+                                    Text("\(post.likedListID?.count ?? 0)").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 14))
+                                }
+                            })
+                            
+                            Button(action:{
+                                userVM.updateGroupPostLike(postID: post.id ?? " ", userID: userVM.user?.id ?? " ", actionToLike: false) { list in
+                                    self.post.likedListID = list[0]
+                                    self.post.dislikedListID = list[1]
+                                }
+                            },label:{
+                                VStack(spacing: 1){
+                                    Image(systemName: self.userHasDisliked() ? "heart.slash.fill" :  "heart.slash").foregroundColor(self.userHasDisliked() ? Color("AccentColor") :  FOREGROUNDCOLOR).font(.system(size: 20))
+                                    Text("\(post.dislikedListID?.count ?? 0)").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 14))
+                                }
+                            })
+                            
+                            Button(action:{
+                                self.showComments.toggle()
+                            },label:{
+                                VStack(spacing: 1){
+                                    Image(systemName: "message").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 20))
+                                    Text("\(post.commentsCount ?? 0)").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 14))
+                                }
+                            })
+                            
+                            Button(action:{
+                                withAnimation{
+                                    self.selectedPost = post
+                                    self.shareType = "post"
+                                    shareVM.showShareMenu.toggle()
+                                    userVM.hideBackground.toggle()
+                                    userVM.hideTabButtons.toggle()
+                                }
+                            },label:{
+                                    Image(systemName: "arrowshape.turn.up.right").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 22))
+                            })
+                            
+                            
+                            
+                        }.padding(.trailing,5)
+                    }
+                   
                     
                 }.padding([.horizontal,.bottom],5)
             }

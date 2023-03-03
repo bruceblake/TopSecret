@@ -11,7 +11,8 @@ struct PickInterestsView: View {
     @State var isPresented: Bool = false
     @State var selectedInterests: [String] = []
     @EnvironmentObject var userVM: UserViewModel
-    private var interests : [String] = ["Skateboarding", "MMA", "Fun", "Gas", "Skateboarding", "MMA", "Fun", "Gas"]
+    @State var goToCreatePasswordView: Bool = false
+    private var interests : [String] = ["Skateboarding", "MMA", "Fun", "Gas"]
     var body: some View {
         ZStack{
             Color("Background")
@@ -57,12 +58,17 @@ struct PickInterestsView: View {
                 
                 Button {
                     //todo
+                    self.goToCreatePasswordView.toggle()
                 } label: {
                     Text("Next").foregroundColor(Color("Foreground"))
                         .padding(.vertical)
                         .frame(width: UIScreen.main.bounds.width/1.5).background(selectedInterests.count < 3 ? Color("Color") : Color("AccentColor")).cornerRadius(15).disabled(selectedInterests.count < 3)
                 }.padding()
 
+            }.padding()
+            
+            NavigationLink(destination: CreatePassword(interests: selectedInterests), isActive: $goToCreatePasswordView) {
+                EmptyView()
             }
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
     }

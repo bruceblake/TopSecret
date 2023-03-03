@@ -7,20 +7,22 @@
 
 import SwiftUI
 
+import AVKit
+
 struct CreateStoryPostView: View {
     
     @StateObject var imagePickerVM = ImagePickerViewModel()
     @StateObject var groupVM = GroupViewModel()
-    @StateObject var cameraVM = CameraViewModel()
+    @ObservedObject var cameraVM = CameraViewModel()
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var userVM: UserViewModel
     
     @State var avatarImage = UIImage(named: "topbarlogo")!
     @State var selectedGroup : Group = Group()
-    @State var showImageSendView: Bool = false
+    @State var isShowingPhotoPicker: Bool = false
     @State var posts : [UIImage] = []
     @State var showEditStory = false
-    
+    @State var player: AVPlayer = AVPlayer()
     var body: some View {
         
         let longPressDrag = LongPressGesture(minimumDuration: 0.1)
@@ -31,58 +33,31 @@ struct CreateStoryPostView: View {
             .sequenced(before: DragGesture(minimumDistance: 0))
             .onEnded { _ in
                 cameraVM.stopRecording()
-                cameraVM.showVideoPreview.toggle()
             }
         
         ZStack{
             
+            //camera preview where picture has not been taken
             GeometryReader{ proxy in
                 let size = proxy.size
-                Color("Background")
-                CameraPreview(size: size).environmentObject(cameraVM)
+                CameraPreview(camera: cameraVM, size: size)
                 
-                ZStack(alignment: .leading){
-                    Rectangle()
-                        .fill(.black.opacity(0.25))
-                    
-                    Rectangle()
-                        .fill(Color("AccentColor"))
-                        .frame(width: size.width * (cameraVM.recordedDuration / cameraVM.maxDuration))
-                }.edgesIgnoringSafeArea(.all).frame(height: 8).frame(maxHeight: .infinity, alignment: .top).offset(y: 60)
+                if !cameraVM.photoHasBeenTaken{
+                    ZStack(alignment: .leading){
+                        Rectangle()
+                            .fill(.black.opacity(0.25))
+                        
+                        Rectangle()
+                            .fill(Color("AccentColor"))
+                            .frame(width: size.width * (cameraVM.recordedDuration / cameraVM.maxDuration))
+                    }.edgesIgnoringSafeArea(.all).frame(height: 8).frame(maxHeight: .infinity, alignment: .top).offset(y: 10)
+                }
+                
                 
             }
             
             if cameraVM.photoHasBeenTaken {
-                HStack{
-                    HStack{
-                        Spacer()
-                        
-                        
-                        Button(action:{
-                            cameraVM.savePicture()
-                        },label:{
-                            Text(cameraVM.hasSavedPhoto ? "Saved" : "Save")
-                                .foregroundColor(FOREGROUNDCOLOR)
-                                .fontWeight(.semibold)
-                                .padding(.vertical,10)
-                                .padding(.horizontal)
-                                .background(Color("AccentColor"))
-                                .clipShape(Capsule())
-                            
-                        }).padding(.trailing)
-                    }
-                    
-                    Button(action:{
-                        cameraVM.retakePicture()
-                    },label:{
-                        Image(systemName: "arrow.triangle.2.circlepath.camera")
-                            .foregroundColor(FOREGROUNDCOLOR)
-                            .padding()
-                            .background(Color("AccentColor"))
-                            .clipShape(Circle())
-                        
-                    }).padding(.leading)
-                }
+                MediaPreview(cameraVM: cameraVM)
             }
             
             else{
@@ -113,12 +88,14 @@ struct CreateStoryPostView: View {
                     
                     HStack{
                         Button(action:{
-                            self.showImageSendView.toggle()
+                            self.isShowingPhotoPicker.toggle()
                         },label:{
                             ZStack{
                                 Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
                                 Image(systemName: "photo.on.rectangle")
                             }
+                        })  .fullScreenCover(isPresented: $isShowingPhotoPicker, content: {
+                            ImagePicker(avatarImage: $avatarImage, allowsEditing: true)
                         })
                         
                         
@@ -144,8 +121,8 @@ struct CreateStoryPostView: View {
             
             
             ZStack {
-                if let url = cameraVM.previewURL, cameraVM.showVideoPreview {
-                    NavigationLink(destination:VideoPreview(url: url, showPreview: $cameraVM.showVideoPreview).transition(.move(edge: .trailing))
+                if let url = cameraVM.previewURL, cameraVM.showVideoPreview{
+                    NavigationLink(destination:Video(player: player, url: url, cameraVM: cameraVM ).transition(.move(edge: .trailing))
                                    , isActive: $cameraVM.showVideoPreview, label: {EmptyView()})
                 }
             }.animation(.easeInOut, value: cameraVM.showVideoPreview)
@@ -153,21 +130,27 @@ struct CreateStoryPostView: View {
             NavigationLink(destination: EditStoryPost(image: $avatarImage), isActive: $showEditStory, label: {EmptyView()})
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
-            cameraVM.checkPermission()
+//            cameraVM.checkPermission()
         }.onReceive(Timer.publish(every: 0.01, on: .main, in: .common).autoconnect()){ _ in
             if cameraVM.recordedDuration <= cameraVM.maxDuration && cameraVM.isRecording {
+                //increase record duration
                 cameraVM.recordedDuration += 0.01
             }
             
             if cameraVM.recordedDuration >= cameraVM.maxDuration && cameraVM.isRecording {
+                //if at end of video; stop recording
                 cameraVM.stopRecording()
                 cameraVM.isRecording = false
             }
-        }.onChange(of: self.avatarImage) { _ in
+        }.onReceive(cameraVM.$previewURL) { url in
+            if let url = url {
+                self.player = AVPlayer(url: url)
+                cameraVM.showVideoPreview.toggle()
+            }
+        }
+        .onChange(of: self.avatarImage) { _ in
             self.showEditStory.toggle()
-        }.onTapGesture(count: 2, perform: {
-            cameraVM.flipCamera()
-        })
+        }
     }
 }
 
@@ -178,5 +161,50 @@ struct CreateStoryPostView: View {
 struct CreateStoryPostView_Previews: PreviewProvider {
     static var previews: some View {
         CreateStoryPostView()
+    }
+}
+
+
+struct MediaPreview : View {
+    @ObservedObject var cameraVM : CameraViewModel
+
+    var body: some View {
+        VStack{
+            HStack{
+                Button(action:{
+                    cameraVM.photoHasBeenTaken.toggle()
+                },label:{
+                Image(systemName: "xmark")
+                }).padding(10)
+                Spacer()
+            }.padding(.top,50)
+            Spacer()
+            HStack{
+                Button(action:{
+                    cameraVM.savePicture()
+                },label:{
+                    Text(cameraVM.hasSavedPhoto ? "Saved" : "Save")
+                        .foregroundColor(FOREGROUNDCOLOR)
+                        .fontWeight(.semibold)
+                        .padding(.vertical,10)
+                        .padding(.horizontal)
+                        .background(Color("AccentColor"))
+                        .clipShape(Capsule())
+                    
+                })
+                
+                Button(action:{
+                    cameraVM.retakePicture()
+                },label:{
+                    Image(systemName: "arrow.triangle.2.circlepath.camera")
+                        .foregroundColor(FOREGROUNDCOLOR)
+                        .padding()
+                        .background(Color("AccentColor"))
+                        .clipShape(Circle())
+                    
+                })
+                Spacer()
+            }.padding()
+        }
     }
 }

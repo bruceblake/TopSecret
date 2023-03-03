@@ -43,6 +43,8 @@ struct GroupPostModel : Identifiable {
         self.commentsCount = dictionary["commentsCount"] as? Int ?? 0
     }
     
+    
+    
     init(){
         self.id = UUID().uuidString
         

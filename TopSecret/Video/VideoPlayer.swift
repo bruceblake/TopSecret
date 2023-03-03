@@ -4,12 +4,12 @@ import MediaPicker
 
 
 struct Video: View {
-    @State var player : AVPlayer 
-//    var media : Media?
-//    @State var url: URL? = URL(string: "")!
+    @State var player : AVPlayer
+    var url: URL
     @State var isPlaying: Bool = false
     @State var showControls : Bool = false
     @State var value: Float = 0
+    @ObservedObject var cameraVM : CameraViewModel
     
     var body: some View{
             ZStack{
@@ -17,8 +17,15 @@ struct Video: View {
                 if showControls{
                     Controls(player: self.$player, isPlaying: self.$isPlaying, pannel: self.$showControls, value: self.$value)
                 }
-            }.edgesIgnoringSafeArea(.all)
-            .frame(height: UIScreen.main.bounds.height / 3.5).onTapGesture {
+                Button(action:{
+                    cameraVM.saveVideoToAlbum(url) { err in
+                       print("Error Saving Video")
+                    }
+                },label:{
+                    Text("Save")
+                })
+            }.frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height).edgesIgnoringSafeArea(.all)
+            .onTapGesture {
                 self.showControls = true
             }
         
@@ -97,6 +104,9 @@ struct Controls: View {
                     if self.isPlaying{
                         self.player.pause()
                     }else{
+                        if self.value == 1.0{
+                            restartVideo()
+                        }
                         self.player.play()
                     }
                     self.isPlaying.toggle()
@@ -115,8 +125,8 @@ struct Controls: View {
                 
             }
             
-            Spacer()
             CustomProgressBar(value: self.$value, player: self.$player, isPlaying: self.$isPlaying)
+            Spacer()
         }.padding().onTapGesture {
             self.pannel = false
         }.onAppear{
@@ -128,6 +138,10 @@ struct Controls: View {
                 }
             }
         }
+    }
+    
+    func restartVideo(){
+        self.player.seek(to: CMTime(seconds: 0, preferredTimescale: 1))
     }
     func getSliderValue()-> Float {
         return Float(self.player.currentTime().seconds / (self.player.currentItem?.duration.seconds)!)
