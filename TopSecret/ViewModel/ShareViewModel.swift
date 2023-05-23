@@ -12,6 +12,10 @@ class ShareViewModel : ObservableObject{
     
     @Published var sendStatus = SendStatus.notSending
     @Published var showShareMenu: Bool = false
+    @Published var shareType: String = ""
+    @Published var selectedPoll : PollModel = PollModel()
+    @Published var selectedEvent : EventModel = EventModel()
+    @Published var selectedPost : GroupPostModel = GroupPostModel()
     
     enum SendStatus {
         case notSending

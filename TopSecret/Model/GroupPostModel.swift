@@ -24,7 +24,12 @@ struct GroupPostModel : Identifiable {
     var likedList: [User]?
     var dislikedListID: [String]?
     var dislikedList: [User]?
+    var commentsLikedListID: [String]?
+    var commentsLikedList: [User]?
+    var commentsDislikedListID: [String]?
+    var commentsDislikedList: [User]?
     var commentsCount: Int?
+    var viewers: [String]?
     
     init(dictionary: [String:Any]){
         self.id = dictionary["id"] as? String ?? "FUCK"
@@ -40,7 +45,12 @@ struct GroupPostModel : Identifiable {
         self.likedList = dictionary["likedList"] as? [User] ?? []
         self.dislikedListID = dictionary["dislikedListID"] as? [String] ?? []
         self.dislikedList = dictionary["dislikedList"] as? [User] ?? []
+        self.commentsLikedListID = dictionary["commentsLikedListID"] as? [String] ?? []
+        self.commentsLikedList = dictionary["commentsLikedList"] as? [User] ?? []
+        self.commentsDislikedListID = dictionary["commentsDislikedListID"] as? [String] ?? []
+        self.commentsDislikedList = dictionary["commentsDislikedList"] as? [User] ?? []
         self.commentsCount = dictionary["commentsCount"] as? Int ?? 0
+        self.viewers = dictionary["viewers"] as? [String] ?? []
     }
     
     

@@ -288,9 +288,9 @@ struct CalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitcher: 
             }
 
         }
-//        .onReceive(selectedGroupVM.$group, perform: { groupID in
-//            calendarVM.startSearch(groupID: selectedGroupVM.group.id, startDay: makeDays(selectedDate: date).prefix(daysInWeek)[0], endDay: makeDays(selectedDate: date).prefix(daysInWeek)[6])
-//        })
+        .onReceive(selectedGroupVM.$group, perform: { groupID in
+            calendarVM.startSearch(groupID: selectedGroupVM.group.id, startDay: makeDays(selectedDate: date).prefix(daysInWeek)[0], endDay: makeDays(selectedDate: date).prefix(daysInWeek)[6])
+        })
         .onChange(of: date) { newDate in
                                             
 
@@ -299,12 +299,7 @@ struct CalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitcher: 
             
         }.onAppear{
             
-//                calendarVM.getWeather(user: userVM.user ?? User())
-//            DispatchQueue.main.asyncAfter(deadline: .now() + 5, execute: {
-//                for weather in calendarVM.weatherOfDays {
-//                    print("weather: \(weather.city)")
-//                }
-//            })
+
         }
      
         

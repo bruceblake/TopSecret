@@ -18,6 +18,8 @@ final class LocationManager : NSObject, ObservableObject, CLLocationManagerDeleg
     @Published var groupID: String = " "
     @Published var region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 20, longitude: 37), span: MKCoordinateSpan(latitudeDelta: 0.03, longitudeDelta: 0.03))
     @Published var userAnnotations : [UserAnnotations] = []
+    @Published var city = ""
+    @Published var state = ""
 
     private let locationManager = CLLocationManager()
     let userVM = UserViewModel.shared
@@ -48,12 +50,23 @@ final class LocationManager : NSObject, ObservableObject, CLLocationManagerDeleg
     }
     
    
-    
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         
       
               guard let location = locations.last else { return }
               DispatchQueue.main.async {
+                  let geocoder = CLGeocoder()
+                  geocoder.reverseGeocodeLocation(location) { placemarks, error in
+                    if let error = error {
+                      print(error)
+                      return
+                    }
+
+                    if let placemark = placemarks?.first {
+                        self.city = placemark.locality ?? "City"
+                      self.state = placemark.administrativeArea ?? "State"
+                    }
+                  }
                   self.userLocation = location
                   self.region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude), latitudinalMeters: 0.03, longitudinalMeters: 0.03)
                   let latitude = location.coordinate.latitude

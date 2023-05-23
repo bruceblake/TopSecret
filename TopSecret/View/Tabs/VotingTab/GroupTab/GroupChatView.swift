@@ -9,14 +9,13 @@ import SwiftUI
 import SDWebImageSwiftUI
 import Foundation
 import UIKit
-import NIOSSL
+//import NIOSSL
 import Firebase
 
 struct GroupChatView: View {
     @EnvironmentObject var userVM: UserViewModel
     @EnvironmentObject var groupVM: SelectedGroupViewModel
     @StateObject var chatVM = GroupChatViewModel()
-    @StateObject var keyboardVM : KeyboardViewModel
     @Environment(\.presentationMode) var presentationMode
     var userID: String
     @State var height: CGFloat = 20
@@ -190,8 +189,6 @@ struct GroupChatView: View {
         }
             .onDisappear{
             chatVM.exitChat(userID: userID, chatID: groupVM.group.chatID ?? " ", groupID: groupVM.group.id)
-            }.onReceive(keyboardVM.$selectedView) { output in
-                keyboardVM.hideKeyboard()
             }
             .onTapGesture {
                 if self.keyboardHeight != 0 {

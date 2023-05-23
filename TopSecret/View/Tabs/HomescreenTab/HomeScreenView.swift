@@ -16,7 +16,6 @@ struct HomeScreenView: View {
     
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
-    @StateObject var keyboardVM = KeyboardViewModel()
     @State var goBack = false
     @State var showAddContent = false
     @Binding var group : Group
@@ -164,10 +163,10 @@ struct HomeScreenView: View {
                 
                 switch selectedOptionIndex{
                     case 0:
-                    ActivityView(group: group, selectedView: $keyboardVM.selectedView, shareType: $shareType).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
+                    ActivityView(group: group, shareType: $shareType).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
                 case 1:
                     
-                       GroupChatView(keyboardVM: keyboardVM, userID: userVM.user?.id ?? " ").environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
+                       GroupChatView(userID: userVM.user?.id ?? " ").environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
                    
                 case 2:
                     

@@ -5,8 +5,6 @@ import Foundation
 import UserNotifications
 import UIKit
 import CoreData
-import Theo
-import Bolt
 
 
 class AppDelegate: NSObject, UIApplicationDelegate {

@@ -9,8 +9,8 @@ struct PollCell : View {
     @Binding var selectedPoll : PollModel
     @EnvironmentObject var userVM: UserViewModel
     @EnvironmentObject var shareVM: ShareViewModel
-    @Binding var shareType: String
     @State var fullWidth = CGFloat(100)
+    var hideControls : Bool = false
     
     func getTimeSincePoll(date: Date) -> String{
         let interval = (Date() - date)
@@ -83,11 +83,39 @@ struct PollCell : View {
                             
                             Spacer()
                             
-                            Button(action:{
+                            if !self.hideControls{
+                                Menu(content:{
+                                    Button(action:{
+//                                        self.selectedPost = post
+//                                        self.showEditScreen.toggle()
+//                                        userVM.hideBackground.toggle()
+                                        
+                                    },label:{
+                                        Text("Edit")
+                                    })
+                                    
+                                    Button(action:{
+//                                        withAnimation{
+//                                            self.selectedPost = post
+//                                            shareVM.showShareMenu.toggle()
+//                                            userVM.hideTabButtons.toggle()
+//                                            userVM.hideBackground.toggle()
+//                                        }
+                                        
+                                    },label:{
+                                        Text("Share")
+                                    })
+                                    Button(action:{
+                                        self.selectedPoll = poll
+                                        userVM.deletePoll(pollID: poll.id ?? " ")
+                                    },label:{
+                                        Text("Delete")
+                                    })
+                                },label:{
+                                    Image(systemName: "ellipsis").foregroundColor(FOREGROUNDCOLOR).padding(5)
+                                })
                                 
-                            },label:{
-                                Image(systemName: "ellipsis").foregroundColor(FOREGROUNDCOLOR)
-                            }).padding(5)
+                            }
                         }.padding([.horizontal,.top],5)
                         
                         VStack(spacing: 3){
@@ -130,8 +158,8 @@ struct PollCell : View {
                             
                             Button(action:{
                                 withAnimation{
-                                    self.selectedPoll = poll
-                                    self.shareType = "poll"
+                                    shareVM.selectedPoll = poll
+                                    shareVM.shareType = "poll"
                                     shareVM.showShareMenu.toggle()
                                     userVM.hideBackground.toggle()
                                     userVM.hideTabButtons.toggle()

@@ -18,7 +18,6 @@ struct ActivityView: View {
     @State var showEvent : Bool = false
     @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
     @State var openChat : Bool = false
-    @Binding var selectedView: Int
     @State var showUsers : Bool = false
     @State var selectedPoll: PollModel = PollModel()
     @State var selectedPost: GroupPostModel = GroupPostModel()
@@ -175,11 +174,11 @@ struct GroupFeed : View {
                     ForEach(sortedFeed.uniqued(), id: \.id){ item in
                         switch item.itemType {
                         case .event:
-                            EventCell(event: item.event ?? EventModel(), selectedEvent: $selectedEvent, shareType: $shareType).frame(width: UIScreen.main.bounds.width-20)
+                            EventCell(event: item.event ?? EventModel(), selectedEvent: $selectedEvent).frame(width: UIScreen.main.bounds.width-20)
                         case .poll:
-                            PollCell(poll: item.poll ?? PollModel(), selectedPoll: $selectedPoll, shareType: $shareType).frame(width: UIScreen.main.bounds.width-20)
+                            PollCell(poll: item.poll ?? PollModel(), selectedPoll: $selectedPoll).frame(width: UIScreen.main.bounds.width-20)
                         case .post:
-                            GroupPostCell(post: item.post ?? GroupPostModel(), selectedPost: $selectedPost, shareType: $shareType).frame(width: UIScreen.main.bounds.width-20)
+                            GroupPostCell(post: item.post ?? GroupPostModel(), selectedPost: $selectedPost).frame(width: UIScreen.main.bounds.width-20)
                         default:
                             Text("Unknown")
                         }
@@ -187,15 +186,15 @@ struct GroupFeed : View {
                     }
                     case 1: //Events
                     ForEach(selectedGroupVM.events.uniqued(), id: \.id){ event in
-                        EventCell(event: event, selectedEvent: $selectedEvent, shareType: $shareType).frame(width: UIScreen.main.bounds.width-20)
+                        EventCell(event: event, selectedEvent: $selectedEvent).frame(width: UIScreen.main.bounds.width-20)
                     }
                     case 2: //Polls
                     ForEach(selectedGroupVM.polls, id: \.id) { poll in
-                        PollCell(poll: poll ?? PollModel(), selectedPoll: $selectedPoll, shareType: $shareType).frame(width: UIScreen.main.bounds.width-20)
+                        PollCell(poll: poll ?? PollModel(), selectedPoll: $selectedPoll).frame(width: UIScreen.main.bounds.width-20)
                     }
                     case 3:
                     ForEach(selectedGroupVM.posts, id: \.id){ post in
-                        GroupPostCell(post: post ?? GroupPostModel(), selectedPost: $selectedPost, shareType: $shareType).frame(width: UIScreen.main.bounds.width-20)
+                        GroupPostCell(post: post ?? GroupPostModel(), selectedPost: $selectedPost).frame(width: UIScreen.main.bounds.width-20)
                     }
                     default:
                         Text("Unknown")

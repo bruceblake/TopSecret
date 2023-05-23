@@ -309,7 +309,7 @@ struct UserCalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitch
                                                 
                                            
                                             
-                                        } .padding(10).background(Rectangle().fill(getNumberOfEventsOfDay(events: calendarVM.eventsResults, date: date) == 0 ? FOREGROUNDCOLOR : Color("AccentColor"))).offset(y: -offset)
+                                            } .padding(10).background(Rectangle().fill(getNumberOfEventsOfDay(events: calendarVM.eventsResults, date: date) == 0 ? FOREGROUNDCOLOR : Color.blue)).offset(y: -offset)
                                     
                                         
                                  )
@@ -329,7 +329,7 @@ struct UserCalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitch
                                                 
                                            
                                             
-                                        }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(getNumberOfEventsOfDay(events: calendarVM.eventsResults, date: date) == 0 ? Color("Color") : Color("AccentColor"))).padding(.horizontal))
+                                            }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(getNumberOfEventsOfDay(events: calendarVM.eventsResults, date: date) == 0 ? Color("Color") : Color.blue)).padding(.horizontal))
                                         
                                         
                                     
@@ -340,13 +340,13 @@ struct UserCalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitch
                              
                             }.zIndex(4)
                             
-                            VStack{
+                            VStack(spacing: 15){
                             ForEach(calendarVM.eventsResults){ event in
-//                                if Calendar.current.isDate(event.eventStartTime?.dateValue() ?? Date(), inSameDayAs: date){
-//                                    EventCell(event: event, currentDate: date, action: false, isHomescreen: true)
-//                                }
+                                if Calendar.current.isDate(event.eventStartTime?.dateValue() ?? Date(), inSameDayAs: date){
+                                    UserCalendarEventCell(event: event)
+                                }
                             }
-                            }
+                            }.padding(.top,5)
                             
                         }.padding(.bottom,UIScreen.main.bounds.height/4)
                     }
@@ -374,6 +374,26 @@ struct UserCalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitch
     }
 }
 
+struct UserCalendarEventCell : View{
+    var event : EventModel
+    var body: some View {
+        HStack{
+            RoundedRectangle(cornerRadius: 12).frame(width: 5).foregroundColor(Color.gray)
+            VStack(alignment: .leading){
+                HStack{
+                    Text("\(event.eventStartTime?.dateValue() ?? Date(), style: .time)").fontWeight(.bold)
+                    Text("-")
+                    Text("\(event.eventEndTime?.dateValue() ?? Date(), style: .time)").fontWeight(.bold)
+                }
+                Text("\(event.eventName ?? " ")")
+                
+            }
+            Spacer()
+            
+            Image(systemName: "chevron.right").foregroundColor(.gray)
+        }.padding(.horizontal)
+    }
+}
 
 private extension UserCalendarWeekListView {
     func makeDays(selectedDate: Date) -> [Date]{

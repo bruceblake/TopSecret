@@ -4,6 +4,7 @@ import SDWebImageSwiftUI
 
 struct GroupPostCell : View {
     @State var post: GroupPostModel
+    @ObservedObject var groupPostVM = GroupPostViewModel()
     @EnvironmentObject var userVM: UserViewModel
     @State var showLike : Bool = false
     @Binding var selectedPost: GroupPostModel
@@ -13,7 +14,6 @@ struct GroupPostCell : View {
     @State var seeMedia: Bool = false
     @State var editText: String = ""
     @State var showEditScreen: Bool = false
-    @Binding var shareType: String
     @EnvironmentObject var shareVM : ShareViewModel
     var hideControls : Bool = false
     private var moreLessText: String {
@@ -163,7 +163,9 @@ struct GroupPostCell : View {
                 }.padding([.horizontal,.top],5)
                 
                 
-                Image(uiImage: post.image ?? UIImage()).resizable().scaledToFill()
+                Image(uiImage: post.image ?? UIImage()).resizable().scaledToFill().onAppear{
+                    groupPostVM.viewPost(postID: post.id ?? " ", userID: userVM.user?.id ?? " ")
+                }
                 
                 
                 //bottom bar
@@ -180,35 +182,42 @@ struct GroupPostCell : View {
                         HStack(alignment: .top, spacing: 15){
                             
                             
-                            
-                            
-                            
                             Button(action:{
-                                userVM.updateGroupPostLike(postID: post.id ?? " ", userID: userVM.user?.id ?? " ", actionToLike: true) { list in
-                                    if !(post.likedListID?.contains(userVM.user?.id ?? "") ?? false){
-                                        self.showLikeAnimation()
-                                    }
-                                    self.post.likedListID = list[0]
-                                    self.post.dislikedListID = list[1]
-                                }
+                                
                             },label:{
                                 VStack(spacing: 1){
-                                    Image(systemName: self.userHasLiked() ? "heart.fill" :  "heart").foregroundColor(self.userHasLiked() ? Color("AccentColor") : FOREGROUNDCOLOR).font(.system(size: 22))
-                                    Text("\(post.likedListID?.count ?? 0)").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 14))
+                                    Image(systemName: "eye").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 20))
+                                    Text("\(post.viewers?.count ?? 0)").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 14))
                                 }
                             })
                             
-                            Button(action:{
-                                userVM.updateGroupPostLike(postID: post.id ?? " ", userID: userVM.user?.id ?? " ", actionToLike: false) { list in
-                                    self.post.likedListID = list[0]
-                                    self.post.dislikedListID = list[1]
-                                }
-                            },label:{
-                                VStack(spacing: 1){
-                                    Image(systemName: self.userHasDisliked() ? "heart.slash.fill" :  "heart.slash").foregroundColor(self.userHasDisliked() ? Color("AccentColor") :  FOREGROUNDCOLOR).font(.system(size: 20))
-                                    Text("\(post.dislikedListID?.count ?? 0)").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 14))
-                                }
-                            })
+                            
+//                            Button(action:{
+//                                userVM.updateGroupPostLike(postID: post.id ?? " ", userID: userVM.user?.id ?? " ", actionToLike: true) { list in
+//                                    if !(post.likedListID?.contains(userVM.user?.id ?? "") ?? false){
+//                                        self.showLikeAnimation()
+//                                    }
+//                                    self.post.likedListID = list[0]
+//                                    self.post.dislikedListID = list[1]
+//                                }
+//                            },label:{
+//                                VStack(spacing: 1){
+//                                    Image(systemName: self.userHasLiked() ? "heart.fill" :  "heart").foregroundColor(self.userHasLiked() ? Color("AccentColor") : FOREGROUNDCOLOR).font(.system(size: 22))
+//                                    Text("\(post.likedListID?.count ?? 0)").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 14))
+//                                }
+//                            })
+//
+//                            Button(action:{
+//                                userVM.updateGroupPostLike(postID: post.id ?? " ", userID: userVM.user?.id ?? " ", actionToLike: false) { list in
+//                                    self.post.likedListID = list[0]
+//                                    self.post.dislikedListID = list[1]
+//                                }
+//                            },label:{
+//                                VStack(spacing: 1){
+//                                    Image(systemName: self.userHasDisliked() ? "heart.slash.fill" :  "heart.slash").foregroundColor(self.userHasDisliked() ? Color("AccentColor") :  FOREGROUNDCOLOR).font(.system(size: 20))
+//                                    Text("\(post.dislikedListID?.count ?? 0)").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 14))
+//                                }
+//                            })
                             
                             Button(action:{
                                 self.showComments.toggle()
@@ -221,8 +230,8 @@ struct GroupPostCell : View {
                             
                             Button(action:{
                                 withAnimation{
-                                    self.selectedPost = post
-                                    self.shareType = "post"
+                                    shareVM.selectedPost = post
+                                    shareVM.shareType = "post"
                                     shareVM.showShareMenu.toggle()
                                     userVM.hideBackground.toggle()
                                     userVM.hideTabButtons.toggle()
@@ -271,12 +280,8 @@ struct GroupPostCell : View {
 struct ShowShareMenu: View {
     @EnvironmentObject var userVM: UserViewModel
     @ObservedObject var personalChatVM = PersonalChatViewModel()
-    @Binding var selectedPost: GroupPostModel
-    @Binding var selectedPoll: PollModel
-    @Binding var selectedEvent: EventModel
     @State var showSendView: Bool = false
     @State var selectedChats: [ChatModel] = []
-    @Binding var shareType: String
     @EnvironmentObject var shareVM : ShareViewModel
     func getPersonalChatUser(chat: ChatModel) -> User{
         
@@ -397,13 +402,13 @@ struct ShowShareMenu: View {
             if showSendView{
                 Button(action:{
                     for chat in selectedChats{
-                        switch shareType{
+                        switch shareVM.shareType{
                             case "post":
-                                shareVM.sendPostMessage(postID: selectedPost.id ?? " ", user: userVM.user ?? User(), chatID: chat.id)
+                            shareVM.sendPostMessage(postID: shareVM.selectedPost.id ?? " ", user: userVM.user ?? User(), chatID: chat.id)
                             case "poll":
-                                shareVM.sendPollMessage(pollID: selectedPoll.id ?? " ", user: userVM.user ?? User(), chatID: chat.id)
+                            shareVM.sendPollMessage(pollID: shareVM.selectedPoll.id ?? " ", user: userVM.user ?? User(), chatID: chat.id)
                             case "event":
-                            shareVM.sendEventMessage(eventID: selectedEvent.id , user: userVM.user ?? User(), chatID: chat.id)
+                            shareVM.sendEventMessage(eventID: shareVM.selectedEvent.id , user: userVM.user ?? User(), chatID: chat.id)
                         default: break
                             //nada
                         }

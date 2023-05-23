@@ -16,7 +16,7 @@ struct EditStoryPost: View {
         ZStack{
             Image(uiImage: image)
                 .resizable()
-                .aspectRatio(image.size, contentMode: .fit).resizeToScreenSize()
+                .aspectRatio(image.size, contentMode: .fill).resizeToScreenSize()
 
             VStack{
                 

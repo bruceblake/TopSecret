@@ -19,14 +19,12 @@ class UserViewModel : ObservableObject {
     @Published var userSession : FirebaseAuth.User?
     @Published var isConnected : Bool = false
     @Published var firestoreListeners : [ListenerRegistration] = []
-    
     @Published var user : User?
     @Published var loginErrorMessage = ""
     
     @Published var groups: [Group] = []
     @Published var personalChats: [ChatModel] = []
     @Published var notifications : [UserNotificationModel] = []
-    @Published var feed : [Any] = []
     
     
     @Published var showNotification : Int = 0 //on value change, send notification
@@ -54,7 +52,6 @@ class UserViewModel : ObservableObject {
     
     init(){
         
-        //please work
         let dp = DispatchGroup()
         dp.enter()
         self.removeListeners()
@@ -446,6 +443,11 @@ class UserViewModel : ObservableObject {
           
           
       }
+    
+    
+    func deletePoll(pollID: String){
+        COLLECTION_POLLS.document(pollID).delete()
+    }
 //    func encodeGroups(groups: [Group]){
 //        do{
 //                let groupsData = try JSONEncoder().encode(groups)
@@ -506,7 +508,7 @@ class UserViewModel : ObservableObject {
 
     
     
-    func createUser(email:String,username:String,nickName:String,birthday: Date, password: String, profilePicture: UIImage, interests: [String], completion: @escaping (Bool) -> ()) -> (){
+    func createUser(email:String,username:String,nickName:String,birthday: Date, password: String, profilePicture: UIImage, completion: @escaping (Bool) -> ()) -> (){
             Auth.auth().createUser(withEmail: email, password: password) { (result, err) in
                 if let err = err{
                     print("DEBUG: ERROR: \(err.localizedDescription)")
@@ -522,7 +524,7 @@ class UserViewModel : ObservableObject {
                             "nickName": nickName,
                             "uid": user.uid,
                             "birthday": birthday,"profilePicture":"", "bio":"","isActive":true,"dateCreated":Timestamp()
-                            ,"interests":interests
+                            
                             
                 ] as [String : Any]
                 

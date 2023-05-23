@@ -18,10 +18,10 @@ struct ContentView: View {
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var tabVM : TabViewModel
     @StateObject var pollVM = PollViewModel()
-    @State var tabIndex : Tab = .home
+    @State var tabIndex : Tab = .calendar
     @State var showNotification : Bool = false
     @State var selectedGroup : Group = Group()
-
+    
     init() {
         UITextView.appearance().backgroundColor = .clear
     }
@@ -43,19 +43,11 @@ struct ContentView: View {
                 NavigationView{
                     Tabs(tabIndex: $tabIndex, selectedGroup: $selectedGroup)
                 }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).navigationViewStyle(.stack)
-                
-                
-                
-                
-                
-                
-                
                 if userVM.isConnected == false && userVM.showWarning{
                     HStack{
                         HStack{
-                            
-                        Image(systemName: "exclamationmark.triangle").foregroundColor(FOREGROUNDCOLOR)
-                        Text("You are not connected!").foregroundColor(Color("AccentColor"))
+                            Image(systemName: "exclamationmark.triangle").foregroundColor(FOREGROUNDCOLOR)
+                            Text("You are not connected!").foregroundColor(Color("AccentColor"))
                         }
                         Spacer()
                         Button(action:{
@@ -100,7 +92,7 @@ struct ContentView: View {
 
 
 enum Tab {
-    case discover, friends, home, groups, notifications
+    case events, friends, calendar, groups, notifications
 }
 
 
@@ -110,15 +102,15 @@ struct Tabs : View {
     @State var showTabButtons : Bool = true
     @State var showSearch: Bool = false
     @StateObject var personalChatVM = PersonalChatViewModel()
+    @StateObject var feedVM = FeedViewModel()
     @EnvironmentObject var userVM: UserViewModel
     @EnvironmentObject var shareVM: ShareViewModel
     @State var selectedPost: GroupPostModel = GroupPostModel()
     @State var selectedPoll: PollModel = PollModel()
     @State var selectedEvent: EventModel = EventModel()
     @State var shareType : String = ""
-    
+  
    
-    
     var body: some View {
         ZStack{
             if showSearch {
@@ -128,35 +120,36 @@ struct Tabs : View {
                     Color("Background")
                     VStack(){
                         TopBar(showSearch: $showSearch, tabIndex: tabIndex)
-
-                    if tabIndex == .home{
-                        HomeScreen(selectedPost: $selectedPost, selectedPoll: $selectedPoll, selectedEvent: $selectedEvent, shareType: $shareType)
-                    }else if tabIndex == .friends{
-                        FriendsView(personalChatVM: personalChatVM)
-                    }else if tabIndex == .groups{
-                        GroupsView()
-                    }else if tabIndex == .notifications{
-                        UserNotificationView()
-                    }else if tabIndex == .discover {
-                        DiscoverView()
+                        
+                        if tabIndex == .calendar{
+                            ScheduleView(calendar: Calendar(identifier: .gregorian))
+                                      
+                        }else if tabIndex == .friends{
+                            FriendsView(personalChatVM: personalChatVM)
+                        }else if tabIndex == .groups{
+                            GroupsView()
+                        }else if tabIndex == .notifications{
+                            UserNotificationView()
+                        }else if tabIndex == .events {
+                            DiscoverView()
+                        }
                     }
-                }
                 }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).opacity(userVM.hideBackground ? 0.2 : 1).disabled(userVM.hideBackground)
                     .overlay{
                         if shareVM.showShareMenu{
-                      
-
-                        VStack{
-                            Spacer()
-                            ShowShareMenu(selectedPost: $selectedPost, selectedPoll: $selectedPoll, selectedEvent: $selectedEvent, shareType: $shareType)
+                            
+                            
+                            VStack{
+                                Spacer()
+                                ShowShareMenu()
+                            }
+                            
+                            
                         }
-                         
+                        
+                        
                         
                     }
-
-
-
-        }
                     .onTapGesture {
                         
                         if userVM.hideBackground{
@@ -166,7 +159,7 @@ struct Tabs : View {
                                     userVM.hideTabButtons.toggle()
                                 }
                             }
-                           
+                            
                         }
                         if shareVM.showShareMenu{
                             withAnimation{
@@ -179,140 +172,140 @@ struct Tabs : View {
                     }
                 
             }
-          
             
-         
             
+            
+            
+            
+            VStack{
+                Spacer()
                 
-                VStack{
-                    Spacer()
+                HStack(alignment: .center){
                     
-                    HStack(alignment: .center){
-                        
-                        
-                       
-                            
-                            Button(action:{
-                                UIDevice.vibrate()
-                                
-                                self.tabIndex = .discover
-                            },label:{
-                                VStack(spacing: 5){
-                                    
-                                    
-                                    Image(systemName: self.tabIndex == .discover ?  "safari.fill" : "safari").font(.system(size: 20))
-                                    
-                                    Text("Discover").font(.system(size: 12)).foregroundColor(.gray)
-
-                                }
-                                
-                                
-                            }).foregroundColor(self.tabIndex == .discover ? Color("AccentColor") : FOREGROUNDCOLOR).padding(.horizontal,10)
-                            
-                        
                     
+                    
+                    
+                    Button(action:{
+                        UIDevice.vibrate()
+                        
+                        self.tabIndex = .events
+                    },label:{
+                        VStack(spacing: 5){
                             
-                            Button(action:{
-                                UIDevice.vibrate()
+                            
+                            Image(systemName: self.tabIndex == .events ?  "party.popper.fill" : "party.popper").font(.system(size: 20))
+                            
+                            Text("Events").font(.system(size: 10)).foregroundColor(.gray)
+                            
+                        }
+                        
+                        
+                    }).foregroundColor(self.tabIndex == .events ? Color("AccentColor") : .white).padding(.horizontal,10)
+                    
+                    
+                    
+                    
+                    Button(action:{
+                        UIDevice.vibrate()
+                        
+                        self.tabIndex = .friends
+                    },label:{
+                        
+                        VStack(spacing: 5){
+                            
+                            
+                            ZStack{
+                                Image(systemName: self.tabIndex == .friends ? "message.fill" : "message").font(.system(size: 20))
                                 
-                                self.tabIndex = .friends
-                            },label:{
-                                
-                                VStack(spacing: 5){
-                                    
-                                    
+                                if userVM.unreadChatsCount >= 1{
                                     ZStack{
-                                        Image(systemName: self.tabIndex == .friends ? "message.fill" : "message").font(.system(size: 20))
-                                        
-                                        if userVM.unreadChatsCount >= 1{
-                                            ZStack{
-                                                Circle().foregroundColor(Color.red).frame(width: 18, height: 18)
-                                                Text("\(userVM.getUnreadChatCount())").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 12))
-                                            }
-                                           
-                                        .offset(x: 13, y: -10)
-                                        }
-                                              
-                                        
-                                        
-                                        
+                                        Circle().foregroundColor(Color.red).frame(width: 18, height: 18)
+                                        Text("\(userVM.getUnreadChatCount())").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 12))
                                     }
-                                    Text("Friends").font(.system(size: 12)).foregroundColor(.gray)
-
+                                    
+                                    .offset(x: 13, y: -10)
                                 }
                                 
                                 
                                 
                                 
-                            }).foregroundColor(self.tabIndex == .friends ? Color("AccentColor") : FOREGROUNDCOLOR).padding(.horizontal,10).buttonStyle(.plain)
-
+                            }
+                            Text("Friends").font(.system(size: 10)).foregroundColor(.gray)
+                            
+                        }
                         
+                        
+                        
+                        
+                    }).foregroundColor(self.tabIndex == .friends ? Color("AccentColor") : .white).padding(.horizontal,10).buttonStyle(.plain)
                     
-                            
-                            Button(action:{
-                                UIDevice.vibrate()
-                                
-                                self.tabIndex = .home
-                            },label:{
-                                VStack(spacing: 5){
-                                    
-                                    
-                                    Image(systemName: self.tabIndex == .home ?  "house.fill" : "house").font(.system(size: 20))
-                                    
-                                    Text("Home").font(.system(size: 12)).foregroundColor(.gray)
-
-                                }
-                                
-                            }).foregroundColor(self.tabIndex == .home ? Color("AccentColor") : FOREGROUNDCOLOR).padding(.horizontal)
-                            
-                        
-                      
-                     
-                   
                     
-                            
-                            Button(action:{
-                                UIDevice.vibrate()
-                                
-                                self.tabIndex = .groups
-                            },label:{
-                                VStack(spacing: 5){
-                                    
-                                    Image(systemName: self.tabIndex == .groups ?  "person.3.fill" : "person.3").font(.system(size: 20))
-                                    Text("Groups").foregroundColor(.gray).font(.system(size: 12))
-                                    }
-                                
-
-                            }).foregroundColor(self.tabIndex == .groups ? Color("AccentColor") : FOREGROUNDCOLOR).padding(.horizontal,10)
-                            
-                            
-                     
+                    
+                    
+                    Button(action:{
+                        UIDevice.vibrate()
                         
-                       
+                        self.tabIndex = .calendar
+                    },label:{
+                        VStack(spacing: 5){
                             
-                            Button(action:{
-                                UIDevice.vibrate()
-                                
-                                self.tabIndex = .notifications
-                            },label:{
-                                VStack(spacing: 5){
-                                    Image(systemName: self.tabIndex == .notifications ?  "envelope.fill" : "envelope").font(.system(size: 20))
-                                    Text("Notifications").foregroundColor(.gray).font(.system(size: 12))
-                                }
-
-                                
-                            }).foregroundColor(self.tabIndex == .notifications ? Color("AccentColor") : FOREGROUNDCOLOR).padding(.horizontal,10)
                             
-                       
+                            Image(systemName: "calendar").font(.system(size: 20))
+                            
+                            Text("Calendar").font(.system(size: 10)).foregroundColor(.gray).lineLimit(1)
+                            
+                        }
+                        
+                    }).foregroundColor(self.tabIndex == .calendar ? Color("AccentColor") : .white).padding(.horizontal)
+                    
+                    
+                    
+                    
+                    
+                    
+                    
+                    Button(action:{
+                        UIDevice.vibrate()
+                        
+                        self.tabIndex = .groups
+                    },label:{
+                        VStack(spacing: 5){
+                            
+                            Image(systemName: self.tabIndex == .groups ?  "person.3.fill" : "person.3").font(.system(size: 20))
+                            Text("Groups").foregroundColor(.gray).font(.system(size: 10))
+                        }
                         
                         
-                    }.frame(width: UIScreen.main.bounds.width).padding().padding(.bottom).background(Color("Color"))
-                }.opacity(userVM.hideTabButtons ? 0 : 1)
+                    }).foregroundColor(self.tabIndex == .groups ? Color("AccentColor") : .white).padding(.horizontal,10)
+                    
+                    
+                    
+                    
+                    
+                    
+                    Button(action:{
+                        UIDevice.vibrate()
+                        
+                        self.tabIndex = .notifications
+                    },label:{
+                        VStack(spacing: 5){
+                            Image(systemName: self.tabIndex == .notifications ?  "envelope.fill" : "envelope").font(.system(size: 20))
+                            Text("Notifications").foregroundColor(.gray).font(.system(size: 10))
+                        }
+                        
+                        
+                    }).foregroundColor(self.tabIndex == .notifications ? Color("AccentColor") : .white).padding(.horizontal,10)
+                    
+                    
+                    
+                    
+                }.frame(width: UIScreen.main.bounds.width).padding().padding(.bottom).background(Color("Color"))
+            }.opacity(userVM.hideTabButtons ? 0 : 1)
             
-         
             
-           BottomSheetView(isOpen: Binding(get: {userVM.showAddContent}, set: {userVM.showAddContent = $0}), maxHeight: UIScreen.main.bounds.height / 3){
-               HomescreenAddContentView()
+            
+            BottomSheetView(isOpen: Binding(get: {userVM.showAddContent}, set: {userVM.showAddContent = $0}), maxHeight: UIScreen.main.bounds.height / 3){
+                HomescreenAddContentView()
             }
             
             

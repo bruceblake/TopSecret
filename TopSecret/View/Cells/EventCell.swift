@@ -13,7 +13,6 @@ struct EventCell: View {
     @Binding var selectedEvent: EventModel
     @EnvironmentObject var userVM: UserViewModel
     @EnvironmentObject var shareVM: ShareViewModel
-    @Binding var shareType: String
 
     @StateObject var eventVM = EventViewModel()
     
@@ -156,8 +155,8 @@ struct EventCell: View {
                         
                             Button(action:{
                                 withAnimation{
-                                    self.selectedEvent = event
-                                    self.shareType = "event"
+                                    shareVM.selectedEvent = event
+                                    shareVM.shareType = "event"
                                     shareVM.showShareMenu.toggle()
                                     userVM.hideBackground.toggle()
                                     userVM.hideTabButtons.toggle()

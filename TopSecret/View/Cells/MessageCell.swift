@@ -162,7 +162,7 @@ struct MessageEventCell : View {
                         Rectangle().foregroundColor(Color("\(message.userID == userVM.user?.id ?? " " ? "AccentColor" : "blue")")).frame(width:2).padding(.horizontal,5)
                         
                        
-                        EventCell(event: message.event ?? EventModel(), selectedEvent: $selectedEvent, shareType: $shareType).frame(width: UIScreen.main.bounds.width/1.25)
+                        EventCell(event: message.event ?? EventModel(), selectedEvent: $selectedEvent).frame(width: UIScreen.main.bounds.width/1.25)
                         
                      
                         
@@ -202,7 +202,7 @@ struct MessagePollCell: View {
                         Rectangle().foregroundColor(Color("\(message.userID == userVM.user?.id ?? " " ? "AccentColor" : "blue")")).frame(width:2).padding(.horizontal,5)
                         
                        
-                        PollCell(poll: message.poll ?? PollModel(), selectedPoll: $selectedPoll, shareType: $shareType).frame(width: UIScreen.main.bounds.width/1.25)
+                        PollCell(poll: message.poll ?? PollModel(), selectedPoll: $selectedPoll).frame(width: UIScreen.main.bounds.width/1.25)
                         
                      
                         
@@ -282,7 +282,7 @@ struct MessagePostCell : View {
                         }else{
                             NavigationLink(destination: FullScreenGroupPostView(post: message.post ?? GroupPostModel() )) {
                                
-                                    GroupPostCell(post: message.post ?? GroupPostModel(), selectedPost: $selectedPost, shareType: $shareType, hideControls: true
+                                    GroupPostCell(post: message.post ?? GroupPostModel(), selectedPost: $selectedPost, hideControls: true
                                     ).overlay(
                                         GeometryReader { geo in
                                             Color.clear.preference(key: MediaPreferenceKey.self, value: geo.size.height)

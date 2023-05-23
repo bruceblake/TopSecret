@@ -14,7 +14,7 @@ import SwiftUIPullToRefresh
 struct HomeScreen: View {
     
     @EnvironmentObject var userVM: UserViewModel
-    @ObservedObject var feedVM = FeedViewModel()
+    @ObservedObject var feedVM : FeedViewModel
     @State var showSearch : Bool = false
     @State var selectedViewOption = 0
     @EnvironmentObject var shareVM: ShareViewModel
@@ -80,11 +80,7 @@ struct HomeScreen: View {
            
             
             
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
-            if !feedVM.hasFetched{
-            feedVM.fetchAll(userID: userVM.user?.id ?? " ")
-            }
-        }
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
             
         
         
@@ -112,7 +108,7 @@ struct YourGroupsView : View {
   
     
     private var groupsFilter : [FeedItemObjectModel] {
-        return feedVM.feed.filter { item in
+        return (feedVM.feed ?? []).filter  { item in
             return userVM.groups.contains(where: {$0.id == item.groupID ?? ""})
         }
     }
@@ -162,11 +158,11 @@ struct YourGroupsView : View {
                 ForEach(groupsFilter, id: \.id){ item in
                     switch item.itemType {
                     case .event:
-                        EventCell(event: item.event ?? EventModel(), selectedEvent: $selectedEvent, shareType: $shareType).frame(width: UIScreen.main.bounds.width-30)
+                        EventCell(event: item.event ?? EventModel(), selectedEvent: $selectedEvent).frame(width: UIScreen.main.bounds.width-30)
                     case .poll:
-                        PollCell(poll: item.poll ?? PollModel(), selectedPoll: $selectedPoll, shareType: $shareType).frame(width: UIScreen.main.bounds.width-30)
+                        PollCell(poll: item.poll ?? PollModel(), selectedPoll: $selectedPoll).frame(width: UIScreen.main.bounds.width-30)
                     case .post:
-                        GroupPostCell(post: item.post ?? GroupPostModel(), selectedPost: $selectedPost, shareType: $shareType).frame(width: UIScreen.main.bounds.width-30)
+                        GroupPostCell(post: item.post ?? GroupPostModel(), selectedPost: $selectedPost).frame(width: UIScreen.main.bounds.width-30)
                     default:
                         Text("Unknown")
                     }
@@ -184,7 +180,7 @@ struct YourGroupsView : View {
 
 struct YourFeedView : View {
     @EnvironmentObject var userVM: UserViewModel
-    @StateObject var feedVM: FeedViewModel
+    @ObservedObject var feedVM: FeedViewModel
     @State var showInfo: Bool = false
     @Binding var selectedPost: GroupPostModel
     @Binding var selectedPoll: PollModel
@@ -195,7 +191,7 @@ struct YourFeedView : View {
     
     
     private var feedFilter : [FeedItemObjectModel]{
-       return feedVM.feed.filter { item in
+       return (feedVM.feed ?? []).filter  { item in
             return userVM.user?.groupsFollowingID?.contains(where: {$0 == item.groupID ?? ""}) ?? false
         }
     }
@@ -209,7 +205,7 @@ struct YourFeedView : View {
                 Spacer()
             }
             
-        }else if feedVM.isLoading && feedVM.feed.isEmpty{
+        }else if feedVM.isLoading && feedVM.feedIsEmpty(){
             VStack{
                 Spacer()
                 VStack{
@@ -217,8 +213,6 @@ struct YourFeedView : View {
                     ProgressView()
                 }
                 Spacer()
-            }.onAppear{
-                feedVM.fetchAll(userID: userVM.user?.id ?? " ")
             }
         }else{
             RefreshableScrollView {
@@ -234,11 +228,11 @@ struct YourFeedView : View {
                                 ForEach(feedFilter, id: \.id){ item in
                                     switch item.itemType {
                                         case .event:
-                                        EventCell(event: item.event ?? EventModel(), selectedEvent: $selectedEvent, shareType: $shareType).frame(width: UIScreen.main.bounds.width-30)
+                                        EventCell(event: item.event ?? EventModel(), selectedEvent: $selectedEvent).frame(width: UIScreen.main.bounds.width-30)
                                     case .poll:
-                                    PollCell(poll: item.poll ?? PollModel(), selectedPoll: $selectedPoll, shareType: $shareType).frame(width: UIScreen.main.bounds.width-30)
+                                    PollCell(poll: item.poll ?? PollModel(), selectedPoll: $selectedPoll).frame(width: UIScreen.main.bounds.width-30)
                                     case .post:
-                                    GroupPostCell(post: item.post ?? GroupPostModel(), selectedPost: $selectedPost, shareType: $shareType).frame(width: UIScreen.main.bounds.width-30)
+                                    GroupPostCell(post: item.post ?? GroupPostModel(), selectedPost: $selectedPost).frame(width: UIScreen.main.bounds.width-30)
                                         default:
                                             Text("Unknown")
                                     }
@@ -288,83 +282,87 @@ struct ShowGroups : View {
     
     
     var body: some View{
-        ScrollView(showsIndicators: false){
-            VStack(spacing: 30){
-                
-                if userVM.connected {
-                    ForEach(userVM.groups, id: \.id){ group in
-                        Button(action:{
-                            
-                            let dispatchGroup = DispatchGroup()
-                            
-                            
-                            
-                            dispatchGroup.enter()
-                            self.selectedGroup = group
-                            selectedGroupVM.changeCurrentGroup(groupID: group.id){ finishedFetching in
-                                if finishedFetching{
-                                    dispatchGroup.leave()
+        VStack(alignment: .leading){
+            Text("You are in \(userVM.groups.count) \(userVM.groups.count > 1 ? "groups" : "group")").fontWeight(.bold)
+            ScrollView(showsIndicators: false){
+                VStack(spacing: 30){
+                    
+                    if userVM.connected {
+                        ForEach(userVM.groups, id: \.id){ group in
+                            Button(action:{
+                                
+                                let dispatchGroup = DispatchGroup()
+                                
+                                
+                                
+                                dispatchGroup.enter()
+                                self.selectedGroup = group
+                                selectedGroupVM.changeCurrentGroup(groupID: group.id){ finishedFetching in
+                                    if finishedFetching{
+                                        dispatchGroup.leave()
+                                    }
                                 }
-                            }
 
-                            dispatchGroup.notify(queue: .main, execute:{
-                                openGroupHomescreen.toggle()
+                                dispatchGroup.notify(queue: .main, execute:{
+                                    openGroupHomescreen.toggle()
+                                })
+                                
+                            },label:{
+                                VStack{
+                                    VStack(alignment: .leading){
+                                        
+                                        
+                                        
+                                        HStack{
+                                            Spacer()
+                                        }.padding(50).background(WebImage(url: URL(string: group.groupProfileImage )).resizable().scaledToFill())
+                                        
+                                        
+                                        HStack(alignment: .top){
+                                            
+                                            VStack(alignment: .leading,spacing:10){
+                                                Text(group.groupName).font(.headline).bold().foregroundColor(FOREGROUNDCOLOR)
+                                                
+                                                HStack{
+                                                    Text(group.motd)
+                                                }.foregroundColor(FOREGROUNDCOLOR)
+                                                
+                                                HStack{
+                                                    Text("\(group.memberAmount) \(group.memberAmount == 1 ? "member" : "members")").foregroundColor(FOREGROUNDCOLOR)
+                                                    
+                                                    
+                                                }
+                                            }
+                                            
+                                            Spacer(minLength: 0)
+                                        }.padding(10).background(Rectangle().foregroundColor(Color("Color")))
+                                        
+                                        
+                                    }.cornerRadius(10)
+                                    
+                                }.shadow(color: Color.black, radius: 5).frame(width: width - widthAdd, height: height/heightDivide).padding(.top,30)
+                                
+                                
+                                
+                                
+                                
                             })
                             
-                        },label:{
-                            VStack{
-                                VStack(alignment: .leading){
-                                    
-                                    
-                                    
-                                    HStack{
-                                        Spacer()
-                                    }.padding(50).background(WebImage(url: URL(string: group.groupProfileImage )).resizable().scaledToFill())
-                                    
-                                    
-                                    HStack(alignment: .top){
-                                        
-                                        VStack(alignment: .leading,spacing:10){
-                                            Text(group.groupName).font(.headline).bold().foregroundColor(FOREGROUNDCOLOR)
-                                            
-                                            HStack{
-                                                Text(group.motd)
-                                            }.foregroundColor(FOREGROUNDCOLOR)
-                                            
-                                            HStack{
-                                                Text("\(group.memberAmount) \(group.memberAmount == 1 ? "member" : "members")").foregroundColor(FOREGROUNDCOLOR)
-                                                
-                                                
-                                            }
-                                        }
-                                        
-                                        Spacer(minLength: 0)
-                                    }.padding(10).background(Rectangle().foregroundColor(Color("Color")))
-                                    
-                                    
-                                }.cornerRadius(10)
-                                
-                            }.shadow(color: Color.black, radius: 5).frame(width: width - widthAdd, height: height/heightDivide).padding(.top,30)
-                            
-                            
-                            
-                            
-                            
-                        })
+                        }
                         
+                    }else{
+                        Text("Unable to connect!")
                     }
                     
-                }else{
-                    Text("Unable to connect!")
-                }
+                   
+                    
+                    
+                    
+                }.padding(.bottom, UIScreen.main.bounds.height/4)
                 
-               
-                
-                
-                
-            }.padding(.bottom, UIScreen.main.bounds.height/4)
-            
+            }
         }
+       
         .edgesIgnoringSafeArea(.all).navigationBarHidden(true)
         
     }

@@ -13,7 +13,6 @@ struct AddFriendsView: View {
     @State var selectedChatID = ""
     @StateObject var searchVM = SearchRepository()
     @StateObject var personalChatVM = PersonalChatViewModel()
-    @ObservedObject var keyboardVM = KeyboardViewModel()
     var body: some View {
         ZStack{
             Color("Background")
@@ -42,7 +41,7 @@ struct AddFriendsView: View {
                 AddFriendsSearchList(searchVM: searchVM, openChat: $openChat, selectedChatID: $selectedChatID)
             }
             
-            NavigationLink(destination: PersonalChatView(personalChatVM: personalChatVM, keyboardVM: keyboardVM, chatID: selectedChatID), isActive: $openChat, label: {
+            NavigationLink(destination: PersonalChatView(personalChatVM: personalChatVM, chatID: selectedChatID), isActive: $openChat, label: {
                 EmptyView()
             })
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{

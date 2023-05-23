@@ -12,14 +12,16 @@ struct GroupPostCommentModel : Identifiable {
     var id: String?
     var text: String?
     var timeStamp: Timestamp?
-    var usersLikedID: [String]?
-    var usersLiked : [User]?
-    var usersDislikedID: [User]?
-    var usersDisliked: [String]?
+    var likedListID: [String]?
+    var likedList : [User]?
+    var dislikedListID: [String]?
+    var dislikedList: [User]?
     var creatorID: String?
     var creator: User?
     var postID: String?
     var post: GroupPostModel?
+    var parentCommentID: String?
+    var repliedCommentsCount: Int?
 
     
     
@@ -29,13 +31,14 @@ struct GroupPostCommentModel : Identifiable {
         self.timeStamp = dictionary["timeStamp"] as? Timestamp ?? Timestamp()
         self.creatorID = dictionary["creatorID"] as? String ?? " "
         self.creator = dictionary["creator"] as? User ?? User()
-        self.usersLiked = dictionary["usersLiked"] as? [User] ?? []
-        self.usersLikedID = dictionary["usersLikedID"] as? [String] ?? []
-        self.usersDisliked = dictionary["usersDisliked"] as? [String] ?? []
-        self.usersDislikedID = dictionary["usersDislikedID"] as? [User] ?? []
+        self.likedList = dictionary["likedList"] as? [User] ?? []
+        self.likedListID = dictionary["likedListID"] as? [String] ?? []
+        self.dislikedList = dictionary["dislikedList"] as? [User] ?? []
+        self.dislikedListID = dictionary["dislikedListID"] as? [String] ?? []
         self.postID = dictionary["postID"] as? String ?? " "
         self.post = dictionary["post"] as? GroupPostModel ?? GroupPostModel()
-
+        self.repliedCommentsCount = dictionary["repliedCommentsCount"] as? Int ?? 0
+        self.parentCommentID = dictionary["parentCommentID"] as? String ?? " "
     }
     
     init(){

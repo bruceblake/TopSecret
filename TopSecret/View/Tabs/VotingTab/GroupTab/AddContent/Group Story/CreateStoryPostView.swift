@@ -95,7 +95,7 @@ struct CreateStoryPostView: View {
                                 Image(systemName: "photo.on.rectangle")
                             }
                         })  .fullScreenCover(isPresented: $isShowingPhotoPicker, content: {
-                            ImagePicker(avatarImage: $avatarImage, allowsEditing: true)
+                            ImagePicker(avatarImage: $avatarImage, allowsEditing: false)
                         })
                         
                         

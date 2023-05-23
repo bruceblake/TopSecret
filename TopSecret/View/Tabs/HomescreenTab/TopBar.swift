@@ -58,12 +58,8 @@ struct TopBar : View {
             
             Spacer()
             
-            if tabIndex == .home {
-                Button(action:{
-                    print(userVM.printListenersCount())
-                },label:{
-                    Text("Skyler").bold().font(.title2).foregroundColor(FOREGROUNDCOLOR)
-                })
+            if tabIndex == .calendar {
+                    Text("Calendar").bold().font(.title2).foregroundColor(FOREGROUNDCOLOR)
             }
             else if tabIndex == .friends{
                 Text("Friends").bold().font(.title2)
@@ -73,6 +69,9 @@ struct TopBar : View {
             }
             else if tabIndex == .notifications {
                 Text("Notifications").bold().font(.title2)
+            }
+            else if tabIndex == .events {
+                Text("Events").bold().font(.title2)
             }
             
           

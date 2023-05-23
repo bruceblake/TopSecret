@@ -85,17 +85,7 @@ struct CurrentUserProfilePage: View {
                                 
                                 VStack(alignment: .leading, spacing: 5){
                                     
-                                    Button(action:{
-                                        userVM.hideTabButtons.toggle()
-                                        switchAccounts.toggle()
-                                    },label:{
-                                        HStack(spacing: 1
-                                        ){
-                                            Text("\(userVM.user?.nickName ?? "") ").fontWeight(.bold).font(.headline).lineLimit(1).foregroundColor(FOREGROUNDCOLOR)
-                                            Image(systemName: "chevron.down").font(.subheadline).foregroundColor(FOREGROUNDCOLOR)
-                                        }
-                                        
-                                    })
+                                    Text("\(userVM.user?.nickName ?? "") ").fontWeight(.bold).font(.headline).lineLimit(1).foregroundColor(FOREGROUNDCOLOR)
                                     
                                     
                                     Text("@\(userVM.user?.username ?? "")").font(.footnote).foregroundColor(.gray)
@@ -157,7 +147,6 @@ struct CurrentUserProfilePage: View {
                         Text("\(userVM.user?.bio ?? "")").frame(width: UIScreen.main.bounds.width - 20).multilineTextAlignment(.center)
                         
                         
-                        ScheduleView(calendar: Calendar(identifier: .gregorian))
                         
                         
                         
@@ -189,10 +178,10 @@ struct CurrentUserProfilePage: View {
                 SwitchAccountsView()
             }.zIndex(5)
             
-//            NavigationLink(destination:  UserEditProfilePageView(showEditPage: $showEditPage), isActive: $showEditPage) {
-//                EmptyView()
-//            }
-//
+            NavigationLink(destination:  UserEditProfilePageView(showEditPage: $showEditPage), isActive: $showEditPage) {
+                EmptyView()
+            }
+
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
         
         

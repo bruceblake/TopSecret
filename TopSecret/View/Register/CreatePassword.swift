@@ -41,7 +41,7 @@ struct CreatePassword: View {
 
                         dp.enter()
 
-                        userVM.createUser(email: registerVM.email, username: registerVM.username, nickName: registerVM.nickName,  birthday: registerVM.birthday, password: registerVM.password, profilePicture: registerVM.userProfileImage, interests: interests, completion: { userCreated in
+                        userVM.createUser(email: registerVM.email, username: registerVM.username, nickName: registerVM.nickName,  birthday: registerVM.birthday, password: registerVM.password, profilePicture: registerVM.userProfileImage, completion: { userCreated in
                             if userCreated{
                                 dp.leave()
                             }

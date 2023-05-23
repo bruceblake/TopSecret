@@ -13,16 +13,19 @@ class FeedViewModel: ObservableObject {
     @Published var posts: [GroupPostModel] = []
     @Published var polls: [PollModel] = []
     @Published var events: [EventModel] = []
-    @Published var feed: [FeedItemObjectModel] = []
+    @Published var feed: [FeedItemObjectModel]?
     @Published var stories: [StoryModel] = []
-    @Published var isLoading : Bool = true
+    @Published var isLoading : Bool = false
     @Published var hasFetched: Bool = false
     @Published var firestoreListener : [ListenerRegistration] = []
     
-    
+    init(){
+        self.fetchAll(userID: UserViewModel.shared.user?.id ?? " ")
+    }
  
-    
-   
+    func feedIsEmpty() -> Bool{
+        feed?.isEmpty ?? false
+    }
     
     func parseIntoFeedObject(feedItem: Any) -> FeedItemObjectModel? {
         if let event = feedItem as? EventModel  {
@@ -118,7 +121,7 @@ class FeedViewModel: ObservableObject {
         let storageRef = Storage.storage().reference()
         let fileRef = storageRef.child(urlPath)
         
-        DispatchQueue.global(qos: .userInteractive).async{
+        DispatchQueue.global(qos: .background).async{
             fileRef.getData(maxSize: 5 * 1024 * 1024) { data, err in
                 if err != nil {
                     print("ERROR")

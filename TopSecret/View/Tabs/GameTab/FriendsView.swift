@@ -57,7 +57,7 @@ struct FriendsView: View {
                         }else{
                             ForEach(self.sortPersonalChats(userID: userVM.user?.id ?? " "), id: \.id){ chat in
                                 NavigationLink {
-                                    PersonalChatView(personalChatVM: personalChatVM, keyboardVM: KeyboardViewModel(), chatID: chat.id)
+                                    PersonalChatView(personalChatVM: personalChatVM , chatID: chat.id)
                                 } label: {
                                     FriendCell(user: personalChatVM.getPersonalChatUser(chat: chat, userID: userVM.user?.id ?? " "), personalChatVM: personalChatVM, chat: chat)
                                 }

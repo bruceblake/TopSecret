@@ -9,7 +9,7 @@ import SwiftUI
 
 struct HomescreenAddContentView: View {
     
-    var texts : [String] = ["Create a Group", "Create Poll","Create Event"]
+    var texts : [String] = ["Create a Group","Create a Post","Create Poll","Create Event"]
     @EnvironmentObject var userVM: UserViewModel
     
     var body: some View {
@@ -23,6 +23,8 @@ struct HomescreenAddContentView: View {
                             
                         case "Create a Group":
                             CreateGroupView()
+                        case "Create a Post":
+                            CreateGroupPostView()
                         case "Create Event":
                             CreateEventView(isGroup: false)
                         case "Create Poll":

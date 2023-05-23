@@ -16,7 +16,6 @@ struct PersonalChatView : View {
     @EnvironmentObject var userVM: UserViewModel
     @Environment(\.presentationMode) var presentationMode
     @StateObject var personalChatVM: PersonalChatViewModel
-    @StateObject var keyboardVM: KeyboardViewModel
     @State var openAddContent : Bool = false
     @State var showOverlay : Bool = false
     @State var selectedMessage: Message = Message()
@@ -30,7 +29,7 @@ struct PersonalChatView : View {
     let notificationSender = PushNotificationSender()
     @Environment(\.scenePhase) var scenePhase
     @State private var scrollViewOffset = CGFloat.zero
-
+    @State var canAddAnotherLine : Bool = false
     @State var chatID: String
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
@@ -95,11 +94,6 @@ struct PersonalChatView : View {
         return color
     }
     
-    var drag: some Gesture {
-        DragGesture(minimumDistance: 10, coordinateSpace: .local).onEnded { state in
-            print("ended")
-        }
-    }
   
         
     var body: some View {
@@ -345,7 +339,7 @@ struct PersonalChatView : View {
                         })
                     
                         Spacer()
-                        OmenTextField("",text: $personalChatVM.text).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Background")))
+                        OmenTextField("",text: $personalChatVM.text, canAddAnotherLine: $canAddAnotherLine).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Background")))
                         Button(action:{
                             if showReplyView{
                                 personalChatVM.sendReplyTextMessage(text: personalChatVM.text, user: userVM.user ?? User(), nameColor: self.getChatColor(userID: userVM.user?.id ?? " "), repliedMessageID: selectedMessage.id, messageType: "repliedMessage", chatID: personalChatVM.chat.id)
@@ -367,7 +361,7 @@ struct PersonalChatView : View {
 
                         },label:{
                             Text("Send").padding(5).background(RoundedRectangle(cornerRadius: 12).fill(Color("Background")))
-                        }).disabled(!(personalChatVM.text != ""))
+                        }).disabled(personalChatVM.text == "")
                     }.padding().padding(.bottom,10)
                       
                 }.background(Color("Color")).offset(y: -self.keyboardHeight)

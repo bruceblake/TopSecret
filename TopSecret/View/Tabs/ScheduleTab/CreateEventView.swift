@@ -12,6 +12,8 @@ struct CreateEventView: View {
     @State var eventName: String = ""
     @State var eventLocation: String = ""
     @State var eventStartTime : Date = Date()
+    @State var membersCanInviteGuests : Bool = false
+    @State var isAllDay : Bool = false
     @State var eventEndTime : Date = Date()
     @State var selectedFriends : [User] = []
     @State var selectedGroups : [Group] = []
@@ -25,13 +27,15 @@ struct CreateEventView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
+    let options = ["Open to Friends", "Open to Mutuals", "Invite Only"]
+    @State var selectedOption : Int = 0
     
     var body: some View {
         ZStack{
             Color("Background")
             VStack{
                 
-                HStack{
+                HStack(alignment: .center){
                     Button(action:{
                         presentationMode.wrappedValue.dismiss()
                     },label:{
@@ -45,159 +49,180 @@ struct CreateEventView: View {
                     
                     
                     
+               
                     Spacer()
-                    
-                    Text("Schedule An Event!")
-                        .fontWeight(.bold).font(.title)
-                    Spacer()
-                }.padding(.top,50)
-                
-                
-                ScrollView{
-                    
-                    
-                    VStack(spacing: 20){
-                        //Event Name
-                        
-                        VStack(alignment: .leading){
-                            Text("Event Name").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
-                            VStack{
-                                CustomTextField(text: $eventName, placeholder: "Event Name", isPassword: false, isSecure: false, hasSymbol: false, symbol: "")
-                            }
-                        }.padding(.horizontal)
-                        
-                        VStack(alignment: .leading){
-                            HStack{
-                                Text("Event Location").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
-                                
-                                Button(action:{
-                                    
-                                },label:{
-                                    Text("Create Location")
-                                })
-                                Button(action:{
-                                    searchLocationView.toggle()
-                                }, label: {
-                                    ZStack{
-                                        Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
-                                        Image(systemName: "magnifyingglass")
-                                        
-                                    }
-                                }).fullScreenCover(isPresented: $searchLocationView) {
-                                    
-                                } content: {
-                                    LocationSearchView()
-                                }
-                                
-                                
-                                
-                                
-                            }
-                            ScrollView(.horizontal){
-                                HStack(){
-                                    Button(action:{
-                                        if eventLocation == "The White House"{
-                                            eventLocation = ""
-                                        }else{
-                                            eventLocation = "The White House"
-                                        }
-                                    },label:{
-                                        Text("The White House").foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 20).fill(eventLocation == "The White House" ? Color("AccentColor") : Color("Color")))
-                                    })
-                                }
-                            }
-                            
-                        }.padding(.horizontal)
-                        
-                        VStack(alignment: .leading){
-                            Text("Event Start Time").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
-                            HStack{
-                                DatePicker("", selection: $eventStartTime)
-                                Spacer()
-                            }
-                        }.padding(.horizontal)
-                        
-                        VStack(alignment: .leading){
-                            Text("Event End Time").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
-                            HStack{
-                                DatePicker("", selection: $eventEndTime)
-                                Spacer()
-                            }
-                        }.padding(.horizontal)
-                        
-                        VStack(alignment: .leading){
-                            Text("Visible To").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
-                            
-                            HStack{
-                                Spacer()
-                                if isGroup{
-                                    
-                                    Button(action:{
-                                        selectedGroups.append(selectedGroupVM.group)
-                                    },label:{
-                                        Text("\(selectedGroupVM.group.groupName )").foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 20).fill(Color("Color")))
-                                    })
-                                }else{
-                                    HStack(spacing: 15){
-                                        Button(action:{
-                                            withAnimation(.easeIn){
-                                                self.openFriendsList.toggle()
-                                            }
-                                        },label:{
-                                            Text("Add Friends")
-                                        }).fullScreenCover(isPresented: $openFriendsList) {
-                                            
-                                        } content: {
-                                            AddFriendsToEventView(isOpen: $openFriendsList)
-                                        }
-                                        
-                                        
-                                        Button(action:{
-                                            withAnimation(.easeIn){
-                                                self.openGroupsList.toggle()
-                                            }
-                                        },label:{
-                                            Text("Add Groups")
-                                        }).fullScreenCover(isPresented: $openGroupsList) {
-                                            
-                                        } content: {
-                                            //                                    AddGroupsToEventView()
-                                            Text("Hello World")
-                                        }
-                                    }
-                                }
-                                
-                                Spacer()
-                                
-                            }
-                        }.padding(.horizontal)
-                        
-                        VStack(alignment: .leading){
-                            Text("Event Picture").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
-                            Button(action:{
-                                self.openImagePicker.toggle()
-                            },label:{
-                                Image(uiImage: image)
-                                    .resizable()
-                                    .scaledToFit().frame(width: UIScreen.main.bounds.width - 20).cornerRadius(12)
-                            }).fullScreenCover(isPresented: $openImagePicker, content: {
-                                ImagePicker(avatarImage: $image, allowsEditing: true)
-                            })
-                            
-                        }.padding(.horizontal)
-                        
-                    }.padding(.vertical,10)
-                    
                     
                     Button(action:{
                         
                         eventVM.createEvent(group: selectedGroupVM.group, eventName: eventName, eventLocation: eventLocation, eventStartTime: eventStartTime , eventEndTime: eventEndTime, usersVisibleTo:selectedGroupVM.group.realUsers , user: userVM.user ?? User(), image: image)
                         presentationMode.wrappedValue.dismiss()
                     },label:{
-                        Text("Create Event").foregroundColor(Color("Foreground"))
-                            .padding(.vertical)
-                            .frame(width: UIScreen.main.bounds.width/1.5).background(Color("AccentColor")).cornerRadius(15)
-                    })
+                        Text("Create").foregroundColor(FOREGROUNDCOLOR).padding(.horizontal,10).padding(.vertical,5).background(RoundedRectangle(cornerRadius: 16).fill(Color("AccentColor"))).disabled(eventName == "")
+                           
+                    }).disabled(eventName == "")
+                }.padding(.top,50).padding(.horizontal,10)
+                
+                
+                ScrollView{
+                    
+                    
+                    VStack(alignment: .leading, spacing: 20){
+                        //Event Name
+                        
+                        VStack(){
+                            
+                            TextField("Event Name",text: $eventName).multilineTextAlignment(.center).font(.system(size: 25, weight: .bold))
+                            Rectangle().frame(width: UIScreen.main.bounds.width-50, height: 2).foregroundColor(Color.gray)
+                
+                        }.padding(10)
+                        HStack{
+                            
+                            Text("Invitation Type").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                            Divider()
+                            Menu {
+                                VStack{
+                                    ForEach(options, id: \.self){ option in
+                                        Button(action:{
+                                            if option == options[0]{
+                                                withAnimation{
+                                                    selectedOption = 0
+                                                }
+                                            }
+                                            else if option == options[1]{
+                                                withAnimation{
+                                                    selectedOption = 1
+                                                }
+                                            }
+                                            else if option == options[2]{
+                                                withAnimation{
+                                                    selectedOption = 2
+                                                }
+                                            }
+                                            
+                                           
+                                        },label:{
+                                            Text(option)
+                                        })
+                                    }
+                                }
+                            } label: {
+                                HStack{
+                                    Text("\(options[selectedOption])").foregroundColor(FOREGROUNDCOLOR)
+                                    Image(systemName: "chevron.down")
+                                }
+                            }
+                            
+
+                        }.padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color"))).padding(.horizontal)
+                        
+                        
+                        //place here
+                        
+                        VStack(alignment: .leading){
+                            Text("Event Details").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                            VStack{
+                                HStack{
+                                    Toggle(isOn: $isAllDay) {
+                                        Text("All Day")
+                                    }
+                                }
+                                Divider()
+                                
+                                
+                                
+                                HStack{
+                                    Text("Start")
+                                    if isAllDay{
+                                        DatePicker("", selection: $eventStartTime, displayedComponents: .date)
+                                    }else{
+                                        DatePicker("", selection: $eventStartTime)
+                                    }
+                                  
+                                    Spacer()
+                                }
+                                
+                                HStack{
+                                    Text("End")
+                                    if isAllDay{
+                                        DatePicker("", selection: $eventEndTime, displayedComponents: .date)
+                                    }else{
+                                        DatePicker("", selection: $eventEndTime)
+                                    }
+                                    Spacer()
+                                }
+                                
+                                Divider()
+                                
+                                HStack{
+                                    Image(systemName: "mappin")
+                                    Text("Add Location")
+                                    Spacer()
+                                    Button(action:{
+                                        
+                                    },label:{
+                                        Image(systemName: "chevron.right")
+                                    })
+                                }
+                                
+                                Divider()
+                                
+                                HStack{
+                                    Image(systemName: "text.alignleft")
+                                    Text("Description")
+                                    Spacer()
+                                    Button(action:{
+                                        
+                                    },label:{
+                                        Image(systemName: "chevron.right")
+                                    })
+                                }
+                                
+                            }.padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
+                        }.padding(.horizontal)
+                        
+                        VStack(alignment: .leading){
+                            Text("Participants").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                            VStack{
+                                
+                                HStack{
+                                    VStack{
+                                        Text("Invite Members")
+                                    }
+                                    Spacer()
+                                    Button(action:{
+                                        
+                                    },label:{
+                                        Image(systemName: "chevron.right")
+                                    })
+                                }
+                                Divider()
+                                HStack{
+                                    VStack{
+                                        Text("Exclude Members")
+                                    }
+                                    Spacer()
+                                    Button(action:{
+                                        
+                                    },label:{
+                                        Image(systemName: "chevron.right")
+                                    })
+                                }
+                                Divider()
+                                
+                                Toggle(isOn: $membersCanInviteGuests) {
+                                    Text("Members Can Invite Guests")
+                                }
+                            }.padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
+                        }.padding(.horizontal)
+                    
+                  
+                        
+                       
+                        
+                    }.padding(.vertical,10)
+                    
+                    
+                   
                 }
                 
                 
