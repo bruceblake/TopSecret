@@ -10,7 +10,7 @@ import SwiftUI
 struct LoginView: View {
     @State var email = ""
     @State var password = ""
-    @EnvironmentObject var userAuthVM: UserViewModel
+    @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var validationVM : RegisterValidationViewModel
     @StateObject var userCoreDataVM = UserCoreDataViewModel()
     @State var showForgotPasswordView = false
@@ -32,10 +32,10 @@ struct LoginView: View {
                     
                     
                     //Icon and Name
-                    VStack{
+                    VStack(spacing: 0){
                         
                         
-                        Image("FinishedIcon").resizable().aspectRatio(contentMode: .fit).frame(width: 150, height: 150)
+                        Image("topbarlogo").resizable().frame(width: 200, height: 200)
                         Text("Top Secret")
                             .font(.largeTitle)
                             .fontWeight(.bold)
@@ -45,7 +45,7 @@ struct LoginView: View {
                     
                     VStack(spacing: 10){
                         
-                        Text(userAuthVM.loginErrorMessage).foregroundColor(.red)
+                        Text(userVM.loginErrorMessage).foregroundColor(.red)
                         
                         //Text Fields
                         VStack(spacing: 20){
@@ -57,6 +57,9 @@ struct LoginView: View {
                         //Forgot Password
                         HStack{
                             
+                           
+                          
+                            
                             Spacer()
                             
                             Button(action: {
@@ -67,12 +70,11 @@ struct LoginView: View {
                             
                         }
                         
-                        
                         Button(action: {
                             let dp = DispatchGroup()
                             self.showContentScreen.toggle()
                             dp.enter()
-                            userAuthVM.signIn(withEmail: email, password: password, completion: { fetchedUser in
+                            userVM.signIn(withEmail: email, password: password, completion: { fetchedUser in
                                 userCoreDataVM.addUser(user: fetchedUser)
                                 dp.leave()
                             })
@@ -92,6 +94,19 @@ struct LoginView: View {
                     }.padding(.top,50)
                     
                     Spacer()
+
+
+                    HStack{
+                        Spacer()
+                        Text("Don't have an account?").font(.system(size: 13))
+                        Button(action: {
+                            self.beginRegisterView.toggle()
+                        },label:{
+                            Text("Register").foregroundColor(Color("AccentColor")).font(.system(size: 13))
+                        })
+                        
+                        Spacer()
+                    }.padding(.bottom,40)
                 }.offset(y: -self.value)
                     .onAppear{
                         NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { (noti) in
@@ -117,15 +132,7 @@ struct LoginView: View {
                 
                 
             }.edgesIgnoringSafeArea(.all)
-                .toolbar{
-                    ToolbarItem(placement: .navigationBarTrailing){
-                        Button(action: {
-                            self.beginRegisterView.toggle()
-                        },label:{
-                            Text("Register")
-                        })
-                    }
-                }.opacity(showContentScreen ? 0.2 : 1).disabled(showContentScreen).overlay {
+              .opacity(showContentScreen ? 0.2 : 1).disabled(showContentScreen).overlay {
                     if showContentScreen{
                         SignInOverlay().frame(width: UIScreen.main.bounds.width/1.5, height: UIScreen.main.bounds.height/3).cornerRadius(16)
                     }
@@ -137,11 +144,6 @@ struct LoginView: View {
     }
 }
 
-struct LoginView_Previews: PreviewProvider {
-    static var previews: some View {
-        LoginView().preferredColorScheme(.dark).environmentObject(UserViewModel())
-    }
-}
 
 
 struct SignInOverlay : View {

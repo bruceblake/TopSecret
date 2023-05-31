@@ -11,19 +11,19 @@ import SDWebImageSwiftUI
 struct EditStoryPost: View {
     
     @Binding var image : UIImage
-    
+    @Environment(\.presentationMode) var presentationMode
     var body: some View {
         ZStack{
             Image(uiImage: image)
                 .resizable()
-                .aspectRatio(image.size, contentMode: .fit)
+                .aspectRatio(image.size, contentMode: .fill).resizeToScreenSize()
 
             VStack{
                 
                 HStack{
                     
                     Button(action:{
-                        
+                        presentationMode.wrappedValue.dismiss()
                     },label:{
                         ZStack{
                             Circle().foregroundColor(Color("Color")).frame(width: 32, height: 32)
@@ -44,4 +44,8 @@ struct EditStoryPost: View {
     }
 }
 
-
+extension View {
+    func resizeToScreenSize() -> some View{
+        frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+    }
+}

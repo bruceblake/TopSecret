@@ -10,13 +10,26 @@ import SwiftUI
 struct CreateGroupPostView: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject var createPostVM = CreateGroupPostViewModel()
-    var group: Group
+    var group: Group = Group()
     @EnvironmentObject var userVM: UserViewModel
     @State var openImagePicker: Bool = false
-    @State var post = UIImage(named: "Icon")!
+    @State var post = UIImage(named: "topbarlogo")!
     @State var showOverlay : Bool = false
     @State var showTaggedUsersView: Bool = false
     @State var selectedUsers: [User] = []
+    @State var description : String = ""
+    @State var selectedGroups: [Group] = []
+    
+    func makeSelection(groups: [Group], selectedGroup: Group) -> [Group]{
+        var groupsToReturn = groups
+        if groups.contains(where: {$0.id == selectedGroup.id}){
+            groupsToReturn.removeAll(where: {$0.id == selectedGroup.id})
+        }else{
+            groupsToReturn.append(selectedGroup)
+        }
+        return groupsToReturn
+    }
+    
     var body: some View {
         ZStack{
             Color("Background")
@@ -33,66 +46,94 @@ struct CreateGroupPostView: View {
                         }
                     })
                     
-                    Text("Create Post")
+                    Spacer()
+                    Text("Create Post").font(.headline).bold()
                     
                     Spacer()
-                }.padding(.top,50)
-                
-                Spacer()
-                
-                Button(action:{
-                    self.showTaggedUsersView.toggle()
-                },label:{
                     
-                Text("Add Tagged Users")
-                }).fullScreenCover(isPresented: $showTaggedUsersView) {
+                    Circle().frame(width: 40, height: 40).foregroundColor(Color.clear)
+
+                }.padding(.top,50).padding(.horizontal,10)
+                
+                
+//                Button(action:{
+//                    self.showTaggedUsersView.toggle()
+//                },label:{
+//
+//                Text("Add Tagged Users")
+//                }).fullScreenCover(isPresented: $showTaggedUsersView) {
+//
+//                } content: {
+//                    VStack{
+//                        ForEach(userVM.user?.friendsList ?? [], id: \.id){ friend in
+//
+//                            Button(action:{
+//                                self.selectedUsers.append(friend)
+//                            },label:{
+//                                UserSearchCell(user: friend, showActivity: false)
+//                            })
+//                        }
+//                        ScrollView(.horizontal){
+//                            HStack{
+//                                ForEach(selectedUsers){ user in
+//                                    Button(action:{
+//                                        self.selectedUsers.removeAll { removedUser in
+//                                            user.id == removedUser.id
+//                                        }
+//                                    },label:{
+//                                    Text("\(user.nickName ?? " ")")
+//                                    })
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+
+                
+                VStack{
+                    Button(action:{
+                        self.openImagePicker.toggle()
+                    },label:{
+                        Image(uiImage: post)
+                            .resizable()
+                            .scaledToFit().frame(width: UIScreen.main.bounds.width - 20).cornerRadius(12)
+                    }).fullScreenCover(isPresented: $openImagePicker, content: {
+                        ImagePicker(avatarImage: $post, allowsEditing: true)
+                    })
                     
-                } content: {
                     VStack{
-                        ForEach(userVM.user?.friendsList ?? [], id: \.id){ friend in
-                            
-                            Button(action:{
-                                self.selectedUsers.append(friend)
-                            },label:{
-                                UserSearchCell(user: friend, showActivity: false)
-                            })
+                        HStack{
+                            Text("Write a description").padding(.leading,10)
+                            Spacer()
                         }
-                        ScrollView(.horizontal){
-                            HStack{
-                                ForEach(selectedUsers){ user in
-                                    Button(action:{
-                                        self.selectedUsers.removeAll { removedUser in
-                                            user.id == removedUser.id
-                                        }
-                                    },label:{
-                                    Text("\(user.nickName ?? " ")")
-                                    })
-                                }
+                   
+                        TextField("description", text: $description).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color"))).padding(.horizontal,10)
+                        
+                    }
+                    
+                    ScrollView{
+                        HStack{
+                            ForEach(selectedGroups){ group in
+                                Button(action:{
+                                    self.makeSelection(groups: selectedGroups, selectedGroup: group)
+                                },label:{
+                                    Text("\(group.groupName)")
+                                })
                             }
                         }
                     }
                 }
-
-                
-                
-                Button(action:{
-                    self.openImagePicker.toggle()
-                },label:{
-                    Image(uiImage: post)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width:UIScreen.main.bounds.width,height:100)
-                }).fullScreenCover(isPresented: $openImagePicker, content: {
-                    ImagePicker(avatarImage: $post, allowsEditing: true)
-                })
-                Spacer()
-                Button(action:{
-                    createPostVM.createPost(image: post, userID: userVM.user?.id ?? " ", group: group)
-                },label:{
-                    Text("Create Post")
-                })
+               
                 
                 Spacer()
+                Button(action:{
+                    createPostVM.createPost(image: post, userID: userVM.user?.id ?? " ", group: group, description: description)
+                },label:{
+                    Text(createPostVM.uploadStatus == .startedUpload ? "Uploading Post" : "Create Post").foregroundColor(Color("Foreground"))
+                        .padding(.vertical)
+                        .frame(width: UIScreen.main.bounds.width/1.5).background(Color("AccentColor")).cornerRadius(15)
+                }).padding(.bottom,30).disabled(createPostVM.uploadStatus == .startedUpload)
+                
             }
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onReceive(createPostVM.$uploadStatus) { uploadStatus in
             if uploadStatus == .finishedUpload{

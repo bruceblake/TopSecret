@@ -18,7 +18,7 @@ struct UserSearchCell: View {
                 WebImage(url: URL(string: user.profilePicture ?? ""))
                     .resizable()
                     .scaledToFill()
-                    .frame(width:48,height:48)
+                    .frame(width:40,height:40)
                     .clipShape(Circle())
                 
                 

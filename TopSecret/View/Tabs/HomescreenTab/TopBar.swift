@@ -14,15 +14,15 @@ struct TopBar : View {
     @EnvironmentObject var userVM: UserViewModel
     @State var user : User = User()
     @State var selectedColorIndex : Int = 0
-    var icons : [Image] = [Image("FinishedIcon"),Image("Icon")]
     @Binding var showSearch : Bool
+    @EnvironmentObject var shareVM: ShareViewModel
     var tabIndex : Tab
 
     var body : some View {
 
-        HStack{
+        HStack(alignment: .top){
             
-            HStack(spacing: 5){
+            HStack(alignment: .top, spacing: 5){
                 
                 
                 
@@ -35,6 +35,72 @@ struct TopBar : View {
                         .overlay(Circle().stroke(Color("AccentColor"), lineWidth: 1))
                 }
                 
+                NavigationLink(destination: AddFriendsView()) {
+                     ZStack{
+                         Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
+                         
+                         
+                             
+                        
+                         Image(systemName: "person.fill.badge.plus").foregroundColor(FOREGROUNDCOLOR).font(.title3)
+
+
+                     }
+                }
+
+                
+              
+            }.padding(.leading)
+            
+            
+          
+            
+            
+            Spacer()
+            
+            if tabIndex == .calendar {
+                    Text("Calendar").bold().font(.title2).foregroundColor(FOREGROUNDCOLOR)
+            }
+            else if tabIndex == .friends{
+                Text("Friends").bold().font(.title2)
+            }
+            else if  tabIndex == .groups {
+                Text("Groups").bold().font(.title2)
+            }
+            else if tabIndex == .notifications {
+                Text("Notifications").bold().font(.title2)
+            }
+            else if tabIndex == .events {
+                Text("Events").bold().font(.title2)
+            }
+            
+          
+            
+            
+            Spacer()
+             
+             
+            HStack(alignment: .top){
+                
+                Button(action: {
+                  //todo
+                    userVM.hideTabButtons.toggle()
+                    userVM.showAddContent.toggle()
+                    userVM.hideBackground.toggle()
+                 },label:{
+                     
+                     ZStack{
+                         Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
+                         
+                         
+                             
+                        
+                         Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title3)
+                         
+
+                     }
+       
+                 })
                 
                 Button(action:{
                     withAnimation(.easeIn){
@@ -52,58 +118,11 @@ struct TopBar : View {
                         
                     }
                 })
-            }.padding(.leading)
-            
-            
-          
-            
-            
-            Spacer()
-            
-            if tabIndex == .home {
-                Button(action:{
-                    if selectedColorIndex == icons.count-1{
-                        selectedColorIndex = 0
-                    }else{
-                        selectedColorIndex = selectedColorIndex + 1
-                    }
-                },label:{
-                    icons[selectedColorIndex].resizable().scaledToFit().frame(width: 70, height:70)
-                })
-            }
-            else if tabIndex == .friends{
-                Text("Friends").bold().font(.title3)
-            }
-            else if  tabIndex == .schedule {
-                Text("Schedule").bold().font(.title3)
-            }
-            
-          
-            
-            
-            Spacer()
-             
                 
-               Button(action: {
-                 //todo
-                   userVM.hideTabButtons.toggle()
-                   userVM.showAddContent.toggle()
-                },label:{
-                    
-                    ZStack{
-                        Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
-                        
-                        
-                        if tabIndex == .friends {
-                            
-                        Image(systemName: "person.fill.badge.plus").foregroundColor(FOREGROUNDCOLOR).font(.title3)
-                        }else {
-                        Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title3)
-                        }
-
-                    }
-      
-                }).padding(.trailing)
+               
+            }
+            .padding(.trailing)
+              
                 
             
             

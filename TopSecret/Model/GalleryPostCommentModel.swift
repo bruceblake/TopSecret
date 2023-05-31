@@ -8,28 +8,41 @@
 import Foundation
 import Firebase
 
-struct GalleryPostCommentModel : Identifiable,Hashable {
-   var id: String?
+struct GroupPostCommentModel : Identifiable {
+    var id: String?
     var text: String?
-    var dateCreated: Timestamp?
-    var usersLiked : [String]?
-    var likes : Int?
-    var creator : String?
-    var user: User?
-    var galleryPostID: String?
-    var groupID: String?
+    var timeStamp: Timestamp?
+    var likedListID: [String]?
+    var likedList : [User]?
+    var dislikedListID: [String]?
+    var dislikedList: [User]?
+    var creatorID: String?
+    var creator: User?
+    var postID: String?
+    var post: GroupPostModel?
+    var parentCommentID: String?
+    var repliedCommentsCount: Int?
+
     
     
     init(dictionary: [String:Any]){
         self.id = dictionary["id"] as? String ?? " "
         self.text = dictionary["text"] as? String ?? ""
-        self.dateCreated = dictionary["dateCreated"] as? Timestamp ?? Timestamp()
-        self.creator = dictionary["creator"] as? String ?? " "
-        self.usersLiked = dictionary["usersLiked"] as? [String] ?? []
-        self.likes = dictionary["likes"] as? Int ?? 0
-        self.galleryPostID = dictionary["galleryPostID"] as? String ?? " "
-        self.groupID = dictionary["groupID"] as? String ?? ""
-        self.user = dictionary["user"] as? User ?? User()
+        self.timeStamp = dictionary["timeStamp"] as? Timestamp ?? Timestamp()
+        self.creatorID = dictionary["creatorID"] as? String ?? " "
+        self.creator = dictionary["creator"] as? User ?? User()
+        self.likedList = dictionary["likedList"] as? [User] ?? []
+        self.likedListID = dictionary["likedListID"] as? [String] ?? []
+        self.dislikedList = dictionary["dislikedList"] as? [User] ?? []
+        self.dislikedListID = dictionary["dislikedListID"] as? [String] ?? []
+        self.postID = dictionary["postID"] as? String ?? " "
+        self.post = dictionary["post"] as? GroupPostModel ?? GroupPostModel()
+        self.repliedCommentsCount = dictionary["repliedCommentsCount"] as? Int ?? 0
+        self.parentCommentID = dictionary["parentCommentID"] as? String ?? " "
+    }
+    
+    init(){
+        self.id = UUID().uuidString
     }
  }
 

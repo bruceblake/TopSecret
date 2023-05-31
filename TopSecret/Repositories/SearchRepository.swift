@@ -103,6 +103,20 @@ class SearchRepository : ObservableObject {
         return res
     }
     
+    private func filterUserResults(text: String, result: [User]) -> [User] {
+        var res : [User] = []
+        let lowercasedText = text.lowercased()
+        
+        res = result.filter {
+            let username = $0.username ?? ""
+            let email = $0.email ?? ""
+            let nickName = $0.nickName ?? ""
+            
+            return username.lowercased().contains(lowercasedText)  || email.lowercased().contains(lowercasedText)  || nickName.lowercased().contains(lowercasedText)
+        }
+        
+        return res
+    }
     
     private func filterResults(text: String, results1: [User], results2: [Group]) -> [[Any]]{
         
@@ -287,7 +301,7 @@ class SearchRepository : ObservableObject {
             .combineLatest($userGroupResults)
             .map(self.filterUserGroupsResults)
             .sink { [self](returnedResults) in
-                userGroupReturnedResults = returnedResults as? [Group] ?? []
+                userGroupReturnedResults = returnedResults 
                 
             }
             .store(in: &self.cancellables)
@@ -314,8 +328,10 @@ class SearchRepository : ObservableObject {
             
             groupD.enter()
             for friend in friendsID {
+                groupD.enter()
                 self.fetchUser(userID: friend) { fetchedUser in
                     usersToReturn.append(fetchedUser)
+                    groupD.leave()
                 }
             }
                                 groupD.leave()
@@ -323,6 +339,7 @@ class SearchRepository : ObservableObject {
             
             groupD.notify(queue: .main, execute:{
                 self.userFriendsResults = usersToReturn
+                print("count: \(self.userFriendsResults.count)")
             })
             
         }
@@ -338,7 +355,6 @@ class SearchRepository : ObservableObject {
             .map(self.filterFriendsResults)
             .sink { [self](returnedResults) in
                 userFriendsReturnedResults = returnedResults as? [User] ?? []
-                
             }
             .store(in: &self.cancellables)
         
@@ -381,12 +397,10 @@ class SearchRepository : ObservableObject {
         })
         
         $searchText
-            .combineLatest($userResults, $groupResults)
-            .map(filterResults)
+            .combineLatest($userResults)
+            .map(filterUserResults)
             .sink { [self](returnedResults) in
-                userReturnedResults = returnedResults[0] as? [User] ?? []
-                groupReturnedResults = returnedResults[1] as? [Group] ?? []
-                
+                userReturnedResults = returnedResults as? [User] ?? []
             }
             .store(in: &cancellables)
     }

@@ -148,6 +148,9 @@ class GroupCalendarViewModel : ObservableObject {
                     groupD.leave()
                 }
                 
+                
+                
+                
                 groupD.notify(queue: .main, execute: {
                     eventsToReturn.append(EventModel(dictionary: data))
                 })

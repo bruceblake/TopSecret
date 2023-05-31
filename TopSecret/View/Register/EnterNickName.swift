@@ -12,13 +12,29 @@ struct EnterFullName: View {
     @State var nickName: String = ""
     @State var isNext: Bool = false
     @EnvironmentObject var registerVM : RegisterValidationViewModel
-    
+    @Environment(\.presentationMode) var presentationMode
+
     
     var body: some View {
         ZStack{
             
             Color("Background")
             VStack{
+                
+                HStack{
+                    Button {
+                        presentationMode.wrappedValue.dismiss()
+                    } label: {
+                        ZStack{
+                            Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
+                            Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR)
+                        }
+                    }
+
+                  
+                    Spacer()
+                    Circle().frame(width: 40, height: 40).foregroundColor(Color.clear)
+                }.padding(.horizontal).padding(.top,50)
                 Text("Enter your nickname").foregroundColor(Color("Foreground")).font(.largeTitle).fontWeight(.bold).padding(.horizontal)
                 
                 Text("This is the name your friends will see you as").font(.headline).padding(.bottom,30)
@@ -50,8 +66,8 @@ struct EnterFullName: View {
                     })
                 
                 Spacer()
-            }.padding(.top,100)
-        }.edgesIgnoringSafeArea(.all)
+            }
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
     }
 }
 

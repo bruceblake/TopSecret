@@ -31,6 +31,7 @@ struct User : Identifiable, Hashable{
     var userNotificationCount : Int?
     var pendingFriendsList : [User]?
     var pendingFriendsListID : [String]?
+    var pendingGroupInvitationID : [String]?
     var isActive: Bool?
     var lastActive: Timestamp?
     var latitude : Double?
@@ -42,8 +43,18 @@ struct User : Identifiable, Hashable{
     var personalChatsID : [String]
     var personalChats : [ChatModel]
     var personalChatNotificationCount : Int?
+    var dateCreated : Timestamp?
+    var groupsFollowingID: [String]?
+    var groupsFollowing: [Group]?
+    var hasUnreadMessages : Bool?
+    var appIconBadgeNumber : Int?
+    var interests: [String]?
+    var usersLoggedInCount: Int?
+    var eventsID: [String]
+    var events: [EventModel]
 
 init(dictionary: [String:Any]) {
+    self.appIconBadgeNumber = dictionary["appIconBadgeNumber"] as? Int ?? 0
     self.id = dictionary["uid"] as? String ?? " "
     self.username = dictionary["username"] as? String ?? " "
     self.email = dictionary["email"] as? String ?? " "
@@ -72,7 +83,17 @@ init(dictionary: [String:Any]) {
     self.personalChatsID = dictionary["personalChatsID"] as? [String] ?? []
     self.personalChats = dictionary["personalChats"] as? [ChatModel] ?? []
     self.personalChatNotificationCount = dictionary["personalChatNotificationCount"] as? Int ?? 0
- }
+    self.pendingGroupInvitationID = dictionary["pendingGroupInvitationID"] as? [String] ?? []
+    self.dateCreated = dictionary["dateCreated"] as? Timestamp ?? Timestamp()
+    self.groupsFollowingID = dictionary["groupsFollowingID"] as? [String] ?? []
+    self.groupsFollowing = dictionary["groupsFollowing"] as? [Group] ?? []
+    self.hasUnreadMessages = dictionary["hasUnreadMessages"] as? Bool ?? false
+    self.interests = dictionary["interests"] as? [String] ?? []
+    self.usersLoggedInCount = dictionary["usersLoggedInCount"] as? Int ?? 0
+    self.eventsID = dictionary["eventsID"] as? [String] ?? []
+    self.events = dictionary["events"] as? [EventModel] ?? []
+ 
+}
 
     init(){
         self.id = UUID().uuidString
@@ -80,6 +101,8 @@ init(dictionary: [String:Any]) {
         self.nickName = "nickName" 
         self.personalChatsID = []
         self.personalChats = []
+        self.eventsID = []
+        self.events = []
     }
     
     

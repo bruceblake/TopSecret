@@ -24,7 +24,6 @@ struct GalleryPostModel : Identifiable {
     var creator : User?
     var isInGroup : Bool?
     var isFollowingGroup : Bool?
-    var comments: [GalleryPostCommentModel]?
     
     
     init(dictionary: [String:Any]){
@@ -42,7 +41,6 @@ struct GalleryPostModel : Identifiable {
         self.creator = dictionary["creator"] as? User ?? User()
         self.isInGroup = dictionary["isInGroup"] as? Bool ?? false
         self.isFollowingGroup = dictionary["isFollowingGroup"] as? Bool ?? true
-        self.comments = dictionary["comments"] as? [GalleryPostCommentModel] ?? []
     }
     
     init(){

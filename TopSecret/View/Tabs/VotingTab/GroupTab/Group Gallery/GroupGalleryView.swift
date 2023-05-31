@@ -7,22 +7,26 @@
 
 import SwiftUI
 import Photos
-import MediaCore
-import MediaSwiftUI
+import PhotosUI
+import SDWebImageSwiftUI
+
 
 
 
 struct GroupGalleryView: View {
     
-    @State var isShowingPhotoPicker = false
-    @State var selectedImages : [UIImage] = []
     @StateObject var groupGalleryVM = GroupGalleryViewModel()
+    @State var images : [UIImage] = []
+    @State var picker = false
+    @StateObject var imagePickerVM = ImagePickerViewModel()
     @EnvironmentObject var userVM: UserViewModel
     @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
+    @Environment(\.presentationMode) var presentationMode
     @State var openImageToEdit : Bool = false
     @State var selectedImageToEdit : GroupGalleryImageModel = GroupGalleryImageModel()
     @StateObject var searchRepository = SearchRepository()
     @State var readyToPost : Bool = false
+    @State var selectedOptionIndex : Int = 0
     
     let columns : [GridItem] = [
         GridItem(.flexible(), spacing: 0),
@@ -31,6 +35,11 @@ struct GroupGalleryView: View {
         
         
     ]
+    
+    func getHStackCount(numberOfImages: Int) -> Int{
+        return Int(ceil(Double(numberOfImages/3)))
+    }
+    
     
     var body: some View {
         
@@ -44,69 +53,120 @@ struct GroupGalleryView: View {
                 HStack{
                     
                     Button(action:{
-                        self.isShowingPhotoPicker.toggle()
+                        presentationMode.wrappedValue.dismiss()
                     },label:{
                         ZStack{
                             Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
-                            Image(systemName: "lock").font(.headline).foregroundColor(FOREGROUNDCOLOR)
+                            Image(systemName: "chevron.left").font(.headline).foregroundColor(FOREGROUNDCOLOR)
                         }
                     }).padding(.leading).padding(.trailing,0)
                     
-                    
+                    Spacer()
               
                     
-                    SearchBar(text: $searchRepository.searchText, placeholder: "Gallery", onSubmit: {})
-                    
+                    Text("\(selectedGroupVM.group.groupName)'s Gallery")
                        
-                    
+                    Spacer()
                     
                     Button(action:{
-                        self.isShowingPhotoPicker.toggle()
+                        self.picker.toggle()
                     },label:{
                         ZStack{
                             Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
-                            Image(systemName: "photo.on.rectangle.angled").foregroundColor(FOREGROUNDCOLOR)
+                            Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR)
                         }
-                    }).padding(.trailing)
+                    }).padding(.trailing).sheet(isPresented: $picker){
+                        MultipleAssetPicker(images: $images, picker: $picker, userID: userVM.user?.id ?? " ", groupGalleryVM: groupGalleryVM)
+                    }
                     
-                }.padding(.top).padding(.bottom,10)
+                }.padding(.top,50)
                 
-           
-                Spacer()
+                VStack{
+                    ScrollView(.horizontal){
+                        HStack(spacing: 20 ){
+                            Button(action:{
+                                selectedOptionIndex = 0
+                            },label:{
+                                Text("All").foregroundColor(selectedOptionIndex == 0 ? Color("AccentColor") : FOREGROUNDCOLOR)
+                            })
+                            
+                            Button(action:{
+                                selectedOptionIndex = 1
+                            },label:{
+                                Text("Favorites").foregroundColor(selectedOptionIndex == 1 ? Color("AccentColor") : FOREGROUNDCOLOR)
+                            })
+                            
+                            Button(action:{
+                                selectedOptionIndex = 2
+                            },label:{
+                                Text("Videos").foregroundColor(selectedOptionIndex == 2 ? Color("AccentColor") : FOREGROUNDCOLOR)
+                            })
+                            
+                            Button(action:{
+                                selectedOptionIndex = 3
+                            },label:{
+                                Text("Photos").foregroundColor(selectedOptionIndex == 3 ? Color("AccentColor") : FOREGROUNDCOLOR)
+                            })
+                            
+                            Button(action:{
+                                selectedOptionIndex = 4
+                            },label:{
+                                Text("Screenshots").foregroundColor(selectedOptionIndex == 4 ? Color("AccentColor") : FOREGROUNDCOLOR)
+                            })
+                            
+                            
+                        }.padding(.horizontal)
+                    }
+                    Divider()
+                }
+                   
                 
+                
+                if selectedOptionIndex == 0 {
+         
+                    ScrollView(showsIndicators: false){
+                        
+                       
+                        
+                        LazyVGrid(columns: columns,spacing: 1) {
+                            
+                           
+                            ForEach(groupGalleryVM.retrievedImages, id: \.id){ image in
+                                Button(action:{
+                                    self.openImageToEdit.toggle()
+                                    self.selectedImageToEdit = image
+                                },label:{
+                                    GalleryThumbnailImage(image: image.image ?? UIImage(named: "Icon")!, creator: image.creator ?? User())
+                                  
+                                }).fullScreenCover(isPresented: $openImageToEdit) {
+                                    
+                                } content: {
+                                    EditGalleryImageView(galleryImage: $selectedImageToEdit)
+                                }
+                                
+                                
+                            }
+                        }
+                    }
+                    
+                }else if selectedOptionIndex == 1 {
+                    
+                }else if selectedOptionIndex == 2 {
+                    
+                }
+                else if selectedOptionIndex == 3 {
+                    
+                }else if selectedOptionIndex == 4 {
+                    
+                }
                 
                 //Gallery
                 
                     
                   
                         
-                        if !groupGalleryVM.retrievedImages.isEmpty{
-                            ScrollView(showsIndicators: false){
-                            LazyVGrid(columns: columns, spacing: 1) {
-                                ForEach(groupGalleryVM.retrievedImages, id: \.id){ image in
-                                    Button(action:{
-                                        self.selectedImageToEdit = image
-                                        withAnimation(.spring()){
-                                            self.openImageToEdit.toggle()
-                                        }
-                                    },label:{
-                                        
-                                        Image(uiImage: image.image ?? UIImage(named: "Icon")!)
-                                            .resizable()
-                                            .frame(width: UIScreen.main.bounds.width/3, height: 150)
-                                            .aspectRatio(contentMode: .fit)
-                                            .overlay(Rectangle().stroke(Color("Background"), lineWidth: 2))
-                                    }).fullScreenCover(isPresented: $openImageToEdit) {
-                                        
-                                    } content: {
-                                        EditGalleryImageView(galleryImage: $selectedImageToEdit)
-                                    }
-
-                                    
-                                }
-                            }
-                        }
-                        }
+                           
+                        
                         
                     
                     
@@ -125,24 +185,114 @@ struct GroupGalleryView: View {
                 groupGalleryVM.fetchPhotos(userID: userVM.user?.id ?? " ", groupID: selectedGroupVM.group.id)
             }
             
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).sheet(isPresented: $isShowingPhotoPicker) {
-                
-            for image in selectedImages {
-                groupGalleryVM.uploadPhoto(image: image, userID: userVM.user?.id ?? " ", group: selectedGroupVM.group ?? Group())
-                print("uploaded")
-            }
-            
-        } content: {
-            GroupGalleryPhotoPicker(selectedImages: $selectedImages, picker: $isShowingPhotoPicker, readyToPost: $readyToPost)
-        }
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
         
         
         
         
     }
+    
 }
 
 
+struct GalleryThumbnailImage : View {
+    var image: UIImage
+    var creator: User
+    var body: some View{
+        ZStack{
+            Color("Color").overlay(
+                ZStack{
+                    Image(uiImage: image ?? UIImage(named: "Icon")!)
+                        .resizable()
+                            .aspectRatio(contentMode: .fill)
+                    VStack{
+                        Spacer()
+                        HStack{
+                            Spacer()
+                            WebImage(url: URL(string: creator.profilePicture ?? ""))
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width:20,height:20)
+                                .clipShape(Circle())
+                        }
+                    }
+                }
+                
+            ).clipped()
+            
+       
+            
+         
+        }.edgesIgnoringSafeArea(.all).frame(width: UIScreen.main.bounds.width/3, height: 200)
+    }
+}
+
+
+struct MultipleAssetPicker : UIViewControllerRepresentable {
+    
+    
+    func makeCoordinator() -> Coordinator {
+        return MultipleAssetPicker.Coordinator(parent1: self)
+    }
+    
+    @Binding var images: [UIImage]
+    @Binding var picker : Bool
+    var userID: String
+    @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
+    @StateObject var groupGalleryVM : GroupGalleryViewModel
+    
+    func makeUIViewController(context: Context) -> PHPickerViewController {
+        var config = PHPickerConfiguration()
+        
+        config.selectionLimit = 1
+        let picker = PHPickerViewController(configuration: config)
+        picker.delegate = context.coordinator
+        return picker
+    }
+    
+    func updateUIViewController(_ uiViewController: PHPickerViewController, context: Context) {
+        
+    }
+    
+    
+    
+    
+    class Coordinator: NSObject, PHPickerViewControllerDelegate {
+        
+        var parent : MultipleAssetPicker
+        
+        init(parent1: MultipleAssetPicker){
+            parent = parent1
+        }
+        
+        
+        
+        func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+            
+            parent.picker.toggle()
+            
+            for img in results {
+                
+                if img.itemProvider.canLoadObject(ofClass: UIImage.self){
+                    
+                    img.itemProvider.loadObject(ofClass: UIImage.self) { image, err in
+                        guard let image1 = image else {
+                            print(err)
+                            return
+                        }
+                        
+                        
+                        self.parent.images.append(image1 as! UIImage)
+                        self.parent.groupGalleryVM.uploadPhoto(image: image1 as! UIImage, userID: self.parent.userID, group: self.parent.selectedGroupVM.group, isPrivate: false)
+                    }
+                }else{
+                    print("Cannot be loaded")
+                }
+            }
+            
+        }
+    }
+}
 
 
 

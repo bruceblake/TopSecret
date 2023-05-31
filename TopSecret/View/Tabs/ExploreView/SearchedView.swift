@@ -15,7 +15,7 @@ struct SearchedView: View {
     @State var openGroupProfile : Bool = false
     @EnvironmentObject var userVM : UserViewModel
     @State var selectedOptionIndex : Int = 0
-    var options = ["Top","Users","Groups","Friends","Places"]
+    var options = ["Top","Users","Groups","Friends","Favorites"]
 
     
     var body: some View {
@@ -43,7 +43,7 @@ struct SearchedView: View {
                     UserResults(searchVM: searchVM).pageView(ignoresSafeArea: true, edges: .bottom)
                     GroupResults(searchVM: searchVM).pageView(ignoresSafeArea: true, edges: .bottom)
                     FriendResults(searchVM: searchVM).pageView(ignoresSafeArea: true, edges: .bottom)
-                    Text("Hello World").pageView(ignoresSafeArea: true, edges: .bottom)
+                    Text("doesnt work yet :/")
 
                 }.padding(.top)
                     .ignoresSafeArea(.container, edges: .bottom )
@@ -134,7 +134,7 @@ struct GroupResults : View {
                         VStack{
                             ForEach(searchVM.groupReturnedResults, id: \.id){ group in
                                     NavigationLink {
-                                        GroupProfileView(group: $selectedGroup, isInGroup: selectedGroup.users.contains(userVM.user?.id ?? " "), showProfileView: $openGroupProfile)
+                                        GroupProfileView(group: selectedGroup, isInGroup: selectedGroup.users.contains(userVM.user?.id ?? " "))
                                     } label: {
                                         GroupSearchCell(group: group)
                                     }
@@ -224,7 +224,7 @@ struct TopResults : View {
         ZStack{
             Color("Background")
             ScrollView(){
-                if !searchVM.searchText.isEmpty && searchVM.groupReturnedResults.isEmpty && searchVM.userReturnedResults.isEmpty{
+                if !searchVM.searchText.isEmpty && searchVM.groupReturnedResults.isEmpty && searchVM.userReturnedResults.isEmpty && searchVM.userFriendsReturnedResults.isEmpty{
                     Text("There are no results for \(searchVM.searchText)")
                 }
                 VStack(alignment: .leading){
@@ -237,7 +237,7 @@ struct TopResults : View {
                         VStack{
                             ForEach(searchVM.groupReturnedResults, id: \.id){ group in
                                     NavigationLink {
-                                        GroupProfileView(group: $selectedGroup, isInGroup: selectedGroup.users.contains(userVM.user?.id ?? " "), showProfileView: $openGroupProfile)
+                                        GroupProfileView(group: selectedGroup, isInGroup: selectedGroup.users.contains(userVM.user?.id ?? " "))
                                     } label: {
                                         GroupSearchCell(group: group)
                                     }

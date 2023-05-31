@@ -16,7 +16,7 @@ class GroupGalleryViewModel : ObservableObject {
     @Published var isLoading : Bool = true
     
     
-    func uploadPhoto(image: UIImage, userID: String, group: Group){
+    func uploadPhoto(image: UIImage, userID: String, group: Group, isPrivate: Bool){
         
       
         
@@ -38,7 +38,7 @@ class GroupGalleryViewModel : ObservableObject {
                     if err == nil {
                         
                         DispatchQueue.main.async{
-                            let galleryImageData = ["id":id, "url":path,"image":image,"creatorID":userID,"timeStamp":Timestamp(),"isPrivate":false] as [String:Any]
+                            let galleryImageData = ["id":id, "url":path,"image":image,"creatorID":userID,"timeStamp":Timestamp(),"isPrivate":isPrivate] as [String:Any]
                             self.retrievedImages.append(GroupGalleryImageModel(dictionary: galleryImageData))
                         }
                         
@@ -46,6 +46,21 @@ class GroupGalleryViewModel : ObservableObject {
                     }
                 }
             }
+            
+            self.fetchPhotos(userID: userID, groupID: group.id)
+        }
+    }
+    
+    func fetchUser(userID: String, completion: @escaping (User) -> ()) -> () {
+        COLLECTION_USER.document(userID).getDocument { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            let data = snapshot?.data() as? [String:Any] ?? [:]
+            
+            return completion(User(dictionary: data))
         }
     }
     
@@ -55,22 +70,20 @@ class GroupGalleryViewModel : ObservableObject {
         var groupD = DispatchGroup()
         
         groupD.enter()
-        self.retrievedImages.removeAll()
         COLLECTION_GROUP.document(groupID).collection("Gallery").getDocuments { snapshot, err in
             if err != nil {
                 print("ERROR")
                 return
             }
             
-            var paths = [String]()
             
            var documents = snapshot!.documents
             
             
             for doc in documents{
+                var docData = doc.data() as? [String:Any] ?? [:]
                 var path = doc["url"] as? String ?? " "
-                var id = doc["id"] as? String ?? " "
-                var timeStamp = doc["timeStamp"] as? Timestamp ?? Timestamp()
+                var creatorID = doc["creatorID"] as? String ?? ""
                 let storageRef = Storage.storage().reference()
                 
                 let fileRef = storageRef.child(path)
@@ -83,10 +96,20 @@ class GroupGalleryViewModel : ObservableObject {
                     }
                     
                     if let image = UIImage(data: data!){
-                        DispatchQueue.main.async {
-                            let galleryImageData = ["id":id, "url":path,"image":image,"creatorID":userID,"timeStamp":timeStamp,"isPrivate":false] as [String:Any]
-                            self.retrievedImages.append(GroupGalleryImageModel(dictionary: galleryImageData))
+                        let dp = DispatchGroup()
+                        dp.enter()
+                        docData["image"] = image
+                        
+                        self.fetchUser(userID: creatorID) { fetchedUser in
+                            docData["creator"] = fetchedUser
+                            dp.leave()
                         }
+                        
+                        dp.notify(queue: .main, execute:{
+                            self.retrievedImages.append(GroupGalleryImageModel(dictionary: docData))
+                        })
+                           
+                        
                     }
                     
                 }

@@ -12,7 +12,7 @@ struct GroupSettingsView: View {
     @StateObject var groupVM = GroupViewModel()
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
-    @EnvironmentObject var navigationHelper : NavigationHelper
+    @Environment(\.modalMode) var modalMode
     @State var openChangeMOTD : Bool = false
     
     var body: some View {
@@ -107,7 +107,7 @@ struct GroupSettingsView: View {
                                 }).padding(.top,10)
                                 SettingsButtonCell(text: "Leave Group", includeDivider: false,  action:{
                                     
-                                    self.navigationHelper.moveToDashboard = true
+                                    self.modalMode.wrappedValue = false
                                     groupVM.leaveGroup(group: selectedGroupVM.group ?? Group(), user: userVM.user ?? User())
                                     
                                     

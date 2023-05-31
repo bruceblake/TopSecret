@@ -11,7 +11,7 @@ struct PollModel : Identifiable {
     var id : String?
     var creatorID : String?
     var creator: User?
-    var startDate : Timestamp?
+    var timeStamp : Timestamp?
     var endDate : Timestamp?
     var pollOptions : [PollOptionModel] = []
     var finished: Bool?
@@ -22,6 +22,7 @@ struct PollModel : Identifiable {
     var usersAnswered: [User]?
     var usersVisibleToID: [String]?
     var usersVisibleTo: [User]?
+    
    
    
     
@@ -29,7 +30,7 @@ struct PollModel : Identifiable {
         self.id = dictionary["id"] as? String ?? ""
         self.creatorID = dictionary["creatorID"] as? String ?? ""
         self.creator = dictionary["creator"] as? User ?? User()
-        self.startDate = dictionary["startDate"] as? Timestamp ?? Timestamp()
+        self.timeStamp = dictionary["timeStamp"] as? Timestamp ?? Timestamp()
         self.endDate = dictionary["endDate"] as? Timestamp ?? Timestamp()
         self.pollOptions = dictionary["pollOptions"] as? [PollOptionModel] ?? []
         self.finished = dictionary["finished"] as? Bool ?? false

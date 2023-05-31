@@ -11,7 +11,7 @@ import SDWebImageSwiftUI
 struct GroupSearchCell: View {
     var group : Group
     var body: some View {
-        VStack(alignment: .leading){
+            
             HStack(alignment: .center){
                 WebImage(url: URL(string: group.groupProfileImage))
                     .resizable()
@@ -28,9 +28,9 @@ struct GroupSearchCell: View {
 
                 }
                 Spacer()
-            }.padding([.leading,.vertical])
-            Divider()
-        }
+            }.padding(.leading).padding(.vertical,10)
+            
+         
     .edgesIgnoringSafeArea(.all)
     }
 }

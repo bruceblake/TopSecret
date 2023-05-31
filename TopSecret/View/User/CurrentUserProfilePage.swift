@@ -15,10 +15,10 @@ struct CurrentUserProfilePage: View {
     @State var isLoading: Bool = false
     @State var switchAccounts : Bool = false
     @State var selectedIndex : Int = 0
+    @State var seeProfilePicture : Bool = false
     
     @StateObject var chatVM = ChatViewModel()
     @EnvironmentObject var userVM : UserViewModel
-    @EnvironmentObject var navigationHelper : NavigationHelper
     
     @Environment(\.presentationMode) var presentationMode
     
@@ -29,12 +29,9 @@ struct CurrentUserProfilePage: View {
         
         ZStack{
             Color("Background").zIndex(0)
-            ScrollView{
                 VStack{
-                    
-                    HStack{
+                    HStack(alignment: .top){
                         
-                        VStack{
                             
                         Button(action:{
                             presentationMode.wrappedValue.dismiss()
@@ -44,55 +41,10 @@ struct CurrentUserProfilePage: View {
                                 Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR)
                             }
                         })
-                            Spacer()
-                        }
+                          
                         
                         Spacer()
-                        
-                        //pfp username nickname
-                        HStack(spacing: 5){
-                            VStack{
-                                
-                                Button(action:{
-                                    
-                                },label:{
-                                    WebImage(url: URL(string: userVM.user?.profilePicture ?? ""))
-                                        .resizable()
-                                        .scaledToFill()
-                                        .frame(width:60,height:60)
-                                        .clipShape(Circle())
-                                })
-                                
-                                VStack(alignment: .leading, spacing: 5){
-                                    
-                                    Button(action:{
-                                        userVM.hideTabButtons.toggle()
-                                        switchAccounts.toggle()
-                                    },label:{
-                                        HStack(spacing: 1
-                                        ){
-                                            Text("\(userVM.user?.nickName ?? "") ").fontWeight(.bold).font(.headline).lineLimit(1).foregroundColor(FOREGROUNDCOLOR)
-                                            Image(systemName: "chevron.down").font(.subheadline).foregroundColor(FOREGROUNDCOLOR)
-                                        }
-                                        
-                                    })
-                                    
-                                    
-                                    Text("@\(userVM.user?.username ?? "")").font(.footnote).foregroundColor(.gray)
-                                }
-                                
-                                
-                                
-                            }.padding(5).padding(.leading)
-                            
-                        }
-                        
-                        
-                        
-                        
-                        
-                        Spacer()
-                        VStack{
+
                             
                             NavigationLink(destination:{
                                SettingsMenuView()
@@ -103,58 +55,61 @@ struct CurrentUserProfilePage: View {
                             }
                             })
                         
-                            Spacer()
-                        }
                         
-                    }.padding(.top,60).padding(.horizontal)
-                    
+                        
+                    }.padding(.top,60).padding(.horizontal).zIndex(1)
+
+                    ScrollView{
+                        
+                        //pfp username nickname
+                            VStack{
+                                
+                                Button(action:{
+                                    self.seeProfilePicture.toggle()
+                                },label:{
+                                    WebImage(url: URL(string: userVM.user?.profilePicture ?? ""))
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width:60,height:60)
+                                        .clipShape(Circle())
+                                }).fullScreenCover(isPresented: $seeProfilePicture) {
+                                    
+                                } content: {
+                                    WebImage(url: URL(string: userVM.user?.profilePicture ?? ""))
+                                            .resizable()
+                                            .scaledToFit()
+                                .onTapGesture{
+                                        self.seeProfilePicture.toggle()
+                                    }
+                                }
+                                
+                                VStack(alignment: .leading, spacing: 5){
+                                    
+                                    Text("\(userVM.user?.nickName ?? "") ").fontWeight(.bold).font(.headline).lineLimit(1).foregroundColor(FOREGROUNDCOLOR)
+                                    
+                                    
+                                    Text("@\(userVM.user?.username ?? "")").font(.footnote).foregroundColor(.gray)
+                                }
+                                
+                                
+                                
+                            }.padding(5).padding(.leading)
+
                     
                     HStack{
-                        
-                        
-                        
-                        
-                        
+      
                         Spacer()
-                        
-                        
-                        
-                        
-                        
-                        
+
                         Button(action:{
                             self.showEditPage.toggle()
                         },label:{
                             Text("Edit Profile").font(.body).padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color"))).foregroundColor(FOREGROUNDCOLOR)
                         }).frame(maxWidth: .infinity)
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
-                        
+
                         Spacer()
-                        
-                        
-                        
+    
                     }
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
+
                     //User Info
                     HStack(spacing: 25){
                         
@@ -164,7 +119,7 @@ struct CurrentUserProfilePage: View {
                         NavigationLink(destination: Text("Hello World")){
                             
                             VStack{
-                                Text("\(userVM.user?.groupsID?.count ?? 0)").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
+                                Text("\(userVM.groups.count)").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
                                 Text("Groups").font(.callout).foregroundColor(.gray)
                             }
                         }
@@ -188,24 +143,25 @@ struct CurrentUserProfilePage: View {
                         
                     }.padding(.vertical)
                     
-                    Text("\(userVM.user?.bio ?? "")").frame(width: UIScreen.main.bounds.width - 20).multilineTextAlignment(.center)
+                        
+                        Text("\(userVM.user?.bio ?? "")").frame(width: UIScreen.main.bounds.width - 20).multilineTextAlignment(.center)
+                        
+                        
+                        
+                        
+                        
+                    Text("You joined Top Secret on \(userVM.user?.dateCreated?.dateValue() ?? Date(), style: .date)").font(.footnote).foregroundColor(.gray).padding()
+                        
+                    }.zIndex(2)
+            
                     
                     
-                    
-                    
-                    Spacer()
-                    
-                    
-                    
-                    
-                    
-                    
-                }.zIndex(1).opacity(switchAccounts ? 0.2 : 1)
-            }
+                }.zIndex(3).opacity(switchAccounts ? 0.2 : 1)
+            
             
             ZStack{
                 Color.clear
-            }.zIndex(2).frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height).onTapGesture {
+            }.zIndex(4).frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height).onTapGesture {
                 
                 userVM.hideTabButtons.toggle()
                 switchAccounts.toggle()
@@ -220,12 +176,12 @@ struct CurrentUserProfilePage: View {
             
             BottomSheetView(isOpen: $switchAccounts, maxHeight: UIScreen.main.bounds.height * 0.40) {
                 SwitchAccountsView()
-            }.zIndex(3)
+            }.zIndex(5)
             
             NavigationLink(destination:  UserEditProfilePageView(showEditPage: $showEditPage), isActive: $showEditPage) {
                 EmptyView()
             }
-            
+
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
         
         

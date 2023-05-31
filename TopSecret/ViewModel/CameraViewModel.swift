@@ -8,7 +8,18 @@
 import Foundation
 import AVFoundation
 import SwiftUI
+import Photos
 
+
+struct Photo: Identifiable, Equatable{
+    public var id: String
+    public var originalData: Data
+    
+    public init(id: String = UUID().uuidString, originalData: Data) {
+            self.id = id
+            self.originalData = originalData
+        }
+}
 
 class CameraViewModel : NSObject, ObservableObject, AVCapturePhotoCaptureDelegate, AVCaptureFileOutputRecordingDelegate {
     @Published var photoHasBeenTaken = false
@@ -18,6 +29,7 @@ class CameraViewModel : NSObject, ObservableObject, AVCapturePhotoCaptureDelegat
     @Published var photoOutput = AVCapturePhotoOutput()
     @Published var videoOutput = AVCaptureMovieFileOutput()
     
+    @Published var flashMode: AVCaptureDevice.FlashMode = .off
     @Published var preview: AVCaptureVideoPreviewLayer!
     
     @Published var hasSavedPhoto = false
@@ -30,6 +42,7 @@ class CameraViewModel : NSObject, ObservableObject, AVCapturePhotoCaptureDelegat
     @Published var showVideoPreview = false
     @Published var recordedDuration: CGFloat = 0
     @Published var maxDuration : CGFloat = 20
+    
     
     func checkPermission(){
         
@@ -60,16 +73,16 @@ class CameraViewModel : NSObject, ObservableObject, AVCapturePhotoCaptureDelegat
             
             self.session.beginConfiguration()
             
-//            let cameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: cameraPosition)
-//            let videoInput = try AVCaptureDeviceInput(device: cameraDevice!)
-//            let audioDevice = AVCaptureDevice.default(for: .audio)
-//            let audioInput = try AVCaptureDeviceInput(device: audioDevice!)
+            let cameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: cameraPosition)
+            let videoInput = try AVCaptureDeviceInput(device: cameraDevice!)
+            let audioDevice = AVCaptureDevice.default(for: .audio)
+            let audioInput = try AVCaptureDeviceInput(device: audioDevice!)
             
-//            if self.session.canAddInput(videoInput) && self.session.canAddInput(audioInput){
-//                self.session.addInput(videoInput)
-//                self.session.addInput(audioInput)
-//
-//            }
+            if self.session.canAddInput(videoInput) && self.session.canAddInput(audioInput){
+                self.session.addInput(videoInput)
+                self.session.addInput(audioInput)
+
+            }
             
             if self.session.canAddOutput(self.videoOutput) && self.session.canAddOutput(self.photoOutput){
                 self.session.addOutput(self.photoOutput)
@@ -77,6 +90,7 @@ class CameraViewModel : NSObject, ObservableObject, AVCapturePhotoCaptureDelegat
 
             }
             self.session.commitConfiguration()
+            
         }
         catch{
             print(error.localizedDescription)
@@ -108,10 +122,6 @@ class CameraViewModel : NSObject, ObservableObject, AVCapturePhotoCaptureDelegat
         }
     }
     
-    func flipCamera(){
-     
-       
-    }
     
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         if error != nil {
@@ -134,6 +144,38 @@ class CameraViewModel : NSObject, ObservableObject, AVCapturePhotoCaptureDelegat
         print("Saved Photo!")
         
     }
+    
+    func requestAuthorization(completion: @escaping ()->Void) {
+            if PHPhotoLibrary.authorizationStatus() == .notDetermined {
+                PHPhotoLibrary.requestAuthorization { (status) in
+                    DispatchQueue.main.async {
+                        completion()
+                    }
+                }
+            } else if PHPhotoLibrary.authorizationStatus() == .authorized{
+                completion()
+            }
+        }
+
+
+
+    func saveVideoToAlbum(_ outputURL: URL, _ completion: ((Error?) -> Void)?) {
+            requestAuthorization {
+                PHPhotoLibrary.shared().performChanges({
+                    let request = PHAssetCreationRequest.forAsset()
+                    request.addResource(with: .video, fileURL: outputURL, options: nil)
+                }) { (result, error) in
+                    DispatchQueue.main.async {
+                        if let error = error {
+                            print(error.localizedDescription)
+                        } else {
+                            print("Saved successfully")
+                        }
+                        completion?(error)
+                    }
+                }
+            }
+        }
 
 
     func startRecording(){

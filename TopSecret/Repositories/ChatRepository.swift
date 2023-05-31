@@ -21,9 +21,6 @@ class ChatRepository : ObservableObject {
 
     
     var colors: [String] = ["green","red","blue","orange","purple","teal"]
-
-    
-    
     
     //this is for chat info tab
     func getUsers(usersID: [String]){
@@ -141,17 +138,27 @@ class ChatRepository : ObservableObject {
     }
    
     
-    func createGroupChat(name: String, users: [String], groupID: String, chatID: String){
-        
-        _ = UUID().uuidString
-        
+    func createGroupChat(name: String, users: [String], groupID: String, chatID: String, profileImage: String){
+                
         
         let data = ["name": name,
                     "memberAmount":1,
                     "dateCreated":Date(),
-                    "usersID":users, "id":chatID, "chatNameColors":[], "pickedColors":[], "nextColor":0,"groupID":groupID,"chatType":"groupChat"] as [String : Any]
+                    "usersID":users, "id":chatID, "chatNameColors":[], "pickedColors":[], "nextColor":0,"groupID":groupID,"chatType":"groupChat", "profileImage":profileImage] as [String : Any]
         
-        _ = ChatModel(dictionary: data)
+        
+        
+        for user in users {
+            COLLECTION_USER.document(user).updateData(["personalChatsID":FieldValue.arrayUnion([chatID])])
+           
+        }
+        
+        COLLECTION_PERSONAL_CHAT.document(chatID).setData(data){ err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+        }
         
         COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).setData(data) { (err) in
             if err != nil{
@@ -167,31 +174,7 @@ class ChatRepository : ObservableObject {
             }
 
     }
-    func createGroupChat(name: String, users: [String], groupID: String, chatID: String, completion: @escaping (ChatModel) -> ()) -> (){
-        
-        
-        
-        let data = ["name": name,
-                    "memberAmount":1,
-                    "dateCreated":Date(),
-                    "usersID":users, "id":chatID, "chatNameColors":[], "pickedColors":[], "nextColor":0,"groupID":groupID,"chatType":"groupChat"] as [String : Any]
-        
-        let chat = ChatModel(dictionary: data)
-        
-        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).setData(data) { (err) in
-            if err != nil{
-                print("Error")
-                return
-            }
-        }
-        
-       
-            for user in users {
-                self.pickColor(chatID: chatID, picker: 0, userID: user, groupID: groupID)
-            }
-    
-        return completion(chat)
-    }
+ 
     
     
     

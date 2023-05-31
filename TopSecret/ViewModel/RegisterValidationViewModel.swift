@@ -11,9 +11,6 @@ import FirebaseAuth
 import FirebaseFirestore
 import FirebaseStorage
 import SwiftUI
-import PackStream
-import Theo
-import Bolt
 
 
 
@@ -36,7 +33,7 @@ class RegisterValidationViewModel : ObservableObject {
     @Published var email = ""
     @Published var password = ""
     @Published var birthday : Date = Date()
-    @Published var userProfileImage : UIImage = UIImage(named: "Icon")!
+    @Published var userProfileImage : UIImage = UIImage(named: "topbarlogo")!
     @Published var user : User?
     
     private var cancellables : Set<AnyCancellable> = []

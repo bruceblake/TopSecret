@@ -20,8 +20,7 @@ struct CreatePollView: View {
     @State var choice2 = ""
     @State var choice3 = ""
     @State var choice4 = ""
-    var group: Group
-
+    @EnvironmentObject var groupVM : SelectedGroupViewModel
     var body: some View {
         ZStack{
             Color("Background")
@@ -38,11 +37,11 @@ struct CreatePollView: View {
                         
                         Spacer()
                         
-                        Text("Create A Poll")
+                        Text("Create A Poll").foregroundColor(FOREGROUNDCOLOR).font(.title2).bold()
                         
                         Spacer()
                         
-                        
+                        Circle().foregroundColor(Color.clear).frame(width: 40, height: 40)
                     })
                 }.padding(.top,50)
                 
@@ -77,14 +76,16 @@ struct CreatePollView: View {
                         createPollVM.createPoll(creatorID: userVM.user?.id ?? " ", pollOptions: [PollOptionModel(dictionary: ["id":UUID().uuidString,"choice":choice1,"pickedUsers":[]]),
                             PollOptionModel(dictionary: ["id":UUID().uuidString,"choice":choice2,"pickedUsers":[]]),
                             PollOptionModel(dictionary: ["id":UUID().uuidString,"choice":choice3,"pickedUsers":[]]),
-                                                                                                 PollOptionModel(dictionary: ["id":UUID().uuidString,"choice":choice4,"pickedUsers":[]])                                                       ], groupID: group.id ?? " ", question: question, usersVisibleToID: group.users ?? [])
+                                                                                                 PollOptionModel(dictionary: ["id":UUID().uuidString,"choice":choice4,"pickedUsers":[]])                                                       ], groupID: groupVM.group.id ?? " ", question: question, usersVisibleToID: groupVM.group.users ?? [])
                         presentationMode.wrappedValue.dismiss()
                     },label:{
-                        Text("Create Poll")
-                    })
+                        Text("Create Poll").foregroundColor(Color("Foreground"))
+                            .padding(.vertical)
+                            .frame(width: UIScreen.main.bounds.width/1.5).background(Color("AccentColor")).cornerRadius(15)
+                    }).padding(.bottom,30)
                   
                     
-                }.padding(.vertical,10)
+                }
                 
                 
                 

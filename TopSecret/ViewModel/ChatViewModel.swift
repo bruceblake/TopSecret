@@ -76,8 +76,8 @@ class ChatViewModel : ObservableObject {
         chatRepository.joinChat(chatID: chatID, userID: userID, groupID: groupID)
     }
 
-    func createGroupChat(name: String, users: [String], groupID: String, chatID: String){
-        chatRepository.createGroupChat(name: name, users: users, groupID: groupID, chatID: chatID)
+    func createGroupChat(name: String, users: [String], groupID: String, chatID: String, profileImage: String){
+        chatRepository.createGroupChat(name: name, users: users, groupID: groupID, chatID: chatID, profileImage: profileImage)
     }
 
 
@@ -119,7 +119,7 @@ class ChatViewModel : ObservableObject {
                     print("Users do not have a personal chat!")
                     let id = UUID().uuidString
 
-                    let data = ["users":[user1, user2],"id":id,"chatType":"personal"] as [String : Any]
+                    let data = ["users":[user1, user2],"id":id,"chatType":"personal","lastMessageID":"NO_MESSAGE"] as [String : Any]
 
                     let chat = ChatModel(dictionary: data)
 

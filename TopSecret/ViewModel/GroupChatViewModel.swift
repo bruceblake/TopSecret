@@ -11,7 +11,6 @@ import Firebase
 
 
 class GroupChatViewModel : ObservableObject {
-    @Published var groupChat : ChatModel?
     @Published var messages : [Message] = []
     @Published var text: String = ""
     @Published var currentChatColor = "green"
@@ -21,32 +20,60 @@ class GroupChatViewModel : ObservableObject {
     @Published var readAllMessagesListener : ListenerRegistration?
     @Published var chatListener : ListenerRegistration?
     @Published var usersIdlingListener : ListenerRegistration?
+    @Published var chat : ChatModel = ChatModel()
+    @Published var users: [User] = []
     
     
+    
+    func readLastMessage(chatID: String, userID: String){
+        
+        
+        
+        COLLECTION_PERSONAL_CHAT.document(chatID).getDocument { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            var data = snapshot?.data() as? [String:Any] ?? [:]
+            var usersThatHaveSeen = data["usersThatHaveSeenLastMessage"] as? [String] ?? []
+            if !usersThatHaveSeen.contains(userID){
+                COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["lastActionDate":Timestamp()])
+                
+                COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["usersThatHaveSeenLastMessage":FieldValue.arrayUnion([userID])])
+             
+                
+                
+                
+            }
+            
+            
+        }
+        
+        
+        
+        
+    }
     
     func startTyping(userID: String, chatID: String, groupID: String){
-            COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["usersTypingID":FieldValue.arrayUnion([userID])])
+        COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["usersTypingID":FieldValue.arrayUnion([userID])])
        
         
     }
     
     func stopTyping(userID: String, chatID: String, groupID: String){
-            COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["usersTypingID":FieldValue.arrayRemove([userID])])
+        COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["usersTypingID":FieldValue.arrayRemove([userID])])
         
         
     }
   
     
     func openChat(userID: String, chatID: String, groupID: String){
-        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).collection("UsersIdling").document(userID).setData(["user":userID])
-            
-        
-        
-        
+        COLLECTION_PERSONAL_CHAT.document(chatID).collection("UsersIdling").document(userID).setData(["user":userID])
     }
     
     func exitChat(userID: String, chatID: String, groupID: String){
-        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).collection("UsersIdling").document(userID).delete()
+        COLLECTION_PERSONAL_CHAT.document(chatID).collection("UsersIdling").document(userID).delete()
 
         
     }
@@ -56,9 +83,8 @@ class GroupChatViewModel : ObservableObject {
     
     func readAllMessages(chatID: String, groupID: String){
         
-        readAllMessagesListener?.remove()
         
-        readAllMessagesListener = COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).collection("Messages").order(by: "timeStamp", descending: false).addSnapshotListener { snapshot, err in
+        readAllMessagesListener = COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").order(by: "timeStamp", descending: false).addSnapshotListener { snapshot, err in
             if err != nil {
                 print(err!.localizedDescription)
                 return
@@ -80,7 +106,8 @@ class GroupChatViewModel : ObservableObject {
     //action
     
     func sendTextMessage(text: String, user: User, timeStamp: Timestamp, nameColor: String, messageID: String,messageType: String, chatID: String, groupID: String, messageColor: String){
-        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).collection("Messages").document(messageID).setData(["name":user.nickName ?? "","timeStamp":timeStamp, "nameColor":nameColor, "id":messageID,"profilePicture":user.profilePicture ?? "","messageType":messageType,"messageValue":text,"userID":user.id ?? " ", "messageColor":messageColor])
+        print("chatID: \(chatID)")
+        COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").document(messageID).setData(["name":user.nickName ?? "","timeStamp":timeStamp, "nameColor":nameColor, "id":messageID,"profilePicture":user.profilePicture ?? "","type":messageType,"value":text,"userID":user.id ?? " ", "messageColor":messageColor])
         
         
         let notificationID = UUID().uuidString
@@ -98,8 +125,8 @@ class GroupChatViewModel : ObservableObject {
     }
     
     func editMessage(messageID: String, chatID: String, text: String, groupID: String){
-        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).collection("Messages").document(messageID).updateData(["messageValue":text])
-        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).collection("Messages").document(messageID).updateData(["edited":true])
+        COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").document(messageID).updateData(["messageValue":text])
+        COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").document(messageID).updateData(["edited":true])
         self.scrollToBottom += 1
 
     }
@@ -125,37 +152,30 @@ class GroupChatViewModel : ObservableObject {
     func listenToChat(chatID: String, groupID: String, completion: @escaping (Bool) -> ()) -> (){
         
         
-        self.listenToUsersIdling(chatID: chatID, groupID: groupID)
         
-        chatListener?.remove()
         
-        chatListener = COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).addSnapshotListener { snapshot, err in
+        chatListener = COLLECTION_PERSONAL_CHAT.document(chatID).addSnapshotListener { snapshot, err in
             if err != nil {
                 print("ERROR")
                 return
             }
             
             var data = snapshot?.data() ?? [:]
-            let users = data["usersID"] as? [String] ?? []
-       
+            let usersID = data["usersID"] as? [String] ?? []
             let groupD = DispatchGroup()
             
             
             //fetch all chat users
             groupD.enter()
-            self.fetchChatUsers(users: users) { fetchedUsers in
+            self.fetchChatUsers(users: usersID) { fetchedUsers in
                 data["users"] = fetchedUsers
                 groupD.leave()
             }
             
-            
-           
-            
-          
-            
-            
             groupD.notify(queue: .main, execute: {
-                self.groupChat = ChatModel(dictionary: data)
+                self.chat = ChatModel(dictionary: data)
+                self.users = data["users"] as? [User] ?? []
+                print("id count: \(usersID.count)")
                 return completion(true)
             })
             
@@ -164,9 +184,8 @@ class GroupChatViewModel : ObservableObject {
     }
     
     func listenToUsersIdling(chatID: String, groupID: String){
-        usersIdlingListener?.remove()
         
-    usersIdlingListener  = COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).collection("UsersIdling").addSnapshotListener({ snapshot, err in
+    usersIdlingListener  = COLLECTION_PERSONAL_CHAT.document(chatID).collection("UsersIdling").addSnapshotListener({ snapshot, err in
             if err != nil {
                 print("ERROR")
                 return
@@ -230,7 +249,7 @@ class GroupChatViewModel : ObservableObject {
     func checkIfUserIsIdling(userID: String) -> Bool {
      
         
-        return self.groupChat?.usersIdlingID.contains(userID) ?? false
+        return self.chat.usersIdlingID.contains(userID) 
         
     }
     

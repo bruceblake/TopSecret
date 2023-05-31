@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+
 struct ImagePicker: UIViewControllerRepresentable {
     
     @Binding var avatarImage : UIImage

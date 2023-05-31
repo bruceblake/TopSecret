@@ -5,8 +5,6 @@ import Foundation
 import UserNotifications
 import UIKit
 import CoreData
-import Theo
-import Bolt
 
 
 class AppDelegate: NSObject, UIApplicationDelegate {
@@ -50,18 +48,29 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     }
     
     
+    func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -> UIInterfaceOrientationMask {
+            return UIInterfaceOrientationMask.portrait
+        }
+    
+    
   
 }
 
 
 extension AppDelegate: MessagingDelegate {
 
+
     func messaging(_ messaging: Messaging, didReceiveRegistrationToken fcmToken: String?) {
 
-      let deviceToken:[String: String] = ["token": fcmToken ?? ""]
-        print("Device token: ", deviceToken) // This token can be used for testing notifications on FCM
-        @AppStorage("userID") var uid = " "
-        COLLECTION_USER.document(uid).updateData(["fcmToken":fcmToken ?? " "])
+        Messaging.messaging().token { token, err in
+            if let error = err {
+                print("Error fetching FCM token: \(error)")
+            }else if let token = token {
+                print("FCM Token: \(token)")
+                @AppStorage("userID") var uid = " "
+                COLLECTION_USER.document(uid).updateData(["fcmToken":fcmToken ?? " "])
+            }
+        }
     }
 }
 

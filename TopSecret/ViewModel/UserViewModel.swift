@@ -9,22 +9,24 @@ import Firebase
 import SwiftUI
 import Combine
 import SCSDKLoginKit
+import Network
 
 class UserViewModel : ObservableObject {
     
     
     let notificationSender = PushNotificationSender()
-    
-    @Published var user : User?
+    //firebase
     @Published var userSession : FirebaseAuth.User?
+    @Published var isConnected : Bool = false
+    @Published var firestoreListeners : [ListenerRegistration] = []
+    @Published var user : User?
     @Published var loginErrorMessage = ""
     
     @Published var groups: [Group] = []
     @Published var personalChats: [ChatModel] = []
-    @Published var isConnected : Bool = false
-    @Published var firestoreListener : [ListenerRegistration] = []
-    @Published var notifications : [NotificationModel] = []
-    @Published var userNotificationCount : Int = 0
+    @Published var notifications : [UserNotificationModel] = []
+    
+    
     @Published var showNotification : Int = 0 //on value change, send notification
     @Published var fcmToken : String?
     @Published var hideTabButtons : Bool = false
@@ -33,13 +35,16 @@ class UserViewModel : ObservableObject {
     @Published var timedOut : Bool = false
     @Published var startFetch : Bool = false
     @Published var showWarning: Bool = false
-    
-  
-    
+    @Published var hasUnreadMessages : Bool = false
+    @Published var hideBackground: Bool = false
+    @Published var unreadChatsCount : Int = 0
+    @Published var unreadNotificationsCount: Int = 0
+    @Published var notificationsCount : Int = 0
+    let monitor = NWPathMonitor()
+    let queue = DispatchQueue(label: "Monitor")
+    @Published private(set) var connected: Bool = false
+    @Published var userListener : ListenerRegistration?
     static let shared = UserViewModel()
-    
-    
-    
     let store = Firestore.firestore()
     let path = "Users"
     
@@ -48,37 +53,48 @@ class UserViewModel : ObservableObject {
     
     init(){
         
-   
-        
-        
         let dp = DispatchGroup()
-
         dp.enter()
+        self.removeListeners()
+        self.checkConnection()
         self.userSession = Auth.auth().currentUser
+      
+        UserDefaults.standard.set("\(self.userSession?.uid ?? " ")", forKey: "userID")
         dp.leave()
-
-        dp.notify(queue: .main, execute:{
-            self.fetchUser(userID: self.userSession?.uid ?? " ") { fetchedUser in
-                self.user = fetchedUser
-                UserDefaults.standard.set(self.userSession?.uid ?? " ", forKey: "userID")
-            }
-            
-            if self.userSession != nil{
-                self.listenToAll(uid: self.userSession?.uid ?? " ")
-
-            }
+        dp.notify(queue: .main, execute: {
+            self.listenToAll(uid: self.userSession?.uid ?? " ")
         })
         
-       
-      refresh()
-        
     }
+    
+    func checkConnection() {
+        DispatchQueue.main.async{
+            self.monitor.pathUpdateHandler = { path in
+                DispatchQueue.main.async{
+            self.connected = (path.status == .satisfied)
+                }
+        }
+            self.monitor.start(queue: self.queue)
+      
+        }
+    }
+    
+    func followGroup(groupID: String, userID: String){
+        COLLECTION_GROUP.document(groupID).updateData(["followersID":FieldValue.arrayUnion([userID])])
+        COLLECTION_USER.document(userID).updateData(["groupsFollowingID":FieldValue.arrayUnion([groupID])])
+    }
+    
+    func unfollowGroup(groupID: String, userID: String){
+        COLLECTION_GROUP.document(groupID).updateData(["followersID":FieldValue.arrayRemove([userID])])
+        COLLECTION_USER.document(userID).updateData(["groupsFollowingID":FieldValue.arrayRemove([groupID])])
+    }
+    
     
     
     func refresh(){
         DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
             if !self.finishedFetchingGroups && !self.timedOut{
-            self.timedOut = true
+                self.timedOut = true
                 self.startFetch = false
             }
         }
@@ -86,29 +102,281 @@ class UserViewModel : ObservableObject {
     
     //listeners
     
+    
+    func getTotalNotifications(userID: String) -> Int {
+        var sum = 0
+        for chat in self.personalChats{
+            if !(chat.usersThatHaveSeenLastMessage?.contains(userID) ?? false ){
+                sum += 1
+            }
+        }
+        return sum
+    }
+    
+    func fetchGroup(groupID: String, completion: @escaping (Group) -> ()) -> () {
+        COLLECTION_GROUP.document(groupID).getDocument { snapshot, err in
+            if err != nil{
+                print("ERROR")
+                return
+            }
+            var data = snapshot?.data() as? [String:Any] ?? [:]
+            
+            return completion(Group(dictionary: data))
+        }
+    }
+    
+    func getUnreadNotificationsCount(notifications: [UserNotificationModel]) -> Int {
+        var count : Int = 0
+        for noti in notifications {
+            if !(noti.hasSeen ?? false){
+               count += 1
+            }
+        }
+        return count
+    }
+    
+    func getUnreadChatCount(chats: [ChatModel]) -> Int {
+        var count : Int = 0
+        for chat in chats {
+            if !(chat.usersThatHaveSeenLastMessage?.contains(self.user?.id ?? " ") ?? false){
+               count += 1
+            }
+        }
+        return count
+    }
+    
+    func listenToNotifications(userID: String){
+        self.firestoreListeners.append(
+        
+            COLLECTION_USER.document(userID).collection("Notifications").order(by: "timeStamp", descending: true).addSnapshotListener({ snapshot, err in
+                if err != nil {
+                    print("ERROR")
+                    return
+                }
+                
+                var notificationsToReturn : [UserNotificationModel] = []
+                let groupD = DispatchGroup()
+                
+                
+                let documents = snapshot!.documents
+             
+                groupD.enter()
+                for document in documents{
+                    var data = document.data() as? [String:Any] ?? [:]
+                    var type = data["type"] as? String ?? ""
+                    switch type{
+                    case "eventCreated":
+                        groupD.enter()
+                        var eventID = data["eventID"] as? String ?? ""
+                        self.fetchNotificationEvent(eventID: eventID) { fetchedEvent in
+                            data["event"] = fetchedEvent
+                            groupD.leave()
+                        }
+                        
+                    case "sentFriendRequest", "acceptedFriendRequest":
+                        groupD.enter()
+                        var userID = data["userID"] as? String ?? ""
+                        self.fetchNotificationUser(userID: userID) { fetchedUser in
+                            data["user"] = fetchedUser
+                            groupD.leave()
+                        }
+                    case "acceptedGroupInvitation", "sentGroupInvitation":
+                        groupD.enter()
+                        var groupID = data["groupID"] as? String ?? ""
+                        self.fetchNotificationGroup(groupID: groupID) { fetchedGroup in
+                            data["group"] = fetchedGroup
+                            groupD.leave()
+                        }
+                            groupD.enter()
+                            var userID = data["userID"] as? String ?? ""
+                            self.fetchNotificationUser(userID: userID) { fetchedUser in
+                                data["user"] = fetchedUser
+                                groupD.leave()
+                            }
+                    default:
+                        print("unknown")
+                    }
+                    
+                  
+                  
+                    groupD.notify(queue: .main, execute:{
+                        notificationsToReturn.append(UserNotificationModel(dictionary: data))
+                    })
+                    
+                }
+                groupD.leave()
+                
+                groupD.notify(queue: .main, execute:{
+                    self.notifications = notificationsToReturn
+                    self.unreadNotificationsCount = self.getUnreadNotificationsCount(notifications: notificationsToReturn)
+                })
+                
+            })
+        
+        
+        
+        )
+    }
+    
+    func listenToPersonalChats(userID: String){
+        
+        self.firestoreListeners.append( COLLECTION_PERSONAL_CHAT.whereField("usersID", arrayContains: userID).addSnapshotListener { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            var chatsToReturn : [ChatModel] = []
+            let groupD = DispatchGroup()
+            
+            
+            let documents = snapshot!.documents
+         
+            groupD.enter()
+            for document in documents{
+                var data = document.data()
+                var groupID = data["groupID"] as? String ?? " "
+                let usersID = data["usersID"] as? [String] ?? []
+                let lastMessageID = data["lastMessageID"] as? String ?? " "
+                let usersTypingID = data["usersTypingID"] as? [String] ?? []
+                let usersThatHaveSeenLastMessage = data["usersThatHaveSeenLastMessage"] as? [String] ?? []
+                let id = data["id"] as? String ?? " "
+                let chatType = data["chatType"] as? String ?? ""
+                groupD.enter()
+                  self.fetchChatUsers(users: usersID) { fetchedUsers in
+                data["users"] = fetchedUsers
+                groupD.leave()
+            }
+                groupD.enter()
+                self.fetchLastMessage(chatID: id, messageID: lastMessageID) { fetchedMessage in
+                    data["lastMessage"] = fetchedMessage
+                    groupD.leave()
+                }
+                
+                groupD.enter()
+                self.fetchUsersTyping(chatID: id, usersTypingID: usersTypingID){ fetchedUsers in
+                   data["usersTyping"] = fetchedUsers
+                    groupD.leave()
+                }
+                
+                if chatType == "groupChat"{
+                    //fetch group
+                    groupD.enter()
+                    self.fetchGroup(groupID: groupID) { fetchedGroup in
+                        data["group"] = fetchedGroup
+                        groupD.leave()
+                    }
+                }
+                
+                
+              
+              
+                groupD.notify(queue: .main, execute:{
+                    chatsToReturn.append(ChatModel(dictionary: data))
+                })
+                
+            }
+            groupD.leave()
+            
+            groupD.notify(queue: .main, execute:{
+                    self.personalChats = chatsToReturn
+                self.unreadChatsCount = self.getUnreadChatCount(chats: chatsToReturn)
+            })
+            
+        }
+                                       )
+    }
+   
+    func fetchLastMessage(chatID: String, messageID: String, completion: @escaping (Message) -> ()) -> () {
+        COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").document(messageID).getDocument { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            let data = snapshot!.data() as? [String:Any] ?? [:]
+            return completion(Message(dictionary: data))
+            
+        }
+    }
+
+    func fetchUsersTyping(chatID: String, usersTypingID: [String], completion: @escaping ([User]) -> ()) -> (){
+        var usersToReturn : [User] = []
+        var groupD = DispatchGroup()
+        
+        for userID in usersTypingID {
+            groupD.enter()
+            COLLECTION_USER.document(userID).getDocument { snapshot, err in
+                if err != nil {
+                   print("ERROR")
+                    return
+                }
+                
+                let data = snapshot?.data() as? [String:Any] ?? [:]
+                
+                usersToReturn.append(User(dictionary: data))
+                groupD.leave()
+            }
+        }
+        groupD.notify(queue: .main, execute: {
+            return completion(usersToReturn)
+        })
+    }
+    
+    func fetchChatUsers(users: [String], completion: @escaping ([User]) -> ()) -> (){
+        var usersToReturn : [User] = []
+        
+        var groupD = DispatchGroup()
+        
+        for userID in users {
+            groupD.enter()
+            COLLECTION_USER.document(userID).getDocument { snapshot, err in
+                if err != nil {
+                    print("ERROR")
+                    return
+                }
+                
+                let data = snapshot?.data() as? [String:Any] ?? [:]
+                
+                usersToReturn.append(User(dictionary: data))
+                groupD.leave()
+            }
+        }
+        
+        groupD.notify(queue: .main, execute: {
+            return completion(usersToReturn)
+        })
+    }
+    
+
+    
+   
+    
+    
     func listenToUser(uid: String){
-        let listener =  COLLECTION_USER.document(uid).addSnapshotListener { (snapshot, err) in
+        self.firestoreListeners.append(COLLECTION_USER.document(uid).addSnapshotListener { (snapshot, err) in
+            
+            
             if err != nil {
                 print("ERROR - User Not Being Fetched")
                 return
             }
-            
-            
-            
+   
             
             var data = snapshot?.data() as? [String:Any] ?? [:]
-            
+            let usersLoggedInCount = data["usersLoggedInCount"] as? Int ?? 0
+            var appIconBadgeNumber = data["appIconBadgeNumber"] as? Int ?? 0
             
             let groupD = DispatchGroup()
             
             groupD.enter()
-            
+
             //fetch user friends list
             self.fetchUserFriendsList(friendsList: data["friendsListID"] as? [String] ?? []) { fetchedFriends in
                 data["friendsList"] = fetchedFriends
                 groupD.leave()
             }
-            
+
           
             
             groupD.enter()
@@ -116,38 +384,25 @@ class UserViewModel : ObservableObject {
                 data["personalChats"] = fetchedChats
                 groupD.leave()
             }
-            
-            groupD.enter()
-            self.fetchUserBlockedList(blockedList: data["blockedAccountsID"] as? [String] ?? []) { fetchedUsers in
-                data["blockedAccounts"] = fetchedUsers
-                groupD.leave()
-            }
-           
-
-            groupD.enter()
-
-            //fetch user notifications
-            self.fetchUserNotifications(userID: self.userSession?.uid ?? " ") { fetchedNotifications in
-                data["notifications"] = fetchedNotifications
-                groupD.leave()
-            }
-            
-            
+        
             groupD.notify(queue: .main, execute:{
+                UIApplication.shared.applicationIconBadgeNumber = appIconBadgeNumber
                 self.user = User(dictionary: data)
             })
             
             
             
-        }
+        })
         
-        firestoreListener.append(listener)
         
     }
     
+    
+    
+    
       func listenToUserGroups(uid: String){
           
-          let listener = COLLECTION_GROUP.whereField("users", arrayContains: uid).addSnapshotListener { (snapshot, err) in
+          self.firestoreListeners.append( COLLECTION_GROUP.whereField("users", arrayContains: uid).addSnapshotListener { (snapshot, err) in
               
               if err != nil {
                   print("ERROR! find")
@@ -167,48 +422,61 @@ class UserViewModel : ObservableObject {
               
               let groupD = DispatchGroup()
               
-              groupD.enter()
               
               for document in documents {
                   groupD.enter()
                   var data = document.data()
-                  self.fetchGroupNotifications(groupID: document.documentID) { fetchedNotifications in
-                      data["groupNotifications"] = fetchedNotifications
-                      groupD.leave()
-                  }
-                  
-                  groupD.enter()
-                  
-                  self.fetchGroupUnreadNotifications(userID: uid, groupID: data["id"] as? String ?? " ") { fetchedUnreadNotifications in
-                      data["unreadGroupNotifications"] = fetchedUnreadNotifications
-                      groupD.leave()
-                  }
-                  
+//                  self.fetchGroupNotifications(groupID: document.documentID) { fetchedNotifications in
+//                      data["groupNotifications"] = fetchedNotifications
+//                      groupD.leave()
+//                  }
+//
+//                  groupD.enter()
+//
+//                  self.fetchGroupUnreadNotifications(userID: uid, groupID: data["id"] as? String ?? " ") { fetchedUnreadNotifications in
+//                      data["unreadGroupNotifications"] = fetchedUnreadNotifications
+//                      groupD.leave()
+//                  }
+                  groupD.leave()
                   groupD.notify(queue: .main, execute: {
                       groupsToReturn.append(Group(dictionary: data))
                   })
                   
               }
               
-              groupD.leave()
               
               
               groupD.notify(queue: .main, execute: {
                   self.groups = groupsToReturn
+//                  self.encodeGroups(groups: groupsToReturn)
                   self.finishedFetchingGroups = true
+                  //encode groups to local storage
+                  
               })
               
-          }
+          })
           
           
           
           
           
-          firestoreListener.append(listener)
           
           
       }
-      
+    
+    
+    func deletePoll(pollID: String){
+        COLLECTION_POLLS.document(pollID).delete()
+    }
+//    func encodeGroups(groups: [Group]){
+//        do{
+//                let groupsData = try JSONEncoder().encode(groups)
+//                UserDefaults.standard.set(groupsData, forKey: "groups")
+//            
+//        }catch{
+//            print(error.localizedDescription)
+//        }
+//    }
     
     //auth
     
@@ -235,10 +503,7 @@ class UserViewModel : ObservableObject {
                 }
             }
             
-            
-            
-            
-            let dp = DispatchGroup()
+       let dp = DispatchGroup()
             dp.enter()
             withAnimation(.spring()){
                 self.userSession = result?.user
@@ -246,11 +511,15 @@ class UserViewModel : ObservableObject {
             }
             
             dp.notify(queue: .main, execute:{
-                self.listenToAll(uid: userSession?.uid ?? " ")
-                self.fetchUser(userID: userSession?.uid ?? " ") { fetchedUser in
+                self.listenToAll(uid: self.userSession?.uid ?? " ")
+                COLLECTION_USER.document(self.userSession?.uid ?? " ").updateData(["usersLoggedInCount":FieldValue.increment(Int64(1))])
+                self.fetchUser(userID: self.userSession?.uid ?? " ") { fetchedUser in
                     return completion(fetchedUser)
                 }
             })
+            
+            
+          
 
             
         }
@@ -274,7 +543,8 @@ class UserViewModel : ObservableObject {
                             "username": username,
                             "nickName": nickName,
                             "uid": user.uid,
-                            "birthday": birthday,"profilePicture":"", "bio":"","isActive":true
+                            "birthday": birthday,"profilePicture":"", "bio":"","isActive":true,"dateCreated":Timestamp()
+                            
                             
                 ] as [String : Any]
                 
@@ -287,11 +557,15 @@ class UserViewModel : ObservableObject {
                 print("DEBUG: Succesfully uploaded user data!")
                 
                 
-                
+                let dp = DispatchGroup()
+                dp.enter()
                 withAnimation {
                     self.userSession = user
                 }
-                self.listenToAll(uid: user.uid)
+                dp.leave()
+                dp.notify(queue: .main, execute:{
+                    self.listenToAll(uid: self.userSession?.uid ?? " ")
+                })
                 
                 
                 Auth.auth().currentUser?.sendEmailVerification(completion: { (err) in
@@ -303,16 +577,42 @@ class UserViewModel : ObservableObject {
             }
         }
     
-    func signOut(){
-        
-        for listener in firestoreListener  {
+    func removeListeners(){
+        for listener in firestoreListeners{
             listener.remove()
-            print("Removed listener!")
         }
+    }
+    
+    func printListenersCount(){
+        print("listener count: \(firestoreListeners.count)")
+    }
+    
+    func signOut(){
+        let dp = DispatchGroup()
         
-        self.loginErrorMessage = ""
-        userSession = nil
-        try? Auth.auth().signOut()
+        dp.enter()
+   
+      COLLECTION_USER.document(self.userSession?.uid ?? " ").getDocument { snapshot, err in
+             if err != nil {
+                 print("ERROR")
+                 return
+             }
+             
+             let data = snapshot?.data() as? [String:Any] ?? [:]
+             let usersLoggedInCount = data["usersLoggedInCount"] as? Int ?? 0
+             print("uid: \(self.userSession?.uid ?? " ")")
+             print("usersLoggedInCount: \(usersLoggedInCount)")
+        }
+
+        dp.leave()
+        dp.notify(queue: .main, execute:{
+            self.loginErrorMessage = ""
+            try? Auth.auth().signOut()
+            self.userListener?.remove()
+            self.userSession = nil
+            print("logging out!")
+        })
+        self.removeListeners()
     }
     
     
@@ -417,7 +717,8 @@ class UserViewModel : ObservableObject {
                 }
                 
                 let data = snapshot?.data() as? [String:Any] ?? [:]
-                
+                var usersThatHaveSeenLastMessage = data["usersThatHaveSeenLastMessage"] as? [String] ?? []
+            
                 personalChatsToReturn.append(ChatModel(dictionary: data))
             
                 
@@ -430,6 +731,8 @@ class UserViewModel : ObservableObject {
             return completion(personalChatsToReturn)
         })
     }
+    
+  
     
     func fetchUserFriendsList(friendsList: [String], completion: @escaping ([User]) -> ()) -> (){
         var users : [User] = []
@@ -482,31 +785,28 @@ class UserViewModel : ObservableObject {
             
             for document in documents {
                 var data = document.data() as? [String:Any] ?? [:]
-                let notificationType = data["notificationType"] as? String ?? " "
-                let notificationGroupID = data["groupID"] as? String ?? " "
+                var notificationType = data["notificationType"] as? String ?? " "
+                var actionTypeID = data["actionTypeID"] as? String ?? " "
+                var actionType = data["actionType"] as? String ?? " "
+                
+                
+                
                 groupD.enter()
-
-                self.fetchUserNotificationCreator(notificationCreatorType: notificationType, notificationCreatorID: data["notificationCreatorID"] as? String ?? " ") { fetchedCreator in
+                self.fetchUserNotificationCreator(notificationType: notificationType, notificationCreatorID: data["notificationCreatorID"] as? String ?? " ") { fetchedCreator in
                     data["notificationCreator"] = fetchedCreator
                     groupD.leave()
 
                 }
-
-
-
+                
                 groupD.enter()
-
-                self.fetchUserNotificationGroup(notificationGroupID: notificationGroupID){ fetchedGroup in
-                    data["group"] = fetchedGroup
+                self.fetchUserNotificationAction(notificationActionType: actionType, notificationActionID: actionTypeID) { fetchedAction in
+                    data["action"] = fetchedAction
                     groupD.leave()
                 }
+              
 
-//                groupD.enter()
-//
-//                self.fetchUserNotificationAction(notificationType: notificationType, groupID: notificationGroupID, userID: userID,notificationActionID: data["actionTypeID"] as? String ?? " "){ fetchedAction in
-//                    data["actionType"] = fetchedAction
-//                    groupD.leave()
-//                }
+
+    
 
 
 
@@ -524,66 +824,104 @@ class UserViewModel : ObservableObject {
         }
     }
     
-    func fetchUserNotificationAction(notificationType: String, groupID: String, userID: String, notificationActionID: String, completion: @escaping (Any) -> ()) -> (){
-        switch notificationType {
-        case "eventCreated":
-            COLLECTION_GROUP.document(groupID).collection("Events").document(notificationActionID).getDocument { snapshot, err in
-                if err != nil {
-                    print("ERROR")
-                    return
-                }
+
+  
+    func fetchNotificationEvent(eventID: String, completion: @escaping (EventModel) -> ()) -> (){
+        COLLECTION_EVENTS.document(eventID).getDocument { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
                 
-                var data = snapshot?.data() as? [String:Any] ?? [:]
-                
-                let dp = DispatchGroup()
-                
-                dp.enter()
-                self.fetchEventUsersAttending(usersAttendingID: data["usersAttendingID"] as? [String] ?? [], eventID: notificationActionID, groupID: groupID) { fetchedUsers in
-                    data["usersAttending"] = fetchedUsers
-                    dp.leave()
-                }
-                
-                dp.notify(queue: .main, execute:{
-                    return completion(EventModel(dictionary: data))
-                })
             }
             
-        default: break
+            var groupD = DispatchGroup()
+            var data = snapshot?.data() as? [String:Any] ?? [:]
+            var creatorID = data["creatorID"] as? String ?? " "
             
+            groupD.enter()
+            self.fetchUser(userID: creatorID) { fetchedUser in
+                data["creator"] = fetchedUser
+                groupD.leave()
+            }
+            
+            groupD.notify(queue: .main, execute: {
+            return completion(EventModel(dictionary: data))
+            })
         }
     }
     
-    
-    func fetchUserNotificationGroup(notificationGroupID: String, completion: @escaping (Group) ->()) -> () {
-        
-        COLLECTION_GROUP.document(notificationGroupID).getDocument { snapshot, err in
+    func fetchNotificationUser(userID: String, completion: @escaping (User) -> ()) -> () {
+        COLLECTION_USER.document(userID).getDocument { snapshot, err in
             if err != nil {
                 print("ERROR")
                 return
             }
             
-            let data = snapshot?.data() as? [String:Any] ?? [:]
+            var data = snapshot?.data() as? [String:Any] ?? [:]
             
-            return completion(Group(dictionary: data))
-            
+            return completion(User(dictionary: data))
         }
     }
     
-    func fetchUserNotificationCreator(notificationCreatorType: String, notificationCreatorID: String, completion: @escaping (Any) -> ()) -> (){
+    
+   
+    
+    func fetchUserNotificationCreator(notificationType: String, notificationCreatorID: String, completion: @escaping (Any) -> ()) -> (){
         
-            COLLECTION_USER.document(notificationCreatorID).getDocument { snapshot, err in
-                if err != nil {
-                    print("ERROR")
-                    return
-                }
-                
-                let data = snapshot?.data() as? [String:Any] ?? [:]
-                
-                return completion(User(dictionary: data))
-                
+    switch notificationType {
+        case "eventCreated":
+            self.fetchNotificationEvent(eventID: notificationCreatorID){ fetchedEvent in
+                return completion(fetchedEvent)
             }
+    case "sentFriendRequest", "acceptedFriendRequest","sentGroupInvitation":
+            self.fetchNotificationUser(userID: notificationCreatorID){ fetchedUser in
+                return completion(fetchedUser)
+            }
+    case "acceptedGroupInvitation":
+        self.fetchNotificationGroup(groupID: notificationCreatorID){ fetchedGroup in
+            return completion(fetchedGroup)
+        }
+    default:
+        return completion("not a valid notification yet")
+    }
+        
+        
         
     }
+    
+    func fetchUserNotificationAction(notificationActionType: String, notificationActionID: String, completion: @escaping (Any) -> ()) -> (){
+        
+    switch notificationActionType {
+        case "openGroup":
+        self.fetchNotificationGroup(groupID: notificationActionID){ fetchedGroup in
+            return completion(fetchedGroup)
+        }
+    case "acceptedFriendRequest", "sentFriendRequest":
+        self.fetchNotificationUser(userID: notificationActionID) { fetchedUser in
+            return completion(fetchedUser)
+        }
+    default:
+        return completion("not a valid notification yet")
+    }
+        
+        
+        
+    }
+    
+    
+    func fetchNotificationGroup(groupID: String, completion: @escaping (Group) -> ()) -> () {
+        COLLECTION_GROUP.document(groupID).getDocument { snapshot, err in
+            if err != nil{
+                print("ERROR")
+                return
+            }
+            
+            let data = snapshot?.data() as? [String:Any] ?? [:]
+            return completion(Group(dictionary: data))
+        }
+    }
+    
+   
     
     
     
@@ -678,7 +1016,7 @@ class UserViewModel : ObservableObject {
     }
     
     
- 
+   
     
     
     
@@ -770,20 +1108,26 @@ class UserViewModel : ObservableObject {
         let connectedRef = Database.database().reference(withPath: ".info/connected")
         connectedRef.observe(.value, with: { snapshot in
             if snapshot.value as? Bool ?? false {
-                self.isConnected = true
-                self.showWarning = true
+                    self.isConnected = true
+                    self.showWarning = true
+                
+           
             }else{
-                self.isConnected = false
-                self.showWarning = false
+                DispatchQueue.main.async{
+                    self.isConnected = false
+                    self.showWarning = false
+                }
+         
             }
         })
     }
     
     func listenToAll(uid: String){
         self.listenToUserGroups(uid: uid)
-        self.listenToNetworkChanges(uid: uid)
+//        self.listenToNetworkChanges(uid: uid)
         self.listenToUser(uid: uid)
-        
+        self.listenToPersonalChats(userID: uid)
+        self.listenToNotifications(userID: uid)
     }
     
     
@@ -883,30 +1227,56 @@ class UserViewModel : ObservableObject {
     }
     
 
-    func sendFriendRequest(friend: User) {
+    func sendFriendRequest(friend: User, completion: @escaping (Bool) -> ()) -> () {
         
-        COLLECTION_USER.document(self.user?.id ?? " ").updateData(["pendingFriendsListID":FieldValue.arrayUnion([friend.id ?? " "])])
-        
-        COLLECTION_USER.document(friend.id ?? " ").updateData(["pendingFriendsListID":FieldValue.arrayUnion([user?.id ?? " "])])
-        
-        notificationSender.sendPushNotification(to: friend.fcmToken ?? " ", title: "\(friend.username ?? "")", body: "\(friend.nickName ?? "") sent a friend request")
-        
-        self.addFriend(friendID: friend.id ?? " ")
+        if (friend.blockedAccountsID ?? []).contains(where: {$0 == self.user?.id ?? " "}){
+            return completion(false)
+        }else{
+        let dp = DispatchGroup()
+            dp.enter()
+            COLLECTION_USER.document(self.user?.id ?? " ").updateData(["pendingFriendsListID":FieldValue.arrayUnion([friend.id ?? " "])])
+            
+            COLLECTION_USER.document(friend.id ?? " ").updateData(["pendingFriendsListID":FieldValue.arrayUnion([user?.id ?? " "])])
+            
+            notificationSender.sendPushNotification(to: friend.fcmToken ?? " ", title: "\(self.user?.username ?? "")", body: "\(self.user?.nickName ?? "") sent a friend request")
+            
+
+            
+            let notificationID = UUID().uuidString
+            
+            let userNotificationData = ["id":notificationID,
+                "name": "Friend Request",
+                "timeStamp":Timestamp(),
+                "userID":self.user?.id ?? "USER_ID",
+                "hasSeen":false,
+                "type":"sentFriendRequest"] as [String:Any]
+            
+            
+            COLLECTION_USER.document(friend.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)
+            COLLECTION_USER.document(friend.id ?? " ").updateData(["userNotificationCount":FieldValue.increment((Int64(1)))])
+            
+            dp.leave()
+            dp.notify(queue: .main, execute:{
+                return completion(true)
+                print("\(self.user?.username ?? " ") sent a friend request to \(friend.username ?? " ")")
+            })
+        }
 
         
-        let notificationID = UUID().uuidString
-        
-        let userNotificationData = ["id":notificationID,
-            "notificationName": "Friend Request",
-            "notificationTime":Timestamp(),
-                                    "notificationType":"sentFriendRequest","notificationCreatorID":self.user?.id ?? "USER_ID",
-            "hasSeen":false,
-                                     "actionTypeID": self.user?.id ?? " "] as [String:Any]
-        
-        
-        COLLECTION_USER.document(friend.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)
-        COLLECTION_USER.document(friend.id ?? " ").updateData(["userNotificationCount":FieldValue.increment((Int64(1)))])
     }
+    
+    func unsendFriendRequest(friend: User, completion: @escaping (Bool) -> ()) -> (){
+        let dp = DispatchGroup()
+        dp.enter()
+        COLLECTION_USER.document(self.user?.id ?? " ").updateData(["pendingFriendsListID":FieldValue.arrayRemove([friend.id ?? " "])])
+        
+        COLLECTION_USER.document(friend.id ?? " ").updateData(["pendingFriendsListID":FieldValue.arrayRemove([user?.id ?? " "])])
+        dp.leave()
+        dp.notify(queue: .main, execute: {
+            return completion(true)
+        })
+    }
+    
     
     func acceptFriendRequest(friend: User){
         
@@ -917,22 +1287,28 @@ class UserViewModel : ObservableObject {
         COLLECTION_USER.document(friend.id ?? " ").updateData(["pendingFriendsListID":FieldValue.arrayRemove([self.user?.id ?? " "])])
         //END
         
-        self.addFriend(friendID: friend.id ?? " ")
+        
+        
+        self.addFriend(friendID: friend.id ?? " "){ finished in
+            print("Added Friend!")
+        }
         
         let notificationID = UUID().uuidString
         
-        let userNotificationData = ["id":notificationID,
-                                    "notificationName": "Friend Request",
-                                    "notificationTime":Timestamp(),
-                                    "notificationType":"acceptedFriendRequest", "notificationCreatorID":friend.id ?? "USER_ID",
-                                    "hasSeen":false,
-                                    "actionTypeID": friend.id ?? ""] as [String:Any]
+        let userNotificationData = [
+            "id":notificationID,
+            "name": "Friend Request",
+            "timeStamp":Timestamp(),
+            "type":"acceptedFriendRequest",
+            "userID":self.user?.id ?? "USER_ID",
+            "hasSeen":false,
+            "finished":true] as [String:Any]
         
         
         COLLECTION_USER.document(friend.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)
         COLLECTION_USER.document(friend.id ?? " ").updateData(["userNotificationCount":FieldValue.increment((Int64(1)))])
         
-        notificationSender.sendPushNotification(to: friend.fcmToken ?? " ", title: "\(friend.username ?? "")", body: "\(friend.nickName ?? "") accepted your friend request")
+        notificationSender.sendPushNotification(to: friend.fcmToken ?? " ", title: "\(self.user?.username ?? "")", body: "\(self.user?.nickName ?? "") accepted your friend request")
     }
     
     func denyFriendRequest(friend: User){
@@ -941,12 +1317,130 @@ class UserViewModel : ObservableObject {
         COLLECTION_USER.document(friend.id ?? " ").updateData(["pendingFriendsListID":FieldValue.arrayRemove([user?.id ?? " "])])
         
         
-        notificationSender.sendPushNotification(to: friend.fcmToken ?? " ", title: "\(friend.username ?? "")", body: "\(friend.nickName ?? "") denied your friend request")
+        notificationSender.sendPushNotification(to: friend.fcmToken ?? " ", title: "\(self.user?.username ?? "")", body: "\(self.user?.nickName ?? "") denied your friend request")
     }
     
-    func addFriend(friendID: String){
+    func checkIfUsersHavePersonalChats(user1: String, user2: String, completion: @escaping (Bool) -> ()) -> (){
+        COLLECTION_PERSONAL_CHAT.whereField("usersID", arrayContains: [user1,user2]).getDocuments { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            if snapshot?.documents.isEmpty ?? false{
+                COLLECTION_PERSONAL_CHAT.whereField("usersID", arrayContains: [user2,user1]).getDocuments { snapshot, err in
+                    if err != nil {
+                        print("ERROR")
+                        return
+                    }
+                    return completion(!(snapshot?.documents.isEmpty ?? false))
+
+                }
+            }else{
+                return completion(true)
+            }
+            
+        }
+    }
+    
+    func deletePost(postID: String){
+        COLLECTION_POSTS.document(postID).delete()
+    }
+    
+    func updateGroupPostLike(postID: String, userID: String, actionToLike: Bool, completion: @escaping ([[String]]) -> ()) -> (){
         
+        //user has liked post and not disliked
+        //user has disliked and not liked
         
+       let dp = DispatchGroup()
+        COLLECTION_POSTS.document(postID).getDocument { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+                
+                
+                
+            }
+            
+            var data = snapshot?.data() as? [String:Any] ?? [:]
+            
+            var likedListID = data["likedListID"] as? [String] ?? []
+            var dislikedListID = data["dislikedListID"] as? [String] ?? []
+            
+            if likedListID.contains(userID){
+                // if user already liked, and goal is to dislike, then remove like and dislike
+                //if user already liked, and goal is to like, remove like
+                dp.enter()
+
+                if !actionToLike{
+                  
+                    COLLECTION_POSTS.document(postID).updateData(["dislikedListID":FieldValue.arrayUnion([userID])])
+                    dislikedListID.append(userID)
+                }
+                
+                COLLECTION_POSTS.document(postID).updateData(["likedListID":FieldValue.arrayRemove([userID])])
+                likedListID.removeAll(where: {$0 == userID})
+
+                dp.leave()
+                dp.notify(queue: .main, execute:{
+                 
+                    return completion([likedListID, dislikedListID])
+                })
+               
+            }else if dislikedListID.contains(userID){
+                //if user has already disliked, and goal is to like, then remove dislike and like
+                //if user has already disliked, and goal is to dislike, then remove dislike
+                dp.enter()
+                if actionToLike{
+                  
+                    //like
+                    COLLECTION_POSTS.document(postID).updateData(["likedListID":FieldValue.arrayUnion([userID])])
+                    likedListID.append(userID)
+
+                }
+                
+                COLLECTION_POSTS.document(postID).updateData(["dislikedListID":FieldValue.arrayRemove([userID])])
+                dislikedListID.removeAll(where: {$0 == userID})
+
+                
+                dp.leave()
+                dp.notify(queue: .main, execute:{
+                 
+                    return completion([likedListID, dislikedListID])
+
+                })
+            }
+            else{
+                dp.enter()
+                if actionToLike{
+                    COLLECTION_POSTS.document(postID).updateData(["likedListID":FieldValue.arrayUnion([userID])])
+                    likedListID.append(userID)
+                }else{
+                    COLLECTION_POSTS.document(postID).updateData(["dislikedListID":FieldValue.arrayUnion([userID])])
+                    dislikedListID.append(userID)
+                }
+                
+                dp.leave()
+                dp.notify(queue: .main, execute:{
+                 
+                    return completion([likedListID, dislikedListID])
+
+                })
+             
+            }
+            
+        }
+       
+
+    }
+    
+   
+    
+    func addFriend(friendID: String, completion: @escaping (Bool) -> ()) -> (){
+        
+        let dp = DispatchGroup()
+        
+        dp.enter()
         //add to eachothers friend list
         COLLECTION_USER.document(self.user?.id ?? " ").updateData(["friendsListID":FieldValue.arrayUnion([friendID])])
         
@@ -955,34 +1449,46 @@ class UserViewModel : ObservableObject {
         //END
         
         
-        let id = UUID().uuidString
-        let chatData = ["dateCreated":Date(),
-                        "usersID":[friendID,user?.id ?? " "],
-                        "id":id,
-                        "chatType":"personal"] as [String:Any]
-        //create personal chat
-        COLLECTION_PERSONAL_CHAT.document(id).setData(chatData){ err in
-            if err != nil {
-                print("ERROR")
-                return
-            }
-        }
-        //picks colors
-        COLLECTION_PERSONAL_CHAT.document(id).updateData(["chatColors":FieldValue.arrayUnion(
-            [[user?.id ?? " ":"green"]])])
-        COLLECTION_PERSONAL_CHAT.document(id).updateData(["chatColors":FieldValue.arrayUnion([[friendID:"red"]])])
+         self.checkIfUsersHavePersonalChats(user1: self.user?.id ?? " ", user2: friendID, completion: { usersHaveChat in
+             if !usersHaveChat{
+                 
+                 print("Creating new personal chat!")
+                 let id = UUID().uuidString
+                 let chatData = ["dateCreated":Date(),
+                                 "usersID":[friendID,self.user?.id ?? " "],
+                                 "id":id,
+                                 "chatType":"personal","lastMessageID":"NO_MESSAGE"] as [String:Any]
+                 //create personal chat
+                 COLLECTION_PERSONAL_CHAT.document(id).setData(chatData){ err in
+                     if err != nil {
+                         print("ERROR")
+                         return
+                     }
+                 }
+                 //picks colors
         
-        COLLECTION_USER.document(self.user?.id ?? " ").updateData(["personalChatsID":FieldValue.arrayUnion([id])])
+                 
+                 COLLECTION_USER.document(self.user?.id ?? " ").updateData(["personalChatsID":FieldValue.arrayUnion([id])])
+                 
+                 COLLECTION_USER.document(friendID).updateData(["personalChatsID":FieldValue.arrayUnion([id])])
+             }
+        })
+        dp.leave()
         
-        COLLECTION_USER.document(friendID).updateData(["personalChatsID":FieldValue.arrayUnion([id])])
+        dp.notify(queue: .main, execute:{
+            return completion(true)
+        })
     }
     
     
     
-    func removeFriend(friendID: String){
+    func removeFriend(friendID: String, completion: @escaping (Bool) -> ()) -> () {
  
         
         //friends list
+        let dp = DispatchGroup()
+        
+        dp.enter()
         
         COLLECTION_USER.document(self.user?.id ?? " ").updateData(["friendsListID":FieldValue.arrayRemove([friendID])])
         COLLECTION_USER.document(friendID).updateData(["friendsListID":FieldValue.arrayRemove([self.user?.id ?? " "])])
@@ -992,6 +1498,38 @@ class UserViewModel : ObservableObject {
         COLLECTION_USER.document(self.user?.id ?? " ").updateData(["pendingFriendsListID":FieldValue.arrayRemove([friendID])])
         COLLECTION_USER.document(friendID).updateData(["pendingFriendsListID":FieldValue.arrayRemove([self.user?.id ?? " "])])
         
+        COLLECTION_PERSONAL_CHAT.whereField("usersID", isEqualTo: [friendID,self.user?.id ?? " "]).getDocuments { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            print("got here")
+            
+            let documents = snapshot!.documents
+            if documents.isEmpty{
+                COLLECTION_PERSONAL_CHAT.whereField("usersID", isEqualTo: [self.user?.id ?? " ",friendID]).getDocuments { snapshot, err in
+                    let documents = snapshot!.documents
+                    for document in documents {
+                        let id = document.get("id") as? String ?? " "
+                        COLLECTION_PERSONAL_CHAT.document(id).delete()
+                        print("Chat Deleted")
+                    }
+                }
+            }else{
+                for document in documents {
+                    let id = document.get("id") as? String ?? " "
+                    COLLECTION_PERSONAL_CHAT.document(id).delete()
+                    print("Chat Deleted")
+                }
+            }
+           
+        }
+        
+        dp.leave()
+        
+        dp.notify(queue: .main, execute: {
+            return completion(true)
+        })
         
     }
     
@@ -1010,7 +1548,9 @@ class UserViewModel : ObservableObject {
         COLLECTION_USER.document(blockee).updateData(["blockedAccountsID":FieldValue.arrayUnion([blocker])])
         
 
-        self.removeFriend(friendID: blockee)
+        self.removeFriend(friendID: blockee){ finished in
+            print("removed friend")
+        }
     }
     
     
@@ -1099,15 +1639,227 @@ class UserViewModel : ObservableObject {
  
     
 
+    func answerPollOption(poll: PollModel, pollOption: PollOptionModel, userID: String, completion: @escaping (PollModel) -> ()) -> (){
+       var groupD = DispatchGroup()
+        
+        groupD.enter()
+        //updates poll option picked users
+        if !(poll.usersAnsweredID?.contains(userID) ?? false){
+            COLLECTION_POLLS.document(poll.id ?? " ").collection("Options").document(pollOption.id ?? " ").updateData(["pickedUsersID":FieldValue.arrayUnion([userID])])
+            
+            COLLECTION_GROUP.document(poll.groupID ?? "").collection("Polls").document(poll.id ?? " ").collection("Options").document(pollOption.id ?? " ").updateData(["pickedUsersID":FieldValue.arrayUnion([userID])])
+            
+            //update poll answered users
+            COLLECTION_POLLS.document(poll.id ?? " ").updateData(["usersAnsweredID":FieldValue.arrayUnion([userID])])
+            COLLECTION_GROUP.document(poll.groupID ?? "").collection("Polls").document(poll.id ?? " ").updateData(["usersAnsweredID":FieldValue.arrayUnion([userID])])
+        }
+  
+        groupD.leave()
+        groupD.notify(queue: .main, execute:{
+            COLLECTION_POLLS.document(poll.id ?? " ").getDocument { snapshot, err in
+                if err != nil{
+                    print("ERROR")
+                    return
+                }
+                var data = snapshot?.data() as? [String:Any] ?? [:]
+                
+                var groupID = data["groupID"] as? String ?? ""
+                
+                groupD.enter()
+                self.fetchPollOptions(pollID: data["id"] as? String ?? " ", groupID: groupID) { fetchedChoices in
+                    data["pollOptions"] = fetchedChoices
+                    groupD.leave()
+                }
+                
+                groupD.enter()
+                self.fetchUser(userID: data["creatorID"] as? String ?? " ") { fetchedUser in
+                    data["creator"] = fetchedUser
+                    groupD.leave()
+                }
+                
+                groupD.enter()
+                self.fetchGroup(groupID: groupID) { fetchedGroup in
+                    data["group"] = fetchedGroup
+                    groupD.leave()
+                }
+                
+                groupD.enter()
+                self.fetchUsersAnswered(usersID: data["usersAnsweredID"] as? [String] ?? []){ fetchedUsers in
+                    data["usersAnswered"] = fetchedUsers
+                    
+                    groupD.leave()
+                }
+                
+                
+                
+                groupD.notify(queue: .main, execute:{
+                    return completion(PollModel(dictionary: data))
+                })
+                
+            }
+        })
+       
+    }
    
  
  
-
+    func fetchUsersAnswered(usersID: [String], completion: @escaping ([User]) -> ()) -> () {
+        var usersToReturn : [User] = []
+        let groupD = DispatchGroup()
+        groupD.enter()
+        for userID in usersID{
+            COLLECTION_USER.document(userID).getDocument { snapshot, err in
+                if err != nil {
+                    print("ERROR")
+                    return
+                }
+                
+                let data = snapshot?.data() as? [String:Any] ?? [:]
+                
+                
+                usersToReturn.append(User(dictionary: data))
+                
+            }
+        }
+        groupD.leave()
+        
+        groupD.notify(queue: .main, execute: {
+            return completion(usersToReturn)
+        })
+    }
 
   
+    func fetchPollOptions(pollID: String, groupID: String, completion: @escaping ([PollOptionModel]) -> () ) -> () {
+        var choicesToReturn : [PollOptionModel] = []
+
+        COLLECTION_POLLS.document(pollID).collection("Options").getDocuments { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            let documents = snapshot!.documents
+            
+            let groupD = DispatchGroup()
+
+            groupD.enter()
+       
+            for document in documents {
+                var data = document.data()
+                
+              
+                groupD.enter()
+                self.fetchUsersAnswered(usersID: data["pickedUsersID"] as? [String] ?? []){ fetchedUsers in
+                    data["pickedUsers"] = fetchedUsers
+                    
+                    groupD.leave()
+                }
+                
+                    choicesToReturn.append(PollOptionModel(dictionary: data))
+            }
+            
+            groupD.leave()
+            
+            groupD.notify(queue: .main, execute: {
+                return completion(choicesToReturn)
+            })
+            
+            
+        }
+    }
+
+    func updateGroupEventLike(eventID: String, userID: String, actionToLike: Bool, completion: @escaping ([[String]]) -> ()) -> (){
+        
+        //user has liked post and not disliked
+        //user has disliked and not liked
+        
+       let dp = DispatchGroup()
+        COLLECTION_EVENTS.document(eventID).getDocument { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+                
+                
+                
+            }
+            
+            var data = snapshot?.data() as? [String:Any] ?? [:]
+            
+            var likedListID = data["likedListID"] as? [String] ?? []
+            var dislikedListID = data["dislikedListID"] as? [String] ?? []
+            
+            if likedListID.contains(userID){
+                // if user already liked, and goal is to dislike, then remove like and dislike
+                //if user already liked, and goal is to like, remove like
+                dp.enter()
+
+                if !actionToLike{
+                  
+                    COLLECTION_EVENTS.document(eventID).updateData(["dislikedListID":FieldValue.arrayUnion([userID])])
+                    dislikedListID.append(userID)
+                }
+                
+                COLLECTION_EVENTS.document(eventID).updateData(["likedListID":FieldValue.arrayRemove([userID])])
+                likedListID.removeAll(where: {$0 == userID})
+
+                dp.leave()
+                dp.notify(queue: .main, execute:{
+                 
+                    return completion([likedListID, dislikedListID])
+                })
+               
+            }else if dislikedListID.contains(userID){
+                //if user has already disliked, and goal is to like, then remove dislike and like
+                //if user has already disliked, and goal is to dislike, then remove dislike
+                dp.enter()
+                if actionToLike{
+                  
+                    //like
+                    COLLECTION_EVENTS.document(eventID).updateData(["likedListID":FieldValue.arrayUnion([userID])])
+                    likedListID.append(userID)
+
+                }
+                
+                COLLECTION_EVENTS.document(eventID).updateData(["dislikedListID":FieldValue.arrayRemove([userID])])
+                dislikedListID.removeAll(where: {$0 == userID})
+
+                
+                dp.leave()
+                dp.notify(queue: .main, execute:{
+                 
+                    return completion([likedListID, dislikedListID])
+
+                })
+            }
+            else{
+                dp.enter()
+                if actionToLike{
+                    COLLECTION_EVENTS.document(eventID).updateData(["likedListID":FieldValue.arrayUnion([userID])])
+                    likedListID.append(userID)
+                }else{
+                    COLLECTION_EVENTS.document(eventID).updateData(["dislikedListID":FieldValue.arrayUnion([userID])])
+                    dislikedListID.append(userID)
+                }
+                
+                dp.leave()
+                dp.notify(queue: .main, execute:{
+                 
+                    return completion([likedListID, dislikedListID])
+
+                })
+             
+            }
+            
+        }
+       
+
+    }
     
-
-  
+    
+    func editGroupPost(postID: String, editText: String){
+        COLLECTION_POSTS.document(postID).updateData(["description":editText])
+    }
     
     
 }
+

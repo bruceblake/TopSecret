@@ -8,20 +8,22 @@
 import SwiftUI
 
 struct SettingsMenuView: View {
+    @EnvironmentObject var userVM : UserViewModel
     @Environment(\.presentationMode) var dismiss
     @EnvironmentObject var userAuthVM: UserViewModel
     @State var logOut : String = "Log Out"
     @State var openChangeNicknameScreen : Bool = false
     @State var openChangeUsernameScreen : Bool = false
     @State var openBlockedAccountsScreen : Bool = false
-
+    @ObservedObject var settingsVM = UserSettingsViewModel()
+    
     var body: some View {
         ZStack{
             Color("Background")
             VStack(alignment: .leading){
                 
                 HStack(alignment: .center){
-                 
+                    
                     Spacer()
                     
                     
@@ -44,122 +46,62 @@ struct SettingsMenuView: View {
                 ScrollView(){
                     VStack(alignment: .leading){
                         
-                        VStack(alignment: .leading){
+                        VStack(alignment: .leading, spacing: 5){
                             
                             Text("My Account").fontWeight(.bold).foregroundColor(Color("Foreground")).padding(.leading,25)
                             
                             VStack(alignment: .leading, spacing: 15){
                                 SettingsButtonCell(text: "Blocked Accounts", includeDivider: true, action: {
-                                    self.openBlockedAccountsScreen.toggle()
+                                   
+                                    let dp = DispatchGroup()
+                                    dp.enter()
+                                    
+                                    settingsVM.fetchBlockedAccounts(blockedAccountIDS: userVM.user?.blockedAccountsID ?? [], completion: { fetched in
+                                        if fetched{
+                                            dp.leave()
+                                        }
+                                    })
+                                    dp.notify(queue: .main, execute:{
+                                            self.openBlockedAccountsScreen.toggle()
+                                        
+                                    })
+                                  
+                                    
                                 }).padding(.top,15)
                                 
-                                
-                                SettingsButtonCell(text: "Color Preferences", includeDivider: true,  action:{
-                                    //TODO
-                                })
-                                SettingsButtonCell(text: "Change Username", includeDivider: true,  action:{
-                                    self.openChangeUsernameScreen.toggle()
-                                })
-                                
-                                SettingsButtonCell(text: "Change Nickname", includeDivider: true,  action:{
-                                    self.openChangeNicknameScreen.toggle()
-                                })
-
-                                
-                                SettingsButtonCell(text: "Verify Email", includeDivider: true, action:{
-                                    //TODO
-                                })
-                                
-                             
-                                
-                                SettingsButtonCell(text: "Change Password", includeDivider: true,  action:{
-                                    //TODO
-                                })
-                                
-                                SettingsButtonCell(text: "Two Factor Authentification", includeDivider: false, action:{
-                                    //TODO
-                                }).padding(.bottom,15)
-                                
-                                
-                                
-                                
                             }.background(Color("Color")).cornerRadius(12).padding([.horizontal,.bottom])
                         }
                         
-                    
-                    
-                    
-                    
-                    
-                    VStack(alignment: .leading){
-                        VStack(alignment: .leading){
-                            Text("Support").fontWeight(.bold).foregroundColor(Color("Foreground")).padding(.leading,25)
+                        HStack{
+                            Spacer()
                             
-                            VStack{
-                                SettingsButtonCell(text: "Contact Us", includeDivider: true,  action:{
-                                    //TODO
-                                }).padding(.top,10)
-                                
-                                SettingsButtonCell(text: "Contact Us", includeDivider: false, action: {
-                                    print("cock")
-                                })
-                                .padding(.bottom,15)
-                            }.background(Color("Color")).cornerRadius(12).padding([.horizontal,.bottom])
+                            
+                            Button(action:{
+                                self.dismiss.wrappedValue.dismiss()
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    userAuthVM.signOut()
+                                }
+                            },label:{
+                                Text("Sign Out").foregroundColor(Color("AccentColor"))
+                            })
+                            Spacer()
                         }
                         
                         
                         
                     }
-                    
-                    
-                    
-                    VStack(alignment: .leading){
-                        VStack(alignment: .leading){
-                            Text("Account Actions").fontWeight(.bold).foregroundColor(Color("Foreground")).padding(.leading,25)
-                            
-                            VStack{
-                                SettingsButtonCell(text: "Switch Accounts", includeDivider: true, action:{
-                                    //TODO
-                                }).padding(.top,10)
-                                SettingsButtonCell(text: logOut, includeDivider: false, action:{
-                                    self.dismiss.wrappedValue.dismiss()
-                                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                                        userAuthVM.signOut()
-                                                    }
-                                }).padding(.bottom,15)
-                                
-                            }.background(Color("Color")).cornerRadius(12).padding([.horizontal,.bottom])
-                        }
-                        
-                        
-                        
-                    }
-                    
-                    
-                }
                 }
                 
                 
                 //Navigation Links
                 
-                    //Change Nickname
-               
-                    NavigationLink(destination: ChangeNicknameView(openNicknameScreen: $openChangeNicknameScreen), isActive: $openChangeNicknameScreen) {
-                    EmptyView()
-                    }
                 
-                
-                    //Change Username
-                
-                    NavigationLink(destination: ChangeUsernameView(openUsernameScreen: $openChangeUsernameScreen), isActive: $openChangeUsernameScreen) {
-                    EmptyView()
-                    }
                 
                 //Blocked Accounts
                 
-                    NavigationLink(destination: BlockedAccountsView( openBlockedAccountsScreen: $openBlockedAccountsScreen), isActive: $openBlockedAccountsScreen) {
+                NavigationLink(destination: BlockedAccountsView(blockedAccounts: settingsVM.blockedAccounts, openBlockedAccountsScreen: $openBlockedAccountsScreen, settingsVM: settingsVM), isActive: $openBlockedAccountsScreen) {
                     EmptyView()
-                    }
+                }
                 
                 
                 

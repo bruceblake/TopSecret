@@ -14,18 +14,28 @@ struct EnterBirthday: View {
     @EnvironmentObject var userVM: UserViewModel
     @EnvironmentObject var validationVM : RegisterValidationViewModel
     
+    @Environment(\.presentationMode) var presentationMode
     var body: some View {
         ZStack{
             
             Color("Background")
             VStack{
+                
+                HStack{
+                    Button {
+                        presentationMode.wrappedValue.dismiss()
+                    } label: {
+                        ZStack{
+                            Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
+                            Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR)
+                        }
+                    }
+
+                  
+                    Spacer()
+                    Circle().frame(width: 40, height: 40).foregroundColor(Color.clear)
+                }.padding(.horizontal).padding(.top,50)
                 Text("Enter your birthday").foregroundColor(Color("Foreground")).font(.largeTitle).fontWeight(.bold).padding(.horizontal)
-                
-                Text("Don't worry, you can create an account regardless of your age").font(.headline).padding(.bottom,30)
-                
-                
-                
-                
                 //BIRTHDAY PICKER TODO
                 
                 DatePicker("", selection: $selectedDate, displayedComponents: .date)
@@ -53,8 +63,8 @@ struct EnterBirthday: View {
                     })
                 
                 Spacer()
-            }.padding(.top,100)
-        }.edgesIgnoringSafeArea(.all)
+            }
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
     }
 }
 
