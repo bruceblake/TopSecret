@@ -12,7 +12,7 @@ struct RegisterEmailView: View {
     @State var usingEmail:Bool = true
     @State var showErrorMessage:Bool = false
     @EnvironmentObject var validationVM : RegisterValidationViewModel
-    
+    @Environment(\.presentationMode) var presentationMode
     
     
     
@@ -21,7 +21,6 @@ struct RegisterEmailView: View {
         
         
         
-        if usingEmail {
             ZStack {
                 
                 Color("Background")
@@ -32,6 +31,21 @@ struct RegisterEmailView: View {
                         EmptyView()
                     })
                 VStack{
+                    
+                    HStack{
+                        Button {
+                            presentationMode.wrappedValue.dismiss()
+                        } label: {
+                            ZStack{
+                                Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
+                                Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR)
+                            }
+                        }
+
+                      
+                        Spacer()
+                        Circle().frame(width: 40, height: 40).foregroundColor(Color.clear)
+                    }.padding(.horizontal).padding(.top,50)
                     
                     
                     
@@ -61,9 +75,6 @@ struct RegisterEmailView: View {
                         }).padding()
                         
                         
-                        Button(action:{
-                            self.usingEmail.toggle()
-                        },label:{Text("I want to use my phone number").font(.body)})
                         
                         
                     
@@ -71,12 +82,10 @@ struct RegisterEmailView: View {
                     
                     Spacer()
                     
-                }.padding(.top,100)
+                }
                 
-            }.edgesIgnoringSafeArea(.all)
-        }else{
-            RegisterPhoneView(usingEmail: $usingEmail)
-        }
+            }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+        
     }
     
     

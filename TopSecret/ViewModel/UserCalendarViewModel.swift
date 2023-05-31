@@ -14,13 +14,15 @@ class UserCalendarViewModel : ObservableObject {
     
     @Published var eventsResults : [EventModel] = []
     @Published var selectedOption : String = ""
+    @Published var isLoading: Bool = false
 
     
    
     private var cancellables = Set<AnyCancellable>()
     
-    func startSearch(userID: String, startDay: Date, endDay: Date){
-        self.fetchEvents(userID: userID, startDay: startDay, endDay: endDay)
+    func startSearch(eventsID: [String]){
+        self.fetchEvents(eventsID: eventsID)
+        print("fuck")
     }
     
     
@@ -65,55 +67,40 @@ class UserCalendarViewModel : ObservableObject {
         
     }
     
-    func fetchEvents(userID: String, startDay: Date, endDay: Date) {
-        COLLECTION_EVENTS.whereField("usersVisibleTo", arrayContains: userID).getDocuments { snapshot, err in
-         
-            if err != nil {
-                print("ERROR")
-                return
-            }
-            
-            guard let documents = snapshot?.documents else {
-                print("No document!")
-                return
-            }
-            
-            var eventsToReturn : [EventModel] = []
-            
-            var groupD = DispatchGroup()
-            
-           
-            groupD.enter()
-            
-            for document in documents {
-                groupD.enter()
+    func fetchEvents(eventsID: [String]) {
+        self.isLoading = true
+        let dp = DispatchGroup()
+        var eventsToReturn : [EventModel] = []
 
-                var data = document.data()
-                var startTime = data["eventStartTime"] as? Date ?? Date()
-                let users = data["usersAttendingID"] as? [String] ?? []
-//                self.fetchEventUsersAttending(usersAttendingID: users, eventID: data["id"] as? String ?? " ", groupID: groupID) { fetchedUsers in
-//                    data["usersAttending"] = fetchedUsers
-//                    groupD.leave()
-//                }
-                groupD.leave()
-                
-                groupD.notify(queue: .main, execute: {
-                    eventsToReturn.append(EventModel(dictionary: data))
-                })
+        for id in eventsID{
+            dp.enter()
+            COLLECTION_EVENTS.document(id).getDocument { snapshot, err in
+             
+                if err != nil {
+                    print("ERROR")
+                    return
+                }
+           
+                var data = snapshot?.data() as? [String:Any] ?? [:]
+//                    var startTime = data["eventStartTime"] as? Date ?? Date()
+//                    let users = data["usersAttendingID"] as? [String] ?? []
+//    //                self.fetchEventUsersAttending(usersAttendingID: users, eventID: data["id"] as? String ?? " ", groupID: groupID) { fetchedUsers in
+//    //                    data["usersAttending"] = fetchedUsers
+//    //                    groupD.leave()
+//    //                }
+            
+                        eventsToReturn.append(EventModel(dictionary: data))
+                    dp.leave()
+
             }
-            
-            groupD.leave()
-            
-         
-            
-            groupD.notify(queue: .main, execute: {
-                self.eventsResults = eventsToReturn
-            })
-            
         }
         
+       
       
-            
+        dp.notify(queue: .main, execute: {
+            self.eventsResults = eventsToReturn
+            self.isLoading = false
+        })
         
     }
     

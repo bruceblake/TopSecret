@@ -14,15 +14,15 @@ import Firebase
 
 struct GroupChatView: View {
     @EnvironmentObject var userVM: UserViewModel
-    @EnvironmentObject var groupVM: SelectedGroupViewModel
     @StateObject var chatVM = GroupChatViewModel()
     @Environment(\.presentationMode) var presentationMode
-    var userID: String
     @State var height: CGFloat = 20
     @State var keyboardHeight : CGFloat = 0
     @State var showMenu : Bool = false
     @State var openAddContent : Bool = false
     @State private var scrollViewOffset = CGFloat.zero
+    var chatID: String
+    var groupID: String
 
     func initKeyboardGuardian(){
         NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification , object: nil, queue: .main) { data in
@@ -52,14 +52,27 @@ struct GroupChatView: View {
             VStack{
                 
                 //Top Bar
-                
+//                HStack{
+//                    Button {
+//                        presentationMode.wrappedValue.dismiss()
+//                    } label: {
+//                        ZStack{
+//                            Circle().frame(width: 40, height: 40).foregroundColor( Color("Color"))
+//                            Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR)
+//                        }
+//                    }
+//
+//                    Spacer()
+//
+//                    Circle().frame(width: 40, height: 40).foregroundColor(Color.clear)
+//
+//                }.padding(.top,50).padding(.horizontal)
             
                 
                 //Active Users
-                VStack{
                 ScrollView(.horizontal){
                     HStack(spacing: 5){
-                        ForEach(chatVM.groupChat?.users ?? [], id: \.id){ user in
+                        ForEach(chatVM.users, id: \.id){ user in
                             
                             NavigationLink(destination: UserProfilePage(user: user), label:{
                                 
@@ -69,7 +82,7 @@ struct GroupChatView: View {
                                         .scaledToFill()
                                         .frame(width:40,height:40)
                                         .clipShape(Circle())
-                                        .overlay(Circle().stroke(chatVM.usersIdling.contains(user) ? Color(chatVM.getColor(userID: user.id ?? "", groupChat: chatVM.groupChat ?? ChatModel())) : Color.gray,lineWidth: 2))
+                                        .overlay(Circle().stroke(chatVM.usersIdling.contains(user) ? Color(chatVM.getColor(userID: user.id ?? "", groupChat: chatVM.chat)) : Color.gray,lineWidth: 2))
                                     
                                     Text("\(user.nickName ?? "TOP SECRET USER")").foregroundColor(FOREGROUNDCOLOR)
                                 }
@@ -86,9 +99,11 @@ struct GroupChatView: View {
                     }
                     
                     
-                }.padding(5)
+                }
+                
                 Divider()
-            }
+               
+                //messages
                 ZStack(alignment: .bottomTrailing){
                     
                     ScrollView{
@@ -96,9 +111,9 @@ struct GroupChatView: View {
                             VStack(spacing: 0){
                                 ForEach(chatVM.messages, id: \.id){ message in
                                     if message.type == "text"{
-                                        MessageTextCell(message: message, chatID: groupVM.group.chatID ?? " ")
+                                        MessageTextCell(message: message, chatID: chatVM.chat.id)
                                     }else if message.type == "followUpUserText"{
-                                        MessageFollowUpTextCell(message: message, chatID: groupVM.group.chatID ?? " ")
+                                        MessageFollowUpTextCell(message: message, chatID: chatVM.chat.id)
                                     }
                                 }
                                     HStack{Spacer()}.padding(0).id("Empty")
@@ -136,6 +151,7 @@ struct GroupChatView: View {
                 
                 Spacer()
           
+                //keyboard
                 VStack{
                     Divider()
                     HStack(alignment: .center){
@@ -151,7 +167,7 @@ struct GroupChatView: View {
                         ResizableTF(height: $height, chatVM: chatVM, isPersonalChat: false).frame(height: self.height).cornerRadius(12)
                     Spacer()
                     Button(action:{
-                        chatVM.sendTextMessage(text: chatVM.text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: "green", messageID: UUID().uuidString, messageType: chatVM.readLastMessage().userID == userVM.user?.id ?? " "  ? "followUpUserText" : "text",chatID: groupVM.group.chatID ?? " ", groupID: groupVM.group.id, messageColor: chatVM.currentChatColor)
+                        chatVM.sendTextMessage(text: chatVM.text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: "green", messageID: UUID().uuidString, messageType: chatVM.readLastMessage().userID == userVM.user?.id ?? " "  ? "followUpUserText" : "text",chatID: chatID, groupID: groupID, messageColor: chatVM.currentChatColor)
                         chatVM.text = ""
                         chatVM.scrollToBottom += 1
                         
@@ -176,19 +192,20 @@ struct GroupChatView: View {
         }.edgesIgnoringSafeArea(.all)
             .navigationBarHidden(true)
             .onAppear{
+                
                 self.initKeyboardGuardian()
-                    chatVM.listenToChat(chatID: groupVM.group.chatID ?? " ", groupID: groupVM.group.id) { completed in
-                    print("fetched messages!")
+                    chatVM.listenToChat(chatID: chatID, groupID: groupID) { completed in
                 }
-                chatVM.readAllMessages(chatID: groupVM.group.chatID ?? " ", groupID: groupVM.group.id)
-                chatVM.openChat(userID: userID ,chatID: groupVM.group.chatID ?? " ", groupID: groupVM.group.id)
+                chatVM.readAllMessages(chatID: chatID, groupID: groupID)
+                chatVM.openChat(userID: userVM.user?.id ?? " " ,chatID: chatID, groupID: groupID)
                 DispatchQueue.main.asyncAfter(deadline: .now() + 1){
                 chatVM.scrollToBottom += 1
-     
+                    print("groupID: \(groupID)")
                 }
+                chatVM.readLastMessage(chatID: chatID, userID: userVM.user?.id ?? " ")
         }
             .onDisappear{
-            chatVM.exitChat(userID: userID, chatID: groupVM.group.chatID ?? " ", groupID: groupVM.group.id)
+                chatVM.exitChat(userID: userVM.user?.id ?? " ", chatID: chatID, groupID: groupID)
             }
             .onTapGesture {
                 if self.keyboardHeight != 0 {

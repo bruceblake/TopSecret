@@ -12,7 +12,7 @@ import GeoFire
 import GeoFireUtils
 import SwiftUI
 
-final class LocationManager : NSObject, ObservableObject, CLLocationManagerDelegate {
+final class LocationManager : NSObject, ObservableObject, CLLocationManagerDelegate, MKMapViewDelegate {
     @Published var userLocation : CLLocation?
     @Published var userID: String = " "
     @Published var groupID: String = " "
@@ -20,7 +20,9 @@ final class LocationManager : NSObject, ObservableObject, CLLocationManagerDeleg
     @Published var userAnnotations : [UserAnnotations] = []
     @Published var city = ""
     @Published var state = ""
-
+    @Published var mapView : MKMapView = .init()
+    @Published var pickedLocation : CLLocation?
+    @Published var pickedPlaceMark: CLPlacemark?
     private let locationManager = CLLocationManager()
     let userVM = UserViewModel.shared
     
@@ -33,12 +35,76 @@ final class LocationManager : NSObject, ObservableObject, CLLocationManagerDeleg
            locationManager.stopUpdatingLocation()
            locationManager.delegate = self
             locationManager.requestLocation()
-        
+        mapView.delegate = self
 
        }
     
     
 
+    func addDraggablePin(coordinate: CLLocationCoordinate2D){
+        let annotation = MKPointAnnotation()
+        annotation.coordinate = coordinate
+        
+        
+        annotation.title = "Hold and drag to desired location"
+        
+        
+        if mapView.annotations.isEmpty{
+            mapView.addAnnotation(annotation)
+        }else{
+            mapView.removeAnnotations(mapView.annotations)
+            mapView.addAnnotation(annotation)
+        }
+    }
+    
+    
+    
+    func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
+        if let annotation = annotation as? MKPointAnnotation {
+            let identifier = "User"
+            var view: CustomAnnotationView
+            
+            if let dequeuedView = mapView.dequeueReusableAnnotationView(withIdentifier: identifier) as? CustomAnnotationView {
+                dequeuedView.annotation = annotation
+                view = dequeuedView
+            } else {
+                view = CustomAnnotationView(annotation: annotation, reuseIdentifier: identifier)
+                view.isDraggable = true
+                view.canShowCallout = true
+                view.calloutOffset = CGPoint(x: -5, y: 5)
+            }
+            
+            return view
+        } else {
+            return nil
+        }
+    }
+    
+    func mapView(_ mapView: MKMapView, annotationView view: MKAnnotationView, didChange newState: MKAnnotationView.DragState, fromOldState oldState: MKAnnotationView.DragState) {
+        guard let newLocation = view.annotation?.coordinate else {return}
+        self.pickedLocation = .init(latitude: newLocation.latitude, longitude: newLocation.longitude)
+        updatePlacemark(location: .init(latitude: newLocation.latitude, longitude: newLocation.longitude))
+    }
+    
+    func updatePlacemark(location: CLLocation){
+        Task{
+            do{
+                guard let place = try await reverseLocationCoordinates(location: location) else {return}
+                await MainActor.run(body: {
+                    self.pickedPlaceMark = place
+                })
+            }
+            catch{
+                
+            }
+        }
+        
+    }
+    
+    func reverseLocationCoordinates(location: CLLocation)async throws->CLPlacemark?{
+        let place = try await CLGeocoder().reverseGeocodeLocation(location).first
+        return place
+    }
  
     
     func setCurrentUser(userID: String){
@@ -140,3 +206,47 @@ struct UserAnnotations : Identifiable{
 }
 
 
+class CustomAnnotationView: MKAnnotationView {
+    
+    override var annotation: MKAnnotation? {
+        didSet {
+            if let annotation = annotation as? MKPointAnnotation {
+                // Set the image and center offset for the annotation view
+                // Assume "originalImage" is the original image you want to resize
+                var originalImage = UIImage(named: "MapPin")
+                originalImage = originalImage?.withTintColor(UIColor(Color("AccentColor")))
+                
+                let newSize = CGSize(width: 60, height: 60) // Define the size you want
+                UIGraphicsBeginImageContextWithOptions(newSize, false, 0.0)
+                originalImage?.draw(in: CGRect(origin: CGPoint.zero, size: newSize))
+                let resizedImage = UIGraphicsGetImageFromCurrentImageContext()
+                UIGraphicsEndImageContext()
+                self.image = resizedImage
+                
+                
+                
+                self.centerOffset = CGPoint(x: 0, y: -self.image!.size.height / 2)
+            }
+        }
+    }
+    
+    override func setSelected(_ selected: Bool, animated: Bool) {
+        super.setSelected(selected, animated: animated)
+        
+        if selected {
+            // Create a custom callout view
+            let calloutView = UIView(frame: CGRect(x: 0, y: 0, width: 200, height: 100))
+            calloutView.backgroundColor = UIColor.white
+            
+            let calloutLabel = UILabel(frame: CGRect(x: 10, y: 10, width: 180, height: 80))
+            calloutLabel.numberOfLines = 1
+            calloutLabel.text = "Custom Callout View"
+            calloutView.addSubview(calloutLabel)
+            
+            // Set the callout view for the annotation view
+            self.detailCalloutAccessoryView = calloutView
+        } else {
+            self.detailCalloutAccessoryView = nil
+        }
+    }
+}

@@ -40,20 +40,6 @@ class GroupViewModel: ObservableObject {
     }
 
     
-    
-    func addToGroupStory(groupID: String, post: UIImage, creator: String){
-        let id = UUID().uuidString
-        COLLECTION_GROUP.document(groupID).collection("Story").document(id).setData(["groupID":groupID,"creator":creator,"id":id,"dateCreated":Timestamp()])
-        COLLECTION_GROUP.document(groupID).updateData(["storyPosts":FieldValue.arrayUnion([id])])
-        self.persistImageToStorage(groupID: groupID, image: post, storyID: id)
-    }
-    
-    
- 
-    func seeStory(groupID: String, storyID: String, userID: String){
-        COLLECTION_GROUP.document(groupID).collection("Story").document(storyID).updateData(["usersSeenStory":FieldValue.arrayUnion([userID])])
-    }
-    
    
     
     
@@ -143,6 +129,9 @@ class GroupViewModel: ObservableObject {
     }
     
     func acceptGroupInvitation(group: Group, user: User){
+        
+        let dp = DispatchGroup()
+        dp.enter()
         COLLECTION_USER.document(user.id ?? " ").updateData(["pendingGroupInvitationID":FieldValue.arrayRemove([group.id])])
         
         joinGroup(group: group, user: user)
@@ -154,6 +143,36 @@ class GroupViewModel: ObservableObject {
             "name": "acceptedGroupInvitation",
             "timeStamp":Timestamp(),
             "type":"acceptedGroupInvitation",
+            "userID":user.id ?? "USER_ID",
+            "hasSeen":false,
+            "groupID":group.id] as [String:Any]
+        
+        dp.leave()
+        dp.notify(queue: .main, execute: {
+            for id in group.users{
+                COLLECTION_USER.document(id).collection("Notifications").document(notificationID).setData(userNotificationData)
+                COLLECTION_USER.document(id).updateData(["userNotificationCount":FieldValue.increment((Int64(1)))])
+            }
+        })
+      
+        
+
+        
+        
+    }
+    
+    func denyGroupInvitation(group: Group, user: User){
+        COLLECTION_USER.document(user.id ?? " ").updateData(["pendingGroupInvitationID":FieldValue.arrayRemove([group.id])])
+        
+        joinGroup(group: group, user: user)
+        
+        let notificationID = UUID().uuidString
+        
+        let userNotificationData = [
+            "id":notificationID,
+            "name": "denyGroupInvitation",
+            "timeStamp":Timestamp(),
+            "type":"denyGroupInvitation",
             "userID":user.id ?? "USER_ID",
             "hasSeen":false,
             "groupID":group.id] as [String:Any]
@@ -273,59 +292,12 @@ class GroupViewModel: ObservableObject {
                 print("ERROR \(err!.localizedDescription)")
                 return
             }
-            self.persistImageToStorage(groupID: id,image: image)
+            self.persistImageToStorage(groupID: id,image: image, completion: { fetchedImageString in
+                self.chatRepository.createGroupChat(name: groupName, users: users, groupID: id, chatID: chatID, profileImage: fetchedImageString)
+            })
         }
-        
-        COLLECTION_GAMES.document(id).collection("Lobby").document("Lobby").setData(["playersID": [], "playersReady":[]])
-        
-     
-
-        chatRepository.createGroupChat(name: groupName, users: users, groupID: id, chatID: chatID)
-        
-        
-        
     }
-    
-    func createGroup(groupName: String, dateCreated: Date, users: [String], image: UIImage, completion: @escaping (ChatModel) -> ()) -> (){
-        
-        let id = UUID().uuidString
-
-        for user in users{
-            COLLECTION_USER.document(user).updateData(["groupsID":FieldValue.arrayUnion([id])])
-        }
-        
-        
-        let chatID = UUID().uuidString
-        
-        for user in users {
-            
-            COLLECTION_JUNCTION_GROUP_USER.document("\(id)\(user)").setData(["groupID":id,
-                                                                             "userID":user]) //groupid , userid
-        }
-
-        let data = ["groupName" : groupName,
-                    "users" : users ,
-                    "memberAmount": 1, "id":id, "chatID": chatID, "dateCreated":Timestamp(), "groupProfileImage": " "
-        ] as [String:Any]
-                
-        COLLECTION_GROUP.document(id).setData(data) { (err) in
-            if err != nil {
-                print("ERROR \(err!.localizedDescription)")
-                return
-            }
-            self.persistImageToStorage(groupID: id,image: image)
-        }
-      
-        COLLECTION_GAMES.document(id).collection("Lobby").document("Lobby").setData(["playersID": [], "playersReady":[]])
-        
-
-        chatRepository.createGroupChat(name: groupName, users: users, groupID: id, chatID: chatID ,completion: { chat in
-            return completion(chat)
-        })
-
-        
-        
-    }
+   
     
     
   
@@ -352,7 +324,7 @@ class GroupViewModel: ObservableObject {
     
  
     
-    func persistImageToStorage(groupID: String, image: UIImage) {
+    func persistImageToStorage(groupID: String, image: UIImage, completion: @escaping (String) -> ()) -> (){
        let fileName = "groupImages/\(groupID)"
         let ref = Storage.storage().reference(withPath: fileName)
         guard let imageData = image.jpegData(compressionQuality: 0.5) else { return }
@@ -369,32 +341,12 @@ class GroupViewModel: ObservableObject {
                 print("Successfully stored image in database")
                 let imageURL = url?.absoluteString ?? ""
                 COLLECTION_GROUP.document(groupID).updateData(["groupProfileImage":imageURL])
+                return completion(imageURL)
             }
         }
       
     }
-    
-    func persistImageToStorage(groupID: String, image: UIImage, storyID: String) {
-       let fileName = "groupStories/\(groupID)"
-        let ref = Storage.storage().reference(withPath: fileName)
-        guard let imageData = image.jpegData(compressionQuality: 0.5) else { return }
-        ref.putData(imageData, metadata: nil) { (metadata, err) in
-            if err != nil{
-                print("ERROR")
-                return
-            }
-               ref.downloadURL { (url, err) in
-                if err != nil{
-                    print("ERROR: Failed to retreive download URL")
-                    return
-                }
-                print("Successfully stored image in database")
-                let imageURL = url?.absoluteString ?? ""
-                   COLLECTION_GROUP.document(groupID).collection("Story").document(storyID).updateData(["image":imageURL])
-            }
-        }
-      
-    }
+
     
     
     

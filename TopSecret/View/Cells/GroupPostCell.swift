@@ -285,7 +285,7 @@ struct ShowShareMenu: View {
     @EnvironmentObject var shareVM : ShareViewModel
     func getPersonalChatUser(chat: ChatModel) -> User{
         
-        for user in chat.users {
+        for user in chat.users ?? []{
             if user.id ?? "" != userVM.user?.id ?? " "{
                 return user
             }

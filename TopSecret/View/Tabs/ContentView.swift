@@ -103,13 +103,14 @@ struct Tabs : View {
     @State var showSearch: Bool = false
     @StateObject var personalChatVM = PersonalChatViewModel()
     @StateObject var feedVM = FeedViewModel()
+    @StateObject var calendarVM = UserCalendarViewModel()
     @EnvironmentObject var userVM: UserViewModel
     @EnvironmentObject var shareVM: ShareViewModel
     @State var selectedPost: GroupPostModel = GroupPostModel()
     @State var selectedPoll: PollModel = PollModel()
     @State var selectedEvent: EventModel = EventModel()
     @State var shareType : String = ""
-  
+    @State private var notSeenNotifications: [UserNotificationModel] = []
    
     var body: some View {
         ZStack{
@@ -122,7 +123,7 @@ struct Tabs : View {
                         TopBar(showSearch: $showSearch, tabIndex: tabIndex)
                         
                         if tabIndex == .calendar{
-                            ScheduleView(calendar: Calendar(identifier: .gregorian))
+                            ScheduleView(calendar: Calendar(identifier: .gregorian), calendarVM: calendarVM)
                                       
                         }else if tabIndex == .friends{
                             FriendsView(personalChatVM: personalChatVM)
@@ -220,7 +221,7 @@ struct Tabs : View {
                                 if userVM.unreadChatsCount >= 1{
                                     ZStack{
                                         Circle().foregroundColor(Color.red).frame(width: 18, height: 18)
-                                        Text("\(userVM.getUnreadChatCount())").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 12))
+                                        Text("\(userVM.getUnreadChatCount(chats: userVM.personalChats))").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 12))
                                     }
                                     
                                     .offset(x: 13, y: -10)
@@ -289,7 +290,18 @@ struct Tabs : View {
                         self.tabIndex = .notifications
                     },label:{
                         VStack(spacing: 5){
-                            Image(systemName: self.tabIndex == .notifications ?  "envelope.fill" : "envelope").font(.system(size: 20))
+                            ZStack{
+                                Image(systemName: self.tabIndex == .notifications ?  "envelope.fill" : "envelope").font(.system(size: 20))
+                                if userVM.unreadNotificationsCount >= 1{
+                                    ZStack{
+                                        Circle().foregroundColor(Color.red).frame(width: 18, height: 18)
+                                        Text("\(userVM.unreadNotificationsCount)").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 12))
+                                    }
+                                    
+                                    .offset(x: 13, y: -10)
+                                }
+                            }
+                          
                             Text("Notifications").foregroundColor(.gray).font(.system(size: 10))
                         }
                         
@@ -313,6 +325,10 @@ struct Tabs : View {
             if !output && userVM.hideBackground{
                 userVM.hideBackground.toggle()
                 userVM.hideTabButtons.toggle()
+            }
+        }.onChange(of: userVM.user?.eventsID) { eventsID in
+            if eventsID?.count ?? 0 > 0{
+                calendarVM.startSearch(eventsID: userVM.user?.eventsID ?? [])
             }
         }
     }

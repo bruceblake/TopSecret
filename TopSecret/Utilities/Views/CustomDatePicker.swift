@@ -10,14 +10,22 @@ import SwiftUI
 struct CustomDatePicker: View {
     @EnvironmentObject var userVM: UserViewModel
     @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
+    @ObservedObject var calendarVM: UserCalendarViewModel
     @Binding var currentDate: Date
-    @Binding var group : Group
     
     @State var currentMonth: Int = 0
     
-    @Binding var selectedMonth: Int
-    @Binding var selectedDay: Int
-    @Binding var selectedYear : Int
+    @State var selectedMonth: Int = Calendar.current.component(.month, from: Date())
+    @State var selectedDay: Int = Calendar.current.component(.day, from: Date())
+    @State var selectedYear : Int = Calendar.current.component(.year, from: Date())
+    @Binding var selectedDate: Date
+    @Binding var showWeekView: Bool
+    
+    func convertComponentsToDate(year: Int, month: Int, day: Int) -> Date{
+        let calendar = Calendar(identifier: .gregorian)
+        let dateComponents = DateComponents(year: year, month: month, day: day)
+        return calendar.date(from: dateComponents) ?? Date()
+    }
     
     let days: [String] = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"]
     var body: some View {
@@ -45,6 +53,7 @@ struct CustomDatePicker: View {
                     Button(action:{
                         withAnimation{
                             currentMonth -= 1
+                        
                         }
                     },label:{
                         Image(systemName: "chevron.left")
@@ -54,15 +63,25 @@ struct CustomDatePicker: View {
                     Button(action:{
                         withAnimation{
                             currentMonth += 1
+                      
                         }
                     },label:{
                         Image(systemName: "chevron.right")
                             .font(.title2)
                     })
+                    
+                    Button(action:{
+                        showWeekView = true
+                    },label:{
+                        ZStack{
+                            Circle().foregroundColor(Color("Background")).frame(width: 30, height: 30)
+                            Image(systemName: "arrow.down.right.and.arrow.up.left").font(.subheadline).foregroundColor(FOREGROUNDCOLOR)
+                        }
+                    })
                 }
                  
                 
-            }.padding(.horizontal)
+            }
             
             HStack(spacing: 0){
                 ForEach(days,id:\.self){ day in
@@ -80,22 +99,24 @@ struct CustomDatePicker: View {
             
             LazyVGrid(columns: columns, spacing: 10){
                 ForEach(extractDate()){ value in
-                    CardView(eventList: selectedGroupVM.events ?? [] ,value: value, selectedDay: selectedDay, completion: { day in
+                    CardView(eventList: calendarVM.eventsResults,value: value, selectedDay: selectedDay, completion: { day in
                         
                        
                         selectedDay = day
                         
-                 
-                        
+                       
+                     
                     })
                 }
             }
         }.onChange(of: currentMonth) { newValue in
             currentDate = getCurrentMonth()
-            selectedMonth = Calendar.current.dateComponents([.month], from: getCurrentMonth()).month ?? 0
-            selectedDay = 1
+            selectedMonth = Calendar.current.dateComponents([.month], from: getCurrentMonth()).month ?? Calendar.current.component(.month, from: Date())
+            selectedDate = convertComponentsToDate(year: selectedYear, month: selectedMonth, day: selectedDay)
             
-        }.padding(10).background(Color("Color")).cornerRadius(20)
+        }.padding(10).background(Color("Color")).cornerRadius(20).onAppear{
+            calendarVM.startSearch(eventsID: userVM.user?.eventsID ?? [])
+        }
     }
     
     @ViewBuilder
@@ -103,23 +124,26 @@ struct CustomDatePicker: View {
         
        
         
-        VStack{
             if value.day != -1{
                 Button(action:{
+                    selectedDate = convertComponentsToDate(year: selectedYear, month: selectedMonth, day: value.day)
+                    
                     return completion(value.day)
                 },label:{
-                    VStack{
+                    VStack(spacing: 3){
                         Text("\(value.day)")
                             .font(.title3)
                             .bold()
                             .foregroundColor(selectedDay == value.day ? Color("AccentColor") : .white)
                         
-                        if hasEvent(eventList: eventList, selectedDay: value.day, selectedMonth: getDateComponents(date: value)[0], selectedYear: getDateComponents(date: value)[2]){
-                                Text("*")
-                            }else{
-                                Text("")
-                            }
                         
+                        
+                        if hasEvent(eventList: eventList, selectedDay: value.day, selectedMonth: selectedMonth, selectedYear: selectedYear){
+                            Circle().foregroundColor(Color("AccentColor")).frame(width: 8, height: 8)
+                            }else{
+                                Circle().foregroundColor(Color.clear).frame(width: 8, height: 8)
+                            }
+
                        
                         
                     }
@@ -127,40 +151,41 @@ struct CustomDatePicker: View {
                 })
                 
             }
-        }
+        
     }
     
     func getDateComponents(date: DateValue) -> [Int] //first is month, second is day, third is year
                     {
         let component = Calendar.current.dateComponents([.year,.month,.day], from: date.date)
-        return [component.month ?? 0,component.day ?? 0,component.year ?? 0]
+        return [component.month ?? Calendar.current.component(.month, from: Date()),component.day ?? 0,component.year ?? 0]
     }
     
     func hasEvent(eventList: [EventModel], selectedDay: Int, selectedMonth: Int, selectedYear: Int) -> Bool{
-        
+
         var hasEvent = false
-        
+
         for event in eventList{
             let components = Calendar.current.dateComponents([.month,.day,.year], from: event.eventStartTime?.dateValue() ?? Date())
             let year = components.year ?? 0
             let month = components.month ?? 0
             let day = components.day ?? 0
-            
+
             if selectedDay == day && selectedMonth == month && selectedYear == year{
                 hasEvent = true
             }
+          
         }
        
         return hasEvent
-        
-        
+
+
     }
     
     func extraDate()->[String]{
         let formatter = DateFormatter()
         formatter.dateFormat = "YYYY MMMM"
         
-        let date = formatter.string(from: currentDate)
+        let date = formatter.string(from: selectedDate)
         
         return date.components(separatedBy: " ")
     }
@@ -170,8 +195,9 @@ struct CustomDatePicker: View {
         
         guard let currentMonth = calendar.date(byAdding: .month, value: self.currentMonth, to: Date()) else{
             return Date()
+         
         }
-        
+        print("current month: \(currentMonth)")
         return currentMonth
     }
     
@@ -181,7 +207,7 @@ struct CustomDatePicker: View {
         let currentMonth = getCurrentMonth()
         
         var days =  currentMonth.getAllDates().compactMap { date -> DateValue in
-            let day = calendar.component(.day, from: date)
+        let day = calendar.component(.day, from: date)
             
             return DateValue(day: day, date: date)
         }

@@ -7,8 +7,6 @@
 
 import SwiftUI
 import SDWebImageSwiftUI
-import MediaCore
-import MediaSwiftUI
 
 struct HomeScreenView: View {
     
@@ -18,17 +16,20 @@ struct HomeScreenView: View {
     @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
     @State var goBack = false
     @State var showAddContent = false
-    @Binding var group : Group
+    var chatID: String
+    var groupID: String
     @State var offset : CGSize = .zero
     @State var showProfileView : Bool = false
     @State var showGalleryView : Bool = false
     @State var shareType : String = ""
     @State var selectedOptionIndex = 0
-    var options = ["Home","Chat","Calendar","Map","Games"]
+    var options = ["Home","Chat","Calendar","Map"]
     
     @Environment(\.presentationMode) var presentationMode
 
-    
+    var notificationsCount : Int {
+        userVM.unreadNotificationsCount + userVM.unreadChatsCount
+    }
             
     var body: some View {
         
@@ -38,104 +39,105 @@ struct HomeScreenView: View {
             
             VStack{
             
-           
-                
-                HStack(alignment: .center){
-                    
-                   
-                    
                     HStack(alignment: .center){
-                        Button(action:{
-                            presentationMode.wrappedValue.dismiss()
-                        },label:{
-                            
-                            
-                            ZStack{
+                        
+                        
+                        
+                        HStack(alignment: .center){
+                            Button(action:{
+                                presentationMode.wrappedValue.dismiss()
+                            },label:{
                                 
-                                HStack(spacing: 1){
+                                
+                                ZStack{
+                                    
+                                    HStack(spacing: 1){
                                         Image(systemName: "chevron.left")
                                             .font(.title3).foregroundColor(FOREGROUNDCOLOR)
                                         Image(systemName: "house")
                                             .font(.title3).foregroundColor(FOREGROUNDCOLOR)
-                                }.padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
-                                
-                                if self.userVM.user?.personalChatNotificationCount ?? 0 != 0 {
-                                    ZStack{
-                                        Circle().foregroundColor(Color("AccentColor")).frame(width: 20, height: 20)
-                                        Text("\(self.userVM.user?.personalChatNotificationCount ?? 0)").foregroundColor(Color.yellow).font(.body)
-                                    }.offset(x: 20, y: -18)
+                                    }.padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
+                                    
+                                    if notificationsCount >= 1 {
+                                        ZStack{
+                                            Circle().foregroundColor(Color("AccentColor")).frame(width: 20, height: 20)
+                                            Text("\(notificationsCount)").foregroundColor(Color.yellow).font(.body)
+                                        }.offset(x: 20, y: -18)
+                                    }
+                                    
+                                    
                                 }
                                 
                                 
-                            }
-                           
-                           
-                         
+                                
+                                
+                            })
                             
-                        })
-                        
-                        NavigationLink {
-                            GroupGalleryView()
-                        } label: {
-                            ZStack{
-                                Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
-                                
-                                
-                                
-                                Image(systemName: "photo.on.rectangle.angled").foregroundColor(FOREGROUNDCOLOR).font(.title3)
-                                
-                              
-                                
-                                
+                            NavigationLink {
+                                GroupGalleryView()
+                            } label: {
+                                ZStack{
+                                    Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
+                                    
+                                    
+                                    
+                                    Image(systemName: "photo.on.rectangle.angled").foregroundColor(FOREGROUNDCOLOR).font(.title3)
+                                    
+                                    
+                                    
+                                    
+                                }
                             }
-                        }
-                        
-               
-                        
-                        
-                    }.padding(.leading)
-                    
-                    
-                  
-                    
-                    Spacer()
-
-                
                             
+                            
+                            
+                            
+                        }.padding(.leading)
+                        
+                        
+                        
+                        
+                        Spacer()
+                        
+                        
+                        
                         Text(selectedGroupVM.group.groupName ).font(.title2).fontWeight(.heavy).minimumScaleFactor(0.5)
-                    
-                   
-                    
-                    Spacer()
-                    
-                    HStack{
-                        
-
-                        Button(action:{
-                            showAddContent.toggle()
-                        },label:{
-                            Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title2)
-                        }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
-                        
-                      
-                        NavigationLink(destination: GroupProfileView(group: selectedGroupVM.group, isInGroup: true)){
-                                                    Image(systemName: "person").foregroundColor(FOREGROUNDCOLOR).font(.title3).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
-                                                }
-                        
-//                        NavigationLink(destination: GroupSettingsView().environmentObject(selectedGroupVM)){
-//                            Image(systemName: "gear").foregroundColor(FOREGROUNDCOLOR).font(.title3).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
-//                        }
                         
                         
                         
+                        Spacer()
                         
-   
-
-                    }.padding(.trailing,12)
-                    
-           
-                    
-                }.padding(.top,60)
+                        HStack{
+                            
+                            Image(systemName: "chevron.left").frame(width: 20, height: 20).foregroundColor(Color.clear)
+                            Button(action:{
+                                showAddContent.toggle()
+                            },label:{
+                                Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title2)
+                            }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
+                            
+                            
+                            NavigationLink(destination: GroupProfileView(group: selectedGroupVM.group, isInGroup: true)){
+                                Image(systemName: "person").foregroundColor(FOREGROUNDCOLOR).font(.title3).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
+                            }
+                            
+                            //                        NavigationLink(destination: GroupSettingsView().environmentObject(selectedGroupVM)){
+                            //                            Image(systemName: "gear").foregroundColor(FOREGROUNDCOLOR).font(.title3).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
+                            //                        }
+                            
+                            
+                            
+                            
+                            
+                            
+                        }.padding(.trailing,12)
+                        
+                        
+                        
+                    }
+                    .padding(.top,60)
+                
+                
                 
                 
                 Spacer()
@@ -163,43 +165,21 @@ struct HomeScreenView: View {
                 
                 switch selectedOptionIndex{
                     case 0:
-                    ActivityView(group: group, shareType: $shareType).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
-                case 1:
-                    
-                       GroupChatView(userID: userVM.user?.id ?? " ").environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
-                   
+                    ActivityView(shareType: $shareType).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
+                        
+                    case 1:
+                        GroupChatView(chatID: chatID, groupID: groupID).pageView(ignoresSafeArea: true, edges: .bottom)
+                        
                 case 2:
                     
                     GroupCalendarView(calendar: Calendar(identifier: .gregorian)).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
                 case 3:
                     
-                    MapView(group: $group).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
-                case 4:
-                    
-                    GamesView().environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
+                    GroupMapView().environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
+      
                 default:
                     Text("Unknown")
                 }
-//
-//                PagerTabView(showLabels: true, tint: Color("AccentColor"), selection: $keyboardVM.selectedView, labels: ["Home","Chat","Calendar","Map","Games"]) {
-//                    ActivityView(group: group, selectedView: $keyboardVM.selectedView, shareType: $shareType).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
-//
-//                    GroupChatView(keyboardVM: keyboardVM, userID: userVM.user?.id ?? " ").environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
-//
-//
-//
-//                    GroupCalendarView(calendar: Calendar(identifier: .gregorian)).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
-//
-//
-//                    MapView(group: $group).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
-//
-//                    GamesView().environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
-//
-//                }.padding(.top)
-//                    .ignoresSafeArea(.container, edges: .bottom )
-           
-                
-              
                 
             }.zIndex(2).opacity(showAddContent ? 0.2 : 1).onTapGesture {
                 if(showAddContent){
@@ -209,9 +189,9 @@ struct HomeScreenView: View {
             
          
             
-            BottomSheetView(isOpen: $showAddContent, maxHeight: UIScreen.main.bounds.height * 0.45) {
+            BottomSheetView(isOpen: $showAddContent, maxHeight: UIScreen.main.bounds.height / 3) {
                 
-                AddContentView(showAddContentView: $showAddContent, group: $group).environmentObject(selectedGroupVM)
+                AddContentView(showAddContentView: $showAddContent).environmentObject(selectedGroupVM)
                 
             }.zIndex(3)
          

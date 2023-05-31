@@ -57,6 +57,9 @@ struct LoginView: View {
                         //Forgot Password
                         HStack{
                             
+                           
+                          
+                            
                             Spacer()
                             
                             Button(action: {
@@ -66,7 +69,6 @@ struct LoginView: View {
                             })
                             
                         }
-                        
                         
                         Button(action: {
                             let dp = DispatchGroup()
@@ -92,6 +94,19 @@ struct LoginView: View {
                     }.padding(.top,50)
                     
                     Spacer()
+
+
+                    HStack{
+                        Spacer()
+                        Text("Don't have an account?").font(.system(size: 13))
+                        Button(action: {
+                            self.beginRegisterView.toggle()
+                        },label:{
+                            Text("Register").foregroundColor(Color("AccentColor")).font(.system(size: 13))
+                        })
+                        
+                        Spacer()
+                    }.padding(.bottom,40)
                 }.offset(y: -self.value)
                     .onAppear{
                         NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification, object: nil, queue: .main) { (noti) in
@@ -117,15 +132,7 @@ struct LoginView: View {
                 
                 
             }.edgesIgnoringSafeArea(.all)
-                .toolbar{
-                    ToolbarItem(placement: .navigationBarTrailing){
-                        Button(action: {
-                            self.beginRegisterView.toggle()
-                        },label:{
-                            Text("Register")
-                        })
-                    }
-                }.opacity(showContentScreen ? 0.2 : 1).disabled(showContentScreen).overlay {
+              .opacity(showContentScreen ? 0.2 : 1).disabled(showContentScreen).overlay {
                     if showContentScreen{
                         SignInOverlay().frame(width: UIScreen.main.bounds.width/1.5, height: UIScreen.main.bounds.height/3).cornerRadius(16)
                     }

@@ -193,7 +193,7 @@ struct UserProfilePage: View {
                             userVM.blockUser(blocker: userVM.user?.id ?? " ", blockee: user.id ?? " ")
                         }
                     },label:{
-                    Text("\(userVM.user?.blockedAccounts?.contains(user) ?? false ? "Unblock User" : "Block User")").fontWeight(.bold).foregroundColor(Color("AccentColor")).padding(.vertical,10).frame(width: UIScreen.main.bounds.width/1.2).background(Color("Background")).cornerRadius(15)
+                    Text("\(userVM.user?.blockedAccounts?.contains(user) ?? false ? "Unblock User" : "Block User")").fontWeight(.bold).foregroundColor(FOREGROUNDCOLOR).padding(.vertical,10).frame(width: UIScreen.main.bounds.width/1.2).background(Color("Background")).cornerRadius(15)
                     })
                     
                     if !(userVM.user?.blockedAccounts?.contains(user) ?? false) {
@@ -217,22 +217,11 @@ struct UserProfilePage: View {
                             }
                             
                         },label:{
-                            Text("\(userVM.user?.friendsList?.contains(user) ?? false ? "Remove Friend" : "Add Friend")").fontWeight(.bold).foregroundColor(Color("AccentColor")).padding(.vertical,10).frame(width: UIScreen.main.bounds.width/1.2).background(Color("Background")).cornerRadius(15)
+                            Text("\(userVM.user?.friendsList?.contains(user) ?? false ? "Remove Friend" : "Add Friend")").fontWeight(.bold).foregroundColor(FOREGROUNDCOLOR).padding(.vertical,10).frame(width: UIScreen.main.bounds.width/1.2).background(Color("Background")).cornerRadius(15)
                         })
                         }
                     }
-                    
-              
-                    
-                    
-                 
-                    
-                    Button(action:{
-                        
-                    },label:{
-                        Text("Send Message").fontWeight(.bold).foregroundColor(Color("AccentColor")).padding(.vertical,10).frame(width: UIScreen.main.bounds.width/1.2).background(Color("Background")).cornerRadius(15)
-                    })
-                    
+     
                 }
             }.zIndex(2)
             

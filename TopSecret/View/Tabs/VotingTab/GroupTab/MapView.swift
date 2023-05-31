@@ -9,11 +9,10 @@ import SwiftUI
 import MapKit
 import SDWebImageSwiftUI
 
-struct MapView: View {
+struct GroupMapView: View {
     @State private var landmarks: [Landmark] = [Landmark]()
     @State private var search: String = ""
     @State private var tapped: Bool = false
-    @Binding var group : Group
     @EnvironmentObject var userVM: UserViewModel
     @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
     @State var followUser : Bool = false
@@ -144,8 +143,8 @@ struct MapView: View {
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
             
             locationManager.setCurrentUser(userID: userVM.user?.id ?? " ")
-            locationManager.setCurrentGroup(groupID: group.id)
-            locationManager.fetchLocations(usersID: group.users ?? [])
+            locationManager.setCurrentGroup(groupID: selectedGroupVM.group.id)
+            locationManager.fetchLocations(usersID: selectedGroupVM.group.users)
         }
         
         

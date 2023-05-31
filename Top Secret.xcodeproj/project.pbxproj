@@ -103,6 +103,9 @@
 		789136C428F58CEA005278E1 /* PlaceModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789136C328F58CEA005278E1 /* PlaceModel.swift */; };
 		789136C628F593DA005278E1 /* LocationSearchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789136C528F593D9005278E1 /* LocationSearchView.swift */; };
 		789136C828F593FC005278E1 /* LocationSearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789136C728F593FC005278E1 /* LocationSearchViewModel.swift */; };
+		7893C86A2A217E9300F708FE /* AddEventDescriptionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7893C8692A217E9300F708FE /* AddEventDescriptionView.swift */; };
+		7893C86C2A218C0C00F708FE /* InviteMembersToEventView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7893C86B2A218C0C00F708FE /* InviteMembersToEventView.swift */; };
+		7893C86E2A22865400F708FE /* ExcludeMembersToEventView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7893C86D2A22865400F708FE /* ExcludeMembersToEventView.swift */; };
 		78959D7329462BB900CAA953 /* FeedViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78959D7229462BB900CAA953 /* FeedViewModel.swift */; };
 		789A63AB2965CCC5001E2ED6 /* RefreshableScrollView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 789A63AA2965CCC5001E2ED6 /* RefreshableScrollView.swift */; };
 		789FC2CB2617DA720021616B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 789FC2CA2617DA720021616B /* Assets.xcassets */; };
@@ -167,8 +170,6 @@
 		78C34CC92A1569E8005715DB /* SwiftUIPullToRefresh in Frameworks */ = {isa = PBXBuildFile; productRef = 78C34CC82A1569E8005715DB /* SwiftUIPullToRefresh */; };
 		78C34CCB2A156C65005715DB /* ExyteMediaPicker in Frameworks */ = {isa = PBXBuildFile; productRef = 78C34CCA2A156C65005715DB /* ExyteMediaPicker */; };
 		78C34CD42A15BE63005715DB /* JZCalendarWeekView in Frameworks */ = {isa = PBXBuildFile; productRef = 78C34CD32A15BE63005715DB /* JZCalendarWeekView */; };
-		78C34CF42A18494F005715DB /* InfiniteCalendar.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 78C34CF32A18494F005715DB /* InfiniteCalendar.framework */; };
-		78C34CF52A18494F005715DB /* InfiniteCalendar.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 78C34CF32A18494F005715DB /* InfiniteCalendar.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		78C34CF82A1948A3005715DB /* EventsTabViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78C34CF72A1948A3005715DB /* EventsTabViewModel.swift */; };
 		78C4DCC127B5592D000F0337 /* UserNotificationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78C4DCC027B5592D000F0337 /* UserNotificationView.swift */; };
 		78C4DCC827B566F5000F0337 /* NotificationModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78C4DCC727B566F5000F0337 /* NotificationModel.swift */; };
@@ -261,20 +262,6 @@
 		78F874E327A6FD3200209B93 /* TabViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78F874E227A6FD3200209B93 /* TabViewModel.swift */; };
 		78FFE7FE28C443A7007B3FC9 /* FinishedPollCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78FFE7FD28C443A7007B3FC9 /* FinishedPollCell.swift */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXCopyFilesBuildPhase section */
-		78C34CF62A18494F005715DB /* Embed Frameworks */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = "";
-			dstSubfolderSpec = 10;
-			files = (
-				78C34CF52A18494F005715DB /* InfiniteCalendar.framework in Embed Frameworks */,
-			);
-			name = "Embed Frameworks";
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		629710FD26E567C300A90E61 /* UploadPostViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UploadPostViewModel.swift; sourceTree = "<group>"; };
@@ -370,6 +357,9 @@
 		789136C328F58CEA005278E1 /* PlaceModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaceModel.swift; sourceTree = "<group>"; };
 		789136C528F593D9005278E1 /* LocationSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationSearchView.swift; sourceTree = "<group>"; };
 		789136C728F593FC005278E1 /* LocationSearchViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocationSearchViewModel.swift; sourceTree = "<group>"; };
+		7893C8692A217E9300F708FE /* AddEventDescriptionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddEventDescriptionView.swift; sourceTree = "<group>"; };
+		7893C86B2A218C0C00F708FE /* InviteMembersToEventView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteMembersToEventView.swift; sourceTree = "<group>"; };
+		7893C86D2A22865400F708FE /* ExcludeMembersToEventView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExcludeMembersToEventView.swift; sourceTree = "<group>"; };
 		78959D7229462BB900CAA953 /* FeedViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FeedViewModel.swift; sourceTree = "<group>"; };
 		789A63AA2965CCC5001E2ED6 /* RefreshableScrollView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RefreshableScrollView.swift; sourceTree = "<group>"; };
 		789FC2C32617DA700021616B /* Top Secret.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Top Secret.app"; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -536,7 +526,6 @@
 				789FC2EF2617DCC80021616B /* FirebaseMessaging in Frameworks */,
 				78066FDA296DBA1D005A4FDC /* LegacyScrollView in Frameworks */,
 				789FC2E92617DCC80021616B /* FirebaseStorage in Frameworks */,
-				78C34CF42A18494F005715DB /* InfiniteCalendar.framework in Frameworks */,
 				78D4B97E288AEAFB00036A3B /* GeoFire in Frameworks */,
 				788902942957EC910073320F /* YPImagePicker in Frameworks */,
 				783ADC9B27545C1600FD517D /* SDWebImageSwiftUI in Frameworks */,
@@ -692,6 +681,9 @@
 		789FC2BA2617DA700021616B = {
 			isa = PBXGroup;
 			children = (
+				7893C86D2A22865400F708FE /* ExcludeMembersToEventView.swift */,
+				7893C86B2A218C0C00F708FE /* InviteMembersToEventView.swift */,
+				7893C8692A217E9300F708FE /* AddEventDescriptionView.swift */,
 				78A7CB5B29672493000344C5 /* swiftui-pull-to-refresh */,
 				783A0408284A3B7600308157 /* AppDelegate.swift */,
 				78199CE828465EA200335E52 /* Top Secret.entitlements */,
@@ -1125,7 +1117,6 @@
 				789FC2C12617DA700021616B /* Resources */,
 				78E1EDDC273208D10080B245 /* ShellScript */,
 				E8DBAEDFD6B18002A0AAF8F4 /* [CP] Embed Pods Frameworks */,
-				78C34CF62A18494F005715DB /* Embed Frameworks */,
 			);
 			buildRules = (
 			);
@@ -1294,6 +1285,7 @@
 				783A0409284A3B7600308157 /* AppDelegate.swift in Sources */,
 				789136C428F58CEA005278E1 /* PlaceModel.swift in Sources */,
 				78BBF4DE28C76D2F0023354A /* CreateGroupPostView.swift in Sources */,
+				7893C86C2A218C0C00F708FE /* InviteMembersToEventView.swift in Sources */,
 				786869C628905A9A00E81D85 /* CustomRefreshView.swift in Sources */,
 				78398335274BD9C800AA9AAD /* ValidationModel.swift in Sources */,
 				78D2DF8C27D656BF00241472 /* GalleryPostCommentCell.swift in Sources */,
@@ -1318,6 +1310,7 @@
 				62CE5ADA26DEE44E00AE6ACC /* VotingView.swift in Sources */,
 				787F33EA28EE3BBE00D5F798 /* RecentSearchViewModel.swift in Sources */,
 				78EBBC2D28808D7800095D05 /* HomeCalendarViewModel.swift in Sources */,
+				7893C86A2A217E9300F708FE /* AddEventDescriptionView.swift in Sources */,
 				78860183294C01DD00A6EC23 /* GroupPostCommentCell.swift in Sources */,
 				786BD9FC27CE62C500FDDE1E /* GameView.swift in Sources */,
 				78C7DF79287DDC360099971D /* GroupStoryViewModel.swift in Sources */,
@@ -1394,6 +1387,7 @@
 				781A7FF82952A494005A397F /* GroupProfileViewModel.swift in Sources */,
 				78C0903F293AEC1B008802F2 /* GroupsView.swift in Sources */,
 				78A347A72896EF1000F92E65 /* UserSettingsViewModel.swift in Sources */,
+				7893C86E2A22865400F708FE /* ExcludeMembersToEventView.swift in Sources */,
 				78C74CFC278263220009E08C /* Landmark.swift in Sources */,
 				6297110026E5681500A90E61 /* HomeScreenViewModel.swift in Sources */,
 				78F8675227C46C5800750F51 /* AddContentView.swift in Sources */,
@@ -1641,9 +1635,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "Top Secret.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_ASSET_PATHS = "\"TopSecret/Preview Content\"";
-				DEVELOPMENT_TEAM = UV9FN34P25;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = YNZ7U94A6R;
 				ENABLE_BITCODE = NO;
 				ENABLE_PREVIEWS = YES;
 				GCC_NO_COMMON_BLOCKS = NO;
@@ -1653,9 +1649,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = bruceblake.TopSecret;
+				PRODUCT_BUNDLE_IDENTIFIER = bruceiiiblake.TopSecret;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Top Secret App";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -1669,9 +1666,11 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = "Top Secret.entitlements";
 				CODE_SIGN_IDENTITY = "Apple Development";
-				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
 				DEVELOPMENT_ASSET_PATHS = "\"TopSecret/Preview Content\"";
-				DEVELOPMENT_TEAM = UV9FN34P25;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = YNZ7U94A6R;
 				ENABLE_BITCODE = NO;
 				ENABLE_PREVIEWS = YES;
 				GCC_NO_COMMON_BLOCKS = NO;
@@ -1681,9 +1680,10 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = bruceblake.TopSecret;
+				PRODUCT_BUNDLE_IDENTIFIER = bruceiiiblake.TopSecret;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = "Top Secret App";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};

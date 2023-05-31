@@ -40,7 +40,7 @@ struct GroupsView: View {
                                 ShowGroups(selectedGroup: $selectedGroup, users: $users, openGroupHomescreen: $openGroupHomescreen)
             }
             
-            NavigationLink(destination: HomeScreenView(group: $selectedGroup), isActive: $openGroupHomescreen) {
+            NavigationLink(destination: HomeScreenView(chatID: selectedGroup.chatID ?? " ", groupID: selectedGroup.id), isActive: $openGroupHomescreen) {
                 EmptyView()
             }.environment(\.modalMode, self.$openGroupHomescreen)
         }

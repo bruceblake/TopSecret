@@ -10,6 +10,7 @@ import SwiftUI
 struct UserNotificationView: View {
     
     @EnvironmentObject var userVM: UserViewModel
+    @StateObject var notificationVM = UserNotificationViewModel()
     @Environment(\.presentationMode) var presentationMode
     
     
@@ -147,6 +148,10 @@ struct UserNotificationView: View {
                                     }
                                 }
                             }
+                            
+                            if userVM.notifications.isEmpty{
+                                Text("You have 0 notifications")
+                            }
                          
                            
                           
@@ -163,7 +168,9 @@ struct UserNotificationView: View {
                 }
             }
             
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
+            notificationVM.readAllNotification(userID: userVM.user?.id ?? " ", notifications: userVM.notifications)
+        }
     }
 }
 

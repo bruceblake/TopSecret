@@ -7,8 +7,6 @@
 
 import SwiftUI
 import Photos
-import MediaCore
-import MediaSwiftUI
 import PhotosUI
 import SDWebImageSwiftUI
 

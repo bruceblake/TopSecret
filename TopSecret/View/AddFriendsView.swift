@@ -93,13 +93,14 @@ struct UserAddSearchCell : View {
     @EnvironmentObject var userVM: UserViewModel
     @State var isLoading: Bool = false
     @State var isFriends: Bool = false
+    @State var isBlocked: Bool = false
     @State var isPendingFriendRequest : Bool = false
     @Binding var selectedChatID : String
     @Binding var openChat: Bool
 
     
     func getPersonalChatID(friendID: String) -> String {
-        return userVM.personalChats.first(where: {$0.usersID.contains(friendID)})?.id ?? " "
+        return userVM.personalChats.first(where: {$0.usersID?.contains(friendID) ?? false})?.id ?? " "
     }
     
     var body: some View {
@@ -118,6 +119,8 @@ struct UserAddSearchCell : View {
                 }
                 
                 Spacer()
+                
+                
                 
                 //if you two are not friends
                 if isFriends {
@@ -198,6 +201,9 @@ struct UserAddSearchCell : View {
                                             self.isLoading = false
                                         }
                                        
+                                    }else{
+                                        self.isBlocked = true
+                                        self.isLoading = false
                                     }
                                 }
                             },label:{
@@ -205,7 +211,7 @@ struct UserAddSearchCell : View {
                                     if isLoading{
                                         ProgressView()
                                     }
-                                    Text("Send Friend Request")
+                                    Text("\(self.isBlocked ? "You are blocked" : "Send Friend Request")")
                                 }.font(.caption).foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("AccentColor")))
                             
                                 

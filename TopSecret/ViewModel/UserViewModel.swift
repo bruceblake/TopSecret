@@ -38,6 +38,7 @@ class UserViewModel : ObservableObject {
     @Published var hasUnreadMessages : Bool = false
     @Published var hideBackground: Bool = false
     @Published var unreadChatsCount : Int = 0
+    @Published var unreadNotificationsCount: Int = 0
     @Published var notificationsCount : Int = 0
     let monitor = NWPathMonitor()
     let queue = DispatchQueue(label: "Monitor")
@@ -124,8 +125,17 @@ class UserViewModel : ObservableObject {
         }
     }
     
-    func getUnreadChatCount() -> Int {
-        let chats = self.personalChats
+    func getUnreadNotificationsCount(notifications: [UserNotificationModel]) -> Int {
+        var count : Int = 0
+        for noti in notifications {
+            if !(noti.hasSeen ?? false){
+               count += 1
+            }
+        }
+        return count
+    }
+    
+    func getUnreadChatCount(chats: [ChatModel]) -> Int {
         var count : Int = 0
         for chat in chats {
             if !(chat.usersThatHaveSeenLastMessage?.contains(self.user?.id ?? " ") ?? false){
@@ -177,6 +187,12 @@ class UserViewModel : ObservableObject {
                             data["group"] = fetchedGroup
                             groupD.leave()
                         }
+                            groupD.enter()
+                            var userID = data["userID"] as? String ?? ""
+                            self.fetchNotificationUser(userID: userID) { fetchedUser in
+                                data["user"] = fetchedUser
+                                groupD.leave()
+                            }
                     default:
                         print("unknown")
                     }
@@ -192,6 +208,7 @@ class UserViewModel : ObservableObject {
                 
                 groupD.notify(queue: .main, execute:{
                     self.notifications = notificationsToReturn
+                    self.unreadNotificationsCount = self.getUnreadNotificationsCount(notifications: notificationsToReturn)
                 })
                 
             })
@@ -218,11 +235,13 @@ class UserViewModel : ObservableObject {
             groupD.enter()
             for document in documents{
                 var data = document.data()
+                var groupID = data["groupID"] as? String ?? " "
                 let usersID = data["usersID"] as? [String] ?? []
                 let lastMessageID = data["lastMessageID"] as? String ?? " "
                 let usersTypingID = data["usersTypingID"] as? [String] ?? []
                 let usersThatHaveSeenLastMessage = data["usersThatHaveSeenLastMessage"] as? [String] ?? []
                 let id = data["id"] as? String ?? " "
+                let chatType = data["chatType"] as? String ?? ""
                 groupD.enter()
                   self.fetchChatUsers(users: usersID) { fetchedUsers in
                 data["users"] = fetchedUsers
@@ -240,6 +259,15 @@ class UserViewModel : ObservableObject {
                     groupD.leave()
                 }
                 
+                if chatType == "groupChat"{
+                    //fetch group
+                    groupD.enter()
+                    self.fetchGroup(groupID: groupID) { fetchedGroup in
+                        data["group"] = fetchedGroup
+                        groupD.leave()
+                    }
+                }
+                
                 
               
               
@@ -252,7 +280,7 @@ class UserViewModel : ObservableObject {
             
             groupD.notify(queue: .main, execute:{
                     self.personalChats = chatsToReturn
-                
+                self.unreadChatsCount = self.getUnreadChatCount(chats: chatsToReturn)
             })
             
         }
@@ -326,22 +354,17 @@ class UserViewModel : ObservableObject {
     
     
     func listenToUser(uid: String){
-        self.userListener = COLLECTION_USER.document(uid).addSnapshotListener { (snapshot, err) in
+        self.firestoreListeners.append(COLLECTION_USER.document(uid).addSnapshotListener { (snapshot, err) in
             
             
             if err != nil {
                 print("ERROR - User Not Being Fetched")
                 return
             }
-            
-            
-            
-            
-            
+   
             
             var data = snapshot?.data() as? [String:Any] ?? [:]
             let usersLoggedInCount = data["usersLoggedInCount"] as? Int ?? 0
-           print("usersLoggedInCount: \(usersLoggedInCount)")
             var appIconBadgeNumber = data["appIconBadgeNumber"] as? Int ?? 0
             
             let groupD = DispatchGroup()
@@ -361,12 +384,7 @@ class UserViewModel : ObservableObject {
                 data["personalChats"] = fetchedChats
                 groupD.leave()
             }
-            
-            //fetch appIconBadgeNumber by adding unread chat count and unread notification count
-            
-            
-            
-            
+        
             groupD.notify(queue: .main, execute:{
                 UIApplication.shared.applicationIconBadgeNumber = appIconBadgeNumber
                 self.user = User(dictionary: data)
@@ -374,10 +392,12 @@ class UserViewModel : ObservableObject {
             
             
             
-        }
+        })
         
         
     }
+    
+    
     
     
       func listenToUserGroups(uid: String){
@@ -1209,34 +1229,40 @@ class UserViewModel : ObservableObject {
 
     func sendFriendRequest(friend: User, completion: @escaping (Bool) -> ()) -> () {
         
+        if (friend.blockedAccountsID ?? []).contains(where: {$0 == self.user?.id ?? " "}){
+            return completion(false)
+        }else{
         let dp = DispatchGroup()
-        dp.enter()
-        COLLECTION_USER.document(self.user?.id ?? " ").updateData(["pendingFriendsListID":FieldValue.arrayUnion([friend.id ?? " "])])
-        
-        COLLECTION_USER.document(friend.id ?? " ").updateData(["pendingFriendsListID":FieldValue.arrayUnion([user?.id ?? " "])])
-        
-        notificationSender.sendPushNotification(to: friend.fcmToken ?? " ", title: "\(self.user?.username ?? "")", body: "\(self.user?.nickName ?? "") sent a friend request")
-        
+            dp.enter()
+            COLLECTION_USER.document(self.user?.id ?? " ").updateData(["pendingFriendsListID":FieldValue.arrayUnion([friend.id ?? " "])])
+            
+            COLLECTION_USER.document(friend.id ?? " ").updateData(["pendingFriendsListID":FieldValue.arrayUnion([user?.id ?? " "])])
+            
+            notificationSender.sendPushNotification(to: friend.fcmToken ?? " ", title: "\(self.user?.username ?? "")", body: "\(self.user?.nickName ?? "") sent a friend request")
+            
+
+            
+            let notificationID = UUID().uuidString
+            
+            let userNotificationData = ["id":notificationID,
+                "name": "Friend Request",
+                "timeStamp":Timestamp(),
+                "userID":self.user?.id ?? "USER_ID",
+                "hasSeen":false,
+                "type":"sentFriendRequest"] as [String:Any]
+            
+            
+            COLLECTION_USER.document(friend.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)
+            COLLECTION_USER.document(friend.id ?? " ").updateData(["userNotificationCount":FieldValue.increment((Int64(1)))])
+            
+            dp.leave()
+            dp.notify(queue: .main, execute:{
+                return completion(true)
+                print("\(self.user?.username ?? " ") sent a friend request to \(friend.username ?? " ")")
+            })
+        }
 
         
-        let notificationID = UUID().uuidString
-        
-        let userNotificationData = ["id":notificationID,
-            "name": "Friend Request",
-            "timeStamp":Timestamp(),
-            "userID":self.user?.id ?? "USER_ID",
-            "hasSeen":false,
-            "type":"sentFriendRequest"] as [String:Any]
-        
-        
-        COLLECTION_USER.document(friend.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)
-        COLLECTION_USER.document(friend.id ?? " ").updateData(["userNotificationCount":FieldValue.increment((Int64(1)))])
-        
-        dp.leave()
-        dp.notify(queue: .main, execute:{
-            return completion(true)
-            print("\(self.user?.username ?? " ") sent a friend request to \(friend.username ?? " ")")
-        })
     }
     
     func unsendFriendRequest(friend: User, completion: @escaping (Bool) -> ()) -> (){

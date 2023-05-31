@@ -56,7 +56,7 @@ class PersonalChatViewModel : ObservableObject {
     
     
     func getPersonalChatUser(chat: ChatModel, userID: String) -> User{
-        for user in chat.users{
+        for user in chat.users ?? []{
             if user.id != userID{
                 return user
             }
@@ -715,7 +715,7 @@ class PersonalChatViewModel : ObservableObject {
                 COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["lastActionDate":Timestamp()])
                 
                 COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["usersThatHaveSeenLastMessage":FieldValue.arrayUnion([userID])])
-                COLLECTION_USER.document(userID).updateData(["personalChatNotificationCount":FieldValue.increment(Int64(-1))])
+             
                 
                 
                 

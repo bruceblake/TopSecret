@@ -9,6 +9,14 @@ import Foundation
 
 class UserNotificationViewModel: ObservableObject{
     
+    func readAllNotification(userID: String, notifications: [UserNotificationModel]){
+        for notification in notifications {
+            if (notification.hasSeen ?? false) == false{
+                COLLECTION_USER.document(userID).collection("Notifications").document(notification.id).updateData(["hasSeen":true])
+            }
+          
+        }
+    }
     
     func getTimeSinceNotification(date: Date) -> String{
        let interval = (Date() - date)
@@ -36,4 +44,6 @@ class UserNotificationViewModel: ObservableObject{
         }
         
     }
+    
+    
 }

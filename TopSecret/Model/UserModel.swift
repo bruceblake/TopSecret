@@ -50,6 +50,8 @@ struct User : Identifiable, Hashable{
     var appIconBadgeNumber : Int?
     var interests: [String]?
     var usersLoggedInCount: Int?
+    var eventsID: [String]
+    var events: [EventModel]
 
 init(dictionary: [String:Any]) {
     self.appIconBadgeNumber = dictionary["appIconBadgeNumber"] as? Int ?? 0
@@ -88,6 +90,8 @@ init(dictionary: [String:Any]) {
     self.hasUnreadMessages = dictionary["hasUnreadMessages"] as? Bool ?? false
     self.interests = dictionary["interests"] as? [String] ?? []
     self.usersLoggedInCount = dictionary["usersLoggedInCount"] as? Int ?? 0
+    self.eventsID = dictionary["eventsID"] as? [String] ?? []
+    self.events = dictionary["events"] as? [EventModel] ?? []
  
 }
 
@@ -97,6 +101,8 @@ init(dictionary: [String:Any]) {
         self.nickName = "nickName" 
         self.personalChatsID = []
         self.personalChats = []
+        self.eventsID = []
+        self.events = []
     }
     
     

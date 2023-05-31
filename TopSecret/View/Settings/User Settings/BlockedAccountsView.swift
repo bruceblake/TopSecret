@@ -13,10 +13,9 @@ import Firebase
 
 struct BlockedAccountsView: View {
     @EnvironmentObject var userVM: UserViewModel
-    @State var blockedAccountsID: [String]
+    @State var blockedAccounts : [User]
     @Binding var openBlockedAccountsScreen : Bool
-    @ObservedObject var settingsVM = UserSettingsViewModel()
-    
+    @ObservedObject var settingsVM: UserSettingsViewModel
     var body: some View {
         ZStack{
             Color("Background")
@@ -38,17 +37,13 @@ struct BlockedAccountsView: View {
                     
                     
                     Spacer()
-                    
-                    Button(action:{
-                        settingsVM.fetchBlockedAccounts(blockedAccountIDS: blockedAccountsID )
-
-                    },label:{
+                
                         
                     VStack{
                         Text("Blocked Accounts").fontWeight(.bold).font(.title)
                         Text("frick these people").foregroundColor(.gray).padding(.horizontal,10).font(.body)
                     }
-                    })
+                    
                     
                     Spacer()
                     
@@ -61,7 +56,7 @@ struct BlockedAccountsView: View {
                     
                 ScrollView{
                     VStack{
-                        ForEach(settingsVM.blockedAccounts){ blockedUser in
+                        ForEach(blockedAccounts, id: \.id){ blockedUser in
                             BlockedAccountsCell(user: blockedUser, settingsVM: settingsVM)
                             Divider()
                         }
@@ -71,16 +66,14 @@ struct BlockedAccountsView: View {
                Spacer()
             }
             
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
-            settingsVM.fetchBlockedAccounts(blockedAccountIDS: blockedAccountsID )
-        }
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
        
        
     }
 }
 
 struct BlockedAccountsCell : View {
-    var user: User
+    @State var user: User
     @EnvironmentObject  var userVM: UserViewModel
     @ObservedObject var settingsVM : UserSettingsViewModel
     var body: some View {
@@ -102,10 +95,16 @@ struct BlockedAccountsCell : View {
                     userVM.unblockUser(unblocker: userVM.user?.id ?? " ", blockee: user.id ?? " ")
                     dp.leave()
                     dp.notify(queue: .main, execute:{
-                    settingsVM.fetchBlockedAccounts(blockedAccountIDS: userVM.user?.blockedAccountsID ?? [])
+                        settingsVM.fetchBlockedAccounts(blockedAccountIDS: userVM.user?.blockedAccountsID ?? [], completion: { fetched in
+                           
+                        })
                     })
                 },label:{
-                    Text("Unblock")
+                    if settingsVM.fetched {
+                        Text("Unblock")
+                    }else{
+                        ProgressView()
+                    }
                 })
                 
                 

@@ -16,8 +16,8 @@ struct CreateGroupView: View {
     @Environment(\.presentationMode) var presentationMode
     @State var isShowingPhotoPicker:Bool = false
     @State var avatarImage = UIImage(named: "AppIcon")!
-    @State var groupName : String = ""
     @State var pickedAnImage: Bool = false
+    @State var groupName : String = ""
     @State var openInviteFriendsView: Bool = false
     @State var selectedUsers: [User] = []
     var body: some View {
@@ -149,10 +149,6 @@ struct CreateGroupView: View {
                 
 
             Button(action:{
-//                let id = UUID().uuidString
-//                groupVM.createGroup(groupName: groupName, dateCreated: Date(), users: selectedUsers.map({ user in
-//                    return user.id ?? ""
-//                }) ,image: avatarImage,id: id)
                 self.openInviteFriendsView.toggle()
             },label:{
                 HStack{

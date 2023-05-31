@@ -29,7 +29,7 @@ struct PersonalChatView : View {
     let notificationSender = PushNotificationSender()
     @Environment(\.scenePhase) var scenePhase
     @State private var scrollViewOffset = CGFloat.zero
-    @State var canAddAnotherLine : Bool = false
+    @State var canAddAnotherLine : Bool = true
     @State var chatID: String
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     
@@ -46,14 +46,16 @@ struct PersonalChatView : View {
         NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { _ in
             withAnimation(.easeOut(duration: 0.25)){
                 self.keyboardHeight = 0
+                
             }
+            
         }
 
     }
     
     func getPersonalChatUser() -> User{
         
-        for user in personalChatVM.chat.users {
+        for user in personalChatVM.chat.users ?? [] {
             if user.id ?? "" != userVM.user?.id ?? " "{
                 return user
             }
@@ -105,7 +107,6 @@ struct PersonalChatView : View {
                 HStack(alignment: .top){
                     //top bar
                     
-                    HStack{
                         
                         Button(action:{
                             presentationMode.wrappedValue.dismiss()
@@ -115,19 +116,11 @@ struct PersonalChatView : View {
                                 Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR)
                             }
                         })
-                        Button(action:{
-                            presentationMode.wrappedValue.dismiss()
-                        },label:{
-                            ZStack{
-                                Circle().frame(width: 40, height: 40).foregroundColor(Color.clear)
-                                
-                                
-                            }
-                        })
+                       
+                           
                       
-                    }
+                    
                    
-                    .padding(.leading,10)
                     
                     Spacer()
                     
@@ -162,42 +155,12 @@ struct PersonalChatView : View {
                     
                     Spacer()
                     
-                    HStack{
-                        
-                        Button(action:{
-                            personalChatVM.loadMoreMessages(chatID: chatID)
-                        },label:{
-                            ZStack{
-                                Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
-                                
-                                Image(systemName: "phone").foregroundColor(FOREGROUNDCOLOR)
-                                Spacer()
-                                
-                            }
-                        })
-                        
                    
-                        
-                        Button(action:{
-                            presentationMode.wrappedValue.dismiss()
-                        },label:{
-                            ZStack{
-                                Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
-                                
-                                Image(systemName: "ellipsis").foregroundColor(FOREGROUNDCOLOR)
-                                Spacer()
-                                
-                            }
-                        })
-                        
-                       
-                    }
                     
-                    
+                    Circle().frame(width: 40, height: 40).foregroundColor(Color.clear)
               
-                    .padding(.trailing,10)
-                    
-                }.padding(.top,50)
+                   
+                }.padding(.top,50).padding(.horizontal)
                 
                 
                 ZStack(alignment: .bottomTrailing){

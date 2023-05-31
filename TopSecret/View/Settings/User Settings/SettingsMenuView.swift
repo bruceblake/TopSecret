@@ -15,14 +15,15 @@ struct SettingsMenuView: View {
     @State var openChangeNicknameScreen : Bool = false
     @State var openChangeUsernameScreen : Bool = false
     @State var openBlockedAccountsScreen : Bool = false
-
+    @ObservedObject var settingsVM = UserSettingsViewModel()
+    
     var body: some View {
         ZStack{
             Color("Background")
             VStack(alignment: .leading){
                 
                 HStack(alignment: .center){
-                 
+                    
                     Spacer()
                     
                     
@@ -51,7 +52,21 @@ struct SettingsMenuView: View {
                             
                             VStack(alignment: .leading, spacing: 15){
                                 SettingsButtonCell(text: "Blocked Accounts", includeDivider: true, action: {
-                                    self.openBlockedAccountsScreen.toggle()
+                                   
+                                    let dp = DispatchGroup()
+                                    dp.enter()
+                                    
+                                    settingsVM.fetchBlockedAccounts(blockedAccountIDS: userVM.user?.blockedAccountsID ?? [], completion: { fetched in
+                                        if fetched{
+                                            dp.leave()
+                                        }
+                                    })
+                                    dp.notify(queue: .main, execute:{
+                                            self.openBlockedAccountsScreen.toggle()
+                                        
+                                    })
+                                  
+                                    
                                 }).padding(.top,15)
                                 
                             }.background(Color("Color")).cornerRadius(12).padding([.horizontal,.bottom])
@@ -61,32 +76,32 @@ struct SettingsMenuView: View {
                             Spacer()
                             
                             
-                        Button(action:{
-                            self.dismiss.wrappedValue.dismiss()
-                                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                                userAuthVM.signOut()
-                                            }
-                        },label:{
-                            Text("Sign Out").foregroundColor(Color("AccentColor"))
-                        })
+                            Button(action:{
+                                self.dismiss.wrappedValue.dismiss()
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                    userAuthVM.signOut()
+                                }
+                            },label:{
+                                Text("Sign Out").foregroundColor(Color("AccentColor"))
+                            })
                             Spacer()
                         }
-                       
                         
-                      
-                }
+                        
+                        
+                    }
                 }
                 
                 
                 //Navigation Links
                 
-               
+                
                 
                 //Blocked Accounts
                 
-                NavigationLink(destination: BlockedAccountsView( blockedAccountsID: userVM.user?.blockedAccountsID ?? [], openBlockedAccountsScreen: $openBlockedAccountsScreen), isActive: $openBlockedAccountsScreen) {
+                NavigationLink(destination: BlockedAccountsView(blockedAccounts: settingsVM.blockedAccounts, openBlockedAccountsScreen: $openBlockedAccountsScreen, settingsVM: settingsVM), isActive: $openBlockedAccountsScreen) {
                     EmptyView()
-                    }
+                }
                 
                 
                 
@@ -97,9 +112,7 @@ struct SettingsMenuView: View {
                 
             }
             
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
-            print("id: \(userVM.user?.blockedAccountsID?.count ?? 0)")
-        }
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
     }
 }
 

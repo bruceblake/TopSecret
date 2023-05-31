@@ -12,10 +12,12 @@ import Foundation
 class UserSettingsViewModel : ObservableObject {
     
     @Published var blockedAccounts : [User] = []
+    @Published var fetched: Bool = false
     
     
-    func fetchBlockedAccounts(blockedAccountIDS: [String]){
+    func fetchBlockedAccounts(blockedAccountIDS: [String], completion: @escaping (Bool) -> ()) -> () {
         var usersToReturn : [User] = []
+        self.fetched = false
         let dp = DispatchGroup()
         dp.enter()
         for userID in blockedAccountIDS {
@@ -32,6 +34,8 @@ class UserSettingsViewModel : ObservableObject {
         dp.leave()
         dp.notify(queue: .main, execute:{
             self.blockedAccounts = usersToReturn
+            self.fetched = true
+            return completion(true)
         })
     }
     

@@ -15,28 +15,76 @@ struct EnterUserProfilePicture: View {
     @State var isNext: Bool = false
     @EnvironmentObject var registerVM : RegisterValidationViewModel
     @State var images : [UIImage] = []
+    @Environment(\.presentationMode) var presentationMode
+    @State var pickedAnImage: Bool = false
+
+    
     
     var body: some View {
         ZStack{
             Color("Background")
             VStack{
-                Spacer()
-                Text("Enter a profile picture!").foregroundColor(FOREGROUNDCOLOR)
-                ZStack{
-                    Circle().foregroundColor(Color("Color")).frame(width: 175, height: 175)
-                    Button(action:{
-                        isShowingPhotoPicker.toggle()
-                    },label:{
+                
+                HStack{
+                    Button {
+                        presentationMode.wrappedValue.dismiss()
+                    } label: {
+                        ZStack{
+                            Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
+                            Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR)
+                        }
+                    }
+
+                  
+                    Spacer()
+                    Circle().frame(width: 40, height: 40).foregroundColor(Color.clear)
+                }.padding(.horizontal).padding(.top,50)
+                
+                Text("Enter a profile picture!").foregroundColor(FOREGROUNDCOLOR).font(.title3)
+                
+                ZStack(alignment: .bottomTrailing){
+                    if pickedAnImage{
                         Image(uiImage: avatarImage)
                             .resizable()
                             .scaledToFill()
-                            .frame(width:200,height:200)
                             .clipShape(Circle())
-                            .padding()
-                    }).fullScreenCover(isPresented: $isShowingPhotoPicker, content: {
-                        ImagePicker(avatarImage: $avatarImage, allowsEditing: true)
-                    })
+                            .frame(width: 150, height: 150)
+                        
+                        Button(action:{
+                            isShowingPhotoPicker.toggle()
+                            
+                        }, label:{
+                            ZStack{
+                                Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
+                                Image(systemName: "photo").foregroundColor(FOREGROUNDCOLOR)
+                            }.offset(x: 5, y: 10)
+                        })
+                    }else{
+                        Button(action:{
+                            isShowingPhotoPicker.toggle()
+                            
+                        },label:{
+                            ZStack{
+                                Circle().strokeBorder(FOREGROUNDCOLOR, lineWidth: 3).frame(width: 150, height: 150)
+                                
+                                Image(systemName: "person")
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: 80, height: 80)
+                                    .foregroundColor(FOREGROUNDCOLOR)
+                            }
+                            
+                        })
+                        
+                    }
+                    
+                    
+                    
                 }
+                
+                .fullScreenCover(isPresented: $isShowingPhotoPicker, content: {
+                    ImagePicker(avatarImage: $avatarImage, allowsEditing: true)
+                })
               
                 
         Button(action: {
@@ -50,7 +98,7 @@ struct EnterUserProfilePicture: View {
                 }).padding()
                 
                 NavigationLink(
-                    destination: PickInterestsView(),
+                    destination: CreatePassword(),
                     isActive: $isNext,
                     label: {
                         EmptyView()
@@ -59,7 +107,9 @@ struct EnterUserProfilePicture: View {
             }
             
            
-        }.edgesIgnoringSafeArea(.all)
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onChange(of: avatarImage) { newValue in
+            self.pickedAnImage = true
+        }
     }
 }
 

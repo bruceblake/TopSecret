@@ -24,6 +24,26 @@ class SelectedGroupViewModel : ObservableObject {
    
     
     
+   
+    
+    func sendGroupInvitation(group: Group, friend: User, userID: String){
+        
+        COLLECTION_USER.document(friend.id ?? " ").updateData(["pendingGroupInvitationID":FieldValue.arrayUnion([group.id])])
+        
+      
+        let notificationID = UUID().uuidString
+        
+        let userNotificationData = ["id":notificationID,
+            "name": "Group Invitation",
+            "timeStamp":Timestamp(),
+            "type":"sentGroupInvitation",
+            "userID":userID,
+            "hasSeen":false,
+            "groupID":group.id] as [String:Any]
+        
+        COLLECTION_USER.document(friend.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)
+        COLLECTION_USER.document(friend.id ?? " ").updateData(["userNotificationCount":FieldValue.increment((Int64(1)))])
+    }
     
     func readGroupNotifications(groupID: String, userID: String, notification: GroupNotificationModel){
         

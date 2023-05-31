@@ -42,8 +42,6 @@ struct UserNotificationModel : Identifiable {
     var pollID: String?
     var group: Group?
     var groupID: String?
-    var post: GroupPostModel?
-    var postID: String?
     
     init(dictionary: [String:Any]) {
         self.id = dictionary["id"] as? String ?? "NOTIFICATION_ID"
@@ -60,8 +58,6 @@ struct UserNotificationModel : Identifiable {
         self.pollID = dictionary["pollID"] as? String ?? ""
         self.group = dictionary["group"] as? Group ?? Group()
         self.groupID = dictionary["groupID"] as? String ?? ""
-        self.post = dictionary["post"] as? GroupPostModel ?? GroupPostModel()
-        self.postID = dictionary["postID"] as? String ?? ""
     }
     
     init(){

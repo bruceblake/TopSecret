@@ -86,7 +86,7 @@ import SwiftUI
             }
 
             func textViewDidChange(_ textView: UITextView) {
-                if  rep.canAddAnotherLine{
+                if  rep.canAddAnotherLine {
                     rep.text = textView.text
                     rep.height = textView.textHeight()
                     if rep.height > 110 {

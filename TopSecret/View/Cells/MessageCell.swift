@@ -8,7 +8,7 @@
 import SwiftUI
 import Firebase
 import SDWebImageSwiftUI
-
+                
 
 struct MessageCell: View {
     var message: Message
@@ -22,26 +22,26 @@ struct MessageCell: View {
         switch message.type ?? "" {
         case "text":
             MessageTextCell(message: message, chatID: personalChatVM.chat.id).padding([.leading,.top],5)
-//                .simultaneousGesture(LongPressGesture(minimumDuration: 0.25).onEnded({ value in
-//                    withAnimation{
-//                        UIDevice.vibrate()
-//                        self.selectedMessage = message
-//                        self.showOverlay.toggle()
-//                        userVM.hideBackground.toggle()
-//
-//                    }
-//                }))
+                .simultaneousGesture(LongPressGesture(minimumDuration: 0.25).onEnded({ value in
+                    withAnimation{
+                        UIDevice.vibrate()
+                        self.selectedMessage = message
+                        self.showOverlay.toggle()
+                        userVM.hideBackground.toggle()
+
+                    }
+                }))
         case "followUpUserText":
             MessageFollowUpTextCell(message: message, chatID: personalChatVM.chat.id).padding(.leading,5)
-//                .simultaneousGesture(LongPressGesture(minimumDuration: 0.25).onEnded({ value in
-//                    withAnimation{
-//                        UIDevice.vibrate()
-//                        self.selectedMessage = message
-//                        self.showOverlay.toggle()
-//                        userVM.hideBackground.toggle()
-//
-//                    }
-//                }))
+                .simultaneousGesture(LongPressGesture(minimumDuration: 0.25).onEnded({ value in
+                    withAnimation{
+                        UIDevice.vibrate()
+                        self.selectedMessage = message
+                        self.showOverlay.toggle()
+                        userVM.hideBackground.toggle()
+
+                    }
+                }))
         case "delete":
             MessageDeleteCell(message: message)
         case "repliedMessage":

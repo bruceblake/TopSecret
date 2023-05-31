@@ -12,18 +12,28 @@ struct CreateUsername: View {
     @State var isNext:Bool = false
     @State var showErrorMessage:Bool = false
     @EnvironmentObject var registerValidation : RegisterValidationViewModel
-    
+    @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
         ZStack{
             Color("Background")
             VStack{
+                HStack{
+                    Button {
+                        presentationMode.wrappedValue.dismiss()
+                    } label: {
+                        ZStack{
+                            Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
+                            Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR)
+                        }
+                    }
+
+                  
+                    Spacer()
+                    Circle().frame(width: 40, height: 40).foregroundColor(Color.clear)
+                }.padding(.horizontal).padding(.top,50)
                 Text("Create Your Username").foregroundColor(Color("Foreground")).font(.largeTitle).fontWeight(.bold).padding(.horizontal)
-                
-                
-                Text("Remeber, you can only change your username once every two weeks").padding(.bottom,20).font(.footnote).foregroundColor(Color("Foreground").opacity(0.5)).padding(.horizontal,20).padding(.top,10)
-                
-                
+ 
                 CustomTextField(text: $registerValidation.username, placeholder: "Username", isPassword: false, isSecure: false, hasSymbol: true,symbol: "person").padding(.horizontal,20)
                
                 if showErrorMessage{
@@ -50,8 +60,8 @@ struct CreateUsername: View {
                     })
                 
                 Spacer()
-            }.padding(.top,100)
-        }.edgesIgnoringSafeArea(.all)
+            }
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
     }
 }
 

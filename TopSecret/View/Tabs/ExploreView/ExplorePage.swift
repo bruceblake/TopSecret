@@ -21,8 +21,6 @@ struct ExplorePage: View {
     func submit(){
         searchVM.hasSearched = true
         openSearchedView.toggle()
-        recentSearchVM.addToRecentSearches(searchText: searchVM.searchText)
-        
     }
     var body: some View {
         ZStack{
@@ -52,67 +50,14 @@ struct ExplorePage: View {
                         }
                         
                     }else{
-                        ExplorePageSearchList(searchVM: searchVM, recentSearchVM: recentSearchVM)
+                        ExplorePageSearchList(searchVM: searchVM)
                     }
                   
                    
                 
-                }else{
-                    ScrollView(){
-                    VStack(spacing: 10){
-                        
-                        
-                      
-                        ForEach(recentSearchVM.recentSearches.reversed().indices, id: \.self) { i in
-                            
-                           
-                            if i <= 4 {
-                                Button(action:{
-                                    searchVM.searchText = recentSearchVM.recentSearches[i]
-                                    searchVM.hasSearched = true
-                                    openSearchedView.toggle()
-                                },label:{
-                                    HStack{
-                                        
-                                        HStack{
-                                            Image(systemName: "clock").foregroundColor(.gray)
-                                            Text("\(recentSearchVM.recentSearches[i])").foregroundColor(FOREGROUNDCOLOR)
-                                        }.padding(.leading,10)
-                                        
-                                        Spacer()
-                                        
-                                       
-                                            Image(systemName: "xmark").font(.caption).onTapGesture {
-                                                recentSearchVM.removeFromRecentSearches(searchText: recentSearchVM.recentSearches[i])
-                                            }
-                                        .foregroundColor(Color.gray).padding(.trailing,10)
-                                    }
-                                })
-                            }
-                         
-                        }
-                        if recentSearchVM.showSeeAll {
-                                
-                                
-                                Button(action:{
-                                    showSeeAllSearches.toggle()
-                                },label:{
-                                    Text("See All")
-                                }).fullScreenCover(isPresented: $showSeeAllSearches) {
-                                    
-                                } content: {
-                                    ShowAllRecentSearchView(recentSearchVM: recentSearchVM, searchVM: searchVM)
-                                }
-
-                            
-                        }
-                    
-                        Spacer()
-                    }.frame(width: UIScreen.main.bounds.width)
-                    }.padding(.horizontal)
                 }
                 
-                   
+                   Spacer()
 
             
             }
@@ -131,31 +76,9 @@ struct ExplorePage: View {
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
             
             searchVM.startSearch(searchRequest: "allUserFriendsAndGroups", id: userVM.user?.id ?? " ")
-            let dp = DispatchGroup()
-            
-            dp.enter()
-            
-            recentSearchVM.fetchSearches() { _ in
-                dp.leave()
-                
-            }
-            
-            dp.notify(queue: .main, execute:{
-            if !recentSearchVM.recentSearches.isEmpty {
-                recentSearchVM.showSeeAll = true
-            }
-            })
-            
-            
-            
+  
         }.frame(width: UIScreen.main.bounds.width)
-//            .onReceive(recentSearchVM.$recentSearches) { addedSearch in
-//            if recentSearchVM.recentSearches.count >= 4 {
-//                recentSearchVM.showSeeAll = true
-//            }else{
-//                recentSearchVM.showSeeAll = false
-//            }
-//        }
+
     }
 }
 
@@ -234,7 +157,6 @@ struct ShowAllRecentSearchView : View {
 struct ExplorePageSearchList : View {
     @EnvironmentObject var userVM: UserViewModel
     @ObservedObject var searchVM : SearchRepository
-    @StateObject var recentSearchVM : RecentSearchViewModel
     @State var selectedGroup : Group = Group()
     @State var selectedUser : User = User()
     @State var openGroupProfile : Bool = false
@@ -259,7 +181,7 @@ struct ExplorePageSearchList : View {
                                 openGroupProfile.toggle()
                                 searchVM.searchText = group.groupName
                                 searchVM.hasSearched = true
-                                recentSearchVM.addToRecentSearches(searchText: searchVM.searchText)
+                           
                             },label:{
                                 GroupSearchCell(group: group)
 
@@ -287,7 +209,6 @@ struct ExplorePageSearchList : View {
                             openUserProfile.toggle()
                             searchVM.searchText = user.username ?? ""
                             searchVM.hasSearched = true
-                            recentSearchVM.addToRecentSearches(searchText: searchVM.searchText)
                         },label:{
                             UserSearchCell(user: user, showActivity: false)
                         })

@@ -241,14 +241,14 @@ struct SaveChangesOverlay : View {
                                 showContentView.toggle()
                                 dismiss.toggle()
                             },label:{
-                                Text("Discard Changes").font(.body).padding(5).padding(.horizontal).background(RoundedRectangle(cornerRadius: 10).fill(Color("Background"))).foregroundColor(Color.red)
+                                Text("Discard Changes").font(.subheadline).padding(5).padding(.horizontal).background(RoundedRectangle(cornerRadius: 10).fill(Color("Background"))).foregroundColor(Color.red).lineLimit(1)
                             })
                             
                             
                             Button(action:{
                                 showContentView.toggle()
                             },label:{
-                                Text("Keep Editing").font(.body).padding(5).padding(.horizontal).background(RoundedRectangle(cornerRadius: 10).fill(Color("Background"))).foregroundColor(Color("AccentColor"))
+                                Text("Keep Editing").font(.subheadline).padding(5).padding(.horizontal).background(RoundedRectangle(cornerRadius: 10).fill(Color("Background"))).foregroundColor(Color("AccentColor"))
                             })
                         }
                         

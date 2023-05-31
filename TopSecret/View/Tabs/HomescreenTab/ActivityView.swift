@@ -14,7 +14,6 @@ struct ActivityView: View {
     
     @EnvironmentObject var userVM : UserViewModel
     
-    var group: Group
     @State var showEvent : Bool = false
     @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
     @State var openChat : Bool = false

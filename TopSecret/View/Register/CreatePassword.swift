@@ -9,17 +9,33 @@ import SwiftUI
 
 struct CreatePassword: View {
     @State var password: String = ""
-    @State var interests: [String]
     @State var showErrorMessage:Bool = false
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var registerVM : RegisterValidationViewModel
     @State var showContentScreen : Bool = false
-    
+    @Environment(\.presentationMode) var presentationMode
+
     var body: some View {
         ZStack{
             
             Color("Background")
             VStack{
+                
+                HStack{
+                    Button {
+                        presentationMode.wrappedValue.dismiss()
+                    } label: {
+                        ZStack{
+                            Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
+                            Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR)
+                        }
+                    }
+
+                  
+                    Spacer()
+                    Circle().frame(width: 40, height: 40).foregroundColor(Color.clear)
+                }.padding(.horizontal).padding(.top,50)
+                
                 Text("Create A Password").foregroundColor(Color("Foreground")).font(.largeTitle).fontWeight(.bold).padding(.horizontal)
                 
                 Text("Make sure your password is secure").font(.headline).padding(.bottom,30)
@@ -63,7 +79,7 @@ struct CreatePassword: View {
                 
                 
                 Spacer()
-            }.padding(.top,100)
+            }
         }.edgesIgnoringSafeArea(.all).opacity(showContentScreen ? 0.5 : 1).disabled(showContentScreen).onTapGesture(perform: {
             if showContentScreen{
                 showContentScreen.toggle()
@@ -75,7 +91,7 @@ struct CreatePassword: View {
                    
          
             }
-        }
+        }.navigationBarHidden(true)
     }
 }
 
