@@ -109,6 +109,7 @@ struct GroupProfileView: View {
                             
                             
                             HStack{
+                                Divider().frame(width: 2, height: 30)
                                 Spacer()
                                 VStack(spacing: 3){
                                     Text("\(group.followersID?.count ?? 0)").foregroundColor(FOREGROUNDCOLOR).bold().font(.system(size: 20))

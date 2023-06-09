@@ -39,7 +39,7 @@ struct ContentView: View {
         
         
         ZStack(alignment: .top){
-            if userVM.userSession != nil{
+            if userVM.userSession != nil {
                 NavigationView{
                     Tabs(tabIndex: $tabIndex, selectedGroup: $selectedGroup)
                 }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).navigationViewStyle(.stack)
@@ -66,17 +66,17 @@ struct ContentView: View {
         .edgesIgnoringSafeArea(.all).navigationBarHidden(true)
         .onChange(of: scenePhase) { newPhase in
             if newPhase == .active {
-                if userVM.userSession != nil{
-                    userVM.setUserActivity(isActive: true, userID: userVM.user?.id ?? " ", completion: { fetchedUser in
-                        userVM.user = fetchedUser
-                    })
-                }
+//                if userVM.userSession != nil{
+//                    userVM.setUserActivity(isActive: true, userID: userVM.user?.id ?? " ", completion: { fetchedUser in
+//                        userVM.user = fetchedUser
+//                    })
+//                }
             }else if newPhase == .background{
-                if userVM.userSession != nil{
-                    userVM.setUserActivity(isActive: false, userID: userVM.user?.id ?? " ", completion: { fetchedUser in
-                        userVM.user = fetchedUser
-                    })
-                }
+//                if userVM.userSession != nil{
+//                    userVM.setUserActivity(isActive: false, userID: userVM.user?.id ?? " ", completion: { fetchedUser in
+//                        userVM.user = fetchedUser
+//                    })
+//                }
             }
         }
     }

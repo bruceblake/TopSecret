@@ -9,9 +9,10 @@ import Foundation
 import Firebase
 
 class EventsTabViewModel: ObservableObject {
-    @Published var events: [EventModel] = []
-    @Published var invitationType: String = "Open to Friends"
-    @Published var isLoading: Bool = false
+    @Published var openToFriendsEvents: [EventModel] = []
+    @Published var inviteOnlyEvents: [EventModel] = []
+    @Published var isLoadingOpenToFriends: Bool = false
+    @Published var isLoadingInviteOnlyEvents: Bool = false
     @Published var radius: Int = 1
     
     func fetchUserEvents(eventsID: [String], completion: @escaping ([EventModel]) -> ()) -> (){
@@ -26,66 +27,103 @@ class EventsTabViewModel: ObservableObject {
                 }
                 
                 var data = snapshot?.data() as? [String:Any] ?? [:]
-//                var locationID = data["locationID"] as? String ?? ""
-//                COLLECTION_EVENTS.document(id).collection("Location").document(locationID).getDocument { snapshot, err in
-//                    if err != nil {
-//                        print("ERROR")
-//                        return
-//                    }
-//
-//
-//                }
-                    eventsToReturn.append(EventModel(dictionary: data))
+
+                eventsToReturn.append(EventModel(dictionary: data))
                 dp.leave()
 
             }
             
         }
+        
         dp.notify(queue: .main, execute: {
             return completion(eventsToReturn)
         })
                 
     }
     
+    func fetchEventCreator(userID: String, completion: @escaping (User) -> ()) -> () {
+        COLLECTION_USER.document(userID).getDocument { snapshot, err in
+            if err != nil{
+                print("Error")
+                return
+            }
+            
+            let data = snapshot?.data() as? [String:Any] ?? [:]
+            return completion(User(dictionary: data))
+        }
+    }
+    
     
     func fetchOpenToFriendsEvents(user: User) {
-        isLoading = true
+        let dp = DispatchGroup()
+        self.isLoadingOpenToFriends = true
+        var eventsToReturn: [EventModel] = []
+        
+        user.friendsListID?.forEach({ id in
+            dp.enter()
+            COLLECTION_EVENTS.whereField("invitationType", isEqualTo: "Open to Friends").whereField("creatorID", isEqualTo: id).getDocuments { snapshot, err in
+                if err != nil {
+                    print("ERROR")
+                    return
+                }
+                
+                for document in snapshot?.documents ?? [] {
+                    var data = document.data()
+                    var userID = data["creatorID"] as? String ?? " "
+                    dp.enter()
+                    self.fetchEventCreator(userID: id) { fetchedCreator in
+                        data["creator"] = fetchedCreator
+                        dp.leave()
+                    }
+                    dp.notify(queue: .main, execute: {
+                        eventsToReturn.append(EventModel(dictionary: data))
+                    })
+                }
+                dp.leave()
+            }
+        })
+        
+        dp.notify(queue: .main, execute: {
+            self.openToFriendsEvents = eventsToReturn
+            self.isLoadingOpenToFriends = false
+        })
+        
+    }
+    
+    func fetchInvitedToEvents(user: User){
+        isLoadingInviteOnlyEvents = true
         var eventsToReturn: [EventModel] = []
         let dispatchGroup = DispatchGroup()
         
         dispatchGroup.enter()
-        
-        user.friendsList?.forEach { friend in
-            dispatchGroup.enter()
-            let query = COLLECTION_EVENTS.whereField("invitationType", isEqualTo: invitationType)
-                .whereField("creatorID", isEqualTo: friend.id ?? "")
+        COLLECTION_EVENTS.whereField("usersInvitedIDS", arrayContains: user.id ?? " ").getDocuments { snapshot, err in
+            if let err = err {
+                print("Fetch events error: \(err.localizedDescription)")
+            }
             
-            query.getDocuments { snapshot, error in
-                if let error = error {
-                    print("Fetch events error: \(error.localizedDescription)")
-                }
-                
-                snapshot?.documents.forEach { document in
-                    let data = document.data()
-                    eventsToReturn.append(EventModel(dictionary: data))
-                }
-                dispatchGroup.leave()
+            snapshot?.documents.forEach { document in
+                var data = document.data()
+                eventsToReturn.append(EventModel(dictionary: data))
             }
         }
         
-        self.fetchUserEvents(eventsID: user.eventsID) { fetchedEvents in
-            eventsToReturn.append(contentsOf: fetchedEvents)
-            dispatchGroup.leave()
-        }
+//        self.fetchUserEvents(eventsID: user.eventsID) { fetchedEvents in
+//            eventsToReturn.append(contentsOf: fetchedEvents)
+//            dispatchGroup.leave()
+//        }
         
+        dispatchGroup.leave()
         
         
         
         dispatchGroup.notify(queue: .main) {
-            self.events = eventsToReturn
-            self.isLoading = false
+            self.inviteOnlyEvents = eventsToReturn
+            self.isLoadingInviteOnlyEvents = false
         }
+        
     }
+    
+ 
     
     func rsvpForEvent(userID: String) {
         // TODO: Implement RSVP for event

@@ -83,13 +83,14 @@ struct CurrentUserProfilePage: View {
                                     }
                                 }
                                 
-                                VStack(alignment: .leading, spacing: 5){
+                                
+                                
                                     
                                     Text("\(userVM.user?.nickName ?? "") ").fontWeight(.bold).font(.headline).lineLimit(1).foregroundColor(FOREGROUNDCOLOR)
                                     
                                     
                                     Text("@\(userVM.user?.username ?? "")").font(.footnote).foregroundColor(.gray)
-                                }
+                                
                                 
                                 
                                 

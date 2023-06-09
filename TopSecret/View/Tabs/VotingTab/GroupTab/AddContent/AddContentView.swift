@@ -53,7 +53,6 @@ struct AddContentView: View {
                     
                     NavigationLink {
                         CreateEventView(isGroup: false)
-
                     } label: {
                         VStack(spacing: 10){
                        
@@ -99,5 +98,6 @@ struct AddContentView: View {
         
     }
 }
+
 
 

@@ -40,6 +40,8 @@ struct User : Identifiable, Hashable{
     var fcmToken : String?
     var groupsID : [String]?
     var recentSearches : [String]?
+    var groupChatsID: [String]?
+    var groupChats: [ChatModel]?
     var personalChatsID : [String]
     var personalChats : [ChatModel]
     var personalChatNotificationCount : Int?

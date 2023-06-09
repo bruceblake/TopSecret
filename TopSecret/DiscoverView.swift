@@ -2,6 +2,7 @@ import SwiftUI
 import Foundation
 import Combine
 import CoreLocation
+import SDWebImageSwiftUI
 
 
 struct DiscoverView : View{
@@ -15,85 +16,79 @@ struct DiscoverView : View{
     let options = ["Open to Friends", "Invite Only"]
     let radiusOptions = ["Within 1 mile", "Within 5 miles", "Within 10 miles", "Any"]
     @State var searchText : String = ""
-
+    
     let formatter: NumberFormatter = {
-            let formatter = NumberFormatter()
-            formatter.numberStyle = .decimal
-            return formatter
-        }()
-
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .decimal
+        return formatter
+    }()
+    
     func getRadiusInMiles(radius: Int) -> Double{
         round(Double(radius / 1609))
     }
+    
+    let columns : [GridItem] = [
+        GridItem(.flexible(), spacing: 5),
+        GridItem(.flexible(), spacing: 5)
+    ]
     var body: some View {
         ZStack{
             VStack{
-                //search bar
-                SearchBar(text: $searchText, placeholder: "search for events", onSubmit: {
-                    //todo
-                })
-                HStack(spacing: 10){
-                    
-                    Spacer()
-                    Menu {
-                        VStack{
-                            ForEach(options, id: \.self){ option in
-                                Button(action:{
-                                    if option == options[0]{
-                                        withAnimation{
-                                            selectedOption = 0
-                                            eventVM.invitationType = options[selectedOption]
-                                        }
-                                    }
-                                    else if option == options[1]{
-                                        withAnimation{
-                                            selectedOption = 1
-                                            eventVM.invitationType = options[selectedOption]
-                                        }
-                                    }
-                            
-                                },label:{
-                                    Text(option)
-                                })
-                            }
-                        }
-                    } label: {
-                        HStack{
-                            Text("\(options[selectedOption])").foregroundColor(FOREGROUNDCOLOR)
-                            Image(systemName: "chevron.down")
-                        }.padding(5).background(RoundedRectangle(cornerRadius: 12).stroke(Color("Color"), lineWidth: 2))
-                    }
-
-                    Button(action:{
-
-                    },label:{
-                        ZStack{
-                            Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
-                            Image(systemName: "slider.horizontal.3").foregroundColor(FOREGROUNDCOLOR)
-                        }
-                    })
-                }.padding(5)
-                
              
-                VStack{
-                    ScrollView{
-                      //place here
-                        if eventVM.isLoading{
-                            VStack{
-                                ProgressView()
-                                Text("loading events...")
+    
+                //Events
+                    ScrollView(showsIndicators: false){
+                        VStack(spacing: 20){
+                            VStack(alignment: .leading){
+                                Text("Invited To").font(.title2).bold().padding(.leading,5)
+                                ScrollView(.horizontal, showsIndicators: false){
+                                    HStack(spacing: 20){
+                                        if eventVM.isLoadingInviteOnlyEvents {
+                                            ProgressView()
+                                        }else{
+                                            ForEach(eventVM.inviteOnlyEvents.uniqued(), id: \.id) { event in
+                                                EventTabEventCell(event: event)
+                                            }
+                                        }
+                                       
+                                    }
+                                    
+                                }
                             }
-                        }else{
-                            ForEach(eventVM.events.uniqued(), id: \.id) { event in
-                                EventTabEventCell(event: event)
+                            
+                            VStack(alignment: .leading){
+                                Text("Open To Friends").font(.title2).bold().padding(.leading,5)
+                                ScrollView(.horizontal, showsIndicators: false){
+                                    HStack(spacing: 20){
+                                        if eventVM.isLoadingOpenToFriends {
+                                            ProgressView()
+                                        }else{
+                                            ForEach(eventVM.openToFriendsEvents.uniqued(), id: \.id) { event in
+                                                EventTabEventCell(event: event)
+                                            }
+                                        }
+                                       
+                                    }
+                                    
+                                }
                             }
-                        }
-
-                    }
-                }
+                        }.padding(.bottom, UIScreen.main.bounds.width/3)
+                      
+                       
+                    }.padding(10)
+            
+                    
+                    
+                
+                
+                
+                
+                Spacer()
+                
             }
         }.edgesIgnoringSafeArea(.all).frame(width: UIScreen.main.bounds.width).onAppear{
             eventVM.fetchOpenToFriendsEvents(user: userVM.user ?? User())
+            eventVM.fetchInvitedToEvents(user: userVM.user ?? User())
         }
     }
 }
@@ -103,14 +98,53 @@ struct DiscoverView : View{
 struct EventTabEventCell : View {
     var event: EventModel
     var body: some View {
-        VStack{
-            Image(uiImage: event.image ?? UIImage()).resizable().frame(height: 100)
-            VStack(alignment: .leading){
-                Text(event.eventStartTime?.dateValue() ?? Date(), style: .time)
-                Text(event.eventName ?? "EVENT_NAME")
-                Text(event.description ?? "")
-            }.padding(10)
-        }.frame(width: 100).cornerRadius(16)
+        VStack(spacing: 0){
+            
+            
+            
+            WebImage(url: URL(string: event.eventImage ?? " ")).resizable().frame(height: 225).scaledToFit()
+            
+            
+            HStack(alignment: .top){
+                
+                VStack(alignment: .leading,spacing:7){
+                    
+                    HStack{
+                        Text(event.eventName ?? " ").font(.title3).bold().foregroundColor(FOREGROUNDCOLOR)
+                        Spacer()
+                        VStack{
+                            Text("Host").font(.callout)
+                            Text("@\(event.creator?.username ?? " ")").foregroundColor(Color.gray).font(.callout)
+                        }
+                      
+                    }
+                    
+                    VStack(alignment: .leading){
+                        Text("\(event.eventStartTime?.dateValue() ?? Date(), style: .date)").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+                        HStack{
+                            Text(event.eventStartTime?.dateValue() ?? Date(), style: .time).foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+                            Text("-")
+                            Text("\(event.eventEndTime?.dateValue() ?? Date(), style: .time)").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+                        }.foregroundColor(FOREGROUNDCOLOR)
+                    }
+                    
+                    Text("\(event.location?.name ?? " ")").foregroundColor(Color.gray).font(.callout)
+                    
+                    Button(action:{
+                        
+                    },label:{
+                        Text("RSVP").padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("AccentColor"))).foregroundColor(FOREGROUNDCOLOR)
+                    })
+                    
+                    Spacer()
+                    
+                }.padding(10)
+                
+                Spacer(minLength: 0)
+            }.frame(height: 175).background(Rectangle().foregroundColor(Color("Color")))
+            
+            
+        }.frame(width: (UIScreen.main.bounds.width/1.5)).clipShape(RoundedRectangle(cornerRadius: 16))
     }
 }
 

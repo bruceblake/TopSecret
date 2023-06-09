@@ -25,36 +25,20 @@ class EventViewModel: ObservableObject {
         
         
         let id = UUID().uuidString
-        
-      
-        
-        let storageRef = Storage.storage().reference()
-        let postID = UUID().uuidString
-        
-        
-        let imageData = image.jpegData(compressionQuality: 0.1)
-        
-        guard imageData != nil else {return}
-        
-        let path = "EventImages/\(group.groupName)/\(postID).jpg"
-        let fileRef = storageRef.child(path)
-        
-        
-        
-        let uploadTask = fileRef.putData(imageData!, metadata: nil) { metadata, err in
-            if err == nil && metadata != nil {
+        let dp = DispatchGroup()
+        dp.enter()
                
-                let data = ["groupID": group.id, "eventName" : eventName,
+                var data = ["groupID": group.id, "eventName" : eventName,
                             "eventLocation" : eventLocation,
                             "eventStartTime": eventStartTime,
                             "eventEndTime":eventEndTime,
-                            "invitedMembersIDS":invitedMembers.map({ user in
+                            "usersInvitedIDS":invitedMembers.map({ user in
                     return user.id ?? ""
                 }),
-                            "excludedMembersIDS":excludedMembers.map({ user in
+                            "usersExcludedIDS":excludedMembers.map({ user in
                     return user.id ?? ""
                 }),"id":id, "usersAttendingID":[user.id ?? " "],
-                            "creatorID":user.id ?? " ", "timeStamp":Timestamp(), "urlPath":path, "invitationType":invitationType, "location":location.toDictionary(), "membersCanInviteGuests":membersCanInviteGuests,
+                            "creatorID":user.id ?? " ", "timeStamp":Timestamp(), "invitationType":invitationType, "location":location.toDictionary(), "membersCanInviteGuests":membersCanInviteGuests,
                             "description":description] as [String:Any]
                 
                 let locationData = ["id": location.id ?? " ",
@@ -62,22 +46,30 @@ class EventViewModel: ObservableObject {
                                     "address":location.address,
                                     "latitude":location.latitude,
                                     "longitude":location.longitude] as [String:Any]
-                
-                COLLECTION_EVENTS.document(id).collection("Location").document(location.id ?? " ").setData(locationData)
-                
-                COLLECTION_EVENTS.document(id).setData(data) { (err) in
-                    if err != nil {
-                        print("ERROR \(err!.localizedDescription)")
-                        return
-                    }
-                    if createEventChat{
-                        self.createEventChat(eventChatID: id, users: invitedMembers, eventID: id, name: eventName)
-                    }
-                    
-                    if createGroupFromEvent{
-                        self.createGroupFromEvent(groupName: eventName, image: image , users: invitedMembers)
-                    }
+        self.persistImageToEventStorage(eventID: id, image: image) { fetchedImageURL in
+            data["eventImage"] = fetchedImageURL
+            dp.leave()
+        }
+        
+        dp.notify(queue: .main, execute:{
+            COLLECTION_EVENTS.document(id).collection("Location").document(location.id ?? " ").setData(locationData)
+            
+            COLLECTION_EVENTS.document(id).setData(data) { (err) in
+                if err != nil {
+                    print("ERROR \(err!.localizedDescription)")
+                    return
                 }
+                if createEventChat{
+                    self.createEventChat(eventChatID: id, users: invitedMembers, eventID: id, name: eventName)
+                }
+                
+                if createGroupFromEvent{
+                    self.createGroupFromEvent(groupName: eventName, image: image , users: invitedMembers)
+                }
+            }
+        })
+                
+              
                 
                 COLLECTION_GROUP.document(group.id).collection("Events").document(id).setData(data) { (err) in
                     if err != nil {
@@ -86,12 +78,7 @@ class EventViewModel: ObservableObject {
                     }
                 }
                 
-            }
             
-            
-        }
-        
-      
         
         var notificationID = UUID().uuidString
         
@@ -118,8 +105,13 @@ class EventViewModel: ObservableObject {
         }
         
        
+            
+        }
         
-    }
+      
+  
+        
+    
     
     func createGroupFromEvent(groupName: String, image: UIImage, users: [User]){
         
@@ -164,6 +156,28 @@ class EventViewModel: ObservableObject {
                 print("Successfully stored image in database")
                 let imageURL = url?.absoluteString ?? ""
                 COLLECTION_GROUP.document(groupID).updateData(["groupProfileImage":imageURL])
+                return completion(imageURL)
+            }
+        }
+      
+    }
+    
+    func persistImageToEventStorage(eventID: String, image: UIImage, completion: @escaping (String) -> ()) -> (){
+       let fileName = "eventImages/\(eventID)"
+        let ref = Storage.storage().reference(withPath: fileName)
+        guard let imageData = image.jpegData(compressionQuality: 1.0) else { return }
+        ref.putData(imageData, metadata: nil) { (metadata, err) in
+            if err != nil{
+                print("ERROR")
+                return
+            }
+               ref.downloadURL { (url, err) in
+                if err != nil{
+                    print("ERROR: Failed to retreive download URL")
+                    return
+                }
+                print("Successfully stored image in database")
+                let imageURL = url?.absoluteString ?? ""
                 return completion(imageURL)
             }
         }

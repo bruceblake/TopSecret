@@ -28,6 +28,8 @@ struct GroupSearchCell: View {
 
                 }
                 Spacer()
+                
+            
             }.padding(.leading).padding(.vertical,10)
             
          

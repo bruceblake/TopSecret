@@ -33,7 +33,7 @@ struct CreateEventView: View {
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
     let options = ["Open to Friends", "Invite Only"]
-    @State var selectedOption : Int = 0
+    @State var selectedOption : Int = 1
     @State var invitationType : String = "Open to Friends"
     @State var showLocationPicker: Bool = false
     @State var location = EventModel.Location()
@@ -45,11 +45,11 @@ struct CreateEventView: View {
     @State var openExcludeMembersView : Bool = false
     @State var excludedMembers: [User] = []
     @State var isShowingPhotoPicker:Bool = false
-    @State var avatarImage = UIImage(named: "AppIcon")!
     @State var pickedAnImage: Bool = false
     @State var createEventChat : Bool = false
     @State var createGroupFromEvent: Bool = false
     @State var nonSpecifiedEndDate: Bool = false
+
     
     var body: some View {
         ZStack{
@@ -73,6 +73,15 @@ struct CreateEventView: View {
                     
                   
 
+                    Spacer()
+                    
+                    Button(action:{
+                        isShowingPhotoPicker.toggle()
+                    },label:{
+                        Text("Enter Image")
+                    }) .fullScreenCover(isPresented: $isShowingPhotoPicker, content: {
+                        ImagePicker(avatarImage: $image, allowsEditing: true)
+                    })
                     Spacer()
                     
                     Button(action:{
@@ -113,9 +122,9 @@ struct CreateEventView: View {
                                                 }
                                             }
                                            
-                                            else if option == options[2]{
+                                            else if option == options[1]{
                                                 withAnimation{
-                                                    selectedOption = 2
+                                                    selectedOption = 1
                                                     invitationType = "Invite Only"
                                                 }
                                             }
@@ -258,7 +267,7 @@ struct CreateEventView: View {
                                     HStack{
                                         VStack(alignment: .leading){
                                             HStack{
-                                                Text("Invite Members").foregroundColor(FOREGROUNDCOLOR)
+                                                Text("Invite Members Or Groups").foregroundColor(FOREGROUNDCOLOR)
                                                 Text("\(invitedMembers.count) invited").foregroundColor(Color.gray)
                                             }
                                             HStack{

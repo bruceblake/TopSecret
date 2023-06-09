@@ -50,7 +50,15 @@ struct InviteMembersToEventView: View {
                                 Button(action:{
                                     searchVM.searchText = group.groupName
                                 },label:{
-                                    Text(group.groupName).foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("AccentColor")))
+                                    HStack{
+                                        Text(group.groupName).foregroundColor(FOREGROUNDCOLOR)
+                                        Button(action:{
+                                            selectedGroups.removeAll(where: {$0.id == group.id})
+                                        },label:{
+                                            Image(systemName: "x.circle.fill")
+                                        }).foregroundColor(FOREGROUNDCOLOR)
+                                    }.padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("AccentColor")))
+                                   
                                 })
                             
                         }
@@ -69,7 +77,15 @@ struct InviteMembersToEventView: View {
                                 Button(action:{
                                     searchVM.searchText = user.nickName ?? ""
                                 },label:{
-                                    Text(user.nickName ?? "").foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("AccentColor")))
+                                    HStack{
+                                        Text(user.nickName ?? "").foregroundColor(FOREGROUNDCOLOR)
+                                        Button(action:{
+                                            selectedUsers.removeAll(where: {$0 == user})
+                                        },label:{
+                                            Image(systemName: "x.circle.fill")
+                                        }).foregroundColor(FOREGROUNDCOLOR)
+                                    }.padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("AccentColor")))
+                                   
                                 })
                             }
                         }
@@ -79,16 +95,14 @@ struct InviteMembersToEventView: View {
             
                 ScrollView(){
                     VStack(spacing: 10){
-                        
-                        
-                           
+  
                             VStack(alignment: .leading){
-                                if !(userVM.user?.friendsList ?? []).isEmpty{
+                                if !searchVM.userFriendsReturnedResults.isEmpty{
                                     VStack(alignment: .leading){
                                         Text("Friends").fontWeight(.bold).foregroundColor(Color("Foreground"))
                                     }
                                 }
-                            ForEach(userVM.user?.friendsList ?? [], id: \.id){ friend in
+                                ForEach(searchVM.userFriendsReturnedResults, id: \.id){ friend in
                                 Button(action:{
                                     if selectedUsers.contains(friend){
                                         selectedUsers.removeAll { user in
@@ -126,7 +140,50 @@ struct InviteMembersToEventView: View {
                                 
                                 
                             }
+                        
+                         VStack(alignment: .leading){
+                             if !searchVM.userGroupReturnedResults.isEmpty{
+                                 VStack(alignment: .leading){
+                                     Text("Groups").fontWeight(.bold).foregroundColor(Color("Foreground"))
+                                 }
+                             }
+                             ForEach(searchVM.userGroupReturnedResults, id: \.id) { group in
+                                 Button {
+                                     if selectedGroups.contains(where: {$0.id == group.id}){
+                                         selectedGroups.removeAll(where: {$0.id == group.id})
+                                     }else{
+                                         selectedGroups.append(group)
+                                     }
+                                 } label: {
+                                     HStack(alignment: .center){
+                                         WebImage(url: URL(string: group.groupProfileImage))
+                                             .resizable()
+                                             .scaledToFill()
+                                             .frame(width:48,height:48)
+                                             .clipShape(Circle())
+                                             
+                                         
+                                         VStack(alignment: .leading){
+                                             
+                                             Text("\(group.groupName)").foregroundColor(Color("Foreground"))
+                                             Text("\(group.users.count) \(group.users.count > 1 ? "members" : "member")").foregroundColor(.gray)
+                                             
 
+                                         }
+                                         Spacer()
+                                         
+                                         Image(systemName: selectedGroups.contains(where: {$0.id == group.id}) ? "checkmark.circle.fill" : "circle").font(.title).foregroundColor(FOREGROUNDCOLOR)
+                                     
+                                     }.padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Background")))
+                                 }
+
+                             }
+                             
+                             
+                             
+                             
+                             
+                         }
                     }
                         
                     
@@ -149,7 +206,7 @@ struct InviteMembersToEventView: View {
         }.padding()
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
-            searchVM.startSearch(searchRequest: "allUsersFriendsAndGroups", id: userVM.user?.id ?? " ")
+            searchVM.startSearch(searchRequest: "allUserFriendsAndGroups", id: userVM.user?.id ?? " ")
         }
         
         

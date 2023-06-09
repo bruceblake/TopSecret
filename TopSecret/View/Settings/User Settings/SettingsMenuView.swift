@@ -99,7 +99,7 @@ struct SettingsMenuView: View {
                 
                 //Blocked Accounts
                 
-                NavigationLink(destination: BlockedAccountsView(blockedAccounts: settingsVM.blockedAccounts, openBlockedAccountsScreen: $openBlockedAccountsScreen, settingsVM: settingsVM), isActive: $openBlockedAccountsScreen) {
+                NavigationLink(destination: BlockedAccountsView( openBlockedAccountsScreen: $openBlockedAccountsScreen, settingsVM: settingsVM), isActive: $openBlockedAccountsScreen) {
                     EmptyView()
                 }
                 

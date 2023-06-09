@@ -327,7 +327,7 @@ class GroupViewModel: ObservableObject {
     func persistImageToStorage(groupID: String, image: UIImage, completion: @escaping (String) -> ()) -> (){
        let fileName = "groupImages/\(groupID)"
         let ref = Storage.storage().reference(withPath: fileName)
-        guard let imageData = image.jpegData(compressionQuality: 0.5) else { return }
+        guard let imageData = image.jpegData(compressionQuality: 1.0) else { return }
         ref.putData(imageData, metadata: nil) { (metadata, err) in
             if err != nil{
                 print("ERROR")

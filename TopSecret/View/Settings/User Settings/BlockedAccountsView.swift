@@ -13,7 +13,6 @@ import Firebase
 
 struct BlockedAccountsView: View {
     @EnvironmentObject var userVM: UserViewModel
-    @State var blockedAccounts : [User]
     @Binding var openBlockedAccountsScreen : Bool
     @ObservedObject var settingsVM: UserSettingsViewModel
     var body: some View {
@@ -56,7 +55,7 @@ struct BlockedAccountsView: View {
                     
                 ScrollView{
                     VStack{
-                        ForEach(blockedAccounts, id: \.id){ blockedUser in
+                        ForEach(settingsVM.blockedAccounts, id: \.id){ blockedUser in
                             BlockedAccountsCell(user: blockedUser, settingsVM: settingsVM)
                             Divider()
                         }

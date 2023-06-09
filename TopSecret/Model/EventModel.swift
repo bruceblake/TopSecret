@@ -37,6 +37,7 @@ struct EventModel : Identifiable, Hashable{
     var group: Group?
     var timeStamp: Timestamp?
     var image: UIImage?
+    var eventImage: String?
     var urlPath: String?
     var likedListID: [String]?
     var likedList: [User]?
@@ -117,6 +118,7 @@ enum InvitationType {
         self.dislikedList = dictionary["dislikedList"] as? [User] ?? []
         self.description = dictionary["description"] as? String ?? ""
         self.membersCanInviteGuests = dictionary["membersCanInviteGuests"] as? Bool ?? false
+        self.eventImage = dictionary["eventImage"] as? String ?? " "
         if let invitationTypeString = dictionary["invitationType"] as? String, let invitationType = InvitationType.fromFirestoreValue(invitationTypeString) {
             self.invitationType = invitationType
         }

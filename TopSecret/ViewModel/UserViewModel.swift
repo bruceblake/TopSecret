@@ -52,19 +52,33 @@ class UserViewModel : ObservableObject {
     private var cancellables : Set<AnyCancellable> = []
     
     init(){
+        let dp = DispatchGroup()
+            dp.enter()
+        Auth.auth().addStateDidChangeListener { auth, user in
+            self.userSession = user
+        }
+        dp.leave()
+            dp.notify(queue: .main, execute: {
+                self.beginListening()
+            })
         
+    }
+   
+    
+    func beginListening(){
         let dp = DispatchGroup()
         dp.enter()
+       
         self.removeListeners()
         self.checkConnection()
-        self.userSession = Auth.auth().currentUser
-      
-        UserDefaults.standard.set("\(self.userSession?.uid ?? " ")", forKey: "userID")
         dp.leave()
-        dp.notify(queue: .main, execute: {
-            self.listenToAll(uid: self.userSession?.uid ?? " ")
+        dp.notify(queue: .main, execute:{
+            if self.firestoreListeners.isEmpty{
+                self.listenToAll(uid: self.userSession?.uid ?? " ")
+                let uid = self.userSession?.uid ?? " "
+                print("uid: \(uid)")
+            }
         })
-        
     }
     
     func checkConnection() {
@@ -468,17 +482,6 @@ class UserViewModel : ObservableObject {
     func deletePoll(pollID: String){
         COLLECTION_POLLS.document(pollID).delete()
     }
-//    func encodeGroups(groups: [Group]){
-//        do{
-//                let groupsData = try JSONEncoder().encode(groups)
-//                UserDefaults.standard.set(groupsData, forKey: "groups")
-//            
-//        }catch{
-//            print(error.localizedDescription)
-//        }
-//    }
-    
-    //auth
     
     func signIn(withEmail email: String, password: String, completion: @escaping (User) -> ()) -> (){
         
@@ -511,11 +514,7 @@ class UserViewModel : ObservableObject {
             }
             
             dp.notify(queue: .main, execute:{
-                self.listenToAll(uid: self.userSession?.uid ?? " ")
-                COLLECTION_USER.document(self.userSession?.uid ?? " ").updateData(["usersLoggedInCount":FieldValue.increment(Int64(1))])
-                self.fetchUser(userID: self.userSession?.uid ?? " ") { fetchedUser in
-                    return completion(fetchedUser)
-                }
+                self.beginListening()
             })
             
             
@@ -564,7 +563,7 @@ class UserViewModel : ObservableObject {
                 }
                 dp.leave()
                 dp.notify(queue: .main, execute:{
-                    self.listenToAll(uid: self.userSession?.uid ?? " ")
+                    self.beginListening()
                 })
                 
                 
@@ -610,9 +609,8 @@ class UserViewModel : ObservableObject {
             try? Auth.auth().signOut()
             self.userListener?.remove()
             self.userSession = nil
-            print("logging out!")
+            self.removeListeners()
         })
-        self.removeListeners()
     }
     
     

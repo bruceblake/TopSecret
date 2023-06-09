@@ -6,7 +6,7 @@
 //
 
 import SwiftUI
-
+import SDWebImageSwiftUI
 struct HomescreenAddContentView: View {
     
     var texts : [String] = ["Create a Group","Create Poll","Create Event"]
@@ -48,7 +48,8 @@ struct HomescreenAddContentView: View {
                     
                     
                     NavigationLink {
-                        CreateEventView(isGroup: false)
+                        AddGroupsToEventView()
+
 
                     } label: {
                         VStack(spacing: 10){
@@ -94,4 +95,118 @@ struct HomescreenAddContentView: View {
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).resizeToScreenSize()
     }
 }
+
+struct AddGroupsToEventView : View {
+    
+    @Environment(\.presentationMode) var presentationMode
+    @State var openCreateEventView: Bool = false
+    @State var selectedGroups: [Group] = []
+    @EnvironmentObject var userVM: UserViewModel
+    @StateObject var searchVM = SearchRepository()
+    
+    var body: some View {
+        ZStack{
+            Color("Background")
+            VStack{
+                HStack{
+                    Button(action:{
+                        presentationMode.wrappedValue.dismiss()
+                    },label:{
+                        ZStack{
+                            Circle().foregroundColor(Color("Color")).frame(width: 40, height: 40)
+                            
+                            Image(systemName: "chevron.left")
+                                .font(.title3).foregroundColor(FOREGROUNDCOLOR)
+                        }
+                    })
+                    
+                    Spacer()
+                    Text("Select a Group").foregroundColor(FOREGROUNDCOLOR).font(.title2)
+                    Spacer()
+                    
+                    Button {
+                        self.openCreateEventView.toggle()
+                    } label: {
+                        Text("Skip")
+                    }
+
+                }.padding(.top,50).padding(.horizontal)
+                
+                SearchBar(text: $searchVM.searchText, placeholder: "your groups..", onSubmit: {}).padding(.horizontal)
+                
+                ScrollView(.horizontal, showsIndicators: false){
+                    HStack{
+                        ForEach(selectedGroups){ group in
+                            HStack{
+                                Text("\(group.groupName ?? "")")
+                                Button(action:{
+                                    selectedGroups.removeAll(where: {$0.id == group.id})
+                                },label:{
+                                    Image(systemName: "x.circle.fill")
+                                }).foregroundColor(FOREGROUNDCOLOR)
+                            }.padding(10).background(RoundedRectangle(cornerRadius: 15).fill(Color("AccentColor")))
+                        }
+                    }
+                }.padding(.horizontal)
+                
+                VStack{
+                    ScrollView{
+                        
+                        ForEach(searchVM.userGroupReturnedResults, id: \.id) { group in
+                            Button {
+                                if selectedGroups.contains(where: {$0.id == group.id}){
+                                    selectedGroups.removeAll(where: {$0.id == group.id})
+                                }else{
+                                    selectedGroups.append(group)
+                                }
+                            } label: {
+                                HStack(alignment: .center){
+                                    WebImage(url: URL(string: group.groupProfileImage))
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width:48,height:48)
+                                        .clipShape(Circle())
+                                        
+                                    
+                                    VStack(alignment: .leading){
+                                        
+                                        Text("\(group.groupName)").foregroundColor(Color("Foreground"))
+                                        Text("\(group.users.count) \(group.users.count > 1 ? "members" : "member")").foregroundColor(.gray)
+                                        
+
+                                    }
+                                    Spacer()
+                                    
+                                    Image(systemName: selectedGroups.contains(where: {$0.id == group.id}) ? "checkmark.circle.fill" : "circle").font(.title).foregroundColor(FOREGROUNDCOLOR)
+                                
+                                }.padding(10)
+                            }
+
+                        }
+                        
+                        
+                        
+                    }
+                }
+                
+                Button(action:{
+                    
+                },label:{
+                    
+                })
+                
+            }
+            
+            
+            //nav link
+            NavigationLink(destination:  CreateEventView(isGroup: false)
+                           , isActive: $openCreateEventView) {
+                EmptyView()
+            }
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
+            searchVM.startSearch(searchRequest: "allUserGroups", id: userVM.user?.id ?? " ")
+        }
+    }
+}
+
 

@@ -97,7 +97,7 @@ struct CustomDatePicker: View {
             
             let columns = Array(repeating: GridItem(.flexible()), count: 7)
             
-            LazyVGrid(columns: columns, spacing: 10){
+            LazyVGrid(columns: columns, spacing: 15){
                 ForEach(extractDate()){ value in
                     CardView(eventList: calendarVM.eventsResults,value: value, selectedDay: selectedDay, completion: { day in
                         
@@ -134,12 +134,26 @@ struct CustomDatePicker: View {
                         Text("\(value.day)")
                             .font(.title3)
                             .bold()
-                            .foregroundColor(selectedDay == value.day ? Color("AccentColor") : .white)
+                            .foregroundColor(value.day == Calendar.current.component(.day, from: Date()) ? Color.yellow : selectedDay == value.day ? Color("AccentColor") : .white)
                         
                         
                         
                         if hasEvent(eventList: eventList, selectedDay: value.day, selectedMonth: selectedMonth, selectedYear: selectedYear){
-                            Circle().foregroundColor(Color("AccentColor")).frame(width: 8, height: 8)
+                            
+                            let eventDateComponents = Calendar.current.dateComponents([.month,.day,.year], from: convertComponentsToDate(year: selectedYear, month: selectedMonth, day: value.day))
+                            let currentDateComponents = Calendar.current.dateComponents([.month,.day,.year], from: Date())
+                            
+                             let currentDate = Calendar.current.date(from: currentDateComponents)
+                            let eventDate = Calendar.current.date(from: eventDateComponents)
+                            
+                            if currentDate ?? Date() <= eventDate ?? Date() {
+                                Circle().foregroundColor(Color("AccentColor")).frame(width: 8, height: 8)
+                            }else{
+                                Circle().foregroundColor(Color.gray).frame(width: 8, height: 8)
+                            }
+                            
+                            
+                          
                             }else{
                                 Circle().foregroundColor(Color.clear).frame(width: 8, height: 8)
                             }

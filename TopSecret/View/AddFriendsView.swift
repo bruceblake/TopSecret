@@ -89,7 +89,7 @@ struct AddFriendsSearchList : View {
 }
 
 struct UserAddSearchCell : View {
-    var user: User
+    @State var user: User
     @EnvironmentObject var userVM: UserViewModel
     @State var isLoading: Bool = false
     @State var isFriends: Bool = false
@@ -100,7 +100,8 @@ struct UserAddSearchCell : View {
 
     
     func getPersonalChatID(friendID: String) -> String {
-        return userVM.personalChats.first(where: {$0.usersID?.contains(friendID) ?? false})?.id ?? " "
+        var chats = userVM.personalChats.filter({$0.usersID?.count ?? 0 == 2})
+        return chats.first(where: {$0.usersID?.contains(friendID) ?? false})?.id ?? " "
     }
     
     var body: some View {
