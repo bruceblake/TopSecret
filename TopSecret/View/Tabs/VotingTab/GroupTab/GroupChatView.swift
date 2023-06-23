@@ -50,25 +50,6 @@ struct GroupChatView: View {
         ZStack{
             Color("Background")
             VStack{
-                
-                //Top Bar
-//                HStack{
-//                    Button {
-//                        presentationMode.wrappedValue.dismiss()
-//                    } label: {
-//                        ZStack{
-//                            Circle().frame(width: 40, height: 40).foregroundColor( Color("Color"))
-//                            Image(systemName: "chevron.left").foregroundColor(FOREGROUNDCOLOR)
-//                        }
-//                    }
-//
-//                    Spacer()
-//
-//                    Circle().frame(width: 40, height: 40).foregroundColor(Color.clear)
-//
-//                }.padding(.top,50).padding(.horizontal)
-            
-                
                 //Active Users
                 ScrollView(.horizontal){
                     HStack(spacing: 5){

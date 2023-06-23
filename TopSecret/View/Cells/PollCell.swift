@@ -50,7 +50,7 @@ struct PollCell : View {
                             HStack(alignment: .center){
                                 ZStack(alignment: .bottomTrailing){
                                     
-                                    NavigationLink(destination: GroupProfileView(group: poll.group ?? Group(), isInGroup: poll.group?.users.contains(userVM.user?.id ?? " ") ?? false)) {
+                                    NavigationLink(destination: GroupProfileView(group: poll.group ?? Group(), isInGroup: poll.group?.usersID.contains(userVM.user?.id ?? " ") ?? false)) {
                                         WebImage(url: URL(string: poll.group?.groupProfileImage ?? "")).resizable().frame(width: 40, height: 40).clipShape(Circle())
                                     }
                                     

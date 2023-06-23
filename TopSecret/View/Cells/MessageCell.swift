@@ -8,7 +8,9 @@
 import SwiftUI
 import Firebase
 import SDWebImageSwiftUI
-                
+import AVFoundation
+import AVKit
+
 
 struct MessageCell: View {
     var message: Message
@@ -22,7 +24,7 @@ struct MessageCell: View {
         switch message.type ?? "" {
         case "text":
             MessageTextCell(message: message, chatID: personalChatVM.chat.id).padding([.leading,.top],5)
-                .simultaneousGesture(LongPressGesture(minimumDuration: 0.25).onEnded({ value in
+                   .simultaneousGesture(LongPressGesture(minimumDuration: 0.25).onEnded({ value in
                     withAnimation{
                         UIDevice.vibrate()
                         self.selectedMessage = message
@@ -46,17 +48,96 @@ struct MessageCell: View {
             MessageDeleteCell(message: message)
         case "repliedMessage":
             MessageReplyCell(message: message, chatID: personalChatVM.chat.id).padding(.leading,5)
-        case "postMessage":
-            MessagePostCell(message: message, chatID: personalChatVM.chat.id).padding(.leading,5)
         case "pollMessage":
             MessagePollCell(message: message, chatID: personalChatVM.chat.id).padding(.leading,5)
         case "eventMessage":
             MessageEventCell(message: message, chatID: personalChatVM.chat.id).padding(.leading,5)
+        case "image", "video":
+                MessageMediaCell(message: message, chatID: personalChatVM.chat.id).padding(.leading,5)
         default:
             Text("Hello World")
         }
     
 
+    }
+}
+
+struct MessageMediaCell : View {
+    @EnvironmentObject var userVM: UserViewModel
+    var message: Message
+    var chatID: String
+    @State var showFullScreen: Bool = false
+    
+    var body: some View {
+        
+        ZStack{
+            Color("Background")
+            VStack(alignment: .leading, spacing: 0){
+                
+                HStack(spacing: 3){
+                        Image(systemName: "chevron.left").foregroundColor(message.userID == userVM.user?.id ?? "" ? Color("AccentColor") : Color("blue"))
+                        .frame(width:2).padding(.horizontal,5)
+                        Text("\(message.userID == userVM.user?.id ?? "" ? "Me"  : message.name ?? "")").foregroundColor(message.userID == userVM.user?.id ?? "" ? Color("AccentColor") : Color("blue"))
+                    
+                    
+            
+                    
+                    Spacer()
+                    
+                }.padding(.top,3)
+                
+                
+                HStack(alignment: .center){
+                    
+                    HStack(spacing: 3){
+                        Rectangle().foregroundColor(Color("\(message.userID == userVM.user?.id ?? " " ? "AccentColor" : "blue")")).frame(width:2).padding(.horizontal,5)
+                            
+                        if message.type ?? "" == "image"{
+                            Button {
+                                self.showFullScreen.toggle()
+                            } label: {
+                                WebImage(url: URL(string: message.value ?? " ")).resizable()
+                                    .scaledToFill()
+                                    .frame(width: UIScreen.main.bounds.width/3, height: 200)
+                                    .clipped()
+                                    .cornerRadius(12)
+                                    .sheet(isPresented: $showFullScreen) {
+                                    MessageImageFullScreenView(message: message)
+                                }
+                            }
+                        }else if message.type == "video"{
+                            Button {
+                                self.showFullScreen.toggle()
+                            } label: {
+                                VideoThumbnailImage(videoUrl: URL(string: message.value ?? " ") ?? URL(fileURLWithPath: " ") ).cornerRadius(12)
+                            }.sheet(isPresented: $showFullScreen) {
+                                MessageVideoFullScreenView(message: message)
+                            }
+
+                            
+                        }
+                      
+
+                            
+                        
+                      
+                           
+                    }
+                    
+                    
+                    
+                    
+                    Spacer()
+                    
+                    
+                }.padding(.top,5)
+                
+                
+                
+            }
+            
+            
+        }
     }
 }
 
@@ -93,7 +174,7 @@ struct MessageTextCell: View {
                         Rectangle().foregroundColor(Color("\(message.userID == userVM.user?.id ?? " " ? "AccentColor" : "blue")")).frame(width:2).padding(.horizontal,5)
                         
                         HStack{
-                            Text("\(message.value ?? "")").foregroundColor(FOREGROUNDCOLOR).lineLimit(5)
+                            Text("\(message.value ?? "")").foregroundColor(FOREGROUNDCOLOR)
                             if message.edited ?? false{
                                 Text("(edited)").foregroundColor(.gray).font(.footnote)
                             }
@@ -114,21 +195,7 @@ struct MessageTextCell: View {
             
             
         }
-        
-        
-        
-        
-     
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
+
     }
     
     
@@ -233,89 +300,6 @@ extension View {
     }
 }
 
-struct MessagePostCell : View {
-    @EnvironmentObject var userVM: UserViewModel
-    var message: Message
-    @State var selectedPost: GroupPostModel = GroupPostModel()
-    var chatID: String
-    @State var shareType : String = ""
-    @State var rectangleHeight : CGFloat = .zero
-
-    
-    var body: some View {
-        
-        ZStack{
-            VStack(alignment: .leading, spacing: 2){
-                HStack(spacing: 3){
-                    if message.userID == userVM.user?.id ?? ""{
-                        Image(systemName: "chevron.left").foregroundColor(Color("AccentColor")).frame(width:2).padding(.horizontal,5)
-                        Text("Me").foregroundColor(Color("AccentColor"))
-                    }else{
-                        Image(systemName: "chevron.left").foregroundColor(Color("blue")).frame(width:2).padding(.horizontal,5)
-                        Text("\(message.name ?? "")").foregroundColor(Color("blue"))
-                    }
-                    
-                    Spacer()
-                    
-                }.padding(.top,3)
-                    HStack(spacing: 3){
-                        
-                        Rectangle().foregroundColor(Color("\(message.userID == userVM.user?.id ?? " " ? "AccentColor" : "blue")")).frame(width:2, height: rectangleHeight).padding(.horizontal,5)
-                        
-                        
-                        
-                        if (message.post?.id ?? "") == "deleted" {
-                            Button(action:{
-                                //leave this empty
-                            },label:{
-                                ZStack{
-                                    Color("Color").blur(radius: 30)
-                                    VStack{
-                                        Spacer()
-                                            Text("Post has been deleted").foregroundColor(Color.gray.opacity(0.5))
-
-                                        Spacer()
-                                    }
-                                }
-                                .frame(width: UIScreen.main.bounds.width/1.5, height: 300).cornerRadius(12).updateRectangleHeight(CGFloat(300))
-                            })
-                        }else{
-                            NavigationLink(destination: FullScreenGroupPostView(post: message.post ?? GroupPostModel() )) {
-                               
-                                    GroupPostCell(post: message.post ?? GroupPostModel(), selectedPost: $selectedPost, hideControls: true
-                                    ).overlay(
-                                        GeometryReader { geo in
-                                            Color.clear.preference(key: MediaPreferenceKey.self, value: geo.size.height)
-                                        }
-                                    )
-                                
-                                    
-                                
-                            
-                                
-                               
-                                
-                       
-                                    .frame(width: UIScreen.main.bounds.width/1.5).cornerRadius(12)
-                            }
-                        }
-                      
-                      
-                     
-                        
-                        Spacer()
-                    }
-                    
-                   
-                
-            }
-      
-        }.onPreferenceChange(MediaPreferenceKey.self){
-            self.rectangleHeight = $0
-        }
-        
-    }
-}
 
 
 struct MessageDeleteCell : View {
@@ -474,5 +458,165 @@ struct MessageFollowUpTextCell : View {
             
             
         }
+    }
+}
+
+struct MessageImageFullScreenView : View {
+    var message: Message
+    @Environment(\.presentationMode) var presentationMode
+    
+    func getTimeSince(date: Date) -> String{
+        let interval = (Date() - date)
+        
+        
+        var seconds = interval.second ?? 0
+        var minutes = (seconds / 60)
+        var hours = (minutes / 60)
+        var days = (hours / 24)
+        var time = ""
+        if seconds < 60{
+            if seconds == 1 {
+                time = "\(seconds) second ago"
+            }else{
+                time = "\(seconds) seconds ago"
+            }
+        }else if seconds < 3600  {
+            if minutes == 1 {
+                time = "\(minutes) minute ago"
+            }else{
+                time = "\(minutes) minutes ago"
+            }
+        }else if seconds < 86400 {
+            if hours == 1 {
+                time = "\(hours) hour ago"
+            }else{
+                time = "\(hours) hours ago"
+            }
+        }else if seconds < 604800 {
+            if days == 1 {
+                time = "\(days) day ago"
+            }else{
+                time = "\(days) days ago"
+            }
+        }
+        if time == "0 seconds ago"{
+            return "now"
+        }else{
+            return time
+        }
+        
+    }
+    var body: some View {
+        ZStack{
+            AsyncImage(url: URL(string: message.value ?? " ") ?? URL(string: "turd")) { image in
+                image
+                    .resizable()
+                    .scaledToFit()
+                    .resizeToScreenSize()
+                    .clipped()
+                    .cornerRadius(12)
+            } placeholder: {
+                ZStack{
+                    Rectangle().foregroundColor(Color("Color")).resizeToScreenSize()
+                    ProgressView()
+                }
+            }
+            VStack{
+                HStack{
+                    HStack(spacing: 5){
+                        WebImage(url: URL(string: message.profilePicture ?? " "))
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width:40,height:40)
+                            .clipShape(Circle())
+                        VStack(alignment: .leading, spacing: 1){
+                            Text("\(message.name ?? "")").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+                            Text("\(getTimeSince(date: message.timeStamp?.dateValue() ?? Date()))").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+
+                        }
+                    }.padding(.top,10)
+
+                    Spacer()
+
+                    Circle().frame(width: 40,height: 40).foregroundColor(Color.clear)
+                }.padding(.horizontal).padding(.top,50).background(Color("Background").opacity(0.5))
+                Spacer()
+            }
+        }.resizeToScreenSize().edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+    }
+}
+
+struct MessageVideoFullScreenView : View {
+    var message: Message
+    @Environment(\.presentationMode) var presentationMode
+    var player : AVPlayer {
+        AVPlayer(url: URL(string: message.value ?? " ") ?? URL(fileURLWithPath: " "))
+    }
+    func getTimeSince(date: Date) -> String{
+        let interval = (Date() - date)
+        
+        
+        var seconds = interval.second ?? 0
+        var minutes = (seconds / 60)
+        var hours = (minutes / 60)
+        var days = (hours / 24)
+        var time = ""
+        if seconds < 60{
+            if seconds == 1 {
+                time = "\(seconds) second ago"
+            }else{
+                time = "\(seconds) seconds ago"
+            }
+        }else if seconds < 3600  {
+            if minutes == 1 {
+                time = "\(minutes) minute ago"
+            }else{
+                time = "\(minutes) minutes ago"
+            }
+        }else if seconds < 86400 {
+            if hours == 1 {
+                time = "\(hours) hour ago"
+            }else{
+                time = "\(hours) hours ago"
+            }
+        }else if seconds < 604800 {
+            if days == 1 {
+                time = "\(days) day ago"
+            }else{
+                time = "\(days) days ago"
+            }
+        }
+        if time == "0 seconds ago"{
+            return "now"
+        }else{
+            return time
+        }
+        
+    }
+    var body: some View {
+        ZStack{
+            Video(player: player, url: URL(string: message.value ?? " ") ?? URL(fileURLWithPath: " "), cameraVM: CameraViewModel()).cornerRadius(12)
+            VStack{
+                HStack{
+                    HStack(spacing: 5){
+                        WebImage(url: URL(string: message.profilePicture ?? " "))
+                            .resizable()
+                            .scaledToFill()
+                            .frame(width:40,height:40)
+                            .clipShape(Circle())
+                        VStack(alignment: .leading, spacing: 1){
+                            Text("\(message.name ?? "")").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+                            Text("\(getTimeSince(date: message.timeStamp?.dateValue() ?? Date()))").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+
+                        }
+                    }.padding(.top,10)
+
+                    Spacer()
+
+                    Circle().frame(width: 40,height: 40).foregroundColor(Color.clear)
+                }.padding(.horizontal).padding(.top,50).background(Color("Background").opacity(0.5))
+                Spacer()
+            }
+        }.resizeToScreenSize().edgesIgnoringSafeArea(.all).navigationBarHidden(true)
     }
 }

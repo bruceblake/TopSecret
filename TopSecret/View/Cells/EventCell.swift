@@ -36,7 +36,7 @@ struct EventCell: View {
                     HStack(alignment: .center){
                         ZStack(alignment: .bottomTrailing){
                             
-                            NavigationLink(destination: GroupProfileView(group: event.group ?? Group(), isInGroup: event.group?.users.contains(userVM.user?.id ?? " ") ?? false)) {
+                            NavigationLink(destination: GroupProfileView(group: event.group ?? Group(), isInGroup: event.group?.usersID.contains(userVM.user?.id ?? " ") ?? false)) {
                                 WebImage(url: URL(string: event.group?.groupProfileImage ?? "")).resizable().frame(width: 40, height: 40).clipShape(Circle())
                             }
                             
@@ -128,7 +128,7 @@ struct EventCell: View {
                     
                     HStack(alignment: .top, spacing: 20){
                         Button(action:{
-                            userVM.updateGroupEventLike(eventID: event.id ?? " ", userID: userVM.user?.id ?? " ", actionToLike: true) { list in
+                            userVM.updateGroupEventLike(eventID: event.id , userID: userVM.user?.id ?? " ", actionToLike: true) { list in
                                
                                 self.event.likedListID = list[0]
                                 self.event.dislikedListID = list[1]
@@ -141,7 +141,7 @@ struct EventCell: View {
                         })
                         
                         Button(action:{
-                            userVM.updateGroupEventLike(eventID: event.id ?? " ", userID: userVM.user?.id ?? " ", actionToLike: false) { list in
+                            userVM.updateGroupEventLike(eventID: event.id , userID: userVM.user?.id ?? " ", actionToLike: false) { list in
                                 self.event.likedListID = list[0]
                                 self.event.dislikedListID = list[1]
                             }

@@ -10,7 +10,7 @@ import Firebase
 import SwiftUI
 import AudioToolbox
 
-
+let userVM = UserViewModel.shared
 let COLLECTION_USER = Firestore.firestore().collection("Users")
 let COLLECTION_POSTS = Firestore.firestore().collection("Posts")
 let COLLECTION_GROUP = Firestore.firestore().collection("Groups")
@@ -21,7 +21,7 @@ let COLLECTION_PERSONAL_CHAT = Firestore.firestore().collection("Personal Chats"
 let COLLECTION_GALLERY_POSTS = Firestore.firestore().collection("Gallery Posts")
 let COLLECTION_JUNCTION_GROUP_USER = Firestore.firestore().collection("Junction_Group_User")
 let COLLECTION_GAMES = Firestore.firestore().collection("Games")
-
+let USER_ID = userVM.user?.id ?? " "
 let FOREGROUNDCOLOR : Color = Color("Foreground")
 let BACKGROUNDCOLOR : Color = Color("Background")
 

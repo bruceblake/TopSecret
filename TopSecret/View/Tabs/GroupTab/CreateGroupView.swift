@@ -20,6 +20,7 @@ struct CreateGroupView: View {
     @State var groupName : String = ""
     @State var openInviteFriendsView: Bool = false
     @State var selectedUsers: [User] = []
+    @Binding var showCreateGroupView: Bool
     var body: some View {
         ZStack(alignment: .topLeading){
             Color("Background")
@@ -159,14 +160,14 @@ struct CreateGroupView: View {
                 }
                 .frame(width: UIScreen.main.bounds.width/1.5).padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
                     
-            }).padding(.vertical,10).padding(.bottom,30)
+            }).padding(.vertical,10).padding(.bottom,30).disabled(groupName == "")
             
 
             Spacer()
         
             }
             
-            NavigationLink(destination: InviteFriendsToGroupView(selectedUsers: $selectedUsers, avatarImage: $avatarImage, openInviteFriendsView: $openInviteFriendsView, groupName: $groupName), isActive: $openInviteFriendsView) {
+            NavigationLink(destination: InviteFriendsToGroupView(selectedUsers: $selectedUsers, avatarImage: $avatarImage, openInviteFriendsView: $openInviteFriendsView, groupName: $groupName, showCreateGroupView: $showCreateGroupView), isActive: $openInviteFriendsView) {
                 EmptyView()
             }
             
@@ -178,11 +179,6 @@ struct CreateGroupView: View {
 }
 }
 
-struct CreateGroupView_Previews: PreviewProvider {
-    static var previews: some View {
-        CreateGroupView()
-    }
-}
 
 
 struct InviteFriendsToGroupView : View {
@@ -193,6 +189,7 @@ struct InviteFriendsToGroupView : View {
     @Binding var openInviteFriendsView: Bool
     @Binding var groupName: String
     @StateObject var groupVM = GroupViewModel()
+    @Binding var showCreateGroupView: Bool
     @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
@@ -295,11 +292,11 @@ struct InviteFriendsToGroupView : View {
          Spacer()
             
             Button(action:{
-                let id = UUID().uuidString
+                let groupID = UUID().uuidString
                 groupVM.createGroup(groupName: groupName, dateCreated: Date(), users: selectedUsers.map({ user in
                     return user.id ?? ""
-                }) ,image: avatarImage,id: id)
-                presentationMode.wrappedValue.dismiss()
+                }) ,image: avatarImage, groupID: groupID)
+                self.showCreateGroupView = false
             },label:{
                 Text("Create Group").foregroundColor(FOREGROUNDCOLOR)
                 .frame(width: UIScreen.main.bounds.width/1.5).padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("AccentColor")))

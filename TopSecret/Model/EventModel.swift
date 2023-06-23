@@ -15,7 +15,7 @@ struct EventModel : Identifiable, Hashable{
     static func == (lhs: EventModel, rhs: EventModel) -> Bool {
         return lhs.id == rhs.id
     }
-    
+
     func hash(into hasher: inout Hasher){
         hasher.combine(id)
     }
@@ -31,6 +31,10 @@ struct EventModel : Identifiable, Hashable{
     var usersExcluded: [User]?
     var usersAttendingID : [String]?
     var usersAttending : [User]?
+    var usersDeclinedID: [String]?
+    var usersDeclined: [User]?
+    var usersUndecidedID: [String]?
+    var usersUndecided: [User]?
     var creatorID: String?
     var creator : User?
     var groupID: String?
@@ -105,6 +109,10 @@ enum InvitationType {
         self.usersExcluded = dictionary["usersExcluded"] as? [User] ?? []
         self.usersAttendingID = dictionary["usersAttendingID"] as? [String] ?? []
         self.usersAttending = dictionary["usersAttending"] as? [User] ?? []
+        self.usersDeclinedID = dictionary["usersDeclinedID"] as? [String] ?? []
+        self.usersDeclined = dictionary["usersDeclined"] as? [User] ?? []
+        self.usersUndecidedID = dictionary["usersUndecidedID"] as? [String] ?? []
+        self.usersUndecided = dictionary["usersUndecided"] as? [User] ?? []
         self.creatorID = dictionary["creatorID"] as? String ?? " "
         self.creator = dictionary["creator"] as? User ?? User()
         self.groupID = dictionary["groupID"] as? String ?? ""

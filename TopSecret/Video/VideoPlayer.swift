@@ -7,26 +7,35 @@ struct Video: View {
     @State var player : AVPlayer
     var url: URL
     @State var isPlaying: Bool = false
-    @State var showControls : Bool = false
+    @State var showControls : Bool = true
     @State var value: Float = 0
     @ObservedObject var cameraVM : CameraViewModel
 
     var body: some View{
             ZStack{
                 VideoPlayer(player: $player)
-                if showControls{
-                    Controls(player: self.$player, isPlaying: self.$isPlaying, pannel: self.$showControls, value: self.$value)
+//                if showControls{
+//                    Controls(player: self.$player, isPlaying: self.$isPlaying, pannel: self.$showControls, value: self.$value)
+//                }
+                if !isPlaying {
+                    Image(systemName: "play.fill").foregroundColor(Color.gray).font(.largeTitle).frame(width: 150, height: 150)
                 }
-                Button(action:{
-                    cameraVM.saveVideoToAlbum(url) { err in
-                       print("Error Saving Video")
-                    }
-                },label:{
-                    Text("Save")
-                })
+               
             }.frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height).edgesIgnoringSafeArea(.all)
             .onTapGesture {
-                self.showControls = true
+                if isPlaying{
+                    self.player.pause()
+                    isPlaying = false
+                }else{
+                    self.player.play()
+                    isPlaying = true
+                }
+            }.onDisappear{
+                self.player.pause()
+                isPlaying = false
+            }.onAppear{
+                self.player.play()
+                isPlaying = true
             }
 
     }
@@ -161,13 +170,15 @@ struct VideoPlayer : UIViewControllerRepresentable {
         let controller = AVPlayerViewController()
         controller.player = player
         controller.showsPlaybackControls = false
-        controller.videoGravity = .resize
+        controller.videoGravity = .resizeAspect
         return controller
     }
 
     func updateUIViewController(_ uiViewController: AVPlayerViewController, context: UIViewControllerRepresentableContext<VideoPlayer>) {
 
     }
+    
+
 
 
 }

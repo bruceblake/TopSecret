@@ -22,7 +22,6 @@ class UserCalendarViewModel : ObservableObject {
     
     func startSearch(eventsID: [String]){
         self.fetchEvents(eventsID: eventsID)
-        print("fuck")
     }
     
     

@@ -20,12 +20,16 @@ class PersonalChatViewModel : ObservableObject {
     @Published var currentChatColor = "green"
     @Published var chatListener : ListenerRegistration?
     @Published var personalChatListener : ListenerRegistration?
+    @Published var messagesListener : ListenerRegistration?
     @Published var personalChats: [ChatModel] = []
     @Published var coverMessages : [Message] = []
     @Published var lastMessageListener : ListenerRegistration?
     @Published var lastSnapshot : QueryDocumentSnapshot?
     @Published var isLoading : Bool = false
     @Published var hasMoreMessages: Bool = true
+    @Published var sendingMedia: Bool = false
+    @Published var imagesSent: Int = 0
+    @Published var videosSent: Int = 0
     let notificationSender = PushNotificationSender()
     var colors : [String] = ["red","green","teal","purple"]
     var cancellables = Set<AnyCancellable>()
@@ -51,6 +55,9 @@ class PersonalChatViewModel : ObservableObject {
         COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["usersIdlingID":FieldValue.arrayRemove([userID])])
         if chatListener != nil{
             chatListener?.remove()
+        }
+        if messagesListener != nil {
+            messagesListener?.remove()
         }
     }
     
@@ -148,8 +155,7 @@ class PersonalChatViewModel : ObservableObject {
              self.isLoading = true
          }
          
-        print("added listener")
-        COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").order(by: "timeStamp", descending: true).start(afterDocument: lastSnapshot!).limit(to: 20).addSnapshotListener { (snapshot, error) in
+        COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").order(by: "timeStamp", descending: true).start(afterDocument: lastSnapshot!).limit(to: 20).getDocuments { (snapshot, error) in
             
             if let error = error {
                 print("Error fetching messages: \(error)")
@@ -173,13 +179,6 @@ class PersonalChatViewModel : ObservableObject {
                         dp.enter()
                         self.fetchReplyMessages(chatID: chatID, messageID: repliedMessageID) { fetchedReplyMessage in
                             data["repliedMessage"] = fetchedReplyMessage
-                            dp.leave()
-                        }
-                    }
-                    if type == "postMessage"{
-                        dp.enter()
-                        self.fetchPost(postID: value){ fetchedPost in
-                            data["post"] = fetchedPost
                             dp.leave()
                         }
                     }
@@ -220,23 +219,18 @@ class PersonalChatViewModel : ObservableObject {
             dp.notify(queue: .main, execute: {
               
                 self.messages.insert(contentsOf: messagesToAppend.reversed(), at: 0)
-                    self.isLoading = false
-             
-
-               
+                self.isLoading = false
             })
         }
     }
-    
-    
-    
     
     
     func fetchAllMessages(chatID: String, userID: String){
         //how to paginate
         //1. listen to newest 20 messages [20,19,18,17,...,0]
         //2. fetch 20 starting after the 20th
-        self.chatListener = COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").order(by: "timeStamp", descending: true).limit(to: 20).addSnapshotListener { snapshot, err in
+        self.messagesListener?.remove()
+        self.messagesListener = COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").order(by: "timeStamp", descending: true).limit(to: 20).addSnapshotListener { snapshot, err in
             if err != nil {
                 print(err!.localizedDescription)
                 return
@@ -654,6 +648,103 @@ class PersonalChatViewModel : ObservableObject {
     }
     
     
+    func sendVideoMessage(videoUrl: URL, user: User, completion: @escaping (Bool) -> ()) {
+        let data = try! Data(contentsOf: videoUrl)
+        let storageRef = Storage.storage().reference()
+        let path = "\(self.chat.id)/ChatVideos/\(UUID().uuidString).mp4"
+        let fileRef = storageRef.child(path)
+        let metadata = StorageMetadata()
+        metadata.contentType = "video/mp4"
+        let dp = DispatchGroup()
+        dp.enter()
+        let uploadTask = fileRef.putData(data, metadata: metadata) { (metadata, error) in
+            if let error = error {
+                print("Error uploading video: \(error.localizedDescription)")
+                completion(false)
+            } else {
+                fileRef.downloadURL { (url, error) in
+                    guard let downloadURL = url else {
+                        print("Error getting download URL: \(error?.localizedDescription ?? "unknown error")")
+                        self.sendingMedia = false
+                        completion(false)
+                        return
+                    }
+                    let messageID = UUID().uuidString
+                    let imageMessageData = ["name":user.nickName ?? "",
+                                            "timeStamp":Timestamp(),
+                                            "id":messageID,
+                                            "profilePicture":user.profilePicture ?? "",
+                                            "type":"video",
+                                            "userID":user.id ?? " ",
+                                            "value":url?.absoluteString ?? " "] as! [String:Any]
+                    COLLECTION_PERSONAL_CHAT.document(self.chat.id).collection("Messages").document(messageID).setData(imageMessageData)
+                    dp.leave()
+                    
+                    dp.notify(queue: .main, execute:{
+                        
+                        COLLECTION_PERSONAL_CHAT.document(self.chat.id).updateData(["lastMessageID":messageID])
+                        
+                        COLLECTION_PERSONAL_CHAT.document(self.chat.id).updateData(["usersThatHaveSeenLastMessage":[user.id ?? " "]])
+                        
+                        COLLECTION_PERSONAL_CHAT.document(self.chat.id).updateData(["lastActionDate":Timestamp()])
+                        return completion(true)
+                    })
+                }
+            }
+        }
+    }
+    
+    func sendImageMessage(image: UIImage, user: User, completion: @escaping (Bool) -> ()){
+        
+        
+        let storageRef = Storage.storage().reference()
+        
+        let imageData = image.jpegData(compressionQuality: 0.1)
+        
+        guard imageData != nil else {
+            return completion(false)
+        }
+        let path = "\(self.chat.id)/ChatImages/\(UUID().uuidString).jpg"
+        let fileRef = storageRef.child(path)
+        let dp = DispatchGroup()
+        
+        dp.enter()
+        let uploadTask = fileRef.putData(imageData!, metadata: nil) { metadata , err in
+            if err == nil && metadata != nil {
+
+                fileRef.downloadURL { downloadedURL, err in
+                    if err != nil {
+                        print("ERROR")
+                        dp.leave()
+                        return completion(false)
+                    }
+                    let messageID = UUID().uuidString
+                    let imageMessageData = ["name":user.nickName ?? "",
+                                            "timeStamp":Timestamp(),
+                                            "id":messageID,
+                                            "profilePicture":user.profilePicture ?? "",
+                                            "type":"image",
+                                            "userID":user.id ?? " ",
+                                            "value":downloadedURL?.absoluteString ?? " "] as! [String:Any]
+                    COLLECTION_PERSONAL_CHAT.document(self.chat.id).collection("Messages").document(messageID).setData(imageMessageData)
+                    dp.leave()
+                    
+                    dp.notify(queue: .main, execute:{
+                        
+                        COLLECTION_PERSONAL_CHAT.document(self.chat.id).updateData(["lastMessageID":messageID])
+                        
+                        COLLECTION_PERSONAL_CHAT.document(self.chat.id).updateData(["usersThatHaveSeenLastMessage":[user.id ?? " "]])
+                        
+                        COLLECTION_PERSONAL_CHAT.document(self.chat.id).updateData(["lastActionDate":Timestamp()])
+                        return completion(true)
+                    })
+                }
+                
+            }
+            
+            
+        }
+    }
     
     func sendTextMessage(text: String, user: User, timeStamp: Timestamp, nameColor: String, messageID: String, messageType: String, chatID: String){
         

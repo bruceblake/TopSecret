@@ -31,18 +31,22 @@ class SelectedGroupViewModel : ObservableObject {
         COLLECTION_USER.document(friend.id ?? " ").updateData(["pendingGroupInvitationID":FieldValue.arrayUnion([group.id])])
         
       
-        let notificationID = UUID().uuidString
+        var notificationID = UUID().uuidString
         
-        let userNotificationData = ["id":notificationID,
-            "name": "Group Invitation",
-            "timeStamp":Timestamp(),
-            "type":"sentGroupInvitation",
-            "userID":userID,
-            "hasSeen":false,
-            "groupID":group.id] as [String:Any]
+        var userNotificationData = ["id":notificationID,
+                                    "name": "Group Invitation",
+                                    "timeStamp":Timestamp(),
+                                    "type":"sentGroupInvitation",
+                                    "senderID":USER_ID,
+                                    "receiverID":friend.id ?? " ",
+                                    "hasSeen":false,
+                                    "groupID":group.id,
+                                    "requiresAction":true] as [String:Any]
         
         COLLECTION_USER.document(friend.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)
-        COLLECTION_USER.document(friend.id ?? " ").updateData(["userNotificationCount":FieldValue.increment((Int64(1)))])
+        
+        
+        COLLECTION_USER.document(USER_ID).collection("Notifications").document(notificationID).setData(userNotificationData)
     }
     
     func readGroupNotifications(groupID: String, userID: String, notification: GroupNotificationModel){
@@ -328,8 +332,8 @@ class SelectedGroupViewModel : ObservableObject {
           
 
             groupD.enter()
-                self.fetchGroupUsers(usersID: data["users"] as? [String] ?? [] ,groupID: groupID) { fetchedUsers in
-                    data["realUsers"] = fetchedUsers
+                self.fetchGroupUsers(usersID: data["usersID"] as? [String] ?? []) { fetchedUsers in
+                    data["users"] = fetchedUsers
                     groupD.leave()
                 }
            
@@ -350,7 +354,7 @@ class SelectedGroupViewModel : ObservableObject {
     }
 
     
-    func fetchGroupUsers(usersID: [String], groupID: String, completion: @escaping ([User]) -> ()) -> () {
+    func fetchGroupUsers(usersID: [String], completion: @escaping ([User]) -> ()) -> () {
         var users : [User] = []
         
         var groupD = DispatchGroup()

@@ -40,7 +40,7 @@ struct UserSearchCell: View {
                     Text("@\(user.username ?? "")").font(.subheadline).foregroundColor(.gray)
                 }
                 Spacer()
-            }.padding([.leading,.vertical])
+            }.padding([.leading,.vertical],10)
             Divider()
         }
         .edgesIgnoringSafeArea(.all)

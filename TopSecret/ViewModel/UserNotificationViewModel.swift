@@ -45,5 +45,11 @@ class UserNotificationViewModel: ObservableObject{
         
     }
     
+    func setRequiresAction(usersID: [String], notificationID: String){
+        for id in usersID{
+            COLLECTION_USER.document(id).collection("Notifications").document(notificationID).updateData(["requiresAction":false])
+        }
+    }
+    
     
 }

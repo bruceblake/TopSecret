@@ -22,8 +22,8 @@ struct Group: Identifiable {
     var dateCreated: Date = Date()
     var memberAmount: Int = 0
     var memberLimit: Int = 0
-    var users: [String] = []
-    var realUsers: [User] = []
+    var usersID: [String] = []
+    var users: [User] = []
     var groupProfileImage: String = ""
     var quoteOfTheDay: String = ""
     var bio : String = ""
@@ -34,6 +34,7 @@ struct Group: Identifiable {
     var followers: [User]?
     var chatID: String?
     var interests: [String]?
+    var eventsID : [String]?
 
     
     init(dictionary: [String:Any]){
@@ -41,8 +42,8 @@ struct Group: Identifiable {
         self.groupName = dictionary["groupName"] as? String ?? "GROUP_NAME"
         self.dateCreated = dictionary["dateCreated"] as? Date ?? Date()
         self.memberAmount = dictionary["memberAmount"] as? Int ?? 0
-        self.users = dictionary["users"] as? [String] ?? []
-        self.realUsers = dictionary["realUsers"] as? [User] ?? []
+        self.usersID = dictionary["usersID"] as? [String] ?? []
+        self.users = dictionary["users"] as? [User] ?? []
         self.groupProfileImage = dictionary["groupProfileImage"] as? String ?? " "
         self.motd = dictionary["motd"] as? String ?? "Welcome to the group!"
         self.quoteOfTheDay = dictionary["quoteOfTheDay"] as? String ?? ""
@@ -53,6 +54,7 @@ struct Group: Identifiable {
         self.followers = dictionary["followers"] as? [User] ?? []
         self.interests = dictionary["interests"] as? [String] ?? []
         self.chatID = dictionary["chatID"] as? String ?? " "
+        self.eventsID = dictionary["eventsID"] as? [String] ?? []
         
     }
     

@@ -182,6 +182,15 @@
         }
       },
       {
+        "package": "PagerTabStripView",
+        "repositoryURL": "https://github.com/xmartlabs/PagerTabStripView",
+        "state": {
+          "branch": null,
+          "revision": "39ec00d2577adf75d82d1c7023c56950b96d2298",
+          "version": "4.0.0"
+        }
+      },
+      {
         "package": "PartialSheet",
         "repositoryURL": "https://github.com/AndreaMiotto/PartialSheet",
         "state": {

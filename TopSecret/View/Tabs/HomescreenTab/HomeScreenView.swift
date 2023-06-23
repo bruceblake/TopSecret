@@ -36,7 +36,6 @@ struct HomeScreenView: View {
         ZStack{
             
             Color("Background").opacity(showAddContent ? 0.2 : 1).zIndex(0)
-            
             VStack{
             
                     HStack(alignment: .center){
@@ -143,8 +142,10 @@ struct HomeScreenView: View {
                 Spacer()
                 
                 ScrollView(.horizontal, showsIndicators: false){
-                    HStack(spacing: 10){
-                        ForEach(0..<options.count){ index in
+                    HStack(){
+                        ForEach(0..<options.count){
+                            index in
+                            Spacer()
                             Button(action:{
                                 withAnimation{
                                 selectedOptionIndex = index
@@ -159,28 +160,18 @@ struct HomeScreenView: View {
                                     }
                                 }
                             })
+                            Spacer()
                         }
                     }
-                }.padding(.horizontal,10)
+                }.padding(.horizontal,10).frame(width: UIScreen.main.bounds.width)
                 
-                switch selectedOptionIndex{
-                    case 0:
-                    ActivityView(shareType: $shareType).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
-                        
-                    case 1:
-                        GroupChatView(chatID: chatID, groupID: groupID).pageView(ignoresSafeArea: true, edges: .bottom)
-                        
-                case 2:
-                    
-                    GroupCalendarView(calendar: Calendar(identifier: .gregorian)).environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
-                case 3:
-                    
-                    GroupMapView().environmentObject(selectedGroupVM).pageView(ignoresSafeArea: true, edges: .bottom)
-      
-                default:
-                    Text("Unknown")
-                }
-                
+                TabView(selection: $selectedOptionIndex) {
+                    ActivityView(shareType: $shareType).environmentObject(selectedGroupVM).tag(0)
+                    GroupChatView(chatID: chatID, groupID: groupID).tag(1)
+                    GroupCalendarView(calendar: Calendar(identifier: .gregorian)).environmentObject(selectedGroupVM).tag(2)
+                    GroupMapView().environmentObject(selectedGroupVM).tag(3)
+                }.tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+
             }.zIndex(2).opacity(showAddContent ? 0.2 : 1).onTapGesture {
                 if(showAddContent){
                     showAddContent.toggle()
@@ -399,3 +390,4 @@ extension View {
     
     
 }
+

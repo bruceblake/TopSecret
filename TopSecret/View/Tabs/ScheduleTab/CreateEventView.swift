@@ -15,26 +15,26 @@ import MapKit
 struct CreateEventView: View {
     
     @State var eventName: String = ""
-    @State var eventLocation: String = ""
     @State var eventStartTime : Date = Date()
     @State var membersCanInviteGuests : Bool = false
     @State var isAllDay : Bool = false
     @State var eventEndTime : Date = Date()
     @State var selectedFriends : [User] = []
-    @State var selectedGroups : [Group] = []
+    var selectedGroups : [Group]?
     @State var openFriendsList : Bool = false
     @State var openGroupsList : Bool = false
     @State var searchLocationView : Bool = false
     @State var openImagePicker: Bool = false
     @State var image = UIImage(named: "topbarlogo")!
     var isGroup : Bool
+    var event: EventModel?
     @StateObject var eventVM = EventViewModel()
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var userVM : UserViewModel
     @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
     let options = ["Open to Friends", "Invite Only"]
     @State var selectedOption : Int = 1
-    @State var invitationType : String = "Open to Friends"
+    @State var invitationType : String = "Invite Only"
     @State var showLocationPicker: Bool = false
     @State var location = EventModel.Location()
     @EnvironmentObject var locationManager : LocationManager
@@ -49,11 +49,14 @@ struct CreateEventView: View {
     @State var createEventChat : Bool = false
     @State var createGroupFromEvent: Bool = false
     @State var nonSpecifiedEndDate: Bool = false
-
+    @State var imageText : String = "Add Event Cover"
+    @State var isKeyboardPresented = false
+    @Binding var showAddEventView : Bool
     
     var body: some View {
         ZStack{
             Color("Background")
+            Image(uiImage: image).resizeToScreenSize().scaledToFill().opacity(0.5)
             VStack{
                 
                 HStack(alignment: .center){
@@ -78,7 +81,7 @@ struct CreateEventView: View {
                     Button(action:{
                         isShowingPhotoPicker.toggle()
                     },label:{
-                        Text("Enter Image")
+                        Text("\(imageText)").foregroundColor(FOREGROUNDCOLOR).padding(5).padding(.horizontal).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
                     }) .fullScreenCover(isPresented: $isShowingPhotoPicker, content: {
                         ImagePicker(avatarImage: $image, allowsEditing: true)
                     })
@@ -86,10 +89,23 @@ struct CreateEventView: View {
                     
                     Button(action:{
                         
-                        eventVM.createEvent(group: selectedGroupVM.group, eventName: eventName, eventLocation: eventLocation, eventStartTime: eventStartTime , eventEndTime: eventEndTime, usersVisibleTo:selectedGroupVM.group.realUsers , user: userVM.user ?? User(), image: image, invitationType: invitationType, location: location, membersCanInviteGuests: membersCanInviteGuests, invitedMembers: invitedMembers, excludedMembers: excludedMembers, description: description, createEventChat: createEventChat, createGroupFromEvent: createGroupFromEvent)
-                        presentationMode.wrappedValue.dismiss()
+                        if event != nil{
+                            eventVM.editEvent(event: event!, name: eventName, startTime: eventStartTime, endTime: eventEndTime, user: userVM.user ?? User(), image: image, invitationType: invitationType, location: location, membersCanInviteGuests: membersCanInviteGuests, invitedMembers: invitedMembers, excludedMembers: excludedMembers, description: description, createEventChat: createEventChat, createGroupFromEvent: createGroupFromEvent)
+                        }else{
+                           
+                                eventVM.createEvent(group: !isGroup ? nil : selectedGroupVM.group , eventName: eventName,eventStartTime: eventStartTime , eventEndTime: eventEndTime, user: userVM.user ?? User(), image: image, invitationType: invitationType, location: location, membersCanInviteGuests: membersCanInviteGuests, invitedMembers: invitedMembers, excludedMembers: excludedMembers, description: description, createEventChat: createEventChat, createGroupFromEvent: createGroupFromEvent)
+                            
+                           
+                        }
+                        
+                        self.showAddEventView = false
                     },label:{
-                        Text("Create").foregroundColor(FOREGROUNDCOLOR).padding(.horizontal,10).padding(.vertical,5).background(RoundedRectangle(cornerRadius: 16).fill(eventName == "" ? Color("Color") : Color("AccentColor"))).disabled(eventName == "")
+                        if event != nil {
+                            Text("Edit").foregroundColor(FOREGROUNDCOLOR).padding(.horizontal,10).padding(.vertical,5).background(RoundedRectangle(cornerRadius: 16).fill(eventName == "" ? Color("Color") : Color("AccentColor"))).disabled(eventName == "")
+                        }else{
+                            Text("Create").foregroundColor(FOREGROUNDCOLOR).padding(.horizontal,10).padding(.vertical,5).background(RoundedRectangle(cornerRadius: 16).fill(eventName == "" ? Color("Color") : Color("AccentColor"))).disabled(eventName == "")
+                        }
+                      
                         
                     }).disabled(eventName == "")
                 }.padding(.top,50).padding(.horizontal,10)
@@ -208,19 +224,23 @@ struct CreateEventView: View {
                                 },label:{
                                     HStack{
                                         Image(systemName: "mappin").foregroundColor(FOREGROUNDCOLOR)
-                                        if location.id == nil {
-                                            Text("Add Location").foregroundColor(FOREGROUNDCOLOR)
-                                            Spacer()
-                                            Image(systemName: "chevron.right").foregroundColor(Color.gray)
-                                        }else{
-                                            Text("\(location.address.isEmpty ? "Add Location" : location.address)").foregroundColor(location.address.isEmpty ? FOREGROUNDCOLOR : Color.blue).lineLimit(1)
-                                            Spacer()
-                                            Button(action:{
-                                                location = EventModel.Location()
-                                            },label:{
-                                                Image(systemName: "xmark").foregroundColor(Color.gray)
-                                            })
-                                        }
+                                        
+                                            if location.id == nil {
+                                                Text("Add Location").foregroundColor(FOREGROUNDCOLOR)
+                                                Spacer()
+                                                Image(systemName: "chevron.right").foregroundColor(Color.gray)
+                                            }else{
+                                                Text("\(location.name.isEmpty ? "Add Location" : location.name )").foregroundColor(location.address.isEmpty ? FOREGROUNDCOLOR : Color.blue).lineLimit(1)
+                                                Spacer()
+                                                Button(action:{
+                                                    
+                                                    location = EventModel.Location()
+                                                },label:{
+                                                    Image(systemName: "xmark").foregroundColor(Color.gray)
+                                                })
+                                            }
+                                        
+                                       
                                         
                                         
                                     }
@@ -262,12 +282,13 @@ struct CreateEventView: View {
                             VStack{
                                 
                                 Button {
+                                   
                                     openInviteMembersView = true
                                 } label: {
                                     HStack{
                                         VStack(alignment: .leading){
                                             HStack{
-                                                Text("Invite Members Or Groups").foregroundColor(FOREGROUNDCOLOR)
+                                                Text("Invite Members").foregroundColor(FOREGROUNDCOLOR)
                                                 Text("\(invitedMembers.count) invited").foregroundColor(Color.gray)
                                             }
                                             HStack{
@@ -290,7 +311,7 @@ struct CreateEventView: View {
                                         })
                                     }.padding(.bottom,5)
                                 }.sheet(isPresented: $openInviteMembersView, content: {
-                                    InviteMembersToEventView(selectedUsers: $invitedMembers, selectedGroups: $selectedGroups, openInviteFriendsView: $openInviteMembersView)
+                                    InviteMembersToEventView(selectedUsers: $invitedMembers, openInviteFriendsView: $openInviteMembersView)
                                 })
 
                                 if selectedOption == 0 {
@@ -370,9 +391,37 @@ struct CreateEventView: View {
                 
                 
                 
-            }
+            }.resizeToScreenSize().offset(y: self.isKeyboardPresented ? 100 : 0)
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
-            self.invitedMembers.append(userVM.user ?? User())
+            if event != nil {
+                if event?.invitationType ?? EventModel.InvitationType.openToFriends == EventModel.InvitationType.openToFriends  {
+                    self.selectedOption = 0
+                }else{
+                    self.selectedOption = 1
+                }
+                
+                self.invitedMembers = event?.usersInvited ?? []
+                
+                self.location = event?.location ?? EventModel.Location()
+            }else{
+                for group in selectedGroups ?? []{
+                    for member in group.users{
+                        if member.id != USER_ID{
+                            self.invitedMembers.append(member)
+                        }
+                    }
+                }
+            }
+            
+           
+            
+        }.onChange(of: image) { newValue in
+            self.imageText = "Change Event Cover"
+        } .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
+            self.isKeyboardPresented = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { notification in
+            self.isKeyboardPresented = false
         }
     }
 }
@@ -384,7 +433,7 @@ struct LocationPickerView: View {
     @Binding var location: EventModel.Location
     @Environment(\.presentationMode) var presentationMode
     @State private var mapRegion = MKCoordinateRegion()
-    @StateObject var placeVM = PlaceViewModel()
+    @StateObject var locationVM = LocationSearchViewModel()
     let regionSize = 500.0 //meters
     @State var annotations: [Annotation] = []
     struct Annotation : Identifiable{
@@ -394,8 +443,7 @@ struct LocationPickerView: View {
         var address: String
     }
     @State private var searchText = ""
-    @State private var selectedPlace : Place = Place(mapItem: MKMapItem())
-    @State private var showMap : Bool = true
+    @State private var selectedPlace : MKLocalSearchCompletion = MKLocalSearchCompletion()
     @EnvironmentObject var locationManager : LocationManager
     var body: some View {
         ZStack{
@@ -403,6 +451,7 @@ struct LocationPickerView: View {
             VStack{
                 HStack(alignment: .center){
                     Button(action:{
+                        locationVM.queryFragment = ""
                         presentationMode.wrappedValue.dismiss()
                     },label:{
                         ZStack{
@@ -413,42 +462,67 @@ struct LocationPickerView: View {
                         }
                     }).padding(.leading)
                     
-                    
-                    SearchBar(text: $searchText, placeholder: "Enter location", onSubmit: {
-                        
-                    })
-                    
+                  
                     
                     
                     Spacer()
                     
+                        Button(action:{
+                            withAnimation{
+                                locationVM.showMap.toggle()
+                            }
+                        },label:{
+                            HStack(spacing: 5){
+                                Image(systemName: "magnifyingglass").foregroundColor(FOREGROUNDCOLOR)
+                                Text("\(locationVM.showMap ? "Search for location" : "Searching for location...")").foregroundColor(FOREGROUNDCOLOR)
+                               
+                            }.padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("\(locationVM.showMap ? "Color" : "AccentColor")")))
+                        })
+                        
+                        Spacer()
+                    
+                 
+                    Circle().foregroundColor(Color.clear).frame(width: 40, height: 40)
                     
                 }.padding(10)
                 
-                if showMap {
+                if locationVM.showMap {
                     ZStack{
-                        MapViewSelection(selectedPlace: $selectedPlace, location: location)
+                        LocationMapViewSelection(locationVM: locationVM, selectedPlace: $selectedPlace, location: location)
                         
                         
                         VStack{
                             Spacer()
                           
+                            if locationVM.selectedLocationCoordinate == nil {
+                                HStack{
+                                    
+                                    Spacer()
+                                    Text("Select  place for your event").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold).font(.title3)
+                                    Spacer()
+                              
+                                   
+                                }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color"))).padding().padding(.bottom)
+                            }else{
                                 HStack{
                                     VStack(alignment: .leading){
                                         Text("Select this place").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold).font(.title3)
-                                        Text("\(selectedPlace.name)").foregroundColor(.gray).font(.subheadline)
-                                        Text("\(selectedPlace.address)").foregroundColor(.gray).font(.subheadline)
+                                        Text("\(selectedPlace.title)").foregroundColor(.gray).font(.subheadline)
+                                        Text("\(selectedPlace.subtitle)").foregroundColor(.gray).font(.subheadline)
                                     }
                                     Spacer()
                                     Button(action:{
+                                        locationVM.queryFragment = ""
                                         presentationMode.wrappedValue.dismiss()
-                                            self.location = EventModel.Location(name: selectedPlace.name, id: nil, address: selectedPlace.address, latitude: selectedPlace.latitue, longitude: selectedPlace.longitude)
+                                        self.location = EventModel.Location(name: selectedPlace.title, id: UUID().uuidString, address: selectedPlace.subtitle, latitude: locationVM.selectedLocationCoordinate?.latitude ?? 0.0, longitude: locationVM.selectedLocationCoordinate?.longitude ?? 0.0)
                                     },label:{
                                      
                                         Image(systemName: "chevron.right").foregroundColor(FOREGROUNDCOLOR).frame(width: 50, height: 50).background(RoundedRectangle(cornerRadius: 16).fill(Color("AccentColor")))
                                     })
                                    
                                 }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color"))).padding().padding(.bottom)
+                            }
+                                
                             
                            
                         }
@@ -460,43 +534,35 @@ struct LocationPickerView: View {
                         if location.id == nil{
                             if let coordinate = locationManager.userLocation?.coordinate{
                                 locationManager.mapView.region = .init(center: coordinate, latitudinalMeters: 1000, longitudinalMeters: 1000)
-                                locationManager.addDraggablePin(coordinate: coordinate)
                                 locationManager.pickedLocation = .init(latitude: coordinate.latitude, longitude: coordinate.longitude)
                                 locationManager.updatePlacemark(location: .init(latitude: coordinate.latitude, longitude: coordinate.longitude))
                                 
                             }
                         }else{
                             locationManager.mapView.region = .init(center: location.coordinate, latitudinalMeters: 1000, longitudinalMeters: 1000)
-                            locationManager.addDraggablePin(coordinate: location.coordinate)
                         }
 
 
-                    }.onChange(of: searchText, perform: { text in
-                        if !text.isEmpty {
-                            placeVM.search(text: text, region: MKCoordinateRegion(center: selectedPlace.coordinate, latitudinalMeters: 0.1, longitudinalMeters: 0.1))
-                            if showMap {
-                                showMap = false
-                            }
-                        }else{
-                            showMap = true
-                        }
-                    })
+                    }
                 }else{
-                    List(placeVM.places) { place in
+                    
+                    SearchBar(text: $locationVM.queryFragment, placeholder: "Enter location", onSubmit: {
+                        
+                    })
+                    
+                    List(locationVM.results, id: \.self) { place in
                         Button(action:{
-                            
-                            locationManager.pickedLocation = CLLocation(latitude: place.coordinate.latitude, longitude: place.coordinate.longitude)
-                            locationManager.updatePlacemark(location: .init(latitude: place.coordinate.latitude , longitude: place.coordinate.longitude))
-                         
-                            showMap = true
+                            let placeID = UUID().uuidString
+//                            locationManager.pickedLocation = CLLocation(latitude: place.coordinate.latitude, longitude: place.coordinate.longitude)
+//                            locationManager.updatePlacemark(location: .init(latitude: place.coordinate.latitude , longitude: place.coordinate.longitude))
+
+                           locationVM.selectLocation(place)
+                            locationVM.showMap = true
                             selectedPlace = place
-                            searchText = place.name
-                            location = EventModel.Location(name: selectedPlace.name, id: selectedPlace.id, latitude: selectedPlace.latitue, longitude: selectedPlace.longitude)
-                            
                         },label:{
                             VStack(alignment: .leading){
-                                Text(place.name).foregroundColor(FOREGROUNDCOLOR).font(.title2)
-                                Text(place.address).foregroundColor(FOREGROUNDCOLOR).font(.callout)
+                                Text(place.title).foregroundColor(FOREGROUNDCOLOR).font(.title2)
+                                Text(place.subtitle).foregroundColor(FOREGROUNDCOLOR).font(.callout)
                             }
                         })
                        
@@ -507,115 +573,129 @@ struct LocationPickerView: View {
     }
 }
             
-            
 
-        
-        
-        struct Place: Identifiable {
-            let id = UUID().uuidString
-            private var mapItem: MKMapItem
-            
-            init(mapItem: MKMapItem){
-                self.mapItem = mapItem
-            }
-            
-            
-            var name: String {
-                self.mapItem.name ?? ""
-            }
-            
-            var address: String {
-                let placemark = self.mapItem.placemark
-                var cityAndState = ""
-                var address = ""
-                
-                cityAndState = placemark.locality ?? "" //city
-                if let state = placemark.administrativeArea {
-                    // show either state or city, state
-                    cityAndState = cityAndState.isEmpty ? state : "\(cityAndState), \(state)"
-                }
-                
-                address = placemark.subThoroughfare ?? "" //address #
-                if let street = placemark.thoroughfare {
-                    //just show street unless there is a street # then add space + street
-                    address = address.isEmpty ? street : "\(address) \(street)"
-                }
-                
-                if address.trimmingCharacters(in: .whitespaces).isEmpty && !cityAndState.isEmpty {
-                    //no address? then just city and state with no space
-                    address = cityAndState
-                }else{
-                    //no cityandstate then just address, otherwise address, cityandstate
-                    address = cityAndState.isEmpty ? address : "\(address), \(cityAndState)"
-                    
-                }
-                
-                return address
-            }
-            
-            var latitue : Double {
-                self.mapItem.placemark.coordinate.latitude
-            }
-            
-            var longitude : Double {
-                self.mapItem.placemark.coordinate.longitude
-            }
-            
-            var coordinate : CLLocationCoordinate2D {
-                CLLocationCoordinate2D(latitude: latitue, longitude: longitude)
-            }
-        }
-        
-        
-        
-        class PlaceViewModel : ObservableObject {
-            @Published var places : [Place] = []
-            
-            func search(text: String, region: MKCoordinateRegion) {
-                let searchRequest = MKLocalSearch.Request()
-                searchRequest.naturalLanguageQuery = text
-                searchRequest.region = region
-                let search = MKLocalSearch(request: searchRequest)
-                
-                search.start { response, err in
-                    guard let response = response else {
-                        print("ERROR")
-                        return
-                    }
-                    
-                    self.places = response.mapItems.map(Place.init)
-                }
-            }
-        }
-        
-
-struct MapViewSelection: View {
+struct LocationMapViewSelection: View {
     @EnvironmentObject var locationManager : LocationManager
-    @Binding var selectedPlace: Place
+    @ObservedObject var locationVM : LocationSearchViewModel
+    @Binding var selectedPlace: MKLocalSearchCompletion
     @State var location: EventModel.Location
+    
     var body : some View {
         ZStack{
-            MapViewHelper()
+            LocationMapViewHelper(locationVM: locationVM)
             
         }.onReceive(locationManager.$pickedPlaceMark, perform: { newPlaceMark in
             if let newPlaceMark = newPlaceMark{
                 let placeMark = MKPlacemark(placemark: newPlaceMark)
-                
-                    selectedPlace = Place(mapItem: MKMapItem(placemark: placeMark))
-                
             }
          
         })
     }
 }
 
-struct MapViewHelper : UIViewRepresentable {
-    @EnvironmentObject var locationManager : LocationManager
+struct LocationMapViewHelper : UIViewRepresentable {
+    @ObservedObject var locationVM : LocationSearchViewModel
+    let mapView = MKMapView()
+    let locationManager = LocationManager()
     func makeUIView(context: Context) -> some UIView {
-        return locationManager.mapView
+        mapView.delegate = context.coordinator
+        mapView.isRotateEnabled = false
+        mapView.showsUserLocation = true
+        mapView.userTrackingMode = .follow
+        
+        return mapView
     }
     
     func updateUIView(_ uiView: UIViewType, context: Context) {
+        if let coordinate = locationVM.selectedLocationCoordinate {
+            context.coordinator.addAndSelectAnnotation(withCoordinate: coordinate)
+        }
+    }
+    
+    func makeCoordinator() -> LocationMapCoordinator {
+        return LocationMapCoordinator(parent: self)
+    }
+}
+
+extension LocationMapViewHelper {
+    
+    class LocationMapCoordinator : NSObject, MKMapViewDelegate {
         
+        let parent : LocationMapViewHelper
+        
+        init(parent: LocationMapViewHelper){
+            self.parent = parent
+            super.init()
+        }
+        
+        func mapView(_ mapView: MKMapView, didUpdate userLocation: MKUserLocation){
+            let region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: userLocation.coordinate.latitude, longitude: userLocation.coordinate.longitude), span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
+            
+            parent.mapView.setRegion(region, animated: true)
+        }
+        
+        func addAndSelectAnnotation(withCoordinate coordinate: CLLocationCoordinate2D){
+            parent.mapView.removeAnnotations(parent.mapView.annotations)
+            parent.mapView.showsUserLocation = false
+            let anno = MKPointAnnotation()
+            anno.coordinate = coordinate
+            self.parent.mapView.addAnnotation(anno)
+            self.parent.mapView.selectAnnotation(anno, animated: true)
+            parent.mapView.setRegion(MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: parent.mapView.annotations[0].coordinate.latitude, longitude: parent.mapView.annotations[0].coordinate.longitude), span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)), animated: true)
+        }
+        
+    }
+}
+
+class LocationSearchViewModel : NSObject, ObservableObject {
+ 
+    var queryFragment: String = "" {
+        didSet{
+            searchCompleter.queryFragment = queryFragment
+//            if queryFragment == ""{
+//                self.showMap = true
+//            }else{
+//                self.showMap = false
+//            }
+        }
+    }
+    @Published var showMap = true
+    @Published var results = [MKLocalSearchCompletion]()
+    @Published var selectedLocationCoordinate : CLLocationCoordinate2D?
+    private let searchCompleter = MKLocalSearchCompleter()
+ 
+    override init(){
+        super.init()
+        searchCompleter.delegate = self
+        searchCompleter.queryFragment = queryFragment
+    }
+    
+    func selectLocation(_ localSearch: MKLocalSearchCompletion) {
+        locationSearch(forLocalSearchCompletion: localSearch) { response, error in
+            
+            if let error = error {
+                print("ERROR")
+                return
+            }
+            
+            guard let item = response?.mapItems.first else {return}
+            let coordinate = item.placemark.coordinate
+            self.selectedLocationCoordinate = coordinate
+        }
+    }
+    
+    func locationSearch(forLocalSearchCompletion localSearch: MKLocalSearchCompletion, completion: @escaping MKLocalSearch.CompletionHandler){
+        let searchRequest = MKLocalSearch.Request()
+        searchRequest.naturalLanguageQuery = localSearch.title.appending(localSearch.subtitle)
+        let search = MKLocalSearch(request: searchRequest)
+        
+        search.start(completionHandler: completion)
+    }
+    
+}
+
+extension LocationSearchViewModel : MKLocalSearchCompleterDelegate{
+    func completerDidUpdateResults(_ completer: MKLocalSearchCompleter) {
+        self.results = completer.results
     }
 }

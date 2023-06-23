@@ -33,9 +33,12 @@ struct UserNotificationModel : Identifiable {
     var timeStamp : Timestamp?
     var type: String?
     var hasSeen : Bool?
+    var requiresAction: Bool?
     var finished: Bool?
-    var user: User?
-    var userID: String?
+    var senderID: String?
+    var sender: User?
+    var receiverID: String?
+    var receiver: User?
     var event: EventModel?
     var eventID: String?
     var poll: PollModel?
@@ -49,9 +52,12 @@ struct UserNotificationModel : Identifiable {
         self.timeStamp = dictionary["timeStamp"] as? Timestamp ?? Timestamp()
         self.type = dictionary["type"] as? String ?? "NOTIFICATION_TYPE"
         self.hasSeen = dictionary["hasSeen"] as? Bool ?? false
+        self.requiresAction = dictionary["requiresAction"] as? Bool ?? false
         self.finished = dictionary["finished"] as? Bool ?? false
-        self.user = dictionary["user"] as? User ?? User()
-        self.userID = dictionary["userID"] as? String ?? ""
+        self.senderID = dictionary["senderID"] as? String ?? "SENDER_ID"
+        self.receiverID = dictionary["receiverID"] as? String ?? "RECEIVER_ID"
+        self.sender = dictionary["sender"] as? User ?? User()
+        self.receiver = dictionary["receiver"] as? User ?? User()
         self.event = dictionary["event"] as? EventModel ?? EventModel()
         self.eventID = dictionary["eventID"] as? String ?? ""
         self.poll = dictionary["poll"] as? PollModel ?? PollModel()

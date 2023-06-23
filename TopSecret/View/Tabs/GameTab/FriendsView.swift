@@ -14,8 +14,9 @@ struct FriendsView: View {
     //problem: must store each friends text field text in friendsview
     @EnvironmentObject var userVM : UserViewModel
     @StateObject var searchVM = SearchRepository()
-    @StateObject var personalChatVM : PersonalChatViewModel
+    @ObservedObject var personalChatVM : PersonalChatViewModel
     @State var openGroupChatView: Bool = false
+    @State var openPersonalChatView: Bool = false
     @EnvironmentObject var groupVM : SelectedGroupViewModel
     
     
@@ -31,28 +32,19 @@ struct FriendsView: View {
             VStack{
                 VStack(alignment: .leading, spacing: 3){
                     HStack(spacing: 2){
-                        Text("\(userVM.personalChats.count) \(userVM.personalChats.count > 1 ? "friends" : "friend")").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
+                        Text("\(userVM.personalChats.count) \(userVM.personalChats.count != 1 ? "friends" : "friend")").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
                         
                         Text(", \(userVM.groups.count) \(userVM.groups.count > 0 ? "groups" : "group")").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
                         
                         Spacer()
                     }
-                    HStack(spacing: 3){
-                        Text("4 friend requests").foregroundColor(Color.gray)
-                        Button(action:{
-                            
-                        },label:{
-                            Text("See all").foregroundColor(Color("AccentColor"))
-                        })
+                    if (userVM.user?.incomingFriendInvitationID?.count ?? 0) != 0 {
+                        Text("\((userVM.user?.incomingFriendInvitationID?.count ?? 0) != 1 ? "\(userVM.user?.incomingFriendInvitationID?.count ?? 0) friend requests" : "\(userVM.user?.incomingFriendInvitationID?.count ?? 0) friend request")").foregroundColor(Color.gray)
                     }
+                      
+                       
                     
-//                    HStack{
-//
-//                        Text("0 incoming requests").padding(5).padding(.horizontal,5).background(RoundedRectangle(cornerRadius: 12).fill(Color.red))
-//
-//                        Text("0 outgoing requests").padding(5).padding(.horizontal,5).background(RoundedRectangle(cornerRadius: 12).fill(Color.red))
-//
-//                    }
+                
                 }.padding(.horizontal,30)
                 ScrollView{
                     VStack(spacing: 0){
@@ -78,12 +70,19 @@ struct FriendsView: View {
                                         EmptyView()
                                     }
                                   
+                                    
                                 }else{
-                                    NavigationLink {
-                                        PersonalChatView(personalChatVM: personalChatVM , chatID: chat.id)
+                                    Button {
+                                       
+                                            openPersonalChatView = true
+                                        
                                     } label: {
                                         FriendCell(user: personalChatVM.getPersonalChatUser(chat: chat, userID: userVM.user?.id ?? " "), personalChatVM: personalChatVM, chat: chat)
                                     }
+                                    NavigationLink(destination: PersonalChatView(chatID: chat.id), isActive: $openPersonalChatView) {
+                                        EmptyView()
+                                    }
+                                    
                                 }
                                 
                                 
@@ -151,11 +150,23 @@ struct GroupChatCell : View {
                 
                 
                 //Profile Picture
-                WebImage(url: URL(string: chat.profileImage ?? " "))
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width:48,height:48)
-                    .clipShape(Circle())
+                ZStack(alignment: .bottomTrailing){
+                    
+                   
+                    WebImage(url: URL(string: chat.profileImage ?? " "))
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width:48,height:48)
+                        .clipShape(Circle())
+                
+                    
+                 
+                    WebImage(url: URL(string: chat.lastMessage?.profilePicture ?? " ")).resizable().frame(width: 25, height: 25).clipShape(Circle())
+                    .offset(y: 2)
+                    
+                }
+                
+              
                 
                 HStack(alignment: .center){
                     
@@ -163,6 +174,18 @@ struct GroupChatCell : View {
                         
                         VStack(alignment: .leading, spacing: 2){
                             Text("\(chat.name ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.headline)
+                            
+                            HStack{
+                                
+                              if chat.lastMessage?.type == "eventMessage"{
+                                    Text("\(chat.lastMessage?.name ?? "") sent an event")
+                                }else if chat.lastMessage?.type == "pollMessage"{
+                                    Text("\(chat.lastMessage?.name ?? "") sent a poll")
+                                }
+                                else{
+                                    Text("\( (chat.lastMessage ?? Message() ).value ?? "")").lineLimit(1).foregroundColor(chat.lastMessage?.type == "delete" ? Color("AccentColor") : (chat.usersThatHaveSeenLastMessage?.contains(userVM.user?.id ?? "") ?? false ) ? Color.gray : FOREGROUNDCOLOR).font(.subheadline)
+                                }
+                            }
 
                         }
    

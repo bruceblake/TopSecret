@@ -44,8 +44,10 @@ import SwiftUI
 
             
             if view.text != text {
-                view.text = text
-                height = view.textHeight()
+                DispatchQueue.main.async {
+                    view.text = text
+                    height = view.textHeight()
+                }
             }
 
             updateFocus(view, context: context)

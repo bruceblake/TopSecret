@@ -70,14 +70,16 @@ struct AddFriendsSearchList : View {
                     }
                    
                     VStack{
+                        if searchVM.userReturnedResults.isEmpty && searchVM.searchText != ""{
+                            Text("No Users Found").foregroundColor(.gray).padding(.top,20)
+                        }
+                        
                         ForEach(searchVM.userReturnedResults){ user in
                             if user.id ?? "" != userVM.user?.id ?? ""{
-                            Button(action:{
-                                
-                            },label:{
+                                NavigationLink(destination: UserProfilePage(user: user)) {
+                                    UserAddSearchCell(user: user, selectedChatID: $selectedChatID, openChat: $openChat)
 
-                                UserAddSearchCell(user: user, selectedChatID: $selectedChatID, openChat: $openChat)
-                            })
+                                }
                             }
                         }
                     }
@@ -164,7 +166,7 @@ struct UserAddSearchCell : View {
                                             if fetchedUser.friendsListID?.contains(userVM.user?.id ?? " ") ?? false {
                                                 self.isFriends = true
                                                 self.isPendingFriendRequest = false
-                                            }else if fetchedUser.pendingFriendsListID?.contains(userVM.user?.id ?? " ") ?? false {
+                                            }else if (fetchedUser.incomingFriendInvitationID?.contains(userVM.user?.id ?? " ") ?? false) || (fetchedUser.incomingFriendInvitationID?.contains(userVM.user?.id ?? " ") ?? false) {
                                                 self.isPendingFriendRequest = true
                                                 self.isFriends = false
                                             }else{
@@ -192,7 +194,7 @@ struct UserAddSearchCell : View {
                                             if fetchedUser.friendsListID?.contains(userVM.user?.id ?? " ") ?? false {
                                                 self.isFriends = true
                                                 self.isPendingFriendRequest = false
-                                            }else if fetchedUser.pendingFriendsListID?.contains(userVM.user?.id ?? " ") ?? false {
+                                            }else if (fetchedUser.incomingFriendInvitationID?.contains(userVM.user?.id ?? " ") ?? false) || (fetchedUser.incomingFriendInvitationID?.contains(userVM.user?.id ?? " ") ?? false) {
                                                 self.isPendingFriendRequest = true
                                                 self.isFriends = false
                                             }else{
@@ -238,7 +240,7 @@ struct UserAddSearchCell : View {
                 if fetchedUser.friendsListID?.contains(userVM.user?.id ?? " ") ?? false {
                     self.isFriends = true
                     self.isPendingFriendRequest = false
-                }else if fetchedUser.pendingFriendsListID?.contains(userVM.user?.id ?? " ") ?? false {
+                }else if (fetchedUser.incomingFriendInvitationID?.contains(userVM.user?.id ?? " ") ?? false) || (fetchedUser.outgoingFriendInvitationID?.contains(userVM.user?.id ?? " ") ?? false) {
                     self.isPendingFriendRequest = true
                     self.isFriends = false
                 }else{

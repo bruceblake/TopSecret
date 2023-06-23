@@ -16,8 +16,27 @@ struct InviteUserToGroup: View {
     @State var selectedUsers : [User] = []
     @EnvironmentObject var userVM : UserViewModel
 
-    
+    @State var keyboardHeight : CGFloat = 0
+
     @Environment(\.presentationMode) var presentationMode
+    
+    
+    
+    func initKeyboardGuardian(){
+        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification , object: nil, queue: .main) { data in
+            let height1 = data.userInfo![UIResponder.keyboardFrameEndUserInfoKey] as! NSValue
+            withAnimation(.easeOut(duration: 0.25)){
+                self.keyboardHeight = height1.cgRectValue.height - 20
+            }
+        }
+        
+        NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillHideNotification, object: nil, queue: .main) { _ in
+            withAnimation(.easeOut(duration: 0.25)){
+                self.keyboardHeight = 0
+            }
+        }
+
+    }
     
     var body: some View {
         ZStack{
@@ -72,43 +91,47 @@ struct InviteUserToGroup: View {
                     
                     
                     VStack{
-                        ForEach(searchRepository.userReturnedResults){ user in
-                            Button(action:{
-                                if selectedUsers.contains(user){
-                                    selectedUsers.removeAll(where: {$0 == user})
-                                }else{
-                                    selectedUsers.append(user)
-                                }
-                            },label:{
-                                if user.id != userVM.user?.id{
-                               
-                                
-                                VStack(alignment: .leading){
-                                    HStack{
-                                        
-                                        WebImage(url: URL(string: user.profilePicture ?? ""))
-                                            .resizable()
-                                            .scaledToFill()
-                                            .frame(width:40,height:40)
-                                            .clipShape(Circle())
-                                        
-                                        Text("\(user.username ?? "")").foregroundColor(FOREGROUNDCOLOR)
-                                        
-                                        Spacer()
-                                        
-                                        Image(systemName: selectedUsers.contains(user) ? "checkmark.circle.fill" : "circle").font(.title).foregroundColor(FOREGROUNDCOLOR)
-                                        
-                                    }.padding(.horizontal,10)
-                                    Divider()
-                                }
-                                }
-                            })
+                        if searchRepository.userReturnedResults.isEmpty && searchRepository.searchText != ""{
+                            Text("No Users Found").foregroundColor(Color.gray)
+                        }else{
+                            ForEach(searchRepository.userReturnedResults){ user in
+                                Button(action:{
+                                    if selectedUsers.contains(user){
+                                        selectedUsers.removeAll(where: {$0 == user})
+                                    }else{
+                                        selectedUsers.append(user)
+                                    }
+                                },label:{
+                                    if user.id != userVM.user?.id{
+                                   
+                                    
+                                    VStack(alignment: .leading){
+                                        HStack{
+                                            
+                                            WebImage(url: URL(string: user.profilePicture ?? ""))
+                                                .resizable()
+                                                .scaledToFill()
+                                                .frame(width:40,height:40)
+                                                .clipShape(Circle())
+                                            
+                                            Text("\(user.username ?? "")").foregroundColor(FOREGROUNDCOLOR)
+                                            
+                                            Spacer()
+                                            
+                                            Image(systemName: selectedUsers.contains(user) ? "checkmark.circle.fill" : "circle").font(.title).foregroundColor(FOREGROUNDCOLOR)
+                                            
+                                        }.padding(.horizontal,10)
+                                        Divider()
+                                    }
+                                    }
+                                })
+                            }
                         }
+                       
                         
                         
                     }
                     
-                    Spacer()
 
                     
                     Button(action:{
@@ -130,12 +153,14 @@ struct InviteUserToGroup: View {
                     },label:{
                         Text( selectedUsers.count <= 1 ? "Add User To Group!" : "Add Users To Group!").foregroundColor(Color("Foreground"))
                             .padding(.vertical)
-                            .frame(width: UIScreen.main.bounds.width/1.5).background(Color("AccentColor")).cornerRadius(15)
-                    }).padding(.vertical).padding(.bottom,40)
+                            .frame(width: UIScreen.main.bounds.width/1.5).background(Color("AccentColor")).cornerRadius(15).padding(.vertical).padding(.bottom,40)
+                    })
+                    Spacer()
                     
                 }
             }
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
+            initKeyboardGuardian()
             searchRepository.startSearch(searchRequest: "allUsers", id: "")
         }
     }

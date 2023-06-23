@@ -160,14 +160,6 @@ class ChatRepository : ObservableObject {
             }
         }
         
-        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).setData(data) { (err) in
-            if err != nil{
-                print("Error")
-                return
-            }
-        }
-        
-   
         
             for user in users {
                 self.pickColor(chatID: chatID, picker: 0, userID: user, groupID: groupID)
@@ -180,7 +172,7 @@ class ChatRepository : ObservableObject {
     
     func leaveChat(chatID: String, userID: String, groupID: String){
         COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["memberAmount":FieldValue.increment(Int64(-1))])
-        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["users":FieldValue.arrayRemove([userID])])
+        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["usersID":FieldValue.arrayRemove([userID])])
         
         COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).getDocument { (snapshot, err) in
             
@@ -246,8 +238,8 @@ class ChatRepository : ObservableObject {
     
     func joinChat(chatID: String, userID: String, groupID: String){
         
-        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["users":FieldValue.arrayUnion([userID])])
-        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["memberAmount":FieldValue.increment(Int64(1))])
+        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).updateData(["usersID":FieldValue.arrayUnion([userID])])
+        COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["usersID":FieldValue.arrayUnion([userID])])
         pickColor(chatID: chatID, picker: 0, userID: userID, groupID: groupID)
         
     }

@@ -29,9 +29,10 @@ struct User : Identifiable, Hashable{
     var blockedAccountsID : [String]?
     var blockedAccounts : [User]?
     var userNotificationCount : Int?
-    var pendingFriendsList : [User]?
-    var pendingFriendsListID : [String]?
+    var incomingFriendInvitationID: [String]?
+    var outgoingFriendInvitationID: [String]?
     var pendingGroupInvitationID : [String]?
+    var pendingEventInvitationID: [String]?
     var isActive: Bool?
     var lastActive: Timestamp?
     var latitude : Double?
@@ -54,6 +55,9 @@ struct User : Identifiable, Hashable{
     var usersLoggedInCount: Int?
     var eventsID: [String]
     var events: [EventModel]
+    var isLocationSharing: Bool
+    var lastLocationTime: Timestamp
+    var lastLocationName: String
 
 init(dictionary: [String:Any]) {
     self.appIconBadgeNumber = dictionary["appIconBadgeNumber"] as? Int ?? 0
@@ -67,8 +71,8 @@ init(dictionary: [String:Any]) {
     self.bio = dictionary["bio"] as? String ?? "This is my bio"
     self.friendsList = dictionary["friendsList"] as? [User] ?? []
     self.friendsListID = dictionary["friendsListID"] as? [String] ?? []
-    self.pendingFriendsList = dictionary["pendingFriendsList"] as? [User] ?? []
-    self.pendingFriendsListID = dictionary["pendingFriendsListID"] as? [String] ?? []
+    self.incomingFriendInvitationID = dictionary["incomingFriendInvitationID"] as? [String] ?? []
+    self.outgoingFriendInvitationID = dictionary["outgoingFriendInvitationID"] as? [String] ?? []
     self.blockedAccountsID = dictionary["blockedAccountsID"] as? [String] ?? []
     self.blockedAccounts = dictionary["blockedAccounts"] as? [User] ?? []
     self.userNotificationCount = dictionary["userNotificationCount"] as? Int ?? 0
@@ -86,6 +90,7 @@ init(dictionary: [String:Any]) {
     self.personalChats = dictionary["personalChats"] as? [ChatModel] ?? []
     self.personalChatNotificationCount = dictionary["personalChatNotificationCount"] as? Int ?? 0
     self.pendingGroupInvitationID = dictionary["pendingGroupInvitationID"] as? [String] ?? []
+    self.pendingEventInvitationID = dictionary["pendingEventInvitationID"] as? [String] ?? []
     self.dateCreated = dictionary["dateCreated"] as? Timestamp ?? Timestamp()
     self.groupsFollowingID = dictionary["groupsFollowingID"] as? [String] ?? []
     self.groupsFollowing = dictionary["groupsFollowing"] as? [Group] ?? []
@@ -94,7 +99,9 @@ init(dictionary: [String:Any]) {
     self.usersLoggedInCount = dictionary["usersLoggedInCount"] as? Int ?? 0
     self.eventsID = dictionary["eventsID"] as? [String] ?? []
     self.events = dictionary["events"] as? [EventModel] ?? []
- 
+    self.isLocationSharing = dictionary["isLocationSharing"] as? Bool ?? false
+    self.lastLocationTime = dictionary["lastLocationTime"] as? Timestamp ?? Timestamp()
+    self.lastLocationName = dictionary["lastLocationName"] as? String ?? " "
 }
 
     init(){
@@ -105,6 +112,9 @@ init(dictionary: [String:Any]) {
         self.personalChats = []
         self.eventsID = []
         self.events = []
+        self.isLocationSharing = false
+        self.lastLocationTime = Timestamp()
+        self.lastLocationName = "unable to fetch location"
     }
     
     

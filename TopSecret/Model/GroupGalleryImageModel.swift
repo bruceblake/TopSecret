@@ -9,7 +9,7 @@ import Foundation
 import SwiftUI
 import Firebase
 
-struct GroupGalleryImageModel : Identifiable{
+struct GroupGalleryModel : Identifiable{
     var id : String?
     var url : String?
     var image : UIImage?
@@ -17,7 +17,9 @@ struct GroupGalleryImageModel : Identifiable{
     var creator : User?
     var timeStamp: Timestamp?
     var isPrivate : Bool?
-    
+    var isImage : Bool?
+    var favoritedListID : [String]?
+    var favoritedList: [User]?
     
     
     init(dictionary: [String:Any]){
@@ -26,7 +28,11 @@ struct GroupGalleryImageModel : Identifiable{
         self.image = dictionary["image"] as? UIImage ?? UIImage()
         self.timeStamp = dictionary["timeStamp"] as? Timestamp ?? Timestamp()
         self.creatorID = dictionary["creatorID"] as? String ?? " "
+        self.creator = dictionary["creator"] as? User ?? User()
         self.isPrivate = dictionary["isPrivate"] as? Bool ?? false
+        self.isImage = dictionary["isImage"] as? Bool ?? false
+        self.favoritedListID = dictionary["favoritedListID"] as? [String] ?? []
+        self.favoritedList = dictionary["favoritedList"] as? [User] ?? []
         
     }
     

@@ -95,7 +95,7 @@ struct SearchView: View {
             }
             
             
-            NavigationLink(destination: GroupProfileView(group: selectedGroup, isInGroup: selectedGroup.users.contains(userVM.user?.id ?? " ")), isActive: $openGroupProfile){
+            NavigationLink(destination: GroupProfileView(group: selectedGroup, isInGroup: selectedGroup.usersID.contains(userVM.user?.id ?? " ")), isActive: $openGroupProfile){
                 EmptyView()
             }
 

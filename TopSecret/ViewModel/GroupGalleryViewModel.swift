@@ -12,11 +12,12 @@ import UIKit
 
 class GroupGalleryViewModel : ObservableObject {
     
-    @Published var retrievedImages = [GroupGalleryImageModel]()
+    @Published var fetchedAllMedia : [GroupGalleryModel] = []
+    @Published var fetchedFavoriteMedia : [GroupGalleryModel] = []
     @Published var isLoading : Bool = true
     
     
-    func uploadPhoto(image: UIImage, userID: String, group: Group, isPrivate: Bool){
+    func uploadPhoto(image: UIImage, userID: String, group: Group, isPrivate: Bool, completion: @escaping (Bool) -> ()){
         
       
         
@@ -25,32 +26,66 @@ class GroupGalleryViewModel : ObservableObject {
         let imageData = image.jpegData(compressionQuality: 0.1)
         
         guard imageData != nil else {
-            return
+            return completion(false)
         }
         let path = "\(group.groupName)/GroupGalleryImages/\(UUID().uuidString).jpg"
         let fileRef = storageRef.child(path)
         
         let uploadTask = fileRef.putData(imageData!, metadata: nil) { metadata , err in
             if err == nil && metadata != nil {
-                let id = UUID().uuidString
-                let data = ["id":id,"url":path, "creatorID":userID, "timeStamp":Timestamp(),"isPrivate":false] as [String:Any]
-                COLLECTION_GROUP.document(group.id).collection("Gallery").document(id).setData(data) { err in
-                    if err == nil {
-                        
-                        DispatchQueue.main.async{
-                            let galleryImageData = ["id":id, "url":path,"image":image,"creatorID":userID,"timeStamp":Timestamp(),"isPrivate":isPrivate] as [String:Any]
-                            self.retrievedImages.append(GroupGalleryImageModel(dictionary: galleryImageData))
-                        }
-                        
-                        
+                
+                fileRef.downloadURL { downloadedURL, err in
+                    if err != nil {
+                        print("ERROR")
+                        return completion(false)
                     }
+                    let id = UUID().uuidString
+                    let galleryImageData = ["id":id,"url":downloadedURL?.absoluteString ?? " ", "creatorID":userID, "timeStamp":Timestamp(),"isPrivate":false,"isImage":true] as [String:Any]
+                    COLLECTION_GROUP.document(group.id).collection("Gallery").document(id).setData(galleryImageData) { err in
+                        if err == nil {
+                            return completion(true)
+                        }
+                    }
+                    
                 }
+                
             }
             
-            self.fetchPhotos(userID: userID, groupID: group.id)
         }
     }
     
+    func uploadVideo(url: URL, group: Group, completion: @escaping (Bool) -> ()) {
+        let data = try! Data(contentsOf: url)
+        let storageRef = Storage.storage().reference()
+        let path = "\(group.id)/GroupGalleryVideos/\(UUID().uuidString).mp4"
+        let fileRef = storageRef.child(path)
+        let metadata = StorageMetadata()
+        metadata.contentType = "video/mp4"
+        let uploadTask = fileRef.putData(data, metadata: metadata) { (metadata, error) in
+            if let error = error {
+                print("Error uploading video: \(error.localizedDescription)")
+                completion(false)
+            } else {
+                fileRef.downloadURL { (url, error) in
+                    guard let downloadURL = url else {
+                        print("Error getting download URL: \(error?.localizedDescription ?? "unknown error")")
+                        completion(false)
+                        return
+                    }
+                    let id = UUID().uuidString
+                    let galleryData = ["id":id,"url":url?.absoluteString ?? " ", "creatorID":USER_ID, "timeStamp":Timestamp(),"isPrivate":false,"isImage":false] as [String:Any]
+                    COLLECTION_GROUP.document(group.id).collection("Gallery").document(id).setData(galleryData) { err in
+                        if let err = err {
+                            print("Error writing gallery data: \(err.localizedDescription)")
+                            completion(false)
+                        } else {
+                                completion(true)
+                        }
+                    }
+                }
+            }
+        }
+    }
     func fetchUser(userID: String, completion: @escaping (User) -> ()) -> () {
         COLLECTION_USER.document(userID).getDocument { snapshot, err in
             if err != nil {
@@ -64,65 +99,51 @@ class GroupGalleryViewModel : ObservableObject {
         }
     }
     
-    func fetchPhotos(userID: String, groupID: String){
+    func deleteImage(groupID: String){
         
-        self.isLoading = true
+    }
+    
+    func fetchPhotos(userID: String, groupID: String, completion: @escaping (Bool) -> ()){
+        
         var groupD = DispatchGroup()
-        
+        var imagesToReturn : [GroupGalleryModel] = []
         groupD.enter()
+        self.isLoading = true
         COLLECTION_GROUP.document(groupID).collection("Gallery").getDocuments { snapshot, err in
             if err != nil {
                 print("ERROR")
-                return
+                return completion(false)
             }
-            
-            
            var documents = snapshot!.documents
-            
+       
+
             
             for doc in documents{
                 var docData = doc.data() as? [String:Any] ?? [:]
-                var path = doc["url"] as? String ?? " "
                 var creatorID = doc["creatorID"] as? String ?? ""
-                let storageRef = Storage.storage().reference()
                 
-                let fileRef = storageRef.child(path)
-                
-                fileRef.getData(maxSize: 5 * 1024 * 1024) { data, err in
-                    
-                    if err != nil {
-                        print("ERROR")
-                        return
-                    }
-                    
-                    if let image = UIImage(data: data!){
-                        let dp = DispatchGroup()
-                        dp.enter()
-                        docData["image"] = image
-                        
-                        self.fetchUser(userID: creatorID) { fetchedUser in
-                            docData["creator"] = fetchedUser
-                            dp.leave()
-                        }
-                        
-                        dp.notify(queue: .main, execute:{
-                            self.retrievedImages.append(GroupGalleryImageModel(dictionary: docData))
-                        })
-                           
-                        
-                    }
-                    
+                groupD.enter()
+                self.fetchUser(userID: creatorID) { fetchedUser in
+                    docData["creator"] = fetchedUser
+                    groupD.leave()
                 }
+                
+                groupD.notify(queue: .main, execute:{
+                    imagesToReturn.append(GroupGalleryModel(dictionary: docData))
+                })
+                   
             }
             
-            
-            
+            groupD.leave()
+            groupD.notify(queue: .main, execute:{
+                self.isLoading = false
+                self.fetchedAllMedia = imagesToReturn
+                self.fetchedFavoriteMedia = imagesToReturn.sorted(by: {$0.favoritedListID?.count ?? 0 > $1.favoritedListID?.count ?? 0})
+                return completion(true)
+            })
         }
-        groupD.leave()
         
-        groupD.notify(queue: .main, execute:{
-            self.isLoading = false
-        })
+        
     }
     
     

@@ -10,23 +10,6 @@ import SwiftUI
 import Combine
 
 
-struct DayWeather : Identifiable, Decodable{
-    var id: Int
-    var city : City
-    
-    struct City : Decodable{
-        var id: Int
-        var name: String
-        var coord: Coordinate
-    }
-    
-    struct Coordinate : Decodable{
-        var lat : Double
-        var lon : Double
-    }
-    
-    
-}
 
 
 
@@ -35,37 +18,7 @@ class GroupCalendarViewModel : ObservableObject {
     
     @Published var eventsResults : [EventModel] = []
     @Published var selectedOption : String = ""
-    @Published var weatherOfDays : [DayWeather] = []
-    
-    func getWeather(user: User){
-        guard let url = URL(string: "api.openweathermap.org/data/2.5/forecast/daily?lat=\(user.latitude ?? 40.0)&lon=\(user.longitude ?? 40.0)&cnt=\(7)&appid=\("47a659429631a1f4bb57c1a2507e0e26")") else {fatalError("error getting weather")}
-    
-        let urlRequest = URLRequest(url: url)
-        
-        let dataTask = URLSession.shared.dataTask(with: urlRequest) { (data, response, error) in
-            if let error = error {
-                print("Request error: \(error)")
-                return
-            }
-            
-            guard let response = response as? HTTPURLResponse else {return}
-
-            if response.statusCode == 200 {
-                guard let data = data else {return}
-                DispatchQueue.main.async {
-                    do{
-                        print("fetching JSON")
-                        let decodedData = try JSONDecoder().decode([DayWeather].self, from: data)
-                        self.weatherOfDays = decodedData
-                    }catch let err{
-                        print("Error decoding: \(err)")
-                    }
-                }
-            }
-            
-        }
-        
-    }
+  
     
     
    

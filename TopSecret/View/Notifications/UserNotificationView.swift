@@ -13,7 +13,6 @@ struct UserNotificationView: View {
     @StateObject var notificationVM = UserNotificationViewModel()
     @Environment(\.presentationMode) var presentationMode
     
-    
     private var newNotifications: [UserNotificationModel] {
         return userVM.notifications.filter {  noti in
             let date = Date()
@@ -82,7 +81,7 @@ struct UserNotificationView: View {
                                     ForEach(newNotifications){ notification in
                                        
                                           
-                                                UserNotificationCell(userNotification: notification).padding(.horizontal)
+                                        UserNotificationCell(userNotification: notification).padding(.horizontal)
 
                                             
                                         Divider()

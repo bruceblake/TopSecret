@@ -19,7 +19,6 @@ struct ActivityView: View {
     @State var openChat : Bool = false
     @State var showUsers : Bool = false
     @State var selectedPoll: PollModel = PollModel()
-    @State var selectedPost: GroupPostModel = GroupPostModel()
     @State var selectedEvent: EventModel = EventModel()
     @State var filterType = 0
     @Binding var shareType: String
@@ -59,11 +58,6 @@ struct ActivityView: View {
                                 },label:{
                                     Text("Polls")
                                 })
-                                Button(action:{
-                                    filterType = 3
-                                },label:{
-                                    Text("Posts")
-                                })
                             } label: {
                                 HStack(alignment: .top, spacing: 3){
                                     switch filterType{
@@ -73,8 +67,6 @@ struct ActivityView: View {
                                             Text("Events").foregroundColor(FOREGROUNDCOLOR)
                                         case 2:
                                             Text("Polls").foregroundColor(FOREGROUNDCOLOR)
-                                        case 3:
-                                            Text("Posts").foregroundColor(FOREGROUNDCOLOR)
                                     default:
                                         Text("Unknown")
                                     }
@@ -88,7 +80,7 @@ struct ActivityView: View {
                         
                     }.padding([.top,.horizontal])
                     
-                    GroupFeed( selectedPost: $selectedPost, selectedPoll: $selectedPoll,selectedEvent: $selectedEvent,shareType: $shareType, filterOption: $filterType).environmentObject(selectedGroupVM)
+                    GroupFeed(selectedPoll: $selectedPoll,selectedEvent: $selectedEvent,shareType: $shareType, filterOption: $filterType).environmentObject(selectedGroupVM)
                     
                     
                 }
@@ -117,7 +109,6 @@ struct ActivityView: View {
 
 struct GroupFeed : View {
     @EnvironmentObject var selectedGroupVM: SelectedGroupViewModel
-    @Binding var selectedPost: GroupPostModel
     @Binding var selectedPoll: PollModel
     @Binding var selectedEvent: EventModel
     @Binding var shareType: String
@@ -148,12 +139,6 @@ struct GroupFeed : View {
                         "poll": poll,
                         "itemType":FeedItemObjectModel.ItemType.poll] as [String: Any]
             return FeedItemObjectModel(dictionary: data)
-        } else if let groupPost = feedItem as? GroupPostModel  {
-            let data = ["id": groupPost.id ?? "",
-                        "timeStamp": groupPost.timeStamp ?? Timestamp(),
-                        "post": groupPost,
-                        "itemType":FeedItemObjectModel.ItemType.post] as [String: Any]
-            return FeedItemObjectModel(dictionary: data)
         } else {
             // Return nil if feedItem is not of any of the expected types
             return nil
@@ -176,8 +161,6 @@ struct GroupFeed : View {
                             EventCell(event: item.event ?? EventModel(), selectedEvent: $selectedEvent).frame(width: UIScreen.main.bounds.width-20)
                         case .poll:
                             PollCell(poll: item.poll ?? PollModel(), selectedPoll: $selectedPoll).frame(width: UIScreen.main.bounds.width-20)
-                        case .post:
-                            GroupPostCell(post: item.post ?? GroupPostModel(), selectedPost: $selectedPost).frame(width: UIScreen.main.bounds.width-20)
                         default:
                             Text("Unknown")
                         }
@@ -191,10 +174,7 @@ struct GroupFeed : View {
                     ForEach(selectedGroupVM.polls, id: \.id) { poll in
                         PollCell(poll: poll ?? PollModel(), selectedPoll: $selectedPoll).frame(width: UIScreen.main.bounds.width-20)
                     }
-                    case 3:
-                    ForEach(selectedGroupVM.posts, id: \.id){ post in
-                        GroupPostCell(post: post ?? GroupPostModel(), selectedPost: $selectedPost).frame(width: UIScreen.main.bounds.width-20)
-                    }
+                  
                     default:
                         Text("Unknown")
                 }

@@ -17,6 +17,7 @@ public struct OmenTextField: View {
     var onCommit: (() -> Void)?
     var onTab: (() -> Void)?
     var onBackTab: (() -> Void)?
+    var hasMicrophone: Bool = false
 
     /// Creates a multiline text field with a text label.
     ///
@@ -36,7 +37,8 @@ public struct OmenTextField: View {
         onTab: (() -> Void)? = nil,
         onBackTab: (() -> Void)? = nil,
         onCommit: (() -> Void)? = nil,
-        canAddAnotherLine: Binding<Bool>
+        canAddAnotherLine: Binding<Bool>,
+        hasMicrophone: Bool = false
     ) {
         self.title = String(title)
         _text = text
@@ -46,14 +48,26 @@ public struct OmenTextField: View {
         self.onTab = onTab
         self.onBackTab = onBackTab
         _canAddAnotherLine = canAddAnotherLine
+        self.hasMicrophone = hasMicrophone
     }
 
     public var body: some View {
         ZStack(alignment: .topLeading) {
-            Text(title)
-                .foregroundColor(.secondary)
-                .opacity(text.isEmpty ? 0.5 : 0)
-//                .animation(nil)
+            HStack{
+                Text(title)
+                    .foregroundColor(.secondary)
+                    .opacity(text.isEmpty ? 0.5 : 0)
+                if hasMicrophone {
+                    Spacer()
+                    Button {
+                        //todo
+                    } label: {
+                        Image(systemName: "mic").foregroundColor(Color.gray)
+                    }
+
+                }
+            }
+            
 
             #if os(iOS)
                 OmenTextFieldRep(

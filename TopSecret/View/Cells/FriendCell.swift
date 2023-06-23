@@ -78,16 +78,12 @@ struct FriendCell: View {
                             HStack(alignment: .center){
                                 if chat.usersTypingID.contains(user.id ?? ""){
                                     Text("is typing...").foregroundColor(Color("AccentColor"))
-                                }else if                                     chat.usersTypingID.contains(userVM.user?.id ?? " ")
-                                {
-                                    Text("[Draft: \(chat.draftText ?? "") ]").italic()
-                                    
                                 }else{
                                     
                                     if (chat.lastMessageID ?? "") == "NO_MESSAGE" {
                                         HStack(spacing: 1){
                                             Text("Start a new chat with ").foregroundColor(FOREGROUNDCOLOR)
-                                            Text("@\(user.username ?? "")").foregroundColor(Color("AccentColor"))
+                                            Text("\(user.username ?? "")").foregroundColor(Color.gray)
                                             Text("!").foregroundColor(FOREGROUNDCOLOR)
                                         }.font(.subheadline).lineLimit(1)
                                         
@@ -106,6 +102,10 @@ struct FriendCell: View {
                                         Text("\(chat.lastMessage?.name ?? "") sent an event")
                                     }else if chat.lastMessage?.type == "pollMessage"{
                                         Text("\(chat.lastMessage?.name ?? "") sent a poll")
+                                    }else if chat.lastMessage?.type == "image"{
+                                        Text("\(chat.lastMessage?.name ?? "") sent an image")
+                                    }else if chat.lastMessage?.type == "video"{
+                                        Text("\(chat.lastMessage?.name ?? "") sent an video")
                                     }
                                     else{
                                         Text("\( (chat.lastMessage ?? Message() ).value ?? "")").lineLimit(1).foregroundColor(chat.lastMessage?.type == "delete" ? Color("AccentColor") : (chat.usersThatHaveSeenLastMessage?.contains(userVM.user?.id ?? "") ?? false ) ? Color.gray : FOREGROUNDCOLOR).font(.subheadline)

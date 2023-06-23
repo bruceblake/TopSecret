@@ -106,20 +106,35 @@ class GroupChatViewModel : ObservableObject {
     //action
     
     func sendTextMessage(text: String, user: User, timeStamp: Timestamp, nameColor: String, messageID: String,messageType: String, chatID: String, groupID: String, messageColor: String){
-        print("chatID: \(chatID)")
-        COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").document(messageID).setData(["name":user.nickName ?? "","timeStamp":timeStamp, "nameColor":nameColor, "id":messageID,"profilePicture":user.profilePicture ?? "","type":messageType,"value":text,"userID":user.id ?? " ", "messageColor":messageColor])
         
+        let textMessageData = ["name":user.nickName ?? "",
+                               "timeStamp":timeStamp,
+                               "nameColor":nameColor,
+                               "id":messageID,
+                               "profilePicture":user.profilePicture
+                               ?? "",
+                               "type":messageType,
+                               "value":text,
+                               "userID":user.id ?? " "] as! [String:Any]
         
-        let notificationID = UUID().uuidString
+        let dp = DispatchGroup()
         
-        let notificationData = ["id":notificationID,
-                                "notificationName": "User Sent A Text",
-                                "notificationTime":Timestamp(),
-                                "notificationType":"userSentAText", "notificationCreatorID":user.id ?? "USER_ID",
-                                "usersThatHaveSeen":[]] as [String:Any]
-        COLLECTION_GROUP.document(groupID).collection("Notifications").document(notificationID).setData(notificationData)
+        dp.enter()
         
-        COLLECTION_GROUP.document(groupID).updateData(["notificationCount":FieldValue.increment((Int64(1)))])
+        COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").document(messageID).setData(textMessageData)
+        dp.leave()
+        
+        dp.notify(queue: .main, execute:{
+            
+            COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["lastMessageID":messageID])
+            
+            COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["usersThatHaveSeenLastMessage":[user.id ?? " "]])
+            
+            COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["lastActionDate":Timestamp()])
+            
+            
+            
+        })
         
         
     }

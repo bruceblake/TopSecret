@@ -10,29 +10,23 @@ import MapKit
 import SDWebImageSwiftUI
 
 struct SelectedUserMapView: View {
-    @Binding var user: User
     @Binding var followUser: Bool
-    @ObservedObject var locationManager : LocationManager
-    
+    @Binding var userAnnotations: [UserAnnotations]
+    @Binding var selectedUser: User
     var body: some View {
         ZStack{
-            Map(coordinateRegion: locationManager.region.getBinding()!, interactionModes: .all, showsUserLocation: false, annotationItems: locationManager.userAnnotations){ annotation in
-                MapAnnotation(coordinate: annotation.coordinate){
-                    
-                    Button(action:{
-                        locationManager.region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: annotation.user.latitude ?? 0, longitude: annotation.user.longitude ?? 0), latitudinalMeters: 5000, longitudinalMeters: 5000)
-                    },label:{
-                        WebImage(url: URL(string: annotation.user.profilePicture ?? ""))
+           
+            Map(coordinateRegion: MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: selectedUser.latitude ?? 0.0, longitude: selectedUser.longitude ?? 0.0), span: MKCoordinateSpan(latitudeDelta: 0.05, longitudeDelta: 0.05)).getBinding()!, interactionModes: .all , annotationItems: userAnnotations) { user in
+                MapAnnotation(coordinate: user.coordinate) {
+                        WebImage(url: URL(string: selectedUser.profilePicture ?? ""))
                             .resizable()
                             .scaledToFill()
                             .frame(width:40,height:40)
                             .clipShape(Circle())
-                            .overlay(Circle().stroke(Color("AccentColor"),lineWidth: 2))
-                    })
-                    
-                    
+
                 }
-            }.edgesIgnoringSafeArea(.all)
+
+            }
             
             VStack(alignment: .leading){
                 HStack(alignment: .top){
@@ -47,12 +41,12 @@ struct SelectedUserMapView: View {
                     
                     Spacer()
                     VStack(spacing: 1){
-                        WebImage(url: URL(string: user.profilePicture ?? ""))
+                        WebImage(url: URL(string: selectedUser.profilePicture ?? ""))
                             .resizable()
                             .scaledToFill()
                             .frame(width:40,height:40)
                             .clipShape(Circle())
-                        Text("Bruce").bold().font(.body).foregroundColor(FOREGROUNDCOLOR)
+                        Text("\(selectedUser.nickName ?? " ")").bold().font(.body).foregroundColor(FOREGROUNDCOLOR)
                         Text("Last updated now").font(.subheadline).foregroundColor(FOREGROUNDCOLOR)
                     }.padding(.bottom,5)
                     
@@ -68,7 +62,7 @@ struct SelectedUserMapView: View {
                 HStack(alignment: .bottom){
                     VStack(alignment: .leading){
                         Text("Distance").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
-                        Text("5629 Hobsons Choice Loop").foregroundColor(FOREGROUNDCOLOR).font(.footnote)
+                        Text("\(selectedUser.lastLocationName)").foregroundColor(FOREGROUNDCOLOR).font(.footnote)
                         Text("2 hr, 24 min drive to Bruce").font(.footnote)
                     }.padding(.leading,15)
                     

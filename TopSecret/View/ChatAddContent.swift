@@ -1,20 +1,17 @@
 //
-//  AddContentView.swift
-//  TopSecret
+//  ChatAddContent.swift
+//  Top Secret
 //
-//  Created by Bruce Blake on 2/21/22.
+//  Created by Bruce Blake on 6/22/23.
 //
 
 import SwiftUI
 
-struct AddContentView: View {
-    
+struct ChatAddContent: View {
     @Binding var showAddContentView: Bool
     @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
-    
+    @Binding var showAddEventView: Bool
     var texts : [String] = ["Create Poll","Create Event","Send Group Invitation to Friend"]
-    @State var showAddEventView : Bool = false
-    
     var body: some View {
         ZStack(alignment: .top){
             Color("Color")
@@ -25,30 +22,6 @@ struct AddContentView: View {
                     Spacer()
                 }
                 VStack(alignment: .leading){
-                    
-                        
-                      
-                        NavigationLink {
-                           InviteUserToGroup()
-                        } label: {
-                            VStack(spacing: 10){
-                           
-                                HStack(alignment: .center, spacing: 20){
-                                Image(systemName: "person.fill.badge.plus").foregroundColor(FOREGROUNDCOLOR).frame(width: 15, height: 15)
-                                    Text("Invite Friends").foregroundColor(FOREGROUNDCOLOR)
-                                
-                                Spacer()
-                            }.foregroundColor(FOREGROUNDCOLOR)
-                                
-                                Rectangle().frame(width: UIScreen.main.bounds.width, height: 1).foregroundColor(Color("Background"))
-
-                            
-                        }.padding(.bottom,5).frame(width: UIScreen.main.bounds.width).padding(.leading,30)
-                            
-                        }
-                  
-                    
-                   
                     NavigationLink(destination: CreateEventView(selectedGroups: [selectedGroupVM.group], isGroup: true, showAddEventView: $showAddEventView), isActive: $showAddEventView) {
                         VStack(spacing: 10){
                        
@@ -82,6 +55,22 @@ struct AddContentView: View {
                         }.padding(.top,10).frame(maxWidth: UIScreen.main.bounds.width).padding(.leading,30)
                     }
 
+                    Button {
+                        //todo
+                    } label: {
+                        VStack(spacing: 10){
+                        
+                            HStack(alignment: .center, spacing: 20){
+                                Image(systemName: "mappin").foregroundColor(FOREGROUNDCOLOR).frame(width: 15, height: 15)
+                                Text("Send your current location").foregroundColor(FOREGROUNDCOLOR)
+
+                                Spacer()
+                            }.foregroundColor(FOREGROUNDCOLOR)
+                            
+                            Rectangle().frame(width: UIScreen.main.bounds.width, height: 1).foregroundColor(Color("Background"))
+                        }.padding(.top,10).frame(maxWidth: UIScreen.main.bounds.width).padding(.leading,30)
+                    }
+
                     
                     
                 }
@@ -94,6 +83,4 @@ struct AddContentView: View {
         
     }
 }
-
-
 

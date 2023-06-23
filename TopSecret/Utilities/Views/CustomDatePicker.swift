@@ -12,7 +12,8 @@ struct CustomDatePicker: View {
     @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
     @ObservedObject var calendarVM: UserCalendarViewModel
     @Binding var currentDate: Date
-    
+    var isGroup : Bool = false
+    var group: Group = Group()
     @State var currentMonth: Int = 0
     
     @State var selectedMonth: Int = Calendar.current.component(.month, from: Date())
@@ -115,7 +116,7 @@ struct CustomDatePicker: View {
             selectedDate = convertComponentsToDate(year: selectedYear, month: selectedMonth, day: selectedDay)
             
         }.padding(10).background(Color("Color")).cornerRadius(20).onAppear{
-            calendarVM.startSearch(eventsID: userVM.user?.eventsID ?? [])
+            calendarVM.startSearch(eventsID: isGroup ? group.eventsID ?? [] : userVM.user?.eventsID ?? [])
         }
     }
     

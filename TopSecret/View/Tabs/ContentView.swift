@@ -66,17 +66,15 @@ struct ContentView: View {
         .edgesIgnoringSafeArea(.all).navigationBarHidden(true)
         .onChange(of: scenePhase) { newPhase in
             if newPhase == .active {
-//                if userVM.userSession != nil{
-//                    userVM.setUserActivity(isActive: true, userID: userVM.user?.id ?? " ", completion: { fetchedUser in
-//                        userVM.user = fetchedUser
-//                    })
-//                }
+                if userVM.userSession != nil{
+                    userVM.setUserActivity(isActive: true, userID: userVM.user?.id ?? " ", completion: { fetchedUser in
+                    })
+                }
             }else if newPhase == .background{
-//                if userVM.userSession != nil{
-//                    userVM.setUserActivity(isActive: false, userID: userVM.user?.id ?? " ", completion: { fetchedUser in
-//                        userVM.user = fetchedUser
-//                    })
-//                }
+                if userVM.userSession != nil{
+                    userVM.setUserActivity(isActive: false, userID: userVM.user?.id ?? " ", completion: { fetchedUser in
+                    })
+                }
             }
         }
     }
@@ -111,7 +109,6 @@ struct Tabs : View {
     @State var selectedEvent: EventModel = EventModel()
     @State var shareType : String = ""
     @State private var notSeenNotifications: [UserNotificationModel] = []
-   
     var body: some View {
         ZStack{
             if showSearch {
@@ -136,21 +133,7 @@ struct Tabs : View {
                         }
                     }
                 }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).opacity(userVM.hideBackground ? 0.2 : 1).disabled(userVM.hideBackground)
-                    .overlay{
-                        if shareVM.showShareMenu{
-                            
-                            
-                            VStack{
-                                Spacer()
-                                ShowShareMenu()
-                            }
-                            
-                            
-                        }
-                        
-                        
-                        
-                    }
+                   
                     .onTapGesture {
                         
                         if userVM.hideBackground{

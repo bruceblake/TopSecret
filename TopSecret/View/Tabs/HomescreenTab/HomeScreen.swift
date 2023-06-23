@@ -59,7 +59,7 @@ struct ShowGroups : View {
                                         
                                         
                                         
-                                        WebImage(url: URL(string: group.groupProfileImage)).resizable().frame(width: width - 50, height: 250).scaledToFit()
+                                    WebImage(url: URL(string: group.groupProfileImage)).resizable().scaledToFill().clipped()
                                         
                                         
                                         HStack(alignment: .top){
@@ -84,14 +84,14 @@ struct ShowGroups : View {
                                         }.frame(height: 150).background(Rectangle().foregroundColor(Color("Color")))
                                         
                                         
-                                    }.frame(width: width - widthAdd).clipShape(RoundedRectangle(cornerRadius: 16))
+                                    }.frame(width: width - widthAdd).clipShape(RoundedRectangle(cornerRadius: 12))
                             
                             })
                             
                         }
                         
                     }else{
-                        Text("Unable to connect!")
+                        Text("Unable to connect!").foregroundColor(Color.gray)
                     }
                     
                    

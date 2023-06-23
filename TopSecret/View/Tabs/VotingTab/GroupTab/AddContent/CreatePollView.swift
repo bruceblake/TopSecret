@@ -76,7 +76,7 @@ struct CreatePollView: View {
                         createPollVM.createPoll(creatorID: userVM.user?.id ?? " ", pollOptions: [PollOptionModel(dictionary: ["id":UUID().uuidString,"choice":choice1,"pickedUsers":[]]),
                             PollOptionModel(dictionary: ["id":UUID().uuidString,"choice":choice2,"pickedUsers":[]]),
                             PollOptionModel(dictionary: ["id":UUID().uuidString,"choice":choice3,"pickedUsers":[]]),
-                                                                                                 PollOptionModel(dictionary: ["id":UUID().uuidString,"choice":choice4,"pickedUsers":[]])                                                       ], groupID: groupVM.group.id ?? " ", question: question, usersVisibleToID: groupVM.group.users ?? [])
+                                                                                                 PollOptionModel(dictionary: ["id":UUID().uuidString,"choice":choice4,"pickedUsers":[]])                                                       ], groupID: groupVM.group.id ?? " ", question: question, usersVisibleToID: groupVM.group.usersID ?? [])
                         presentationMode.wrappedValue.dismiss()
                     },label:{
                         Text("Create Poll").foregroundColor(Color("Foreground"))

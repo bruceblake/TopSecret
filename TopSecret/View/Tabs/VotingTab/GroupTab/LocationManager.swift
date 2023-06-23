@@ -14,49 +14,28 @@ import SwiftUI
 
 final class LocationManager : NSObject, ObservableObject, CLLocationManagerDelegate, MKMapViewDelegate {
     @Published var userLocation : CLLocation?
-    @Published var userID: String = " "
-    @Published var groupID: String = " "
     @Published var region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: 20, longitude: 37), span: MKCoordinateSpan(latitudeDelta: 0.03, longitudeDelta: 0.03))
-    @Published var userAnnotations : [UserAnnotations] = []
     @Published var city = ""
     @Published var state = ""
     @Published var mapView : MKMapView = .init()
     @Published var pickedLocation : CLLocation?
     @Published var pickedPlaceMark: CLPlacemark?
+    @Published var userLocationName : String = ""
     private let locationManager = CLLocationManager()
     let userVM = UserViewModel.shared
     
     override init() {
-           super.init()
-           locationManager.desiredAccuracy = kCLLocationAccuracyBest
-           locationManager.distanceFilter = kCLDistanceFilterNone
-           locationManager.requestWhenInUseAuthorization()
-            locationManager.requestAlwaysAuthorization()
-           locationManager.stopUpdatingLocation()
-           locationManager.delegate = self
-            locationManager.requestLocation()
+        super.init()
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        locationManager.distanceFilter = kCLDistanceFilterNone
+        locationManager.requestWhenInUseAuthorization()
+        locationManager.requestAlwaysAuthorization()
+        locationManager.stopUpdatingLocation()
+        locationManager.delegate = self
+        locationManager.requestLocation()
         mapView.delegate = self
-
-       }
-    
-    
-
-    func addDraggablePin(coordinate: CLLocationCoordinate2D){
-        let annotation = MKPointAnnotation()
-        annotation.coordinate = coordinate
         
-        
-        annotation.title = "Hold and drag to desired location"
-        
-        
-        if mapView.annotations.isEmpty{
-            mapView.addAnnotation(annotation)
-        }else{
-            mapView.removeAnnotations(mapView.annotations)
-            mapView.addAnnotation(annotation)
-        }
     }
-    
     
     
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
@@ -105,53 +84,44 @@ final class LocationManager : NSObject, ObservableObject, CLLocationManagerDeleg
         let place = try await CLGeocoder().reverseGeocodeLocation(location).first
         return place
     }
- 
     
-    func setCurrentUser(userID: String){
-        self.userID = userID
-    }
     
-    func setCurrentGroup(groupID: String){
-        self.groupID = groupID
-    }
     
-   
+    
     func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         
-      
-              guard let location = locations.last else { return }
-              DispatchQueue.main.async {
-                  let geocoder = CLGeocoder()
-                  geocoder.reverseGeocodeLocation(location) { placemarks, error in
-                    if let error = error {
-                      print(error)
-                      return
-                    }
-
-                    if let placemark = placemarks?.first {
-                        self.city = placemark.locality ?? "City"
-                      self.state = placemark.administrativeArea ?? "State"
-                    }
-                  }
-                  self.userLocation = location
-                  self.region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude), latitudinalMeters: 0.03, longitudinalMeters: 0.03)
-                  let latitude = location.coordinate.latitude
-                  let longitude = location.coordinate.longitude
-                  
-             
-                  COLLECTION_USER.document(self.userID).updateData(["latitude":latitude, "longitude":longitude])
-                  
-                  COLLECTION_GROUP.document(self.groupID).getDocument { snapshot, err in
-                      if err != nil {
-                          print("ERROR")
-                          return
-                      }
-                      
-                  }
-                  
-              }
         
-      }
+        guard let location = locations.last else { return }
+        DispatchQueue.main.async {
+            let geocoder = CLGeocoder()
+            geocoder.reverseGeocodeLocation(location) { placemarks, error in
+                if let error = error {
+                    print(error)
+                    return
+                }
+                
+                
+                if let placemark = placemarks?.first {
+                    self.city = placemark.locality ?? "City"
+                    self.state = placemark.administrativeArea ?? "State"
+                    self.userLocationName = placemark.name ?? ""
+                    COLLECTION_USER.document(self.userVM.user?.id ?? " ").updateData(["lastLocationName":placemark.name ?? ""])
+                }
+            }
+            self.userLocation = location
+            self.region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: location.coordinate.latitude, longitude: location.coordinate.longitude), latitudinalMeters: 0.03, longitudinalMeters: 0.03)
+            let latitude = location.coordinate.latitude
+            let longitude = location.coordinate.longitude
+            
+            
+            COLLECTION_USER.document(self.userVM.user?.id ?? " ").updateData(["latitude":latitude, "longitude":longitude])
+            
+            
+            
+            
+        }
+        
+    }
     
     func locationManager(
         _ manager: CLLocationManager,
@@ -162,49 +132,34 @@ final class LocationManager : NSObject, ObservableObject, CLLocationManagerDeleg
         return
     }
     
-    func fetchLocations(usersID: [String]){
-        
-        var annotationsToReturn : [UserAnnotations] = []
-        
-       
-
-        for user in usersID {
-            COLLECTION_USER.document(user).getDocument { snapshot, err in
-                if err != nil {
-                    print("ERROR")
-                    return
-                }
-                
-                
-                let data = snapshot?.data() as? [String:Any] ?? [:]
-                
-                
-                let latitude = data["latitude"]
-                let longitude = data["longitude"]
-                
-                
-                self.userAnnotations.append(UserAnnotations(user: User(dictionary: data), coordinate: CLLocationCoordinate2D(latitude: latitude as? CLLocationDegrees ?? CLLocationDegrees(), longitude: longitude as? CLLocationDegrees ?? CLLocationDegrees())))
-                
-
-                
-                
-            }
-
+    func configurePolyline(withDestinationCoordinate coordinate: CLLocationCoordinate2D){
+        guard let userLocationCoordinate = self.userLocation?.coordinate else {return}
+        getDestinationRoute(from: userLocationCoordinate, to: coordinate) { route in
+            self.mapView.addOverlay(route.polyline)
         }
-
-
+    }
+    
+    func getDestinationRoute(from userLocation: CLLocationCoordinate2D, to destination: CLLocationCoordinate2D, completion: @escaping(MKRoute) -> Void){
+        let userPlacemark = MKPlacemark(coordinate: userLocation)
+        let destPlacemark = MKPlacemark(coordinate: destination)
+        let request = MKDirections.Request()
+        request.source = MKMapItem(placemark: userPlacemark)
+        request.destination = MKMapItem(placemark: MKPlacemark(placemark: destPlacemark))
+        let directions = MKDirections(request: request)
         
-     
+        directions.calculate { response, error in
+            if let error = error {
+                print("ERROR")
+                return
+            }
+            
+            guard let route = response?.routes.first else {return}
+            completion(route)
+        }
     }
 }
 
-
-struct UserAnnotations : Identifiable{
-    var id = UUID().uuidString
-    var user: User
-    var coordinate : CLLocationCoordinate2D
-}
-
+    
 
 class CustomAnnotationView: MKAnnotationView {
     

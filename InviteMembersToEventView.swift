@@ -12,7 +12,6 @@ struct InviteMembersToEventView: View {
     
     @EnvironmentObject var userVM: UserViewModel
     @Binding var selectedUsers : [User]
-    @Binding var selectedGroups: [Group]
     @StateObject var searchVM = SearchRepository()
     @Binding var openInviteFriendsView: Bool
     @Environment(\.presentationMode) var presentationMode
@@ -41,39 +40,14 @@ struct InviteMembersToEventView: View {
             
             
             VStack(alignment: .leading){
-                
-                Text("Invited Groups").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
-                ScrollView(.horizontal){
-                    HStack{
-                        ForEach(selectedGroups, id: \.id){ group in
-                        
-                                Button(action:{
-                                    searchVM.searchText = group.groupName
-                                },label:{
-                                    HStack{
-                                        Text(group.groupName).foregroundColor(FOREGROUNDCOLOR)
-                                        Button(action:{
-                                            selectedGroups.removeAll(where: {$0.id == group.id})
-                                        },label:{
-                                            Image(systemName: "x.circle.fill")
-                                        }).foregroundColor(FOREGROUNDCOLOR)
-                                    }.padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("AccentColor")))
-                                   
-                                })
-                            
-                        }
-                    }
+               
+                if !selectedUsers.isEmpty{
+                    Text("Invited Users").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
                 }
-                
-                
-                
-                Text("Invited Users").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
                 ScrollView(.horizontal){
                     HStack{
                         ForEach(selectedUsers, id: \.id){ user in
-                            if user.id == userVM.user?.id ?? "" {
-                                Text("YOU").padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Background")))
-                            }else{
+                            if user.id != userVM.user?.id ?? "" {
                                 Button(action:{
                                     searchVM.searchText = user.nickName ?? ""
                                 },label:{
@@ -85,8 +59,9 @@ struct InviteMembersToEventView: View {
                                             Image(systemName: "x.circle.fill")
                                         }).foregroundColor(FOREGROUNDCOLOR)
                                     }.padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("AccentColor")))
-                                   
+                                    
                                 })
+                                
                             }
                         }
                     }
@@ -140,58 +115,13 @@ struct InviteMembersToEventView: View {
                                 
                                 
                             }
-                        
-                         VStack(alignment: .leading){
-                             if !searchVM.userGroupReturnedResults.isEmpty{
-                                 VStack(alignment: .leading){
-                                     Text("Groups").fontWeight(.bold).foregroundColor(Color("Foreground"))
-                                 }
-                             }
-                             ForEach(searchVM.userGroupReturnedResults, id: \.id) { group in
-                                 Button {
-                                     if selectedGroups.contains(where: {$0.id == group.id}){
-                                         selectedGroups.removeAll(where: {$0.id == group.id})
-                                     }else{
-                                         selectedGroups.append(group)
-                                     }
-                                 } label: {
-                                     HStack(alignment: .center){
-                                         WebImage(url: URL(string: group.groupProfileImage))
-                                             .resizable()
-                                             .scaledToFill()
-                                             .frame(width:48,height:48)
-                                             .clipShape(Circle())
-                                             
-                                         
-                                         VStack(alignment: .leading){
-                                             
-                                             Text("\(group.groupName)").foregroundColor(Color("Foreground"))
-                                             Text("\(group.users.count) \(group.users.count > 1 ? "members" : "member")").foregroundColor(.gray)
-                                             
-
-                                         }
-                                         Spacer()
-                                         
-                                         Image(systemName: selectedGroups.contains(where: {$0.id == group.id}) ? "checkmark.circle.fill" : "circle").font(.title).foregroundColor(FOREGROUNDCOLOR)
-                                     
-                                     }.padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Background")))
-                                 }
-
-                             }
-                             
-                             
-                             
-                             
-                             
-                         }
+                       
                     }
                         
                     
                 }.gesture(DragGesture().onChanged { _ in
                     UIApplication.shared.keyWindow?.endEditing(true)
                 })
-            
-         Spacer()
             
             Button(action:{
              
@@ -201,12 +131,17 @@ struct InviteMembersToEventView: View {
                 .frame(width: UIScreen.main.bounds.width/1.5).padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("AccentColor")))
                     
             }).padding(.vertical,10).padding(.bottom,30)
+            
+         Spacer()
+            
+           
            
           
         }.padding()
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
             searchVM.startSearch(searchRequest: "allUserFriendsAndGroups", id: userVM.user?.id ?? " ")
+            
         }
         
         

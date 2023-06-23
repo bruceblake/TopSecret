@@ -6,7 +6,6 @@
 //
 
 import SwiftUI
-
 struct SearchedView: View {
     
     @Environment(\.presentationMode) var presentationMode
@@ -36,17 +35,61 @@ struct SearchedView: View {
                         
                     })
                 }.padding(.top,50)
+                
+                HStack{
+                    
+                    Spacer()
+                    
+                    Button(action:{
+                        withAnimation{
+                            selectedOptionIndex = 0
+                        }
+                    },label:{
+                        Text("Top").foregroundColor(selectedOptionIndex == 0 ? Color("AccentColor") : FOREGROUNDCOLOR)
+                    })
+                    
+                    Spacer()
+                    
+                    Button(action:{
+                        withAnimation{
+                            selectedOptionIndex = 1
+                        }
+                    },label:{
+                        Text("Users").foregroundColor(selectedOptionIndex == 1 ? Color("AccentColor") : FOREGROUNDCOLOR)
+                    })
+                    
+                    Spacer()
+                    
+                    Button(action:{
+                        withAnimation{
+                            selectedOptionIndex = 2
+                        }
+                    },label:{
+                        Text("Groups").foregroundColor(selectedOptionIndex == 2 ? Color("AccentColor") : FOREGROUNDCOLOR)
+                    })
+                    
+                    Spacer()
+                    
+                    Button(action:{
+                        withAnimation{
+                            selectedOptionIndex = 3
+                        }
+                    },label:{
+                        Text("Friends").foregroundColor(selectedOptionIndex == 3 ? Color("AccentColor") : FOREGROUNDCOLOR)
+                    })
+                    
+                    Spacer()
+                }
+                
+                TabView(selection: $selectedOptionIndex){
+                    TopResults(searchVM: searchVM).tag(0)
+                    UserResults(searchVM: searchVM).tag(1)
+                    GroupResults(searchVM: searchVM).tag(2)
+                    FriendResults(searchVM: searchVM).tag(3)
+                }.tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+
 
                 
-                PagerTabView(showLabels: true, tint: Color("AccentColor"), selection: $selectedOptionIndex, labels: options) {
-                    TopResults(searchVM: searchVM).pageView(ignoresSafeArea: true, edges: .bottom)
-                    UserResults(searchVM: searchVM).pageView(ignoresSafeArea: true, edges: .bottom)
-                    GroupResults(searchVM: searchVM).pageView(ignoresSafeArea: true, edges: .bottom)
-                    FriendResults(searchVM: searchVM).pageView(ignoresSafeArea: true, edges: .bottom)
-                    Text("doesnt work yet :/")
-
-                }.padding(.top)
-                    .ignoresSafeArea(.container, edges: .bottom )
            
                 
                 
@@ -134,7 +177,7 @@ struct GroupResults : View {
                         VStack{
                             ForEach(searchVM.groupReturnedResults, id: \.id){ group in
                                     NavigationLink {
-                                        GroupProfileView(group: selectedGroup, isInGroup: selectedGroup.users.contains(userVM.user?.id ?? " "))
+                                        GroupProfileView(group: selectedGroup, isInGroup: selectedGroup.usersID.contains(userVM.user?.id ?? " "))
                                     } label: {
                                         GroupSearchCell(group: group)
                                     }
@@ -237,7 +280,7 @@ struct TopResults : View {
                         VStack{
                             ForEach(searchVM.groupReturnedResults, id: \.id){ group in
                                     NavigationLink {
-                                        GroupProfileView(group: selectedGroup, isInGroup: selectedGroup.users.contains(userVM.user?.id ?? " "))
+                                        GroupProfileView(group: selectedGroup, isInGroup: selectedGroup.usersID.contains(userVM.user?.id ?? " "))
                                     } label: {
                                         GroupSearchCell(group: group)
                                     }

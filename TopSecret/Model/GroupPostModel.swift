@@ -32,7 +32,7 @@ struct GroupPostModel : Identifiable {
     var viewers: [String]?
     
     init(dictionary: [String:Any]){
-        self.id = dictionary["id"] as? String ?? "FUCK"
+        self.id = dictionary["id"] as? String ?? " "
         self.description = dictionary["description"] as? String ?? ""
         self.image = dictionary["image"] as? UIImage ?? UIImage()
         self.urlPath = dictionary["urlPath"] as? String ?? ""

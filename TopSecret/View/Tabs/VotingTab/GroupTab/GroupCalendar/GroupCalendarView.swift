@@ -8,9 +8,12 @@ struct GroupCalendarView : View {
     private let dayFormatter: DateFormatter
     private let weekDayFormatter: DateFormatter
     @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
-    
+    @ObservedObject var calendarVM = UserCalendarViewModel()
+
+    @State var showMonthView: Bool = false
     @State private var selectedDate = Self.now
     @State var showSelectedDay : Bool = false
+    @State var currentDate: Date = Date()
     private static var now = Date()
     
     init(calendar: Calendar){
@@ -25,7 +28,6 @@ struct GroupCalendarView : View {
             Color("Background")
             VStack{
            
-                
                 CalendarWeekListView(calendar: calendar,
                                      date: $selectedDate,
                                      showSelectedDay: $showSelectedDay,
@@ -37,9 +39,9 @@ struct GroupCalendarView : View {
                             .overlay(
                                 Text(dayFormatter.string(from: date))
                                     .foregroundColor(
-                                        calendar.isDate(date, inSameDayAs: selectedDate)
+                                        calendar.isDate(date, inSameDayAs: Date())
                                         ? FOREGROUNDCOLOR
-                                        : calendar.isDateInToday(date) ? Color("AccentColor")
+                                        : calendar.isDateInToday(date) ? Color.yellow
                                         : .gray
                                     )
                                
@@ -97,13 +99,15 @@ struct GroupCalendarView : View {
                     })
                 }, fullScreenButton: { date in
                     Button(action:{
-                        
+                        self.showMonthView.toggle()
                     }, label:{
                         ZStack{
                             Circle().foregroundColor(Color("Background")).frame(width: 30, height: 30)
                             Image(systemName: "arrow.down.right.and.arrow.up.left").font(.subheadline).foregroundColor(FOREGROUNDCOLOR)
                         }
-                    })
+                    }).sheet(isPresented: $showMonthView) {
+                        CustomDatePicker(calendarVM: calendarVM, currentDate: $currentDate, isGroup: true, group: selectedGroupVM.group, selectedDate: $selectedDate, showWeekView: $showMonthView)
+                    }
                 }
                 
                 )
@@ -216,13 +220,15 @@ struct CalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitcher: 
                                     
                                     HStack(spacing: 20){
                                         VStack{
-                                            header(date).font(.title2)
+                                            header(date).font(.title2).foregroundColor(FOREGROUNDCOLOR)
                                             content(date).font(.headline).foregroundColor(FOREGROUNDCOLOR)
                                         }
                                     
                                        
                                        
                                         VStack(spacing: 7){
+
+                                            
                                             ForEach(calendarVM.eventsResults, id: \.id){ event in
                                               
                                                     if Calendar.current.isDate(event.eventStartTime?.dateValue() ?? Date(), inSameDayAs: date)
@@ -240,17 +246,16 @@ struct CalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitcher: 
                                                                 HStack{
                                                                     HStack(alignment: .center){
                                                                         Image(systemName: "mappin.and.ellipse").foregroundColor(Color.gray).font(.footnote)
-                                                                        Text(event.eventLocation ?? "").font(.footnote)
+                                                                        Text("\(event.location?.name ?? "" == "" ? "No Location Specified" : event.location?.name ?? "")").font(.footnote)
                                                                     }
                                                                     Text("|")
-                                                                Text("4 attending").font(.footnote)
+                                                                Text("\(event.usersAttendingID?.count ?? 0) attending").font(.footnote)
                                                                 }.foregroundColor(FOREGROUNDCOLOR.opacity(0.7))
                                                             }
                                                             
                                                          
                                                         }
                                                     }
-                                                
                                                 
                                             
                                                
@@ -347,10 +352,10 @@ struct SelectedDayView : View {
                                         HStack{
                                             HStack(alignment: .center){
                                                 Image(systemName: "mappin.and.ellipse").foregroundColor(Color.gray).font(.footnote)
-                                                Text(event.eventLocation ?? "").font(.footnote)
+                                                Text(event.location?.name ?? " ").font(.footnote)
                                             }
                                             Text("|")
-                                        Text("4 attending").font(.footnote)
+                                            Text("\(event.usersAttendingID?.count ?? 0) attending").font(.footnote)
                                         }.foregroundColor(FOREGROUNDCOLOR.opacity(0.7))
                                     }
                                     

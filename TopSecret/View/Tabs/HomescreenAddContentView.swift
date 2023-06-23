@@ -11,6 +11,8 @@ struct HomescreenAddContentView: View {
     
     var texts : [String] = ["Create a Group","Create Poll","Create Event"]
     @EnvironmentObject var userVM: UserViewModel
+    @State var showAddEventView : Bool = false
+    @State var showCreateGroupView: Bool = false
     
     var body: some View {
         ZStack(alignment: .top){
@@ -23,48 +25,41 @@ struct HomescreenAddContentView: View {
                 }
                 VStack(alignment: .leading){
                     
-                        
-                      
-                        NavigationLink {
-                            CreateGroupView()
-                        } label: {
-                            VStack(spacing: 10){
-                           
-                                HStack(alignment: .center, spacing: 20){
-                                Image(systemName: "person.3.fill").foregroundColor(FOREGROUNDCOLOR).frame(width: 15, height: 15)
-                                    Text("Create a Group").foregroundColor(FOREGROUNDCOLOR)
-                                
-                                Spacer()
-                            }.foregroundColor(FOREGROUNDCOLOR)
-                                Rectangle().frame(width: UIScreen.main.bounds.width, height: 1).foregroundColor(Color.gray)
-
-                            
-                        }.padding(.vertical,10).frame(width: UIScreen.main.bounds.width).padding(.leading,30)
-                            
-                        }
-                  
                     
-                   
-                    
-                    
-                    NavigationLink {
-                        AddGroupsToEventView()
-
-
-                    } label: {
+                    Button(action:{
+                        self.showCreateGroupView.toggle()
+                    },label:{
                         VStack(spacing: 10){
-                       
+                            
                             HStack(alignment: .center, spacing: 20){
-                                Image(systemName: "party.popper.fill").foregroundColor(FOREGROUNDCOLOR).frame(width: 15, height: 15)
-                                    Text("Create a Event").foregroundColor(FOREGROUNDCOLOR)
+                                Image(systemName: "person.3.fill").foregroundColor(FOREGROUNDCOLOR).frame(width: 15, height: 15)
+                                Text("Create a Group").foregroundColor(FOREGROUNDCOLOR)
                                 
                                 Spacer()
                             }.foregroundColor(FOREGROUNDCOLOR)
                             Rectangle().frame(width: UIScreen.main.bounds.width, height: 1).foregroundColor(Color.gray)
-
+                            
+                            
                         }.padding(.vertical,10).frame(width: UIScreen.main.bounds.width).padding(.leading,30)
-                        
+                    })
+                    
+                    
+                    
+                    
+                    NavigationLink(destination:  AddGroupsToEventView(showAddEventView: $showAddEventView, showCreateGroupView: $showCreateGroupView), isActive: $showAddEventView) {
+                        VStack(spacing: 10){
+                            
+                            HStack(alignment: .center, spacing: 20){
+                                Image(systemName: "party.popper.fill").foregroundColor(FOREGROUNDCOLOR).frame(width: 15, height: 15)
+                                Text("Create a Event").foregroundColor(FOREGROUNDCOLOR)
+                                
+                                Spacer()
+                            }.foregroundColor(FOREGROUNDCOLOR)
+                            Rectangle().frame(width: UIScreen.main.bounds.width, height: 1).foregroundColor(Color.gray)
+                            
+                        }.padding(.vertical,10).frame(width: UIScreen.main.bounds.width).padding(.leading,30)
                     }
+                    
                     
                     
                     NavigationLink {
@@ -72,25 +67,30 @@ struct HomescreenAddContentView: View {
                     } label: {
                         
                         VStack(spacing: 10){
-                        
+                            
                             HStack(alignment: .center, spacing: 20){
                                 Image(systemName: "questionmark.bubble.fill").foregroundColor(FOREGROUNDCOLOR).frame(width: 15, height: 15)
                                 Text("Create a Poll").foregroundColor(FOREGROUNDCOLOR)
-
+                                
                                 Spacer()
                             }.foregroundColor(FOREGROUNDCOLOR)
                             
                             Rectangle().frame(width: UIScreen.main.bounds.width, height: 1).foregroundColor(Color.gray)
                         }.padding(.top,10).frame(maxWidth: UIScreen.main.bounds.width).padding(.leading,30)
                     }
-
+                    
                     
                     
                 }
-             
+                
+                
+                
+                
+            }
             
-                
-                
+            NavigationLink(destination:                             CreateGroupView(showCreateGroupView: $showCreateGroupView)
+                           , isActive: $showCreateGroupView) {
+                EmptyView()
             }
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).resizeToScreenSize()
     }
@@ -103,6 +103,16 @@ struct AddGroupsToEventView : View {
     @State var selectedGroups: [Group] = []
     @EnvironmentObject var userVM: UserViewModel
     @StateObject var searchVM = SearchRepository()
+    @Binding var showAddEventView : Bool
+    @Binding var showCreateGroupView: Bool
+    
+    var groupsToShow: [Group] {
+        if searchVM.searchText == ""{
+            return userVM.groups
+        }else{
+            return searchVM.userGroupReturnedResults
+        }
+    }
     
     var body: some View {
         ZStack{
@@ -129,7 +139,7 @@ struct AddGroupsToEventView : View {
                     } label: {
                         Text("Skip")
                     }
-
+                    
                 }.padding(.top,50).padding(.horizontal)
                 
                 SearchBar(text: $searchVM.searchText, placeholder: "your groups..", onSubmit: {}).padding(.horizontal)
@@ -138,7 +148,7 @@ struct AddGroupsToEventView : View {
                     HStack{
                         ForEach(selectedGroups){ group in
                             HStack{
-                                Text("\(group.groupName ?? "")")
+                                Text("\(group.groupName)")
                                 Button(action:{
                                     selectedGroups.removeAll(where: {$0.id == group.id})
                                 },label:{
@@ -149,10 +159,24 @@ struct AddGroupsToEventView : View {
                     }
                 }.padding(.horizontal)
                 
-                VStack{
+                VStack(){
                     ScrollView{
                         
-                        ForEach(searchVM.userGroupReturnedResults, id: \.id) { group in
+                        NavigationLink(destination: CreateGroupView(showCreateGroupView: $showCreateGroupView)) {
+                            HStack{
+                                ZStack{
+                                    Circle().frame(width: 48, height: 48).foregroundColor(Color("Color"))
+                                    Image(systemName: "person.3.fill").font(.system(size: 18)).foregroundColor(FOREGROUNDCOLOR)
+                                }
+                                Text("Create a new Group").foregroundColor(FOREGROUNDCOLOR)
+                                
+                                Spacer()
+                            }.padding(.vertical,10)
+                        }
+                        
+                        
+                        Divider()
+                        ForEach(groupsToShow, id: \.id) { group in
                             Button {
                                 if selectedGroups.contains(where: {$0.id == group.id}){
                                     selectedGroups.removeAll(where: {$0.id == group.id})
@@ -166,40 +190,47 @@ struct AddGroupsToEventView : View {
                                         .scaledToFill()
                                         .frame(width:48,height:48)
                                         .clipShape(Circle())
-                                        
+                                    
                                     
                                     VStack(alignment: .leading){
                                         
                                         Text("\(group.groupName)").foregroundColor(Color("Foreground"))
                                         Text("\(group.users.count) \(group.users.count > 1 ? "members" : "member")").foregroundColor(.gray)
                                         
-
+                                        
                                     }
                                     Spacer()
                                     
                                     Image(systemName: selectedGroups.contains(where: {$0.id == group.id}) ? "checkmark.circle.fill" : "circle").font(.title).foregroundColor(FOREGROUNDCOLOR)
-                                
-                                }.padding(10)
+                                    
+                                }
                             }
-
+                            
                         }
                         
                         
                         
                     }
-                }
+                    
+                    
+                    
+                    
+                }.padding(10)
                 
                 Button(action:{
-                    
+                    openCreateEventView.toggle()
                 },label:{
-                    
-                })
+                    Text("Add Groups").foregroundColor(FOREGROUNDCOLOR)
+                        .frame(width: UIScreen.main.bounds.width/1.5).padding(10).background(RoundedRectangle(cornerRadius: 16).fill(selectedGroups.count > 0 ? Color("AccentColor") : Color("Color")))
+                }).disabled(selectedGroups.count == 0).padding(.bottom,30)
+                
+                Spacer()
                 
             }
             
             
             //nav link
-            NavigationLink(destination:  CreateEventView(isGroup: false)
+            NavigationLink(destination:  CreateEventView(selectedGroups: selectedGroups, isGroup: false, showAddEventView: $showAddEventView)
                            , isActive: $openCreateEventView) {
                 EmptyView()
             }
