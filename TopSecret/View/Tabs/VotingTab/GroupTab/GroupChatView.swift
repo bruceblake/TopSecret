@@ -90,7 +90,8 @@ struct GroupChatView: View {
     func scrollToBottom(scrollViewProxy: ScrollViewProxy){
         scrollViewProxy.scrollTo("Empty", anchor: .bottom)
     }
-    
+    @State var editText: String = ""
+
     
     
     var body: some View {
@@ -138,11 +139,7 @@ struct GroupChatView: View {
                         ScrollViewReader { scrollViewProxy in
                             VStack(spacing: 0){
                                 ForEach(chatVM.messages, id: \.id){ message in
-                                    if message.type == "text"{
-                                        MessageTextCell(message: message, chatID: chatVM.chat.id)
-                                    }else if message.type == "followUpUserText"{
-                                        MessageFollowUpTextCell(message: message, chatID: chatVM.chat.id)
-                                    }
+                                    MessageCell(message: message, selectedMessage: $selectedMessage, showOverlay: $showOverlay, personalChatVM: PersonalChatViewModel()).environmentObject(userVM)
                                 }
                                     HStack{Spacer()}.padding(0).id("Empty")
                                 }.background(GeometryReader{ proxy -> Color in
@@ -401,11 +398,175 @@ struct GroupChatView: View {
                     
                 }.background(Color("Color")).offset(y: -self.keyboardHeight)
                 
-            }.opacity(self.openAddContent ? 0.2 : 1).disabled(self.openAddContent).onTapGesture(perform: {
+            }.opacity(userVM.hideBackground ? 0.2 : 1).disabled(userVM.hideBackground).onTapGesture(perform: {
+                
+                if userVM.hideBackground {
+                    userVM.hideBackground.toggle()
+                }
+                
                 if self.openAddContent {
                     self.openAddContent.toggle()
                 }
-            })
+                if self.showOverlay{
+                    self.showOverlay.toggle()
+                }
+                if self.showEditView{
+                    self.showEditView.toggle()
+                }
+            }).overlay {
+                if self.showOverlay{
+                    VStack{
+                        VStack(alignment: .leading, spacing: 5){
+                            HStack{
+                                if selectedMessage.userID == userVM.user?.id ?? " "{
+                                    Text("Me").foregroundColor(Color("AccentColor"))
+                                }else{
+                                    Text("\(selectedMessage.name ?? " ")").foregroundColor(Color.blue)
+                                }
+                                Spacer()
+                                Text("\(selectedMessage.timeStamp?.dateValue() ?? Date(), style: .time)").foregroundColor(.gray).font(.footnote)
+                            }
+                            HStack{
+                                Text("\(selectedMessage.value ?? "")").foregroundColor(FOREGROUNDCOLOR).lineLimit(5)
+                                if selectedMessage.edited ?? false{
+                                    Text("(edited)").foregroundColor(.gray).font(.footnote)
+                                }
+                                
+                                Spacer()
+                            }
+                            HStack{
+                                
+//
+//
+//                                if (personalChatVM.chat.usersThatHaveSeenLastMessage?.contains(self.getPersonalChatUser().id ?? "") ?? false){
+//                                    HStack(alignment: .center){
+//
+//                                        Image(systemName: "play").foregroundColor(Color("AccentColor")).font(.caption)
+//                                        Text("Read").foregroundColor(Color.gray).font(.subheadline)
+//
+//
+//                                    }
+//
+//
+//
+//                                }else{
+//                                    HStack(alignment: .center){
+//
+//
+//                                        Image(systemName: "play.fill").foregroundColor(Color("AccentColor")).font(.caption)
+//
+//                                        Text("Delivered").foregroundColor(Color.gray).font(.subheadline)
+//
+//
+//
+//
+//                                    }
+//
+//                                }
+                                
+                                
+                                
+                                Spacer()
+                            }
+                        }.padding(10).background(RoundedRectangle(cornerRadius: 8).fill(Color("Color")))
+                        
+                        if selectedMessage.userID == userVM.user?.id ?? "" {
+                            VStack(alignment: .leading){
+                                Button(action:{
+                                    withAnimation{
+                                        self.showEditView.toggle()
+                                        self.showOverlay.toggle()
+                                        editText = self.selectedMessage.value ?? ""
+//                                        self.focused = true
+                                    }
+                                    
+                                },label:{
+                                    HStack{
+                                        Text("Edit")
+                                        Spacer()
+                                    }.foregroundColor(FOREGROUNDCOLOR)
+                                })
+                                Divider()
+                                Button(action:{
+                                    withAnimation{
+                                        self.showReplyView.toggle()
+                                        self.showOverlay.toggle()
+                                        userVM.hideBackground.toggle()
+                                    }
+                                    
+                                },label:{
+                                    HStack{
+                                        Text("Reply")
+                                        Spacer()
+                                    }
+                                }).foregroundColor(FOREGROUNDCOLOR)
+                                Divider()
+                                Button(action:{
+//                                    withAnimation{
+//                                        personalChatVM.deleteMessage(messageID: selectedMessage.id, chatID: personalChatVM.chat.id, user: userVM.user ?? User())
+//                                        self.showOverlay.toggle()
+//                                        userVM.hideBackground.toggle()
+//                                    }
+                                    
+                                    
+                                },label:{
+                                    HStack{
+                                        Text("Delete")
+                                        Spacer()
+                                    }
+                                }).foregroundColor(FOREGROUNDCOLOR)
+                                
+                            }.padding(10).background(RoundedRectangle(cornerRadius: 8).fill(Color("Color")))
+                        }else{
+                            VStack{
+                                Button(action:{
+                                    self.showReplyView.toggle()
+                                    self.showOverlay.toggle()
+                                    userVM.hideBackground.toggle()
+                                },label:{
+                                    HStack{
+                                        Text("Reply")
+                                        Spacer()
+                                    }
+                                }).foregroundColor(FOREGROUNDCOLOR)
+                            }.padding(10).background(RoundedRectangle(cornerRadius: 8).fill(Color("Color")))
+                            
+                        }
+                        
+                        
+                    }.frame(width: UIScreen.main.bounds.width-20)
+                    
+                }
+                if showEditView{
+                    VStack(alignment: .leading, spacing: 5){
+                        HStack{
+                            if selectedMessage.userID == userVM.user?.id ?? " "{
+                                Text("Me").foregroundColor(Color("AccentColor"))
+                            }else{
+                                Text("\(selectedMessage.name ?? " ")").foregroundColor(Color.blue)
+                            }
+                            Spacer()
+                            Text("\(selectedMessage.timeStamp?.dateValue() ?? Date(), style: .time)").foregroundColor(.gray).font(.footnote)
+                        }
+                        
+                        HStack{
+                            TextField("\(selectedMessage.value ?? "")", text: $editText).padding(5).background(RoundedRectangle(cornerRadius: 12).fill(Color("Background")))
+                            
+                            Button(action:{
+//                                personalChatVM.editMessage(messageID: selectedMessage.id, chatID: personalChatVM.chat.id, text: editText)
+                                self.editText = ""
+                                self.showEditView.toggle()
+                                userVM.hideBackground.toggle()
+                            },label:{
+                                Text("Send").padding(5).background(RoundedRectangle(cornerRadius: 12).fill(Color("Background")))
+                            }).disabled(self.editText == "")
+                        }
+                        
+                        
+                    }.padding(10).background(RoundedRectangle(cornerRadius: 8).fill(Color("Color"))).frame(width: UIScreen.main.bounds.width-20)
+                }
+            }
+            
             
             
             BottomSheetView(isOpen: $openAddContent, maxHeight: UIScreen.main.bounds.height / 3){

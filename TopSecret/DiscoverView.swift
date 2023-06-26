@@ -169,6 +169,60 @@ struct EventTabEventCell : View {
         event.location?.name ?? ""
     }
     
+    func getTimeSince(date: Date) -> String{
+        let interval = (Date() - date)
+        
+        
+        var seconds = interval.second ?? 0
+        var minutes = (seconds / 60)
+        var hours = (minutes / 60)
+        var days = (hours / 24)
+        var time = ""
+        if seconds < 60{
+            if seconds == 1 {
+                time = "\(seconds) second ago"
+            }else{
+                time = "\(seconds) seconds ago"
+            }
+        }else if seconds < 3600  {
+            if minutes == 1 {
+                time = "\(minutes) minute ago"
+            }else{
+                time = "\(minutes) minutes ago"
+            }
+        }else if seconds < 86400 {
+            if hours == 1 {
+                time = "\(hours) hour ago"
+            }else{
+                time = "\(hours) hours ago"
+            }
+        }else if seconds < 604800 {
+            if days == 1 {
+                time = "\(days) day ago"
+            }else{
+                time = "\(days) days ago"
+            }
+        }
+        if time == "0 seconds ago"{
+            return "now"
+        }else{
+            return time
+        }
+        
+    }
+    
+    func getDaysUntil(date: Date) -> Int{
+        let calendar = Calendar.current
+        let date1 = calendar.startOfDay(for: Date())
+        let date2 = calendar.startOfDay(for: date.addingTimeInterval(86400))
+        let components = calendar.dateComponents([.day], from: date1, to: date2)
+
+        if let days = components.day {
+            return days
+        } else {
+           return -1
+        }
+    }
     var body: some View {
         
     
@@ -185,15 +239,21 @@ struct EventTabEventCell : View {
                             Text(event.eventName ?? " ").font(.title3).bold().foregroundColor(FOREGROUNDCOLOR)
                             Spacer()
                         }
-                        
-                        VStack(alignment: .leading){
-                            Text("\(event.eventStartTime?.dateValue() ?? Date(), style: .date)").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
-                            HStack{
-                                Text(event.eventStartTime?.dateValue() ?? Date(), style: .time).foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
-                                Text("-")
-                                Text("\(event.eventEndTime?.dateValue() ?? Date(), style: .time)").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
-                            }.foregroundColor(FOREGROUNDCOLOR)
+                        if event.eventStartTime?.dateValue() ?? Date() <= Date(){
+                            Text("Event started \(getTimeSince(date: event.eventStartTime?.dateValue() ?? Date()))").foregroundColor(Color.green)
+                        }else{
+                            VStack(alignment: .leading){
+                                Text("\(event.eventStartTime?.dateValue() ?? Date(), style: .date)").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+                                HStack{
+                                    Text(event.eventStartTime?.dateValue() ?? Date(), style: .time).foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+                                    Text("-")
+                                    Text("\(event.eventEndTime?.dateValue() ?? Date(), style: .time)").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+                                }.foregroundColor(FOREGROUNDCOLOR)
+                                
+                                Text("\(getDaysUntil(date: event.eventStartTime?.dateValue() ?? Date())) days away")
+                            }
                         }
+                       
                         
                         Text("\(eventLocationName == "" ? "No Location Specified" : eventLocationName)").foregroundColor(Color.gray).font(.callout)
                         

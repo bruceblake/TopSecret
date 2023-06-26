@@ -15,10 +15,10 @@ import MapKit
 struct CreateEventView: View {
     
     @State var eventName: String = ""
-    @State var eventStartTime : Date = Date()
+    @State var eventStartTime : Date = Date().addingTimeInterval(300)
     @State var membersCanInviteGuests : Bool = false
     @State var isAllDay : Bool = false
-    @State var eventEndTime : Date = Date()
+    @State var eventEndTime : Date = Date().addingTimeInterval(3900)
     @State var selectedFriends : [User] = []
     var selectedGroups : [Group]?
     @State var openFriendsList : Bool = false
@@ -203,6 +203,9 @@ struct CreateEventView: View {
                                         }
                                         if eventStartTime < Date(){
                                             Text("Start Date cannot be before today").foregroundColor(Color.red).font(.caption)
+                                        }
+                                        if eventStartTime == eventEndTime{
+                                            Text("Start Date and End Date cannot be the same.. lame party").foregroundColor(Color.red).font(.caption)
                                         }
                                     }
                                   

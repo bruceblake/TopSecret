@@ -557,45 +557,54 @@ struct EventDetailView : View {
                         }.padding(5).background(RoundedRectangle(cornerRadius: 12).fill(Color("Background")))
                     }.padding()
                     
-                    VStack(alignment: .leading){
-                        Text("RSVP").foregroundColor(Color.gray).bold()
+                    if event.eventStartTime?.dateValue() ?? Date() > Date() {
                         VStack(alignment: .leading){
-                            
-                            Toggle("I don't know yet", isOn: $isUndecided)
-                            
-                        
-                            if !isUndecided{
-                                Button(action:{
-                                    selectedOption = 0
-                                },label:{
-                                    HStack{
-                                       
-                                        Text("I Will Be Attending").foregroundColor(FOREGROUNDCOLOR).bold()
-                                        Spacer()
-                                        if selectedOption == 0 {
-                                                Image(systemName: "checkmark")
-                                        }
-                                    }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color.green)).foregroundColor(FOREGROUNDCOLOR).opacity(selectedOption == 1 ? 0.5 : 1)
-                                })
+                            Text("RSVP").foregroundColor(Color.gray).bold()
+                            VStack(alignment: .leading){
                                 
-                                Button(action:{
-                                    selectedOption = 1
-                                },label:{
-                                    HStack{
-                                       
-                                        Text("I Will Not Be Attending").foregroundColor(FOREGROUNDCOLOR).bold()
-                                        Spacer()
-                                        if selectedOption == 1 {
-                                                Image(systemName: "checkmark")
-                                        }
-                                      
-                                    }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color.red)).foregroundColor(FOREGROUNDCOLOR).opacity(selectedOption == 0 ? 0.5 : 1)
-                                })
-                            }
-                          
-                        }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
-                    }.padding(.horizontal)
-                   
+                                Toggle("I don't know yet", isOn: $isUndecided)
+                                
+                            
+                                if !isUndecided{
+                                    Button(action:{
+                                        selectedOption = 0
+                                    },label:{
+                                        HStack{
+                                           
+                                            Text("I Will Be Attending").foregroundColor(FOREGROUNDCOLOR).bold()
+                                            Spacer()
+                                            if selectedOption == 0 {
+                                                    Image(systemName: "checkmark")
+                                            }
+                                        }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color.green)).foregroundColor(FOREGROUNDCOLOR).opacity(selectedOption == 1 ? 0.5 : 1)
+                                    })
+                                    
+                                    Button(action:{
+                                        selectedOption = 1
+                                    },label:{
+                                        HStack{
+                                           
+                                            Text("I Will Not Be Attending").foregroundColor(FOREGROUNDCOLOR).bold()
+                                            Spacer()
+                                            if selectedOption == 1 {
+                                                    Image(systemName: "checkmark")
+                                            }
+                                          
+                                        }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color.red)).foregroundColor(FOREGROUNDCOLOR).opacity(selectedOption == 0 ? 0.5 : 1)
+                                    })
+                                }
+                              
+                            }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
+                        }.padding(.horizontal)
+                       
+                    }else{
+                        if event.creatorID == USER_ID {
+                            Text("End \(event.eventName ?? " ")").foregroundColor(Color.red)
+                        }else{
+                            Text("Leave \(event.eventName ?? " ")")
+                        }
+                    }
+                    
                
                     
                     
