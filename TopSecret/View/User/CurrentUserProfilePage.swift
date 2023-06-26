@@ -68,15 +68,17 @@ struct CurrentUserProfilePage: View {
                                     self.seeProfilePicture.toggle()
                                 },label:{
                                     WebImage(url: URL(string: userVM.user?.profilePicture ?? ""))
-                                        .resizable()
                                         .scaledToFill()
                                         .frame(width:60,height:60)
                                         .clipShape(Circle())
+                                        
                                 }).fullScreenCover(isPresented: $seeProfilePicture) {
                                     
                                 } content: {
                                     WebImage(url: URL(string: userVM.user?.profilePicture ?? ""))
-                                            .resizable()
+                                            .resizable().placeholder{
+                                                ProgressView()
+                                            }
                                             .scaledToFit()
                                 .onTapGesture{
                                         self.seeProfilePicture.toggle()

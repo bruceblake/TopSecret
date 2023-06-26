@@ -90,7 +90,9 @@ struct InviteMembersToEventView: View {
                                 HStack{
                                     
                                     WebImage(url: URL(string: friend.profilePicture ?? ""))
-                                        .resizable()
+                                        .resizable().placeholder{
+                                            ProgressView()
+                                        }
                                         .scaledToFill()
                                         .frame(width:40,height:40)
                                         .clipShape(Circle())

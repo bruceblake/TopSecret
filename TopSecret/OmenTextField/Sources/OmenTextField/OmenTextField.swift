@@ -53,7 +53,7 @@ public struct OmenTextField: View {
 
     public var body: some View {
         ZStack(alignment: .topLeading) {
-            HStack{
+            HStack(alignment: .bottom){
                 Text(title)
                     .foregroundColor(.secondary)
                     .opacity(text.isEmpty ? 0.5 : 0)

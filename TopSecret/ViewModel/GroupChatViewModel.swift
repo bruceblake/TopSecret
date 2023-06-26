@@ -22,7 +22,9 @@ class GroupChatViewModel : ObservableObject {
     @Published var usersIdlingListener : ListenerRegistration?
     @Published var chat : ChatModel = ChatModel()
     @Published var users: [User] = []
-    
+    @Published var sendingMedia: Bool = false
+    @Published var imagesSent: Int = 0
+    @Published var videosSent: Int = 0
     
     
     func readLastMessage(chatID: String, userID: String){
@@ -105,7 +107,8 @@ class GroupChatViewModel : ObservableObject {
     
     //action
     
-    func sendTextMessage(text: String, user: User, timeStamp: Timestamp, nameColor: String, messageID: String,messageType: String, chatID: String, groupID: String, messageColor: String){
+    
+    func sendTextMessage(text: String, user: User, timeStamp: Timestamp, nameColor: String, messageID: String, messageType: String, chatID: String){
         
         let textMessageData = ["name":user.nickName ?? "",
                                "timeStamp":timeStamp,
@@ -137,6 +140,8 @@ class GroupChatViewModel : ObservableObject {
         })
         
         
+        
+        
     }
     
     func editMessage(messageID: String, chatID: String, text: String, groupID: String){
@@ -146,20 +151,150 @@ class GroupChatViewModel : ObservableObject {
 
     }
     
-    func sendImageMessage(name: String, timeStamp: Timestamp, nameColor: String, messageID: String, profilePicture: String, messageType: String ,chatID: String, imageURL: UIImage, groupID: String){
-        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).collection("Messages").document(messageID).setData(["name":name,"timeStamp":timeStamp, "nameColor":nameColor, "id":messageID,"profilePicture":profilePicture,"messageType":messageType,"messageValue":""])
-        persistImageToStorage(image: imageURL, chatID: chatID, messageID: messageID, groupID: groupID)
-        self.scrollToBottom += 1
+    
+    func getLastMessage() -> Message{
+        return self.messages.last ?? Message()
+    }
+    
+    
+    func sendVideoMessage(videoUrl: URL, user: User, completion: @escaping (Bool) -> ()) {
+        let data = try! Data(contentsOf: videoUrl)
+        let storageRef = Storage.storage().reference()
+        let path = "\(self.chat.id)/ChatVideos/\(UUID().uuidString).mp4"
+        let fileRef = storageRef.child(path)
+        let metadata = StorageMetadata()
+        metadata.contentType = "video/mp4"
+        let dp = DispatchGroup()
+        dp.enter()
+        let uploadTask = fileRef.putData(data, metadata: metadata) { (metadata, error) in
+            if let error = error {
+                print("Error uploading video: \(error.localizedDescription)")
+                completion(false)
+            } else {
+                fileRef.downloadURL { (url, error) in
+                    guard let downloadURL = url else {
+                        print("Error getting download URL: \(error?.localizedDescription ?? "unknown error")")
+                        self.sendingMedia = false
+                        completion(false)
+                        return
+                    }
+                    let messageID = UUID().uuidString
+                    let imageMessageData = ["name":user.nickName ?? "",
+                                            "timeStamp":Timestamp(),
+                                            "id":messageID,
+                                            "profilePicture":user.profilePicture ?? "",
+                                            "type":"video",
+                                            "userID":user.id ?? " ",
+                                            "value":url?.absoluteString ?? " "] as! [String:Any]
+                    COLLECTION_PERSONAL_CHAT.document(self.chat.id).collection("Messages").document(messageID).setData(imageMessageData)
+                    dp.leave()
+                    
+                    dp.notify(queue: .main, execute:{
+                        
+                        COLLECTION_PERSONAL_CHAT.document(self.chat.id).updateData(["lastMessageID":messageID])
+                        
+                        COLLECTION_PERSONAL_CHAT.document(self.chat.id).updateData(["usersThatHaveSeenLastMessage":[user.id ?? " "]])
+                        
+                        COLLECTION_PERSONAL_CHAT.document(self.chat.id).updateData(["lastActionDate":Timestamp()])
+                        return completion(true)
+                    })
+                }
+            }
+        }
+    }
+    
+    func sendImageMessage(image: UIImage, user: User, completion: @escaping (Bool) -> ()){
+        
+        
+        let storageRef = Storage.storage().reference()
+        
+        let imageData = image.jpegData(compressionQuality: 0.1)
+        
+        guard imageData != nil else {
+            return completion(false)
+        }
+        let path = "\(self.chat.id)/ChatImages/\(UUID().uuidString).jpg"
+        let fileRef = storageRef.child(path)
+        let dp = DispatchGroup()
+        
+        dp.enter()
+        let uploadTask = fileRef.putData(imageData!, metadata: nil) { metadata , err in
+            if err == nil && metadata != nil {
+
+                fileRef.downloadURL { downloadedURL, err in
+                    if err != nil {
+                        print("ERROR")
+                        dp.leave()
+                        return completion(false)
+                    }
+                    let messageID = UUID().uuidString
+                    let imageMessageData = ["name":user.nickName ?? "",
+                                            "timeStamp":Timestamp(),
+                                            "id":messageID,
+                                            "profilePicture":user.profilePicture ?? "",
+                                            "type":"image",
+                                            "userID":user.id ?? " ",
+                                            "value":downloadedURL?.absoluteString ?? " "] as! [String:Any]
+                    COLLECTION_PERSONAL_CHAT.document(self.chat.id).collection("Messages").document(messageID).setData(imageMessageData)
+                    dp.leave()
+                    
+                    dp.notify(queue: .main, execute:{
+                        
+                        COLLECTION_PERSONAL_CHAT.document(self.chat.id).updateData(["lastMessageID":messageID])
+                        
+                        COLLECTION_PERSONAL_CHAT.document(self.chat.id).updateData(["usersThatHaveSeenLastMessage":[user.id ?? " "]])
+                        
+                        COLLECTION_PERSONAL_CHAT.document(self.chat.id).updateData(["lastActionDate":Timestamp()])
+                        return completion(true)
+                    })
+                }
+                
+            }
+            
+            
+        }
+    }
+    
+    func sendReplyTextMessage(text: String, user: User, nameColor: String, repliedMessageID: String, messageType: String, chatID: String){
+        let id = UUID().uuidString
+        
+        
+        let textMessageData = ["name":user.nickName ?? "",
+                               "timeStamp":Timestamp(),
+                               "nameColor":nameColor,
+                               "id":id,
+                               "profilePicture":user.profilePicture
+                               ?? "",
+                               "type":"repliedMessage",
+                               "value":text,
+                               "userID":user.id ?? " ",
+                               "repliedMessageID":repliedMessageID] as! [String:Any]
+        COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").document(id).setData(textMessageData)
         
     }
     
-    func sendDeletedMessage(name: String, timeStamp: Timestamp, nameColor:String, messageID: String, messageType: String, chatID: String, groupID: String){
-        COLLECTION_GROUP.document(groupID).collection("Chat").document(chatID).collection("Messages").document(messageID).setData(
-            //this is the message
-            ["name":name,"timeStamp":timeStamp,"nameColor":nameColor,"id":messageID,"messageType":messageType]
-        )
+    func editMessage(messageID: String, chatID: String, text: String){
+        COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").document(messageID).updateData(["value":text])
+        COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").document(messageID).updateData(["edited":true])
+    }
+    
+    func deleteMessage(messageID: String, chatID: String, user: User){
+        let dp = DispatchGroup()
+        dp.enter()
+        let id = UUID().uuidString
+        let messageText = "\(user.nickName ?? "") deleted a chat!"
+        COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["lastMessageID":id])
+        let textMessageData = ["name":user.nickName ?? "",
+                               "timeStamp":Timestamp(),
+                               "id":id,
+                               "type":"delete",
+                               "value":messageText] as! [String:Any]
+        dp.leave()
+        dp.notify(queue: .main, execute:{
+            COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").document(id).setData(textMessageData)
+            COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").document(messageID).delete()
+        })
         
-        self.scrollToBottom += 1
     }
     
     

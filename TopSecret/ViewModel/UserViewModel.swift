@@ -56,10 +56,6 @@ class UserViewModel : ObservableObject {
         dp.enter()
         self.userSession = Auth.auth().currentUser
         
-        //        Auth.auth().addStateDidChangeListener { auth, user in
-        //            self.userSession = user
-        //        }
-        
         dp.leave()
         
         dp.notify(queue: .main, execute: {
@@ -79,8 +75,7 @@ class UserViewModel : ObservableObject {
         dp.notify(queue: .main, execute:{
             self.listenToAll(uid: self.userSession?.uid ?? " ")
             let uid = self.userSession?.uid ?? " "
-            print("uid: \(uid)")
-            
+            print("user_id: \(uid)")
         })
     }
     
@@ -397,14 +392,7 @@ class UserViewModel : ObservableObject {
                 groupD.leave()
             }
             
-            
-            
-            groupD.enter()
-            self.fetchUserPersonalChats(personalChats: data["personalChatsID"] as? [String] ?? []) { fetchedChats in
-                data["personalChats"] = fetchedChats
-                groupD.leave()
-            }
-            
+ 
             groupD.notify(queue: .main, execute:{
                 UIApplication.shared.applicationIconBadgeNumber = appIconBadgeNumber
                 self.user = User(dictionary: data)
@@ -646,8 +634,6 @@ class UserViewModel : ObservableObject {
             
             let data = snapshot?.data() as? [String:Any] ?? [:]
             let usersLoggedInCount = data["usersLoggedInCount"] as? Int ?? 0
-            print("uid: \(self.userSession?.uid ?? " ")")
-            print("usersLoggedInCount: \(usersLoggedInCount)")
         }
         
         dp.leave()

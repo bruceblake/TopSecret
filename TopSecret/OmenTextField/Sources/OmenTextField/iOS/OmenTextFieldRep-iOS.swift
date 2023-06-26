@@ -24,7 +24,6 @@ import SwiftUI
             view.delegate = context.coordinator
             view.textContainerInset = .zero
             view.textContainer.lineFragmentPadding = 0
-            view.keyboardDismissMode = .interactive
             view.returnKeyType = returnKeyType.uiReturnKey
             DispatchQueue.main.async {
                 view.text = text
@@ -114,15 +113,15 @@ import SwiftUI
             fatalError("init(coder:) has not been implemented")
         }
 
-//        override func becomeFirstResponder() -> Bool {
-//            rep.isFocused?.wrappedValue = true
-//            return super.becomeFirstResponder()
-//        }
-//
-//        override func resignFirstResponder() -> Bool {
-//            rep.isFocused?.wrappedValue = false
-//            return super.resignFirstResponder()
-//        }
+        override func becomeFirstResponder() -> Bool {
+            rep.isFocused?.wrappedValue = true
+            return super.becomeFirstResponder()
+        }
+
+        override func resignFirstResponder() -> Bool {
+            rep.isFocused?.wrappedValue = false
+            return super.resignFirstResponder()
+        }
     }
 
     // MARK: - Useful Extensions

@@ -14,7 +14,7 @@ struct FriendsView: View {
     //problem: must store each friends text field text in friendsview
     @EnvironmentObject var userVM : UserViewModel
     @StateObject var searchVM = SearchRepository()
-    @ObservedObject var personalChatVM : PersonalChatViewModel
+    @StateObject var personalChatVM : PersonalChatViewModel
     @State var openGroupChatView: Bool = false
     @State var openPersonalChatView: Bool = false
     @EnvironmentObject var groupVM : SelectedGroupViewModel

@@ -101,13 +101,13 @@ struct CreateEventView: View {
                         self.showAddEventView = false
                     },label:{
                         if event != nil {
-                            Text("Edit").foregroundColor(FOREGROUNDCOLOR).padding(.horizontal,10).padding(.vertical,5).background(RoundedRectangle(cornerRadius: 16).fill(eventName == "" ? Color("Color") : Color("AccentColor"))).disabled(eventName == "")
+                            Text("Edit").foregroundColor(FOREGROUNDCOLOR).padding(.horizontal,10).padding(.vertical,5).background(RoundedRectangle(cornerRadius: 16).fill(eventName == "" || eventStartTime > eventEndTime ? Color("Color") : Color("AccentColor"))).disabled(eventName == "")
                         }else{
-                            Text("Create").foregroundColor(FOREGROUNDCOLOR).padding(.horizontal,10).padding(.vertical,5).background(RoundedRectangle(cornerRadius: 16).fill(eventName == "" ? Color("Color") : Color("AccentColor"))).disabled(eventName == "")
+                            Text("Create").foregroundColor(FOREGROUNDCOLOR).padding(.horizontal,10).padding(.vertical,5).background(RoundedRectangle(cornerRadius: 16).fill(eventName == "" || eventStartTime > eventEndTime ? Color("Color") : Color("AccentColor"))).disabled(eventName == "")
                         }
                       
                         
-                    }).disabled(eventName == "")
+                    }).disabled(eventName == "" || eventStartTime > eventEndTime)
                 }.padding(.top,50).padding(.horizontal,10)
                 
                 
@@ -197,6 +197,12 @@ struct CreateEventView: View {
                                                 DatePicker("", selection: $eventEndTime)
                                             }
                                             Spacer()
+                                        }
+                                        if eventStartTime > eventEndTime{
+                                            Text("End Date cannot be before Start Date").foregroundColor(Color.red).font(.caption)
+                                        }
+                                        if eventStartTime < Date(){
+                                            Text("Start Date cannot be before today").foregroundColor(Color.red).font(.caption)
                                         }
                                     }
                                   

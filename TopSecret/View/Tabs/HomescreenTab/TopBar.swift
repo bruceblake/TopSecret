@@ -29,6 +29,9 @@ struct TopBar : View {
                 NavigationLink(destination: CurrentUserProfilePage()) {
                     WebImage(url: URL(string: userVM.user?.profilePicture ?? " "))
                         .resizable()
+                        .placeholder{
+                            ProgressView()
+                        }
                         .scaledToFill()
                         .frame(width:35,height:35)
                         .clipShape(Circle())
@@ -59,7 +62,12 @@ struct TopBar : View {
             Spacer()
             
             if tabIndex == .calendar {
+                Button {
+                    print("user_id: \(USER_ID)")
+                } label: {
                     Text("Calendar").bold().font(.title2).foregroundColor(FOREGROUNDCOLOR)
+                }
+
             }
             else if tabIndex == .friends{
                 Text("Friends").bold().font(.title2)

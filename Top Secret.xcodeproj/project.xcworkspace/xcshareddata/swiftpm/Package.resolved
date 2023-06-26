@@ -11,6 +11,15 @@
         }
       },
       {
+        "package": "AdvancedScrollView",
+        "repositoryURL": "https://github.com/dmytro-anokhin/advanced-scrollview",
+        "state": {
+          "branch": null,
+          "revision": "87d83354cde746751029312efdb844e0f57dc820",
+          "version": "0.0.6"
+        }
+      },
+      {
         "package": "AdvancedList",
         "repositoryURL": "https://github.com/crelies/AdvancedList",
         "state": {

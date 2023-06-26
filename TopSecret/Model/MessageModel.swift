@@ -27,7 +27,7 @@ struct Message : Identifiable{
     var event: EventModel?
     var post: GroupPostModel?
     var poll: PollModel?
- 
+    var urls: [String]?
     
     
     init(dictionary: [String:Any]){
@@ -47,6 +47,7 @@ struct Message : Identifiable{
         self.event = dictionary["event"] as? EventModel ?? EventModel()
         self.post = dictionary["post"] as? GroupPostModel ?? GroupPostModel()
         self.poll = dictionary["poll"] as? PollModel ?? PollModel()
+        self.urls = dictionary["urls"] as? [String] ?? []
     }
     
     

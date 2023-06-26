@@ -229,7 +229,6 @@ class PersonalChatViewModel : ObservableObject {
         //how to paginate
         //1. listen to newest 20 messages [20,19,18,17,...,0]
         //2. fetch 20 starting after the 20th
-        self.messagesListener?.remove()
         self.messagesListener = COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").order(by: "timeStamp", descending: true).limit(to: 20).addSnapshotListener { snapshot, err in
             if err != nil {
                 print(err!.localizedDescription)
@@ -311,13 +310,6 @@ class PersonalChatViewModel : ObservableObject {
                             dp.leave()
                         }
                     }
-                    if type == "postMessage"{
-                        dp.enter()
-                        self.fetchPost(postID: value){ fetchedPost in
-                            data["post"] = fetchedPost
-                            dp.leave()
-                        }
-                    }
                     if type == "pollMessage"{
                         dp.enter()
                         
@@ -346,31 +338,15 @@ class PersonalChatViewModel : ObservableObject {
                     //oldest messages left (first in the array) , newest messages right (last in the array)
                     //we flip the array -> [19,18,17,..0]
                     //proper order
+                    print("fetched messages")
                     self.messages = messagesToReturn.reversed()
                 })
             }
-            
-            
-            
-            
-            
-            
+ 
             self.lastSnapshot = snapshot!.documents.last
             
-         
-            
         }
-        $text
-            .debounce(for: .seconds(1), scheduler: RunLoop.main)
-            .sink{value in
-                if value != "" {
-                    self.startTyping(userID: userID, chatID: chatID)
-                }else{
-                    self.stopTyping(userID: userID, chatID: chatID)
-                }
-                COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["draftText":value])
-            }
-            .store(in: &cancellables)
+       
         
     }
     
@@ -694,6 +670,115 @@ class PersonalChatViewModel : ObservableObject {
         }
     }
     
+    func sendMultipleVideosMessage(videoUrls: [URL], user: User, completion: @escaping (Bool) -> ()){
+        let dp = DispatchGroup()
+        dp.enter()
+        let messageID = UUID().uuidString
+        
+        let imageMessageData = ["name":user.nickName ?? "",
+                                "timeStamp":Timestamp(),
+                                "id":messageID,
+                                "profilePicture":user.profilePicture ?? "",
+                                "type":"multipleVideos",
+                                "userID":user.id ?? " "] as! [String:Any]
+        COLLECTION_PERSONAL_CHAT.document(self.chat.id).collection("Messages").document(messageID).setData(imageMessageData)
+        
+             COLLECTION_PERSONAL_CHAT.document(self.chat.id).updateData(["lastMessageID":messageID])
+             
+             COLLECTION_PERSONAL_CHAT.document(self.chat.id).updateData(["usersThatHaveSeenLastMessage":[user.id ?? " "]])
+             
+             COLLECTION_PERSONAL_CHAT.document(self.chat.id).updateData(["lastActionDate":Timestamp()])
+        dp.leave()
+
+        dp.notify(queue: .main, execute:{
+            for url in videoUrls{
+                let data = try! Data(contentsOf: url)
+                let storageRef = Storage.storage().reference()
+                let path = "\(self.chat.id)/ChatVideos/\(UUID().uuidString).mp4"
+                let fileRef = storageRef.child(path)
+                let metadata = StorageMetadata()
+                metadata.contentType = "video/mp4"
+                    let uploadTask = fileRef.putData(data, metadata: metadata) { (metadata, error) in
+                        if let error = error {
+                            print("Error uploading video: \(error.localizedDescription)")
+                            completion(false)
+                        } else {
+                            fileRef.downloadURL { (url, error) in
+                                guard let downloadURL = url else {
+                                    print("Error getting download URL: \(error?.localizedDescription ?? "unknown error")")
+                                    self.sendingMedia = false
+                                    completion(false)
+                                    return
+                                }
+                                COLLECTION_PERSONAL_CHAT.document(self.chat.id).collection("Messages").document(messageID).updateData(["urls":FieldValue.arrayUnion([url?.absoluteString ?? " "])])
+                                self.videosSent += 1
+                            }
+                        }
+                    }
+            }
+            return completion(true)
+        })
+       
+        
+    }
+    
+    func sendMultipleImagesMessage(images: [UIImage], user: User, completion: @escaping (Bool) -> ()){
+        let dp = DispatchGroup()
+        dp.enter()
+        let messageID = UUID().uuidString
+        
+        let imageMessageData = ["name":user.nickName ?? "",
+                                "timeStamp":Timestamp(),
+                                "id":messageID,
+                                "profilePicture":user.profilePicture ?? "",
+                                "type":"multipleImages",
+                                "userID":user.id ?? " "] as! [String:Any]
+        COLLECTION_PERSONAL_CHAT.document(self.chat.id).collection("Messages").document(messageID).setData(imageMessageData)
+        
+             COLLECTION_PERSONAL_CHAT.document(self.chat.id).updateData(["lastMessageID":messageID])
+             
+             COLLECTION_PERSONAL_CHAT.document(self.chat.id).updateData(["usersThatHaveSeenLastMessage":[user.id ?? " "]])
+             
+             COLLECTION_PERSONAL_CHAT.document(self.chat.id).updateData(["lastActionDate":Timestamp()])
+        dp.leave()
+
+        dp.notify(queue: .main, execute:{
+            for image in images{
+                let storageRef = Storage.storage().reference()
+                
+                let imageData = image.jpegData(compressionQuality: 0.1)
+                
+                guard imageData != nil else {
+                    return completion(false)
+                }
+                let path = "\(self.chat.id)/ChatImages/\(UUID().uuidString).jpg"
+                let fileRef = storageRef.child(path)
+                let uploadTask = fileRef.putData(imageData!, metadata: nil) { metadata , err in
+                    if err == nil && metadata != nil {
+
+                        fileRef.downloadURL { downloadedURL, err in
+                            if err != nil {
+                                print("ERROR")
+                                dp.leave()
+                                return completion(false)
+                            }
+                        
+                      
+                            COLLECTION_PERSONAL_CHAT.document(self.chat.id).collection("Messages").document(messageID).updateData(["urls":FieldValue.arrayUnion([downloadedURL?.absoluteString ?? " "])])
+                            self.imagesSent += 1
+
+                            
+                        }
+                        
+                    }
+                    
+                    
+                }
+            }
+            return completion(true)
+        })
+    }
+    
     func sendImageMessage(image: UIImage, user: User, completion: @escaping (Bool) -> ()){
         
         
@@ -761,18 +846,18 @@ class PersonalChatViewModel : ObservableObject {
         let dp = DispatchGroup()
         
         dp.enter()
+            COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").document(messageID).setData(textMessageData)
         
-        COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").document(messageID).setData(textMessageData)
         dp.leave()
         
         dp.notify(queue: .main, execute:{
             
             COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["lastMessageID":messageID])
-            
+
             COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["usersThatHaveSeenLastMessage":[user.id ?? " "]])
-            
+
             COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["lastActionDate":Timestamp()])
-            
+
             
             
         })
@@ -822,7 +907,7 @@ class PersonalChatViewModel : ObservableObject {
     
     
     func listenToChat(chatID: String){
-        chatListener?.remove()
+        
         print("Chat Removed!")
         
         chatListener = COLLECTION_PERSONAL_CHAT.document(chatID).addSnapshotListener { snapshot, err in
@@ -846,21 +931,21 @@ class PersonalChatViewModel : ObservableObject {
                 data["users"] = fetchedUsers
                 groupD.leave()
             }
-            
+
             groupD.enter()
-            
+
             self.fetchLastMessage(chatID: chatID, messageID: lastMessageID){ fetchedMessage in
                 data["lastMessage"] = fetchedMessage
                 groupD.leave()
             }
-            
+
             groupD.enter()
             self.fetchChatUsers(users: usersIdlingID){ fetchedUsers in
                 data["usersIdling"] = fetchedUsers
                 groupD.leave()
             }
-            
-            
+
+
             groupD.enter()
             self.fetchChatUsers(users: usersTypingID){ fetchedUsers in
                 data["usersTyping"] = fetchedUsers
@@ -868,6 +953,7 @@ class PersonalChatViewModel : ObservableObject {
             }
             
             groupD.notify(queue: .main, execute:{
+                print("fetched chat!")
                 self.chat = ChatModel(dictionary: data)
             })
             

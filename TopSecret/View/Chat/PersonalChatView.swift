@@ -132,8 +132,7 @@ struct PersonalChatView : View {
                         
                         
                         
-                        
-                        
+                       
                         
                         Spacer()
                         
@@ -142,7 +141,9 @@ struct PersonalChatView : View {
                         } label: {
                             VStack{
                                 WebImage(url: URL(string: getPersonalChatUser().profilePicture ?? ""))
-                                    .resizable()
+                                    .resizable().placeholder{
+                                        ProgressView()
+                                    }
                                     .scaledToFill()
                                     .frame(width:50,height:50)
                                     .clipShape(Circle())
@@ -177,17 +178,10 @@ struct PersonalChatView : View {
                     
                     
                     ZStack(alignment: .bottomTrailing){
-                        Color("Background")
                         
+                        Color("Background")
                         ScrollViewReader{ scrollViewProxy in
-                            RefreshableScrollView(action: {
-                                await personalChatVM.loadMoreMessages(chatID: chatID)
-                                
-                                
-                            }, progress: { state in
-                                Image(systemName: "arrow.up")
-                                
-                            }) {
+                            RefreshableScrollView(onRefresh: {_ in personalChatVM.loadMoreMessages(chatID: chatID)}, progress: {_ in ProgressView()}) {
                                 VStack(spacing: 0){
                                     if personalChatVM.isLoading{
                                         ProgressView()
@@ -196,7 +190,7 @@ struct PersonalChatView : View {
                                         
                                         
                                         MessageCell(message: personalChatVM.messages[index], selectedMessage: $selectedMessage,
-                                                    showOverlay: $showOverlay, personalChatVM: personalChatVM).disabled(isLeavingChat)
+                                                    showOverlay: $showOverlay, personalChatVM: personalChatVM).disabled(isLeavingChat).environmentObject(userVM)
                                         
                                         
                                     }
@@ -228,10 +222,12 @@ struct PersonalChatView : View {
                                     }
                                 }).padding(.bottom, UIScreen.main.bounds.height / 4).offset(y: -keyboardHeight)
                             }
-                            
-                            
-                            
                         }.coordinateSpace(name: "scroll")
+                        
+                     
+                        
+                        
+                
                         
                         
                         Button(action:{
@@ -242,7 +238,7 @@ struct PersonalChatView : View {
                                 Circle().frame(width: 30, height: 30).foregroundColor(Color("AccentColor"))
                                 Image(systemName: "chevron.down").foregroundColor(FOREGROUNDCOLOR)
                             }
-                        }).padding(10)
+                        }).padding(10).offset(y: -keyboardHeight)
                         
                     }.edgesIgnoringSafeArea(.all)
 
@@ -333,26 +329,43 @@ struct PersonalChatView : View {
                                 }
                                 
                                 Spacer()
-                                OmenTextField("Send a text..",text: $personalChatVM.text, returnKeyType: .send , onCommit: {
-                                        if showReplyView{
-                                            personalChatVM.sendReplyTextMessage(text: personalChatVM.text, user: userVM.user ?? User(), nameColor: self.getChatColor(userID: userVM.user?.id ?? " "), repliedMessageID: selectedMessage.id, messageType: "repliedMessage", chatID: personalChatVM.chat.id)
-                                            withAnimation{
-                                                self.showReplyView.toggle()
+                                OmenTextField("Send a text..",text: $personalChatVM.text, returnKeyType: personalChatVM.text == "" ? .done : .send , onCommit: {
+                                    if personalChatVM.text != "" {
+                                       
+                                        
+                                            if showReplyView{
+                                                personalChatVM.sendReplyTextMessage(text: personalChatVM.text, user: userVM.user ?? User(), nameColor: self.getChatColor(userID: userVM.user?.id ?? " "), repliedMessageID: selectedMessage.id, messageType: "repliedMessage", chatID: personalChatVM.chat.id)
+                                                withAnimation{
+                                                    self.showReplyView.toggle()
+                                                }
+                                            }else{
+                                                personalChatVM.sendTextMessage(text: personalChatVM.text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: self.getChatColor(userID: userVM.user?.id ?? " "), messageID: UUID().uuidString, messageType: personalChatVM.getLastMessage().userID == userVM.user?.id ?? " "  ? "followUpUserText" : "text", chatID: personalChatVM.chat.id)
                                             }
-                                        }else{
-                                            personalChatVM.sendTextMessage(text: personalChatVM.text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: self.getChatColor(userID: userVM.user?.id ?? " "), messageID: UUID().uuidString, messageType: personalChatVM.getLastMessage().userID == userVM.user?.id ?? " "  ? "followUpUserText" : "text", chatID: personalChatVM.chat.id)
+
+
+                                            if !personalChatVM.chat.usersIdlingID.contains(self.getPersonalChatUser().id ?? ""){
+                                                self.notificationSender.sendPushNotification(to: self.getPersonalChatUser().fcmToken ?? " ", title: userVM.user?.nickName ?? " ", body: personalChatVM.text)
+                                            }
+                                        DispatchQueue.main.async{
+                                            personalChatVM.text = ""
+                                            personalChatVM.scrollToBottom += 1
                                         }
+                                           
                                         
                                         
-                                        if !personalChatVM.chat.usersIdlingID.contains(self.getPersonalChatUser().id ?? ""){
-                                            self.notificationSender.sendPushNotification(to: self.getPersonalChatUser().fcmToken ?? " ", title: userVM.user?.nickName ?? " ", body: personalChatVM.text)
+                                      
+                                    }
+                                    DispatchQueue.main.async{
+                                        withAnimation{
+                                            self.keyboardHeight = 0
+                                        UIApplication.shared.windows.forEach { $0.endEditing(true)}
                                         }
-                                        
+                                            
+                                    }
+                                   
+
                                     
-                                        personalChatVM.text = ""
-                                        personalChatVM.scrollToBottom += 1
-                                    
-                                
+
                                 } ,canAddAnotherLine: $canAddAnotherLine, hasMicrophone: true).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Background")))
                                 Button(action:{
                                     self.showAddContent.toggle()
@@ -422,14 +435,22 @@ struct PersonalChatView : View {
                                         var finishedSendingVideos = false
                                         if !images.isEmpty{
                                             personalChatVM.sendingMedia = true
-                                            for image in images {
+                                            
+                                            if images.count == 1 {
                                                 dp.enter()
-                                                personalChatVM.sendImageMessage(image: image, user: userVM.user ?? User()) { sentImage in
+                                                personalChatVM.sendImageMessage(image: images[0], user: userVM.user ?? User()) { sentImage in
                                                         finishedSendingImages = true
-                                                    personalChatVM.imagesSent += 1
+                                                    dp.leave()
+                                                }
+                                            }else{
+                                                dp.enter()
+                                                personalChatVM.sendMultipleImagesMessage(images: images, user: userVM.user ?? User()) { sentImages in
+                                                    finishedSendingImages = true
                                                     dp.leave()
                                                 }
                                             }
+                                               
+                                            
                                         }else{
                                             dp.enter()
                                             finishedSendingImages = true
@@ -438,14 +459,20 @@ struct PersonalChatView : View {
                                        
                                         if !videos.isEmpty{
                                             personalChatVM.sendingMedia = true
-                                            for video in videos {
+                                            if videos.count == 1 {
                                                 dp.enter()
-                                                personalChatVM.sendVideoMessage(videoUrl: video, user: userVM.user ?? User()) { sentVideo in
+                                                personalChatVM.sendVideoMessage(videoUrl: videos[0], user: userVM.user ?? User()) { sentVideo in
                                                         finishedSendingVideos = true
-                                                    personalChatVM.videosSent += 1
                                                         dp.leave()
                                                 }
+                                            }else{
+                                                dp.enter()
+                                                personalChatVM.sendMultipleVideosMessage(videoUrls: videos, user: userVM.user ?? User()) { sentVideos in
+                                                    finishedSendingVideos = true
+                                                    dp.leave()
+                                                }
                                             }
+                                            
                                         }else{
                                             dp.enter()
                                             finishedSendingVideos = true
@@ -684,16 +711,16 @@ struct PersonalChatView : View {
                 )
         }
        .onAppear{
-           UIScrollView.appearance().keyboardDismissMode = .interactive
-
-           personalChatVM.listenToChat(chatID: chatID)
-           personalChatVM.fetchAllMessages(chatID: chatID, userID: USER_ID)
-           personalChatVM.readLastMessage(chatID: chatID, userID: userVM.user?.id ?? " ")
-           personalChatVM.openChat(userID: userVM.user?.id ?? " ", chatID: chatID)
-            self.initKeyboardGuardian()
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                personalChatVM.scrollToBottom += 1
-            }
+               personalChatVM.listenToChat(chatID: chatID)
+               personalChatVM.fetchAllMessages(chatID: chatID, userID: USER_ID)
+               personalChatVM.readLastMessage(chatID: chatID, userID: userVM.user?.id ?? " ")
+               personalChatVM.openChat(userID: userVM.user?.id ?? " ", chatID: chatID)
+                self.initKeyboardGuardian()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                    personalChatVM.scrollToBottom += 1
+                }
+           
+          
         }.onDisappear{
             personalChatVM.exitChat(userID: userVM.user?.id ?? " ", chatID: chatID)
         } .onChange(of: scenePhase) { newPhase in
@@ -771,5 +798,122 @@ struct PersonalChatView : View {
 extension View {
     func endEditing(_ force: Bool = true) {
         UIApplication.shared.windows.forEach { $0.endEditing(force)}
+    }
+    func delaysTouches(for duration: TimeInterval = 0.25, onTap action: @escaping () -> Void = {}) -> some View{
+        modifier(DelaysTouches(duration: duration, action: action))
+    }
+}
+
+fileprivate struct DelaysTouches: ViewModifier {
+    @State private var disabled = false
+    @State private var touchDownDate: Date? = nil
+    
+    var duration: TimeInterval
+    var action: () -> Void
+    
+    func body(content: Content) -> some View {
+        Button {
+            action()
+        } label: {
+            content
+        }.buttonStyle(DelaysTouchesButtonStyle(disabled: $disabled, duration: duration, touchDownDate: $touchDownDate))
+            .disabled(disabled)
+
+    }
+}
+
+fileprivate struct DelaysTouchesButtonStyle : ButtonStyle {
+    @Binding var disabled: Bool
+    var duration: TimeInterval
+    @Binding var touchDownDate: Date?
+    
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label.onChange(of: configuration.isPressed, perform: handleIsPressed)
+    }
+    
+    private func handleIsPressed(isPressed: Bool){
+        if isPressed{
+            let date = Date()
+            touchDownDate = date
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + max(duration, 0), execute: {
+                if date == touchDownDate{
+                    disabled = true
+                    
+                    DispatchQueue.main.async{
+                        disabled = false
+                    }
+                }
+            })
+        }else{
+            touchDownDate = nil
+            disabled = false
+        }
+    }
+}
+
+
+struct PersonalChatScrollView<Content: View>: UIViewRepresentable {
+    
+    private var content: Content
+    @EnvironmentObject var userVM: UserViewModel
+    init(@ViewBuilder content: () -> Content) {
+        self.content = content()
+    }
+    
+    func makeUIView(context: Context) -> UIScrollView {
+        let scrollView = UIScrollView()
+        scrollView.delegate = context.coordinator
+        scrollView.isScrollEnabled = true
+        scrollView.keyboardDismissMode = .interactive
+        let hostedView = context.coordinator.hostingController.view!
+        hostedView.translatesAutoresizingMaskIntoConstraints = true
+        hostedView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        hostedView.frame = scrollView.bounds
+        hostedView.backgroundColor = .clear
+        scrollView.addSubview(hostedView)
+        scrollView.contentSize = CGSize(width: hostedView.frame.width, height: hostedView.frame.height)
+        
+        return scrollView
+    }
+    
+    func updateUIView(_ uiView: UIScrollView, context: Context) {
+        context.coordinator.hostingController.rootView = self.content
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        return Coordinator(hostingController: UIHostingController(rootView: self.content))
+    }
+    
+    private func hostingController(for content: Content) -> UIHostingController<Content> {
+        let hostingController = UIHostingController(rootView: content)
+        hostingController.view.translatesAutoresizingMaskIntoConstraints = false
+        hostingController.view.backgroundColor = .clear
+        return hostingController
+    }
+    
+    class Coordinator: NSObject, UIScrollViewDelegate {
+        var hostingController : UIHostingController<Content>
+        
+        init(hostingController: UIHostingController<Content>) {
+            self.hostingController = hostingController
+        }
+        
+        
+        func scrollViewDidScroll(_ scrollView: UIScrollView) {
+            // Handle scroll view events here
+        }
+        
+        func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
+            // Prevent the scroll view from overshooting the top or bottom
+            let maxYOffset = scrollView.contentSize.height - scrollView.frame.height
+            let minYOffset: CGFloat = 0
+            let targetYOffset = targetContentOffset.pointee.y
+            if targetYOffset > maxYOffset {
+                targetContentOffset.pointee = CGPoint(x: targetContentOffset.pointee.x, y: maxYOffset)
+            } else if targetYOffset < minYOffset {
+                targetContentOffset.pointee = CGPoint(x: targetContentOffset.pointee.x, y: minYOffset)
+            }
+        }
     }
 }

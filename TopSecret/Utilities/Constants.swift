@@ -21,7 +21,7 @@ let COLLECTION_PERSONAL_CHAT = Firestore.firestore().collection("Personal Chats"
 let COLLECTION_GALLERY_POSTS = Firestore.firestore().collection("Gallery Posts")
 let COLLECTION_JUNCTION_GROUP_USER = Firestore.firestore().collection("Junction_Group_User")
 let COLLECTION_GAMES = Firestore.firestore().collection("Games")
-let USER_ID = userVM.user?.id ?? " "
+let USER_ID = userVM.userSession?.uid ?? " "
 let FOREGROUNDCOLOR : Color = Color("Foreground")
 let BACKGROUNDCOLOR : Color = Color("Background")
 

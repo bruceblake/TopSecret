@@ -18,47 +18,63 @@ struct MessageCell: View {
     @Binding var showOverlay: Bool
     @EnvironmentObject var userVM: UserViewModel
     @ObservedObject var personalChatVM: PersonalChatViewModel
-
+    
     var body: some View {
         
         switch message.type ?? "" {
-        case "text":
-            MessageTextCell(message: message, chatID: personalChatVM.chat.id).padding([.leading,.top],5)
-                   .simultaneousGesture(LongPressGesture(minimumDuration: 0.25).onEnded({ value in
+            case "text":
+                MessageTextCell(message: message, chatID: personalChatVM.chat.id).padding([.leading,.top],5)
+                    .delaysTouches(for: 0.1).gesture(LongPressGesture(minimumDuration: 0.25).onEnded({ value in
+                        withAnimation{
+                            UIDevice.vibrate()
+                            self.selectedMessage = message
+                            self.showOverlay.toggle()
+                            userVM.hideBackground.toggle()
+                            
+                        }
+                    }))
+            case "followUpUserText":
+                MessageFollowUpTextCell(message: message, chatID: personalChatVM.chat.id).padding(.leading,5)
+                    .delaysTouches(for: 0.1).gesture(LongPressGesture(minimumDuration: 0.25).onEnded({ value in
+                        withAnimation{
+                            UIDevice.vibrate()
+                            self.selectedMessage = message
+                            self.showOverlay.toggle()
+                            userVM.hideBackground.toggle()
+                            
+                        }
+                    }))
+            case "delete":
+                MessageDeleteCell(message: message)
+            case "repliedMessage":
+                MessageReplyCell(message: message, chatID: personalChatVM.chat.id).padding(.leading,5).delaysTouches(for: 0.3).gesture(LongPressGesture(minimumDuration: 0.25).onEnded({ value in
                     withAnimation{
                         UIDevice.vibrate()
                         self.selectedMessage = message
                         self.showOverlay.toggle()
                         userVM.hideBackground.toggle()
-
+                        
                     }
                 }))
-        case "followUpUserText":
-            MessageFollowUpTextCell(message: message, chatID: personalChatVM.chat.id).padding(.leading,5)
-                .simultaneousGesture(LongPressGesture(minimumDuration: 0.25).onEnded({ value in
+            case "pollMessage":
+                MessagePollCell(message: message, chatID: personalChatVM.chat.id).padding(.leading,5)
+            case "eventMessage":
+                MessageEventCell(message: message, chatID: personalChatVM.chat.id).padding(.leading,5)
+            case "image", "video", "multipleVideos", "multipleImages":
+                MessageMediaCell(message: message, chatID: personalChatVM.chat.id).padding(.leading,5).delaysTouches(for: 0.2).gesture(LongPressGesture(minimumDuration: 0.35).onEnded({ value in
                     withAnimation{
                         UIDevice.vibrate()
                         self.selectedMessage = message
                         self.showOverlay.toggle()
                         userVM.hideBackground.toggle()
-
+                        
                     }
                 }))
-        case "delete":
-            MessageDeleteCell(message: message)
-        case "repliedMessage":
-            MessageReplyCell(message: message, chatID: personalChatVM.chat.id).padding(.leading,5)
-        case "pollMessage":
-            MessagePollCell(message: message, chatID: personalChatVM.chat.id).padding(.leading,5)
-        case "eventMessage":
-            MessageEventCell(message: message, chatID: personalChatVM.chat.id).padding(.leading,5)
-        case "image", "video":
-                MessageMediaCell(message: message, chatID: personalChatVM.chat.id).padding(.leading,5)
-        default:
-            Text("Hello World")
+            default:
+                Text("Hello World")
         }
-    
-
+        
+        
     }
 }
 
@@ -67,7 +83,13 @@ struct MessageMediaCell : View {
     var message: Message
     var chatID: String
     @State var showFullScreen: Bool = false
-    
+    let columns : [GridItem] = [
+        GridItem(.adaptive(minimum: UIScreen.main.bounds.width/3.5), spacing: 0),
+        GridItem(.adaptive(minimum: UIScreen.main.bounds.width/3.5), spacing: 0),
+        GridItem(.adaptive(minimum: UIScreen.main.bounds.width/3.5), spacing: 0)
+        
+        
+    ]
     var body: some View {
         
         ZStack{
@@ -75,12 +97,12 @@ struct MessageMediaCell : View {
             VStack(alignment: .leading, spacing: 0){
                 
                 HStack(spacing: 3){
-                        Image(systemName: "chevron.left").foregroundColor(message.userID == userVM.user?.id ?? "" ? Color("AccentColor") : Color("blue"))
+                    Image(systemName: "chevron.left").foregroundColor(message.userID == userVM.user?.id ?? "" ? Color("AccentColor") : Color("blue"))
                         .frame(width:2).padding(.horizontal,5)
-                        Text("\(message.userID == userVM.user?.id ?? "" ? "Me"  : message.name ?? "")").foregroundColor(message.userID == userVM.user?.id ?? "" ? Color("AccentColor") : Color("blue"))
+                    Text("\(message.userID == userVM.user?.id ?? "" ? "Me"  : message.name ?? "")").foregroundColor(message.userID == userVM.user?.id ?? "" ? Color("AccentColor") : Color("blue"))
                     
                     
-            
+                    
                     
                     Spacer()
                     
@@ -91,19 +113,20 @@ struct MessageMediaCell : View {
                     
                     HStack(spacing: 3){
                         Rectangle().foregroundColor(Color("\(message.userID == userVM.user?.id ?? " " ? "AccentColor" : "blue")")).frame(width:2).padding(.horizontal,5)
-                            
+                        
                         if message.type ?? "" == "image"{
                             Button {
                                 self.showFullScreen.toggle()
                             } label: {
+                                
                                 WebImage(url: URL(string: message.value ?? " ")).resizable()
                                     .scaledToFill()
                                     .frame(width: UIScreen.main.bounds.width/3, height: 200)
                                     .clipped()
                                     .cornerRadius(12)
                                     .sheet(isPresented: $showFullScreen) {
-                                    MessageImageFullScreenView(message: message)
-                                }
+                                        MessageImageFullScreenView(message: message)
+                                    }
                             }
                         }else if message.type == "video"{
                             Button {
@@ -113,15 +136,48 @@ struct MessageMediaCell : View {
                             }.sheet(isPresented: $showFullScreen) {
                                 MessageVideoFullScreenView(message: message)
                             }
-
                             
+                            
+                        }else if message.type == "multipleVideos"{
+                            LazyVGrid(columns: columns, spacing: 1){
+                                ForEach(message.urls ?? [], id: \.self){ url in
+                                    Button(action:{
+                                        self.showFullScreen.toggle()
+                                    },label:{
+                                        VideoThumbnailImage(videoUrl: URL(string: url) ?? URL(fileURLWithPath: " "), width: UIScreen.main.bounds.width/3.5).cornerRadius(12)
+                                    }).sheet(isPresented: $showFullScreen) {
+                                        MessageVideoFullScreenView(message: message)
+                                    }
+                                    
+                                }
+                            }
+                            
+                            
+                        }else if message.type == "multipleImages"{
+                            LazyVGrid(columns: columns, spacing: 1){
+                                ForEach(message.urls ?? [], id: \.self){ url in
+                                    Button {
+                                        self.showFullScreen.toggle()
+                                    } label: {
+                                        WebImage(url: URL(string: url)).resizable()
+                                            .scaledToFill()
+                                            .frame(width: UIScreen.main.bounds.width/3.5, height: 200)
+                                            .clipped()
+                                            .cornerRadius(12)
+                                            .sheet(isPresented: $showFullScreen) {
+                                                MessageImageFullScreenView(message: message)
+                                            }
+                                    }
+                                    
+                                }
+                            }
                         }
-                      
-
-                            
                         
-                      
-                           
+                        
+                        
+                        
+                        
+                        
                     }
                     
                     
@@ -156,12 +212,12 @@ struct MessageTextCell: View {
             VStack(alignment: .leading, spacing: 0){
                 
                 HStack(spacing: 3){
-                        Image(systemName: "chevron.left").foregroundColor(message.userID == userVM.user?.id ?? "" ? Color("AccentColor") : Color("blue"))
+                    Image(systemName: "chevron.left").foregroundColor(message.userID == userVM.user?.id ?? "" ? Color("AccentColor") : Color("blue"))
                         .frame(width:2).padding(.horizontal,5)
-                        Text("\(message.userID == userVM.user?.id ?? "" ? "Me"  : message.name ?? "")").foregroundColor(message.userID == userVM.user?.id ?? "" ? Color("AccentColor") : Color("blue"))
+                    Text("\(message.userID == userVM.user?.id ?? "" ? "Me"  : message.name ?? "")").foregroundColor(message.userID == userVM.user?.id ?? "" ? Color("AccentColor") : Color("blue"))
                     
                     
-            
+                    
                     
                     Spacer()
                     
@@ -195,7 +251,7 @@ struct MessageTextCell: View {
             
             
         }
-
+        
     }
     
     
@@ -225,18 +281,18 @@ struct MessageEventCell : View {
                     Spacer()
                     
                 }.padding(.top,3)
-                    HStack(spacing: 3){
-                        Rectangle().foregroundColor(Color("\(message.userID == userVM.user?.id ?? " " ? "AccentColor" : "blue")")).frame(width:2).padding(.horizontal,5)
-                        
-                       
-                        EventCell(event: message.event ?? EventModel(), selectedEvent: $selectedEvent).frame(width: UIScreen.main.bounds.width/1.25)
-                        
-                     
-                        
-                        Spacer()
-                    }
+                HStack(spacing: 3){
+                    Rectangle().foregroundColor(Color("\(message.userID == userVM.user?.id ?? " " ? "AccentColor" : "blue")")).frame(width:2).padding(.horizontal,5)
                     
-                   
+                    
+                    EventCell(event: message.event ?? EventModel(), selectedEvent: $selectedEvent).frame(width: UIScreen.main.bounds.width/1.25)
+                    
+                    
+                    
+                    Spacer()
+                }
+                
+                
                 
             }
         }
@@ -265,18 +321,18 @@ struct MessagePollCell: View {
                     Spacer()
                     
                 }.padding(.top,3)
-                    HStack(spacing: 3){
-                        Rectangle().foregroundColor(Color("\(message.userID == userVM.user?.id ?? " " ? "AccentColor" : "blue")")).frame(width:2).padding(.horizontal,5)
-                        
-                       
-                        PollCell(poll: message.poll ?? PollModel(), selectedPoll: $selectedPoll).frame(width: UIScreen.main.bounds.width/1.25)
-                        
-                     
-                        
-                        Spacer()
-                    }
+                HStack(spacing: 3){
+                    Rectangle().foregroundColor(Color("\(message.userID == userVM.user?.id ?? " " ? "AccentColor" : "blue")")).frame(width:2).padding(.horizontal,5)
                     
-                   
+                    
+                    PollCell(poll: message.poll ?? PollModel(), selectedPoll: $selectedPoll).frame(width: UIScreen.main.bounds.width/1.25)
+                    
+                    
+                    
+                    Spacer()
+                }
+                
+                
                 
             }
         }
@@ -346,11 +402,11 @@ struct MessageReplyCell : View {
                         
                         VStack(spacing: 0){
                             
-                          
-                          
                             
-                          
-                               
+                            
+                            
+                            
+                            
                             
                             ZStack{
                                 RoundedRectangle(cornerRadius: 12).fill(Color("Color"))
@@ -375,7 +431,7 @@ struct MessageReplyCell : View {
                                         }
                                         
                                     }
-                                  
+                                    
                                     HStack{
                                         
                                         
@@ -407,13 +463,13 @@ struct MessageReplyCell : View {
                                 Spacer()
                             }.padding(.top,5)
                         }
-                       
+                        
                         
                     }
                     
                     Spacer()
                 }
-             
+                
             }
             
         }
@@ -507,42 +563,87 @@ struct MessageImageFullScreenView : View {
         
     }
     var body: some View {
-        ZStack{
-            AsyncImage(url: URL(string: message.value ?? " ") ?? URL(string: "turd")) { image in
-                image
-                    .resizable()
-                    .scaledToFit()
-                    .resizeToScreenSize()
-                    .clipped()
-                    .cornerRadius(12)
-            } placeholder: {
-                ZStack{
-                    Rectangle().foregroundColor(Color("Color")).resizeToScreenSize()
-                    ProgressView()
+        
+        if message.urls?.isEmpty ?? false {
+            ZStack{
+                AsyncImage(url: URL(string: message.value ?? " ") ?? URL(string: "turd")) { image in
+                    image
+                        .resizable()
+                        .scaledToFit()
+                        .resizeToScreenSize()
+                        .clipped()
+                        .cornerRadius(12)
+                } placeholder: {
+                    ZStack{
+                        Rectangle().foregroundColor(Color("Color")).resizeToScreenSize()
+                        ProgressView()
+                    }
                 }
-            }
-            VStack{
-                HStack{
-                    HStack(spacing: 5){
-                        WebImage(url: URL(string: message.profilePicture ?? " "))
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width:40,height:40)
-                            .clipShape(Circle())
-                        VStack(alignment: .leading, spacing: 1){
-                            Text("\(message.name ?? "")").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
-                            Text("\(getTimeSince(date: message.timeStamp?.dateValue() ?? Date()))").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
-
-                        }
-                    }.padding(.top,10)
-
+                VStack{
+                    HStack{
+                        HStack(spacing: 5){
+                            WebImage(url: URL(string: message.profilePicture ?? " "))
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width:40,height:40)
+                                .clipShape(Circle())
+                            VStack(alignment: .leading, spacing: 1){
+                                Text("\(message.name ?? "")").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+                                Text("\(getTimeSince(date: message.timeStamp?.dateValue() ?? Date()))").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+                                
+                            }
+                        }.padding(.top,10)
+                        
+                        Spacer()
+                        
+                        Circle().frame(width: 40,height: 40).foregroundColor(Color.clear)
+                    }.padding(.horizontal).padding(.top,50).background(Color("Background").opacity(0.5))
                     Spacer()
-
-                    Circle().frame(width: 40,height: 40).foregroundColor(Color.clear)
-                }.padding(.horizontal).padding(.top,50).background(Color("Background").opacity(0.5))
-                Spacer()
-            }
-        }.resizeToScreenSize().edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+                }
+            }.resizeToScreenSize().edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+        }else{
+            TabView(){
+                ForEach(message.urls ?? [], id: \.self) { url in
+                    ZStack{
+                        AsyncImage(url: URL(string: url) ?? URL(string: "turd")) { image in
+                            image
+                                .resizable()
+                                .scaledToFit()
+                                .resizeToScreenSize()
+                                .clipped()
+                                .cornerRadius(12)
+                        } placeholder: {
+                            ZStack{
+                                Rectangle().foregroundColor(Color("Color")).resizeToScreenSize()
+                                ProgressView()
+                            }
+                        }
+                        VStack{
+                            HStack{
+                                HStack(spacing: 5){
+                                    WebImage(url: URL(string: message.profilePicture ?? " "))
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width:40,height:40)
+                                        .clipShape(Circle())
+                                    VStack(alignment: .leading, spacing: 1){
+                                        Text("\(message.name ?? "")").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+                                        Text("\(getTimeSince(date: message.timeStamp?.dateValue() ?? Date()))").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+                                        
+                                    }
+                                }.padding(.top,10)
+                                
+                                Spacer()
+                                
+                                Circle().frame(width: 40,height: 40).foregroundColor(Color.clear)
+                            }.padding(.horizontal).padding(.top,50).background(Color("Background").opacity(0.5))
+                            Spacer()
+                        }
+                    }.resizeToScreenSize().edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+                }
+            }.tabViewStyle(PageTabViewStyle(indexDisplayMode: .always))
+        }
+      
     }
 }
 
@@ -594,29 +695,76 @@ struct MessageVideoFullScreenView : View {
         
     }
     var body: some View {
-        ZStack{
-            Video(player: player, url: URL(string: message.value ?? " ") ?? URL(fileURLWithPath: " "), cameraVM: CameraViewModel()).cornerRadius(12)
-            VStack{
-                HStack{
-                    HStack(spacing: 5){
-                        WebImage(url: URL(string: message.profilePicture ?? " "))
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width:40,height:40)
-                            .clipShape(Circle())
-                        VStack(alignment: .leading, spacing: 1){
-                            Text("\(message.name ?? "")").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
-                            Text("\(getTimeSince(date: message.timeStamp?.dateValue() ?? Date()))").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
-
-                        }
-                    }.padding(.top,10)
-
+        
+        if message.urls?.isEmpty ?? false{
+            ZStack{
+                
+                Video(player: player
+                , url: URL(string: message.value ?? " ") ?? URL(fileURLWithPath: " "), cameraVM: CameraViewModel()).cornerRadius(12)
+                
+                
+                VStack{
+                    HStack{
+                        HStack(spacing: 5){
+                            WebImage(url: URL(string: message.profilePicture ?? " "))
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width:40,height:40)
+                                .clipShape(Circle())
+                            VStack(alignment: .leading, spacing: 1){
+                                Text("\(message.name ?? "")").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+                                Text("\(getTimeSince(date: message.timeStamp?.dateValue() ?? Date()))").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+                                
+                            }
+                        }.padding(.top,10)
+                        
+                        Spacer()
+                        
+                        Circle().frame(width: 40,height: 40).foregroundColor(Color.clear)
+                    }.padding(.horizontal).padding(.top,50).background(Color("Background").opacity(0.5))
                     Spacer()
-
-                    Circle().frame(width: 40,height: 40).foregroundColor(Color.clear)
-                }.padding(.horizontal).padding(.top,50).background(Color("Background").opacity(0.5))
-                Spacer()
-            }
-        }.resizeToScreenSize().edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+                }
+            }.resizeToScreenSize().edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+        }else{
+            TabView{
+                
+                ForEach(message.urls ?? [], id: \.self){ url in
+                    ZStack{
+                        
+                        Video(player:AVPlayer(url: URL(string: url) ?? URL(fileURLWithPath: " "))
+                              , url: URL(string: url) ?? URL(fileURLWithPath: " "), cameraVM: CameraViewModel()).cornerRadius(12)
+                        
+                        
+                        VStack{
+                            HStack{
+                                HStack(spacing: 5){
+                                    WebImage(url: URL(string: message.profilePicture ?? " "))
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(width:40,height:40)
+                                        .clipShape(Circle())
+                                    VStack(alignment: .leading, spacing: 1){
+                                        Text("\(message.name ?? "")").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+                                        Text("\(getTimeSince(date: message.timeStamp?.dateValue() ?? Date()))").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+                                        
+                                    }
+                                }.padding(.top,10)
+                                
+                                Spacer()
+                                
+                                Circle().frame(width: 40,height: 40).foregroundColor(Color.clear)
+                            }.padding(.horizontal).padding(.top,50).background(Color("Background").opacity(0.5))
+                            Spacer()
+                        }
+                    }.resizeToScreenSize().edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+                    
+                }
+                
+                
+                
+            }.tabViewStyle(PageTabViewStyle(indexDisplayMode: .always))
+        }
+        
+        
     }
 }

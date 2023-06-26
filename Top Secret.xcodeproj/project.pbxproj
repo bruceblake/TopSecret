@@ -247,6 +247,7 @@
 		78E6F1FB273ABD5200AFE7EB /* UserRepositiory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78E6F1FA273ABD5200AFE7EB /* UserRepositiory.swift */; };
 		78E6F1FE273ABFB200AFE7EB /* UserViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78E6F1FD273ABFB200AFE7EB /* UserViewModel.swift */; };
 		78E73A6C28721EFD00EE0887 /* TextLimitViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78E73A6B28721EFD00EE0887 /* TextLimitViewModel.swift */; };
+		78E8E75C2A48E2E300310C74 /* AdvancedScrollView in Frameworks */ = {isa = PBXBuildFile; productRef = 78E8E75B2A48E2E300310C74 /* AdvancedScrollView */; };
 		78E938D226FCB573006D630F /* GroupListCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78E938D126FCB573006D630F /* GroupListCell.swift */; };
 		78E938D826FE3722006D630F /* GroupUsersListCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78E938D726FE3722006D630F /* GroupUsersListCell.swift */; };
 		78EBA08B287B9C26008B51EC /* KeyPad.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78EBA08A287B9C26008B51EC /* KeyPad.swift */; };
@@ -543,6 +544,7 @@
 				789FC2EF2617DCC80021616B /* FirebaseMessaging in Frameworks */,
 				78066FDA296DBA1D005A4FDC /* LegacyScrollView in Frameworks */,
 				789FC2E92617DCC80021616B /* FirebaseStorage in Frameworks */,
+				78E8E75C2A48E2E300310C74 /* AdvancedScrollView in Frameworks */,
 				78D4B97E288AEAFB00036A3B /* GeoFire in Frameworks */,
 				788902942957EC910073320F /* YPImagePicker in Frameworks */,
 				7851EFB42A3CFD1100C1FE31 /* MediaPicker in Frameworks */,
@@ -1176,6 +1178,7 @@
 				78C34CD32A15BE63005715DB /* JZCalendarWeekView */,
 				78AFB7092A34009C0087EE9E /* PagerTabStripView */,
 				7851EFB32A3CFD1100C1FE31 /* MediaPicker */,
+				78E8E75B2A48E2E300310C74 /* AdvancedScrollView */,
 			);
 			productName = TopSecret;
 			productReference = 789FC2C32617DA700021616B /* Top Secret.app */;
@@ -1222,6 +1225,7 @@
 				78C34CC22A1561F2005715DB /* XCRemoteSwiftPackageReference "OmenTextField" */,
 				78C34CD22A15BE63005715DB /* XCRemoteSwiftPackageReference "JZCalendarWeekView" */,
 				78AFB7082A34009B0087EE9E /* XCRemoteSwiftPackageReference "PagerTabStripView" */,
+				78E8E75A2A48E2E200310C74 /* XCRemoteSwiftPackageReference "advanced-scrollview" */,
 			);
 			productRefGroup = 789FC2C42617DA700021616B /* Products */;
 			projectDirPath = "";
@@ -1886,6 +1890,14 @@
 				minimumVersion = 5.0.0;
 			};
 		};
+		78E8E75A2A48E2E200310C74 /* XCRemoteSwiftPackageReference "advanced-scrollview" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/dmytro-anokhin/advanced-scrollview";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.0.6;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -2011,6 +2023,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 78D6B50127D0135B00D456AE /* XCRemoteSwiftPackageReference "SnapKit" */;
 			productName = SnapKit;
+		};
+		78E8E75B2A48E2E300310C74 /* AdvancedScrollView */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 78E8E75A2A48E2E200310C74 /* XCRemoteSwiftPackageReference "advanced-scrollview" */;
+			productName = AdvancedScrollView;
 		};
 /* End XCSwiftPackageProductDependency section */
 
