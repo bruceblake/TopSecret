@@ -232,7 +232,7 @@ struct UserProfilePage: View {
             
             
             
-            BottomSheetView(isOpen: $showInfo, maxHeight: UIScreen.main.bounds.height * 0.45 ) {
+            BottomSheetView(isOpen: $showInfo, maxHeight: UIScreen.main.bounds.height / 4 ) {
                 VStack{
                     Button(action:{
                         if userVM.user?.blockedAccounts?.contains(user) ?? false {

@@ -122,7 +122,7 @@ struct CreateStoryPostView: View {
             
             ZStack {
                 if let url = cameraVM.previewURL, cameraVM.showVideoPreview{
-                    NavigationLink(destination:Video(player: player, url: url, cameraVM: cameraVM ).transition(.move(edge: .trailing))
+                    NavigationLink(destination:Video(player: player, isPlaying: .constant(true)).transition(.move(edge: .trailing))
                                    , isActive: $cameraVM.showVideoPreview, label: {EmptyView()})
                 }
             }.animation(.easeInOut, value: cameraVM.showVideoPreview)

@@ -9,6 +9,7 @@ import SwiftUI
 
 import Firebase
 import Combine
+import FirebaseStorage
 
 
 
@@ -130,6 +131,14 @@ class GroupViewModel: ObservableObject {
         
         COLLECTION_USER.document(USER_ID).collection("Notifications").document(notificationID).setData(userNotificationData)
 
+        notificationID = UUID().uuidString
+        let groupNotificationData: [String: Any] = [
+            "id": notificationID,
+            "timeStamp": Timestamp(),
+            "senderID":USER_ID,
+            "receiverID":friendID,
+            "type": "invitedToGroup"]
+        COLLECTION_GROUP.document(groupID).collection("Notifications").document(notificationID).setData(groupNotificationData)
         
     }
     
@@ -160,9 +169,16 @@ class GroupViewModel: ObservableObject {
                 COLLECTION_USER.document(id).collection("Notifications").document(notificationID).setData(userNotificationData)
                 COLLECTION_USER.document(id).updateData(["userNotificationCount":FieldValue.increment((Int64(1)))])
             }
+            var notificationID = UUID().uuidString
+            let groupNotificationData: [String: Any] = [
+                "id": notificationID,
+                "timeStamp": Timestamp(),
+                "senderID":USER_ID,
+                "type": "acceptedGroupInvitation"]
+            COLLECTION_GROUP.document(group.id).collection("Notifications").document(notificationID).setData(groupNotificationData)
         })
       
-        
+     
 
         
         
@@ -193,6 +209,13 @@ class GroupViewModel: ObservableObject {
                 COLLECTION_USER.document(id).collection("Notifications").document(notificationID).setData(userNotificationData)
 
             }
+            var notificationID = UUID().uuidString
+            let groupNotificationData: [String: Any] = [
+                "id": notificationID,
+                "timeStamp": Timestamp(),
+                "senderID":USER_ID,
+                "type": "deniedGroupInvitation"]
+            COLLECTION_GROUP.document(group.id).collection("Notifications").document(notificationID).setData(groupNotificationData)
         })
         
         

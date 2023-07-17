@@ -59,28 +59,7 @@ struct HomescreenAddContentView: View {
                             
                         }.padding(.vertical,10).frame(width: UIScreen.main.bounds.width).padding(.leading,30)
                     }
-                    
-                    
-                    
-                    NavigationLink {
-                        CreatePollView()
-                    } label: {
-                        
-                        VStack(spacing: 10){
-                            
-                            HStack(alignment: .center, spacing: 20){
-                                Image(systemName: "questionmark.bubble.fill").foregroundColor(FOREGROUNDCOLOR).frame(width: 15, height: 15)
-                                Text("Create a Poll").foregroundColor(FOREGROUNDCOLOR)
-                                
-                                Spacer()
-                            }.foregroundColor(FOREGROUNDCOLOR)
-                            
-                            Rectangle().frame(width: UIScreen.main.bounds.width, height: 1).foregroundColor(Color.gray)
-                        }.padding(.top,10).frame(maxWidth: UIScreen.main.bounds.width).padding(.leading,30)
-                    }
-                    
-                    
-                    
+  
                 }
                 
                 

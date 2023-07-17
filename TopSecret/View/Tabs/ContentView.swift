@@ -43,20 +43,6 @@ struct ContentView: View {
                 NavigationView{
                     Tabs(tabIndex: $tabIndex, selectedGroup: $selectedGroup)
                 }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).navigationViewStyle(.stack)
-                if userVM.isConnected == false && userVM.showWarning{
-                    HStack{
-                        HStack{
-                            Image(systemName: "exclamationmark.triangle").foregroundColor(FOREGROUNDCOLOR)
-                            Text("You are not connected!").foregroundColor(Color("AccentColor"))
-                        }
-                        Spacer()
-                        Button(action:{
-                            userVM.showWarning.toggle()
-                        },label:{
-                            Text("Dismiss")
-                        })
-                    }.padding().background(Color("Color")).cornerRadius(16).shadow(color: Color.black,radius: 3).animation(.easeIn, value: userVM.isConnected).padding(.top,50).padding(.horizontal,10)
-                }
                 
             }else {
                 LoginView()
@@ -117,11 +103,20 @@ struct Tabs : View {
                 ZStack{
                     Color("Background")
                     VStack(){
-                        TopBar(showSearch: $showSearch, tabIndex: tabIndex)
+                        VStack(spacing: 0){
+                            TopBar(showSearch: $showSearch, tabIndex: tabIndex)
+                            if !userVM.connected {
+                                HStack{
+                                    Spacer()
+                                    Text("Disconnected from internet, data may fail to load").font(.subheadline).fontWeight(.bold).foregroundColor(FOREGROUNDCOLOR)
+                                    Spacer()
+                                }.padding(5).background(Color.red)
+                            }
+                        }
                         
                         if tabIndex == .calendar{
                             ScheduleView(calendar: Calendar(identifier: .gregorian), calendarVM: calendarVM)
-                                      
+                            
                         }else if tabIndex == .friends{
                             FriendsView(personalChatVM: personalChatVM)
                         }else if tabIndex == .groups{
@@ -133,7 +128,7 @@ struct Tabs : View {
                         }
                     }
                 }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).opacity(userVM.hideBackground ? 0.2 : 1).disabled(userVM.hideBackground)
-                   
+                
                     .onTapGesture {
                         
                         if userVM.hideBackground{
@@ -284,7 +279,7 @@ struct Tabs : View {
                                     .offset(x: 13, y: -10)
                                 }
                             }
-                          
+                            
                             Text("Notifications").foregroundColor(.gray).font(.system(size: 10))
                         }
                         
@@ -299,7 +294,7 @@ struct Tabs : View {
             
             
             
-            BottomSheetView(isOpen: Binding(get: {userVM.showAddContent}, set: {userVM.showAddContent = $0}), maxHeight: UIScreen.main.bounds.height / 3){
+            BottomSheetView(isOpen: Binding(get: {userVM.showAddContent}, set: {userVM.showAddContent = $0}), maxHeight: UIScreen.main.bounds.height / 4){
                 HomescreenAddContentView()
             }
             

@@ -345,14 +345,22 @@ struct GroupChatView: View {
                                     var finishedSendingVideos = false
                                     if !images.isEmpty{
                                         chatVM.sendingMedia = true
-                                        for image in images {
+                                        
+                                        if images.count == 1 {
                                             dp.enter()
-                                            chatVM.sendImageMessage(image: image, user: userVM.user ?? User()) { sentImage in
+                                            chatVM.sendImageMessage(image: images[0], user: userVM.user ?? User()) { sentImage in
                                                     finishedSendingImages = true
-                                                chatVM.imagesSent += 1
+                                                dp.leave()
+                                            }
+                                        }else{
+                                            dp.enter()
+                                            chatVM.sendMultipleImagesMessage(images: images, user: userVM.user ?? User()) { sentImages in
+                                                finishedSendingImages = true
                                                 dp.leave()
                                             }
                                         }
+                                           
+                                        
                                     }else{
                                         dp.enter()
                                         finishedSendingImages = true
@@ -361,14 +369,20 @@ struct GroupChatView: View {
                                    
                                     if !videos.isEmpty{
                                         chatVM.sendingMedia = true
-                                        for video in videos {
+                                        if videos.count == 1 {
                                             dp.enter()
-                                            chatVM.sendVideoMessage(videoUrl: video, user: userVM.user ?? User()) { sentVideo in
+                                            chatVM.sendVideoMessage(videoUrl: videos[0], user: userVM.user ?? User()) { sentVideo in
                                                     finishedSendingVideos = true
-                                                chatVM.videosSent += 1
                                                     dp.leave()
                                             }
+                                        }else{
+                                            dp.enter()
+                                            chatVM.sendMultipleVideosMessage(videoUrls: videos, user: userVM.user ?? User()) { sentVideos in
+                                                finishedSendingVideos = true
+                                                dp.leave()
+                                            }
                                         }
+                                        
                                     }else{
                                         dp.enter()
                                         finishedSendingVideos = true
@@ -502,11 +516,11 @@ struct GroupChatView: View {
                                 }).foregroundColor(FOREGROUNDCOLOR)
                                 Divider()
                                 Button(action:{
-//                                    withAnimation{
-//                                        personalChatVM.deleteMessage(messageID: selectedMessage.id, chatID: personalChatVM.chat.id, user: userVM.user ?? User())
-//                                        self.showOverlay.toggle()
-//                                        userVM.hideBackground.toggle()
-//                                    }
+                                    withAnimation{
+                                        chatVM.deleteMessage(messageID: selectedMessage.id, chatID: chatID, user: userVM.user ?? User())
+                                        self.showOverlay.toggle()
+                                        userVM.hideBackground.toggle()
+                                    }
                                     
                                     
                                 },label:{
@@ -595,6 +609,61 @@ struct GroupChatView: View {
                 if self.keyboardHeight != 0 {
                     
             UIApplication.shared.windows.first?.rootViewController?.view.endEditing(true)
+                }
+            }.onChange(of: urls) { newValue in
+                if !newValue.isEmpty {
+                    // Create a dispatch group to wait for all downloads to finish
+                    isLoadingMedia = true
+                    let group = DispatchGroup()
+                    
+                   
+                    for url in urls {
+                        
+                        switch try! url.resourceValues(forKeys: [.contentTypeKey]).contentType! {
+                            case let contentType where contentType.conforms(to: .image):
+                                //if image
+                                group.enter()
+                                
+                                // Create a URLSession data task for each URL
+                                let task = URLSession.shared.dataTask(with: url) { (data, response, error) in
+                                    if let error = error {
+                                        print("Error downloading photo: \(error.localizedDescription)")
+                                    } else {
+                                        if let data = data, let image = UIImage(data: data) {
+                                            // Add the downloaded image to the array
+                                            images.append(image)
+                                        }
+                                    }
+                                    
+                                    group.leave()
+                                    
+                                }
+                                task.resume()
+                            case let contentType where contentType.conforms(to: .audiovisualContent):
+                                group.enter()
+                                videos.append(url)
+                                group.leave()
+                            default:
+                                group.enter()
+                                print("error")
+                                group.leave()
+                        }
+                        
+                        
+                        
+                        
+                    }
+                    
+                    // Wait for all downloads to finish before continuing
+                    group.notify(queue: DispatchQueue.main) {
+                        withAnimation{
+                            isLoadingMedia = false
+                        }
+                    }
+                    
+                    
+                    
+                    
                 }
             }
     }

@@ -108,7 +108,7 @@ struct FullEventView : View {
                 
                 if !(event.usersAttendingID?.contains(userVM.user?.id ?? " ") ?? false){
                     Button(action: {
-                        eventVM.joinEvent(eventID: event.id, groupID: group.id, userID: userVM.user?.id ?? " ")
+                        eventVM.joinEvent(eventID: event.id, userID: userVM.user?.id ?? " ")
                     }, label: {
                         Text("Join Event").foregroundColor(Color("Foreground"))
                             .padding(.vertical)

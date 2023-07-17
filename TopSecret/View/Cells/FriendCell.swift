@@ -105,8 +105,13 @@ struct FriendCell: View {
                                     }else if chat.lastMessage?.type == "image"{
                                         Text("\(chat.lastMessage?.name ?? "") sent an image")
                                     }else if chat.lastMessage?.type == "video"{
-                                        Text("\(chat.lastMessage?.name ?? "") sent an video")
+                                        Text("\(chat.lastMessage?.name ?? "") sent a video")
+                                    }else if chat.lastMessage?.type == "multipleImages"{
+                                        Text("\(chat.lastMessage?.name ?? "") sent \(chat.lastMessage?.urls?.count ?? 0) images")
+                                    }else if chat.lastMessage?.type == "multipleVideos"{
+                                        Text("\(chat.lastMessage?.name ?? "") sent \(chat.lastMessage?.urls?.count ?? 0) videos")
                                     }
+                                    
                                     else{
                                         Text("\( (chat.lastMessage ?? Message() ).value ?? "")").lineLimit(1).foregroundColor(chat.lastMessage?.type == "delete" ? Color("AccentColor") : (chat.usersThatHaveSeenLastMessage?.contains(userVM.user?.id ?? "") ?? false ) ? Color.gray : FOREGROUNDCOLOR).font(.subheadline)
                                     }

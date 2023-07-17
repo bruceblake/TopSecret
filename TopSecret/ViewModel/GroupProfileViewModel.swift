@@ -8,6 +8,7 @@
 import Firebase
 import SwiftUI
 import Foundation
+import FirebaseStorage
 
 class GroupProfileViewModel : ObservableObject{
     @Published var posts: [GroupPostModel] = []

@@ -10,6 +10,7 @@ import SwiftUI
 import Combine
 import SCSDKLoginKit
 import Network
+import FirebaseStorage
 
 class UserViewModel : ObservableObject {
     
@@ -17,7 +18,6 @@ class UserViewModel : ObservableObject {
     let notificationSender = PushNotificationSender()
     //firebase
     @Published var userSession : FirebaseAuth.User?
-    @Published var isConnected : Bool = false
     @Published var firestoreListeners : [ListenerRegistration] = []
     @Published var user : User?
     @Published var loginErrorMessage = ""
@@ -282,10 +282,7 @@ class UserViewModel : ObservableObject {
                         groupD.leave()
                     }
                 }
-                
-                
-                
-                
+
                 groupD.notify(queue: .main, execute:{
                     chatsToReturn.append(ChatModel(dictionary: data))
                 })
@@ -965,40 +962,31 @@ class UserViewModel : ObservableObject {
     
     
     func fetchEventUsersAttending(usersAttendingID: [String], eventID: String , groupID: String, completion: @escaping ([User]) -> ()) -> (){
-        COLLECTION_GROUP.document(groupID).collection("Events").document(eventID).getDocument { snapshot, err in
-            
-            if err != nil {
-                print("ERROR")
-                return
-            }
-            var usersToReturn : [User] = []
-            
-            
-            let groupD = DispatchGroup()
-            
-            let data = snapshot?.data() as? [String:Any] ?? [:]
-            let users = data["usersAttendingID"] as? [String] ?? []
-            
-            for user in users {
-                groupD.enter()
-                COLLECTION_USER.document(user).getDocument { userSnapshot, err in
-                    if err != nil {
-                        print("ERROR")
-                        return
-                    }
-                    
-                    let userData = userSnapshot?.data() as? [String:Any] ?? [:]
-                    
-                    usersToReturn.append(User(dictionary: userData))
-                    groupD.leave()
+        
+        var usersToReturn : [User] = []
+        
+        
+        let groupD = DispatchGroup()
+        
+        for userID in usersAttendingID {
+            groupD.enter()
+            COLLECTION_USER.document(userID).getDocument { userSnapshot, err in
+                if err != nil {
+                    print("ERROR")
+                    return
                 }
+                
+                let userData = userSnapshot?.data() as? [String:Any] ?? [:]
+                
+                usersToReturn.append(User(dictionary: userData))
+                groupD.leave()
             }
-            
-            groupD.notify(queue: .main, execute: {
-                return completion(usersToReturn)
-            })
-            
         }
+        
+        groupD.notify(queue: .main, execute: {
+            return completion(usersToReturn)
+        })
+    
         
         
     }
@@ -1141,23 +1129,7 @@ class UserViewModel : ObservableObject {
     }
     
     
-    func listenToNetworkChanges(uid: String){
-        let connectedRef = Database.database().reference(withPath: ".info/connected")
-        connectedRef.observe(.value, with: { snapshot in
-            if snapshot.value as? Bool ?? false {
-                self.isConnected = true
-                self.showWarning = true
-                
-                
-            }else{
-                DispatchQueue.main.async{
-                    self.isConnected = false
-                    self.showWarning = false
-                }
-                
-            }
-        })
-    }
+
     
     func listenToAll(uid: String){
         self.listenToUserGroups(uid: uid)

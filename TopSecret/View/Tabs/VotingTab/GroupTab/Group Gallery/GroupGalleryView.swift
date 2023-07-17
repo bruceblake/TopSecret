@@ -32,14 +32,18 @@ struct GroupGalleryView: View {
         GridItem(.flexible(), spacing: 0),
         GridItem(.flexible(), spacing: 0),
         GridItem(.flexible(), spacing: 0)
-        
-        
     ]
     
     func getHStackCount(numberOfImages: Int) -> Int{
         return Int(ceil(Double(numberOfImages/3)))
     }
     
+    func shouldDisplayMonth(previousDate: Date, currentDate: Date) -> Bool{
+        let previousMonth = Calendar.current.component(.month, from: previousDate)
+        let currentMonth = Calendar.current.component(.month, from: currentDate)
+        
+        return previousMonth != currentMonth
+    }
     
     var body: some View {
         
@@ -73,34 +77,37 @@ struct GroupGalleryView: View {
                 }.padding(.top,50)
                 
                 VStack{
-                    ScrollView(.horizontal){
-                        HStack{
-                            Button(action:{
-                                selectedOptionIndex = 0
-                            },label:{
-                                Text("All").foregroundColor(selectedOptionIndex == 0 ? Color("AccentColor") : FOREGROUNDCOLOR)
-                            })
-                            Spacer()
-                            Button(action:{
-                                selectedOptionIndex = 1
-                            },label:{
-                                Text("Favorites").foregroundColor(selectedOptionIndex == 1 ? Color("AccentColor") : FOREGROUNDCOLOR)
-                            })
-                            Spacer()
-                            Button(action:{
-                                selectedOptionIndex = 2
-                            },label:{
-                                Text("Videos").foregroundColor(selectedOptionIndex == 2 ? Color("AccentColor") : FOREGROUNDCOLOR)
-                            })
-                            Spacer()
-                            Button(action:{
-                                selectedOptionIndex = 3
-                            },label:{
-                                Text("Photos").foregroundColor(selectedOptionIndex == 3 ? Color("AccentColor") : FOREGROUNDCOLOR)
-                            })
-                            
-                        }.padding(.horizontal)
-                    }
+                    
+                            HStack{
+                                Spacer()
+                                Button(action:{
+                                    selectedOptionIndex = 0
+                                },label:{
+                                    Text("All").foregroundColor(selectedOptionIndex == 0 ? Color("AccentColor") : FOREGROUNDCOLOR)
+                                })
+                                Spacer()
+                                Button(action:{
+                                    selectedOptionIndex = 1
+                                },label:{
+                                    Text("Favorites").foregroundColor(selectedOptionIndex == 1 ? Color("AccentColor") : FOREGROUNDCOLOR)
+                                })
+                                Spacer()
+                                Button(action:{
+                                    selectedOptionIndex = 2
+                                },label:{
+                                    Text("Videos").foregroundColor(selectedOptionIndex == 2 ? Color("AccentColor") : FOREGROUNDCOLOR)
+                                })
+                                Spacer()
+                                Button(action:{
+                                    selectedOptionIndex = 3
+                                },label:{
+                                    Text("Photos").foregroundColor(selectedOptionIndex == 3 ? Color("AccentColor") : FOREGROUNDCOLOR)
+                                })
+                                Spacer()
+                            }
+                        
+                    
+                  
                     Divider()
                     
                     if groupGalleryVM.isLoading {
@@ -111,41 +118,47 @@ struct GroupGalleryView: View {
                         }
                     }else{
                         ScrollView(showsIndicators: false){
-                            
-                            
-                            LazyVGrid(columns: columns,spacing: 1) {
                                 
-                                
-                                ForEach(mediaToShow, id: \.id){ image in
-                                    if image.isImage ?? false{
-                                        Button(action:{
-                                            self.openImageToEdit.toggle()
-                                            self.selectedMediaToEdit = image
-                                        },label:{
-                                            GalleryThumbnailImage(image: image)
+                                LazyVGrid(columns: columns,spacing: 1) {
+                                    
+                                    
+                                    ForEach(mediaToShow, id: \.id){ image in
+                                        if image.isImage ?? false{
+                                              
+                                                Button(action:{
+                                                    self.openImageToEdit.toggle()
+                                                    self.selectedMediaToEdit = image
+                                                },label:{
+                                                    GalleryThumbnailImage(image: image)
+                                                    
+                                                }).fullScreenCover(isPresented: $openImageToEdit) {
+                                                    
+                                                } content: {
+                                                    EditGalleryImageView(galleryImage: $selectedMediaToEdit, groupGalleryVM: groupGalleryVM)
+                                                }
                                             
-                                        }).fullScreenCover(isPresented: $openImageToEdit) {
-                                            
-                                        } content: {
-                                            EditGalleryImageView(galleryImage: $selectedMediaToEdit, groupGalleryVM: groupGalleryVM)
+                                         
+                                        }else{
+                                            Button(action:{
+                                                self.openVideoToEdit.toggle()
+                                                self.selectedMediaToEdit = image
+                                            },label:{
+                                                VideoThumbnailImage(videoUrl: URL(string: image.url ?? " ") ?? URL(fileURLWithPath: " "))
+                                            }).fullScreenCover(isPresented: $openVideoToEdit) {
+                                                
+                                            } content: {
+                                                EditGalleryVideoView(galleryMedia: $selectedMediaToEdit, groupGalleryVM: groupGalleryVM)
+                                            }
                                         }
-                                    }else{
-                                        Button(action:{
-                                            self.openVideoToEdit.toggle()
-                                            self.selectedMediaToEdit = image
-                                        },label:{
-                                            VideoThumbnailImage(videoUrl: URL(string: image.url ?? " ") ?? URL(fileURLWithPath: " "))
-                                        }).fullScreenCover(isPresented: $openVideoToEdit) {
-                                            
-                                        } content: {
-                                            EditGalleryVideoView(galleryMedia: $selectedMediaToEdit, groupGalleryVM: groupGalleryVM)
-                                        }
+                                        
+                                        
+                                        
                                     }
-                                    
-                                    
-                                    
                                 }
-                            }
+                            
+                                
+                            
+                           
                         }
                     }
                 }
@@ -179,6 +192,7 @@ struct GroupGalleryView: View {
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{                groupGalleryVM.fetchPhotos(userID: USER_ID, groupID: selectedGroupVM.group.id) { fetched in
             self.mediaToShow = groupGalleryVM.fetchedAllMedia
+            
         }
         }.onChange(of: urls) { newValue in
             if !newValue.isEmpty {
@@ -314,25 +328,9 @@ struct GalleryThumbnailImage : View {
 
 struct VideoThumbnailImage: View {
     var videoUrl: URL = URL(fileURLWithPath: " ")
-    @State var thumbnail : UIImage?
+    var thumbnailUrl : URL = URL(fileURLWithPath: " ")
     var width : CGFloat = UIScreen.main.bounds.width/3
     var height : CGFloat = 200
-    func createThumbnailOfVideoFromRemoteUrl(url: URL) -> UIImage? {
-        let asset = AVAsset(url: url)
-        let assetImgGenerate = AVAssetImageGenerator(asset: asset)
-        assetImgGenerate.appliesPreferredTrackTransform = true
-        //Can set this to improve performance if target size is known before hand
-//        assetImgGenerate.maximumSize = CGSize(width: width , height: height)
-        let time = CMTimeMakeWithSeconds(1.0, preferredTimescale: 600)
-        do {
-            let img = try assetImgGenerate.copyCGImage(at: time, actualTime: nil)
-            let thumbnail = UIImage(cgImage: img)
-            return thumbnail
-        } catch {
-            print(error.localizedDescription)
-            return nil
-        }
-    }
     
     func getVideoDuration(url: URL) -> Double {
         return AVURLAsset(url: url).duration.seconds
@@ -340,7 +338,7 @@ struct VideoThumbnailImage: View {
     var body: some View {
         
         ZStack{
-            Image(uiImage: thumbnail ?? UIImage() )
+            WebImage(url: thumbnailUrl)
                 .resizable()
                 .scaledToFill()
                 .frame(width: width, height: height)
@@ -353,9 +351,7 @@ struct VideoThumbnailImage: View {
                 }
             }
         }.frame(width: width, height: height)
-        .edgesIgnoringSafeArea(.all).onAppear{
-            self.thumbnail = self.createThumbnailOfVideoFromRemoteUrl(url: videoUrl) ?? UIImage()
-        }
+        .edgesIgnoringSafeArea(.all)
     }
 }
 
@@ -384,6 +380,7 @@ struct EditGalleryVideoView : View {
     @StateObject var editVM = EditGalleryMediaViewModel()
     @Environment(\.presentationMode) var presentationMode
     @State var changedMedia: Bool = false
+    @State var isPlaying: Bool = false
     let imageSaver = ImageSaver()
     var player : AVPlayer {
         AVPlayer(url: URL(string: galleryMedia.url ?? " ") ?? URL(fileURLWithPath: " "))
@@ -395,7 +392,7 @@ struct EditGalleryVideoView : View {
     var body: some View {
         GeometryReader { geo in
             ZStack{
-                Video(player: player, url: URL(string: editVM.media.url ?? " ") ?? URL(fileURLWithPath: " "), cameraVM: CameraViewModel()).cornerRadius(12)
+                Video(player: player, isPlaying: $isPlaying).cornerRadius(12)
                 
                 
                 VStack{

@@ -2,13 +2,13 @@ import SwiftUI
 import SDWebImageSwiftUI
 import Foundation
 import Firebase
+import FirebaseStorage
 import OmenTextField
 import SwiftUIPullToRefresh
 import MediaPicker
 import AVFoundation
 import AVKit
-
-
+import FirebaseFirestoreSwift
 
 
 fileprivate var initialY : CGFloat? = nil
@@ -42,10 +42,14 @@ struct PersonalChatView : View {
     @State var videos: [URL] = []
     @State var isLoadingMedia : Bool = false
     @State var isLeavingChat: Bool = false
+    @State var selectedThumbnailImages: [UIImage] = []
+    @State var selectedThumbnailUrls: [URL] = []
+    @State var limit: Int = 5
+
     
-    
-  
-    
+   
+   
+                          
     func initKeyboardGuardian(){
         NotificationCenter.default.addObserver(forName: UIResponder.keyboardWillShowNotification , object: nil, queue: .main) { data in
             let height1 = data.userInfo![UIResponder.keyboardFrameEndUserInfoKey] as! NSValue
@@ -88,6 +92,51 @@ struct PersonalChatView : View {
         scrollViewProxy.scrollTo("Empty", anchor: .bottom)
     }
     
+    func getThumbnailUrl(thumbnail: UIImage, chatID: String, completion: @escaping (String?, URL?) -> ()) {
+        let dp = DispatchGroup()
+        dp.enter()
+        let fileName = "\(chatID)/VideoThumbnails/\(UUID().uuidString).mp4"
+        let ref = Storage.storage().reference(withPath: fileName)
+        guard let imageData = thumbnail.jpegData(compressionQuality: 0.5) else {return completion(nil, nil)}
+        ref.putData(imageData, metadata: nil) { (metadata, err) in
+            if err != nil{
+                print("ERROR")
+                return completion(nil, nil)
+            }
+            ref.downloadURL { (url, err) in
+                if err != nil{
+                    print("ERROR: Failed to retreive download URL")
+                    return completion(nil, nil)
+                }
+                print("Successfully stored image in database")
+                let imageURL = url?.absoluteString ?? ""
+                let url =  URL(string: url?.absoluteString ?? "")
+                dp.leave()
+                dp.notify(queue: .main, execute: {
+                    return completion(imageURL, url)
+                })
+            }
+            
+        }
+    }
+    
+    func getThumbnailImageFromVideoRemoteUrl(url: URL) -> UIImage? {
+        let asset = AVAsset(url: url)
+        let assetImgGenerate = AVAssetImageGenerator(asset: asset)
+        assetImgGenerate.appliesPreferredTrackTransform = true
+        
+        let time = CMTimeMakeWithSeconds(1.0, preferredTimescale: 600)
+        do {
+            let img = try assetImgGenerate.copyCGImage(at: time, actualTime: nil)
+            let thumbnail = UIImage(cgImage: img)
+            return thumbnail
+        }
+        catch {
+            print(error.localizedDescription)
+            return nil
+        }
+    }
+    
     
     func getChatColor(userID: String) -> String{
         var color = ""
@@ -107,7 +156,8 @@ struct PersonalChatView : View {
         return color
     }
     @State private var offset: CGFloat = 0
-
+    
+    
     
     
     var body: some View {
@@ -132,7 +182,7 @@ struct PersonalChatView : View {
                         
                         
                         
-                       
+                        
                         
                         Spacer()
                         
@@ -181,20 +231,21 @@ struct PersonalChatView : View {
                         
                         Color("Background")
                         ScrollViewReader{ scrollViewProxy in
-                            RefreshableScrollView(onRefresh: {_ in personalChatVM.loadMoreMessages(chatID: chatID)}, progress: {_ in ProgressView()}) {
+                            ScrollView{
+                                Spacer()
                                 VStack(spacing: 0){
                                     if personalChatVM.isLoading{
                                         ProgressView()
                                     }
                                     ForEach(personalChatVM.messages.indices, id: \.self){ index in
-                                        
-                                        
+                                            
+                                            
                                         MessageCell(message: personalChatVM.messages[index], selectedMessage: $selectedMessage,
-                                                    showOverlay: $showOverlay, personalChatVM: personalChatVM).disabled(isLeavingChat).environmentObject(userVM)
+                                                        showOverlay: $showOverlay, personalChatVM: personalChatVM).disabled(isLeavingChat).environmentObject(userVM)
+                                        }
                                         
-                                        
-                                    }
                                     
+                                   
                                     
                                     VStack{
                                         ForEach(personalChatVM.chat.usersTyping){ user in
@@ -209,6 +260,7 @@ struct PersonalChatView : View {
                                         }
                                     }
                                     HStack{Spacer()}.padding(0).id("Empty")
+                                    Spacer()
                                 }.background(GeometryReader{ proxy -> Color in
                                     DispatchQueue.main.async{
                                         scrollViewOffset = -proxy.frame(in: .named("scroll")).origin.y
@@ -220,19 +272,18 @@ struct PersonalChatView : View {
                                         
                                         self.scrollToBottom(scrollViewProxy: scrollViewProxy)
                                     }
-                                }).padding(.bottom, UIScreen.main.bounds.height / 4).offset(y: -keyboardHeight)
+                                }).offset(y: -keyboardHeight)
                             }
                         }.coordinateSpace(name: "scroll")
                         
-                     
                         
                         
-                
+                        
+                        
                         
                         
                         Button(action:{
                             personalChatVM.scrollToBottom += 1
-                            
                         },label:{
                             ZStack{
                                 Circle().frame(width: 30, height: 30).foregroundColor(Color("AccentColor"))
@@ -241,7 +292,7 @@ struct PersonalChatView : View {
                         }).padding(10).offset(y: -keyboardHeight)
                         
                     }.edgesIgnoringSafeArea(.all)
-
+                    
                     
                     
                     
@@ -268,7 +319,32 @@ struct PersonalChatView : View {
                                         
                                         
                                         HStack{
-                                            Text("\(selectedMessage.value ?? "")").foregroundColor(FOREGROUNDCOLOR).lineLimit(5)
+                                            
+                                            switch selectedMessage.type ?? "" {
+                                                
+                                                case "image":
+                                                    WebImage(url: URL(string: selectedMessage.value ?? " ")).resizable()
+                                                        .scaledToFill()
+                                                        .frame(width: UIScreen.main.bounds.width/3.5, height: 200)
+                                                        .clipped()
+                                                        .cornerRadius(12)
+                                                    
+                                                case "multipleImages":
+                                                    ForEach(selectedMessage.urls ?? [], id: \.self) { image in
+                                                        WebImage(url: URL(string: image)).resizable()
+                                                            .scaledToFill()
+                                                            .frame(width: UIScreen.main.bounds.width/3.5, height: 200)
+                                                            .clipped()
+                                                            .cornerRadius(12)
+                                                    }
+                                                    
+                                                case "text", "followUpUserText", "followUpUserReplyText" , "repliedMessage":
+                                                    Text("\(selectedMessage.value ?? "")").foregroundColor(FOREGROUNDCOLOR).lineLimit(5)
+                                                default:
+                                                    Text("Failed data")
+                                            }
+                                            
+                                        
                                             if selectedMessage.edited ?? false{
                                                 Text("(edited)").foregroundColor(.gray).font(.footnote)
                                             }
@@ -312,6 +388,7 @@ struct PersonalChatView : View {
                                 
                                 Button(action:{
                                     self.urls = []
+                                    self.selectedThumbnailImages = []
                                     self.isShowingMediaPicker.toggle()
                                 },label:{
                                     ZStack{
@@ -325,47 +402,51 @@ struct PersonalChatView : View {
                                         case .failure(let error):
                                             print(error)
                                             self.urls = []
+                                            self.selectedThumbnailImages = []
                                     }
                                 }
                                 
                                 Spacer()
                                 OmenTextField("Send a text..",text: $personalChatVM.text, returnKeyType: personalChatVM.text == "" ? .done : .send , onCommit: {
                                     if personalChatVM.text != "" {
-                                       
                                         
-                                            if showReplyView{
-                                                personalChatVM.sendReplyTextMessage(text: personalChatVM.text, user: userVM.user ?? User(), nameColor: self.getChatColor(userID: userVM.user?.id ?? " "), repliedMessageID: selectedMessage.id, messageType: "repliedMessage", chatID: personalChatVM.chat.id)
-                                                withAnimation{
-                                                    self.showReplyView.toggle()
-                                                }
-                                            }else{
-                                                personalChatVM.sendTextMessage(text: personalChatVM.text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: self.getChatColor(userID: userVM.user?.id ?? " "), messageID: UUID().uuidString, messageType: personalChatVM.getLastMessage().userID == userVM.user?.id ?? " "  ? "followUpUserText" : "text", chatID: personalChatVM.chat.id)
+                                       let lastMessageDate = personalChatVM.getLastMessage().timeStamp?.dateValue() ?? Date()
+                                        if Calendar.current.dateComponents([.day], from: lastMessageDate, to: Date()).day == 1 {
+                                            personalChatVM.sendNewDayMessage(chatID: chatID)
+                                        }
+                                        if showReplyView{
+                                            personalChatVM.sendReplyTextMessage(text: personalChatVM.text, user: userVM.user ?? User(), nameColor: self.getChatColor(userID: userVM.user?.id ?? " "), repliedMessageID: selectedMessage.id, messageType: personalChatVM.getLastMessage().userID == USER_ID ? "followUpUserReplyText" : "repliedMessage", chatID: personalChatVM.chat.id)
+                                            withAnimation{
+                                                self.showReplyView.toggle()
                                             }
-
-
-                                            if !personalChatVM.chat.usersIdlingID.contains(self.getPersonalChatUser().id ?? ""){
-                                                self.notificationSender.sendPushNotification(to: self.getPersonalChatUser().fcmToken ?? " ", title: userVM.user?.nickName ?? " ", body: personalChatVM.text)
-                                            }
+                                        }else{
+                                            personalChatVM.sendTextMessage(text: personalChatVM.text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: self.getChatColor(userID: userVM.user?.id ?? " "), messageID: UUID().uuidString, messageType: personalChatVM.getLastMessage().userID == userVM.user?.id ?? " "  ? "followUpUserText" : "text", chatID: personalChatVM.chat.id)
+                                        }
+                                        
+                                        
+                                        if !personalChatVM.chat.usersIdlingID.contains(self.getPersonalChatUser().id ?? ""){
+                                            self.notificationSender.sendPushNotification(to: self.getPersonalChatUser().fcmToken ?? " ", title: userVM.user?.nickName ?? " ", body: personalChatVM.text)
+                                        }
                                         DispatchQueue.main.async{
                                             personalChatVM.text = ""
                                             personalChatVM.scrollToBottom += 1
                                         }
-                                           
                                         
                                         
-                                      
+                                        
+                                        
                                     }
                                     DispatchQueue.main.async{
                                         withAnimation{
                                             self.keyboardHeight = 0
-                                        UIApplication.shared.windows.forEach { $0.endEditing(true)}
+                                            UIApplication.shared.windows.forEach { $0.endEditing(true)}
                                         }
-                                            
+                                        
                                     }
-                                   
-
                                     
-
+                                    
+                                    
+                                    
                                 } ,canAddAnotherLine: $canAddAnotherLine, hasMicrophone: true).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Background")))
                                 Button(action:{
                                     self.showAddContent.toggle()
@@ -376,7 +457,7 @@ struct PersonalChatView : View {
                                     }
                                 })
                             }.padding().padding(.bottom,10)
-
+                            
                         }else{
                             HStack(alignment: .top, spacing: 4){
                                 if isLoadingMedia{
@@ -386,22 +467,42 @@ struct PersonalChatView : View {
                                     }
                                 }else{
                                     if personalChatVM.sendingMedia{
-                                        VStack{
-                                            Text("Sending Media...").foregroundColor(FOREGROUNDCOLOR)
-                                            VStack(alignment: .leading){
-                                                if !images.isEmpty{
-                                                    Text("\(personalChatVM.imagesSent) out of \(images.count) images sent").foregroundColor(Color.gray)
+                                        
+                                        if personalChatVM.failedToSend {
+                                            HStack{
+                                                Spacer()
+                                                VStack{
+                                                    Text("Failed to send media").foregroundColor(Color.red)
+                                                    Button(action:{
+                                                        personalChatVM.failedToSend = false
+                                                        personalChatVM.sendingMedia = false
+                                                    },label:{
+                                                        Text("Try again?")
+                                                    })
                                                 }
-                                                if !videos.isEmpty{
-                                                    Text("\(personalChatVM.videosSent) out of \(videos.count) videos sent").foregroundColor(Color.gray)
+                                                Spacer()
+                                            }
+                                        }else{
+                                            VStack{
+                                                Text("Sending Media...").foregroundColor(FOREGROUNDCOLOR)
+                                                VStack(alignment: .leading){
+                                                    if !images.isEmpty{
+                                                        Text("\(personalChatVM.imagesSent) out of \(images.count) images sent").foregroundColor(Color.gray)
+                                                    }
+                                                    if !videos.isEmpty{
+                                                        Text("\(personalChatVM.videosSent) out of \(videos.count) videos sent").foregroundColor(Color.gray)
+                                                    }
                                                 }
                                             }
                                         }
+                                       
+                                        
                                     }else{
                                         Button(action:{
                                             //todo
                                             withAnimation{
                                                 self.urls = []
+                                                self.selectedThumbnailImages = []
                                                 self.images = []
                                                 self.videos = []
                                             }
@@ -414,89 +515,93 @@ struct PersonalChatView : View {
                                                     Image(uiImage: image).resizable().scaledToFill().frame(width: 50, height: 50).clipped().cornerRadius(12)
                                                     
                                                 }
-                                            
-                                                ForEach(0..<videos.count, id: \.self) { index in
-                                                    VideoThumbnailImage(videoUrl: videos[index], width: 50, height: 50).cornerRadius(12)
+                                                
+                                                ForEach(0..<selectedThumbnailImages.count, id: \.self) { index in
+//                                                    VideoThumbnailImage(videoUrl: videos[index], width: 50, height: 50).cornerRadius(12)
                                                     
+                                                    Image(uiImage: selectedThumbnailImages[index]).resizable().scaledToFit().frame(width: 50, height: 50).clipped().cornerRadius(12)
                                                 }
                                             }
-                                           
+                                            
                                         }
                                     }
-                                 
+                                    
                                 }
-                               
+                                
                                 if !personalChatVM.sendingMedia {
                                     Spacer()
                                     Button(action:{
                                         //todo
                                         let dp = DispatchGroup()
-                                        var finishedSendingImages = false
-                                        var finishedSendingVideos = false
+                                        personalChatVM.sendingMedia = true
                                         if !images.isEmpty{
-                                            personalChatVM.sendingMedia = true
                                             
                                             if images.count == 1 {
-                                                dp.enter()
                                                 personalChatVM.sendImageMessage(image: images[0], user: userVM.user ?? User()) { sentImage in
-                                                        finishedSendingImages = true
-                                                    dp.leave()
+                                                    if sentImage{
+                                                        personalChatVM.finishedSendingImages = true
+                                                    }else{
+                                                        personalChatVM.failedToSend = true
+                                                    }
                                                 }
                                             }else{
-                                                dp.enter()
                                                 personalChatVM.sendMultipleImagesMessage(images: images, user: userVM.user ?? User()) { sentImages in
-                                                    finishedSendingImages = true
-                                                    dp.leave()
+                                                    personalChatVM.finishedSendingImages = true
                                                 }
                                             }
-                                               
                                             
-                                        }else{
-                                            dp.enter()
-                                            finishedSendingImages = true
-                                            dp.leave()
+                                            
                                         }
-                                       
+                                        
                                         if !videos.isEmpty{
-                                            personalChatVM.sendingMedia = true
                                             if videos.count == 1 {
-                                                dp.enter()
-                                                personalChatVM.sendVideoMessage(videoUrl: videos[0], user: userVM.user ?? User()) { sentVideo in
-                                                        finishedSendingVideos = true
-                                                        dp.leave()
+                                                
+                                                self.getThumbnailUrl(thumbnail: selectedThumbnailImages[0], chatID: personalChatVM.chat.id) { string , _ in
+                                                    if let string = string{
+                                                        personalChatVM.sendVideoMessage(thumbnailUrlString: string  , videoUrl: videos[0], user: userVM.user ?? User()) { sentVideo in
+                                                            personalChatVM.finishedSendingVideos = true
+                                                        }
+                                                    }else{
+                                                        //todo there was an error
+                                                        print("unable to get thumbnail image of video")
+                                                        personalChatVM.finishedSendingVideos = true
+
+                                                    }
                                                 }
+                                                
+                                                
+                                               
                                             }else{
-                                                dp.enter()
-                                                personalChatVM.sendMultipleVideosMessage(videoUrls: videos, user: userVM.user ?? User()) { sentVideos in
-                                                    finishedSendingVideos = true
-                                                    dp.leave()
+                                               
+                                                for thumbnail in
+                                                        selectedThumbnailImages{
+                                                    dp.enter()
+                                                    self.getThumbnailUrl(thumbnail: thumbnail, chatID: personalChatVM.chat.id) { _, url in
+                                                        if let url = url{
+                                                            selectedThumbnailUrls.append(url)
+                                                            dp.leave()
+                                                        }else{
+                                                            //todo there was an error
+                                                            dp.leave()
+                                                        }
+                                                    }
                                                 }
+                                                dp.notify(queue: .main, execute: {
+                                                    personalChatVM.sendMultipleVideosMessage(thumbnailUrls: selectedThumbnailUrls, videoUrls: videos, user: userVM.user ?? User()) { sentVideos in
+                                                        personalChatVM.finishedSendingVideos = true
+                                                    }
+                                                })
+
                                             }
                                             
-                                        }else{
-                                            dp.enter()
-                                            finishedSendingVideos = true
-                                            dp.leave()
-                                        }
-                                        dp.notify(queue: .main) {
-                                            if finishedSendingImages && finishedSendingVideos{
-                                                withAnimation{
-                                                    self.urls = []
-                                                    self.videos = []
-                                                    self.images = []
-                                                    personalChatVM.sendingMedia = false
-                                                    personalChatVM.imagesSent = 0
-                                                    personalChatVM.videosSent = 0
-                                                }
-                                               
-                                            }
                                         }
                                       
+                                        
                                     },label:{
                                         Image(systemName: "play.fill").font(.largeTitle).foregroundColor(Color("AccentColor"))
                                     }).disabled(isLoadingMedia)
                                 }
-                               
+                                
                             }.padding().padding(.bottom,30)
                         }
                         
@@ -710,17 +815,17 @@ struct PersonalChatView : View {
                     }
                 )
         }
-       .onAppear{
-               personalChatVM.listenToChat(chatID: chatID)
-               personalChatVM.fetchAllMessages(chatID: chatID, userID: USER_ID)
-               personalChatVM.readLastMessage(chatID: chatID, userID: userVM.user?.id ?? " ")
-               personalChatVM.openChat(userID: userVM.user?.id ?? " ", chatID: chatID)
-                self.initKeyboardGuardian()
-                DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
-                    personalChatVM.scrollToBottom += 1
-                }
-           
-          
+        .onAppear{
+            personalChatVM.listenToChat(chatID: chatID)
+            personalChatVM.fetchAllMessages(chatID: chatID, userID: USER_ID)
+            personalChatVM.readLastMessage(chatID: chatID, userID: userVM.user?.id ?? " ")
+            personalChatVM.openChat(userID: userVM.user?.id ?? " ", chatID: chatID)
+            self.initKeyboardGuardian()
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                personalChatVM.scrollToBottom += 1
+            }
+            
+            
         }.onDisappear{
             personalChatVM.exitChat(userID: userVM.user?.id ?? " ", chatID: chatID)
         } .onChange(of: scenePhase) { newPhase in
@@ -735,7 +840,7 @@ struct PersonalChatView : View {
                 isLoadingMedia = true
                 let group = DispatchGroup()
                 
-               
+                
                 for url in urls {
                     
                     switch try! url.resourceValues(forKeys: [.contentTypeKey]).contentType! {
@@ -761,6 +866,7 @@ struct PersonalChatView : View {
                         case let contentType where contentType.conforms(to: .audiovisualContent):
                             group.enter()
                             videos.append(url)
+                            selectedThumbnailImages.append(self.getThumbnailImageFromVideoRemoteUrl(url: url) ?? UIImage())
                             group.leave()
                         default:
                             group.enter()
@@ -783,6 +889,30 @@ struct PersonalChatView : View {
                 
                 
                 
+            }
+        }.onReceive(personalChatVM.$finishedSendingVideos) { newValue in
+            if images.isEmpty && newValue || newValue && personalChatVM.finishedSendingImages {
+                withAnimation{
+                    self.urls = []
+                    self.selectedThumbnailImages = []
+                    self.videos = []
+                    self.images = []
+                    personalChatVM.sendingMedia = false
+                    personalChatVM.imagesSent = 0
+                    personalChatVM.videosSent = 0
+                }
+            }
+        }.onReceive(personalChatVM.$finishedSendingImages) { newValue in
+            if videos.isEmpty && newValue || newValue && personalChatVM.finishedSendingVideos {
+                withAnimation{
+                    self.urls = []
+                    self.selectedThumbnailImages = []
+                    self.videos = []
+                    self.images = []
+                    personalChatVM.sendingMedia = false
+                    personalChatVM.imagesSent = 0
+                    personalChatVM.videosSent = 0
+                }
             }
         }
         
@@ -818,7 +948,7 @@ fileprivate struct DelaysTouches: ViewModifier {
             content
         }.buttonStyle(DelaysTouchesButtonStyle(disabled: $disabled, duration: duration, touchDownDate: $touchDownDate))
             .disabled(disabled)
-
+        
     }
 }
 
@@ -852,68 +982,3 @@ fileprivate struct DelaysTouchesButtonStyle : ButtonStyle {
     }
 }
 
-
-struct PersonalChatScrollView<Content: View>: UIViewRepresentable {
-    
-    private var content: Content
-    @EnvironmentObject var userVM: UserViewModel
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
-    }
-    
-    func makeUIView(context: Context) -> UIScrollView {
-        let scrollView = UIScrollView()
-        scrollView.delegate = context.coordinator
-        scrollView.isScrollEnabled = true
-        scrollView.keyboardDismissMode = .interactive
-        let hostedView = context.coordinator.hostingController.view!
-        hostedView.translatesAutoresizingMaskIntoConstraints = true
-        hostedView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
-        hostedView.frame = scrollView.bounds
-        hostedView.backgroundColor = .clear
-        scrollView.addSubview(hostedView)
-        scrollView.contentSize = CGSize(width: hostedView.frame.width, height: hostedView.frame.height)
-        
-        return scrollView
-    }
-    
-    func updateUIView(_ uiView: UIScrollView, context: Context) {
-        context.coordinator.hostingController.rootView = self.content
-    }
-    
-    func makeCoordinator() -> Coordinator {
-        return Coordinator(hostingController: UIHostingController(rootView: self.content))
-    }
-    
-    private func hostingController(for content: Content) -> UIHostingController<Content> {
-        let hostingController = UIHostingController(rootView: content)
-        hostingController.view.translatesAutoresizingMaskIntoConstraints = false
-        hostingController.view.backgroundColor = .clear
-        return hostingController
-    }
-    
-    class Coordinator: NSObject, UIScrollViewDelegate {
-        var hostingController : UIHostingController<Content>
-        
-        init(hostingController: UIHostingController<Content>) {
-            self.hostingController = hostingController
-        }
-        
-        
-        func scrollViewDidScroll(_ scrollView: UIScrollView) {
-            // Handle scroll view events here
-        }
-        
-        func scrollViewWillEndDragging(_ scrollView: UIScrollView, withVelocity velocity: CGPoint, targetContentOffset: UnsafeMutablePointer<CGPoint>) {
-            // Prevent the scroll view from overshooting the top or bottom
-            let maxYOffset = scrollView.contentSize.height - scrollView.frame.height
-            let minYOffset: CGFloat = 0
-            let targetYOffset = targetContentOffset.pointee.y
-            if targetYOffset > maxYOffset {
-                targetContentOffset.pointee = CGPoint(x: targetContentOffset.pointee.x, y: maxYOffset)
-            } else if targetYOffset < minYOffset {
-                targetContentOffset.pointee = CGPoint(x: targetContentOffset.pointee.x, y: minYOffset)
-            }
-        }
-    }
-}

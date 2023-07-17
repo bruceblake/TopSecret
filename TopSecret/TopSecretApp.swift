@@ -10,7 +10,6 @@ import SCSDKCoreKit
 import UIKit
 import SCSDKLoginKit
 import UserNotifications
-import FirebaseMessaging
 import CoreData
 
 @main

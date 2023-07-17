@@ -377,22 +377,26 @@ struct UserRescindedFriendRequestNotificationCell : View {
                     
                     
                     HStack(alignment: .top, spacing: 5){
-                        if USER_ID == sender.id ?? " " {
-                            WebImage(url: URL(string: receiver.profilePicture ?? ""))
+                        ZStack(alignment: .bottomTrailing){
+                            WebImage(url: URL(string: (sender.id ?? " " == USER_ID ) ?  receiver.profilePicture ?? "" : sender.profilePicture ?? ""))
                                 .resizable()
                                 .scaledToFill()
                                 .frame(width:40,height:40)
                                 .clipShape(Circle())
                                 .padding(.leading,5)
-                        }else{
-                            WebImage(url: URL(string: sender.profilePicture ?? ""))
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width:40,height:40)
-                                .clipShape(Circle())
-                                .padding(.leading,5)
+                    
+                            ZStack{
+                                Circle().foregroundColor(Color("Color")).frame(width: 20, height: 20)
+                                
+                                
+                                    
+                               
+                                Image(systemName: "person.fill.badge.plus").foregroundColor(FOREGROUNDCOLOR).font(.caption)
+
+
+                            }.offset(y: 2)
                         }
-                        
+                           
                         
                         VStack(alignment: .leading){
                             HStack(spacing: 5){
@@ -406,9 +410,9 @@ struct UserRescindedFriendRequestNotificationCell : View {
                             }
                             
                             if USER_ID == sender.id ?? " " {
-                                Text("\(receiver.nickName ?? " ") rescinded your friend request.").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                                Text("rescinded your friend request.").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
                             }else{
-                                Text("You rescinded \(sender.username ?? " ")'s friend request.").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                                Text("You rescinded their friend request.").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
                             }
                                
                             
@@ -464,21 +468,26 @@ struct UserAcceptedFriendRequestNotificationCell : View {
                     
                     HStack(alignment: .top, spacing: 5){
                         
-                        if sender.id ?? " " == USER_ID {
-                            WebImage(url: URL(string: receiver.profilePicture ?? ""))
+                        ZStack(alignment: .bottomTrailing){
+                            WebImage(url: URL(string: (sender.id ?? " " == USER_ID ) ?  receiver.profilePicture ?? "" : sender.profilePicture ?? ""))
                                 .resizable()
                                 .scaledToFill()
                                 .frame(width:40,height:40)
                                 .clipShape(Circle())
                                 .padding(.leading,5)
-                        }else{
-                            WebImage(url: URL(string: sender.profilePicture ?? ""))
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width:40,height:40)
-                                .clipShape(Circle())
-                                .padding(.leading,5)
+                    
+                            ZStack{
+                                Circle().foregroundColor(Color("Color")).frame(width: 20, height: 20)
+                                
+                                
+                                    
+                               
+                                Image(systemName: "person.fill.badge.plus").foregroundColor(FOREGROUNDCOLOR).font(.caption)
+
+
+                            }.offset(y: 2)
                         }
+                           
                         
                         
                         VStack(alignment: .leading){
@@ -553,41 +562,47 @@ struct UserDeniedFriendRequestNotificationCell : View {
                     
                     HStack(alignment: .top, spacing: 5){
                         
-                        
-                        
-                        if receiver.id ?? " " != USER_ID {
-                            
-                            WebImage(url: URL(string: receiver.profilePicture ?? ""))
+                        ZStack(alignment: .bottomTrailing){
+                            WebImage(url: URL(string: (sender.id ?? " " == USER_ID ) ?  receiver.profilePicture ?? "" : sender.profilePicture ?? ""))
                                 .resizable()
                                 .scaledToFill()
                                 .frame(width:40,height:40)
                                 .clipShape(Circle())
                                 .padding(.leading,5)
+                    
+                            ZStack{
+                                Circle().foregroundColor(Color("Color")).frame(width: 20, height: 20)
+                                
+                                
+                                    
+                               
+                                Image(systemName: "person.fill.badge.plus").foregroundColor(FOREGROUNDCOLOR).font(.caption)
+
+
+                            }.offset(y: 2)
+                        }
+                           
+                        
+                        
+                        if receiver.id ?? " " != USER_ID {
+                       
                             
                             VStack(alignment: .leading){
                                 HStack(spacing: 5){
                                     Text("\(receiver.username ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
                                     Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.footnote)
                                 }
-                                    Text("You denied the friend request from \(receiver.username ?? " ").").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                                    Text("You denied their friend request.").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
                                    
                                 
                             }
                         }else {
-                            
-                            WebImage(url: URL(string: sender.profilePicture ?? ""))
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width:40,height:40)
-                                .clipShape(Circle())
-                                .padding(.leading,5)
-                            
                             VStack(alignment: .leading){
                                 HStack(spacing: 5){
                                     Text("\(sender.username ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
                                     Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.subheadline)
                                 }
-                                    Text("\(sender.nickName ?? " ") denied your friend request.").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                                    Text("denied your friend request.").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
                             }
                         }
                         
@@ -645,24 +660,26 @@ struct UserSentFriendRequestNotificationCell : View {
                     
                     HStack(alignment: .center, spacing: 5){
                         
-                        //current user is sender
-                        if sender.id ?? " " == USER_ID {
-                            WebImage(url: URL(string: receiver.profilePicture ?? ""))
+                        ZStack(alignment: .bottomTrailing){
+                            WebImage(url: URL(string: (sender.id ?? " " == USER_ID ) ?  receiver.profilePicture ?? "" : sender.profilePicture ?? ""))
                                 .resizable()
                                 .scaledToFill()
                                 .frame(width:40,height:40)
                                 .clipShape(Circle())
                                 .padding(.leading,5)
-                            
-                        }else{
-                            WebImage(url: URL(string: sender.profilePicture ?? ""))
-                                .resizable()
-                                .scaledToFill()
-                                .frame(width:40,height:40)
-                                .clipShape(Circle())
-                                .padding(.leading,5)
-                            
+                    
+                            ZStack{
+                                Circle().foregroundColor(Color("Color")).frame(width: 20, height: 20)
+                                
+                                
+                                    
+                               
+                                Image(systemName: "person.fill.badge.plus").foregroundColor(FOREGROUNDCOLOR).font(.caption)
+
+
+                            }.offset(y: 2)
                         }
+                           
                         
                         
                         VStack(alignment: .leading){
@@ -681,10 +698,10 @@ struct UserSentFriendRequestNotificationCell : View {
                                 //current user is sener
                                 if sender.id ?? " " == USER_ID {
                                   
-                                    Text("You sent a friend request to \(receiver.username ?? " ")").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                                    Text("You sent a friend request").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
                                 }else{
                                     //current user is receiver
-                                    Text("\(sender.nickName ?? " ") sent you a friend request").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                                    Text("sent you a friend request").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
                                    
                                 }
                                 

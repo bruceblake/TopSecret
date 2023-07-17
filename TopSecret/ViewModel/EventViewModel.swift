@@ -9,6 +9,7 @@ import Foundation
 import Firebase
 import SwiftUI
 import Combine
+import FirebaseStorage
 import CoreLocation
 
 
@@ -39,7 +40,6 @@ class EventViewModel: ObservableObject {
         }
         
         COLLECTION_EVENTS.document(event.id).updateData(["usersAttendingID":FieldValue.arrayUnion([userID])])
-        COLLECTION_EVENTS.document(event.id).updateData(["usersInvitedIDS":FieldValue.arrayRemove([userID])])
         COLLECTION_EVENTS.document(event.id).updateData(["usersDeclinedID":FieldValue.arrayRemove([userID])])
         COLLECTION_USER.document(userID).updateData(["pendingEventInvitationID":FieldValue.arrayRemove([event.id])])
         COLLECTION_USER.document(userID).updateData(["eventsID":FieldValue.arrayUnion([event.id])])
@@ -62,7 +62,6 @@ class EventViewModel: ObservableObject {
             COLLECTION_USER.document(userID).collection("Notifications").document(notificationID).setData(userNotificationData)
         }
         
-        COLLECTION_EVENTS.document(event.id).updateData(["usersInvitedIDS":FieldValue.arrayRemove([userID])])
         COLLECTION_EVENTS.document(event.id).updateData(["usersAttendingID":FieldValue.arrayRemove([userID])])
         COLLECTION_EVENTS.document(event.id).updateData(["usersDeclinedID":FieldValue.arrayUnion([userID])])
         COLLECTION_USER.document(userID).updateData(["pendingEventInvitationID":FieldValue.arrayRemove([event.id])])
@@ -77,7 +76,6 @@ class EventViewModel: ObservableObject {
         COLLECTION_EVENTS.document(event.id).updateData(["eventStartTime":startTime])
         COLLECTION_EVENTS.document(event.id).updateData(["eventEndTime":endTime])
         COLLECTION_EVENTS.document(event.id).updateData(["invitationType":invitationType])
-        COLLECTION_EVENTS.document(event.id).updateData(["usersInvitedIDS":invitedMembers.map({$0.id ?? " "})])
         COLLECTION_EVENTS.document(event.id).updateData(["usersExcludedIDS":excludedMembers.map({$0.id ?? " "})])
         COLLECTION_EVENTS.document(event.id).updateData(["description":description])
         COLLECTION_EVENTS.document(event.id).updateData(["location":location.toDictionary()])
@@ -127,7 +125,6 @@ class EventViewModel: ObservableObject {
                 COLLECTION_USER.document(invitedMember.id ?? " ").updateData(["pendingEventInvitationID":FieldValue.arrayUnion([event.id])])
                 COLLECTION_USER.document(invitedMember.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)
                 COLLECTION_EVENTS.document(event.id).updateData(["usersUndecidedID":FieldValue.arrayUnion([invitedMember.id ?? " "])])
-                COLLECTION_EVENTS.document(event.id).updateData(["usersInvitedIDS":FieldValue.arrayUnion([invitedMember.id ?? " "])])
                 //                self.notificationSender.sendPushNotification(to: invitedMember.fcmToken ?? " ", title: "\(group.groupName)", body: "\(invitedMember.nickName ?? " ") created an event!")
             }
             
@@ -146,7 +143,7 @@ class EventViewModel: ObservableObject {
             "eventName" : eventName,
             "eventStartTime": eventStartTime,
             "eventEndTime": eventEndTime,
-            "usersInvitedIDS": invitedMembers.map({ user in
+            "usersUndecidedID": invitedMembers.map({ user in
                 return user.id ?? ""
             }),
             "usersExcludedIDS": excludedMembers.map({ user in
@@ -160,7 +157,8 @@ class EventViewModel: ObservableObject {
             "location": location.toDictionary(),
             "membersCanInviteGuests": membersCanInviteGuests,
             "description": description,
-            "groupID":" "
+            "groupID":" ",
+            "ended":false
         ]
         
         if let group = group {
@@ -173,8 +171,15 @@ class EventViewModel: ObservableObject {
                 
             }
             COLLECTION_GROUP.document(group.id).updateData(["eventsID":FieldValue.arrayUnion([id])])
+            let notificationID = UUID().uuidString
+            let groupNotificationData: [String: Any] = [
+                "id": notificationID,
+                "timeStamp": Timestamp(),
+                "senderID":USER_ID,
+                "eventID": id,
+                "type": "eventCreated"]
+            COLLECTION_GROUP.document(group.id).collection("Notifications").document(notificationID).setData(groupNotificationData)
         }
-            
         
 
         let locationData: [String: Any] = [
@@ -219,14 +224,13 @@ class EventViewModel: ObservableObject {
                     "name": "Invite To Event",
                     "timeStamp": Timestamp(),
                     "senderID": USER_ID,
-                    "receiverID": invitedMember.id ?? "",
+                    "receiverID": invitedMember.id ?? " ",
                     "eventID": id,
                     "hasSeen": false,
                     "type": "invitedToEvent"
                 ]
                 COLLECTION_USER.document(invitedMember.id ?? "").updateData(["pendingEventInvitationID": FieldValue.arrayUnion([id])])
                 COLLECTION_USER.document(invitedMember.id ?? "").collection("Notifications").document(notificationID).setData(userNotificationData)
-                COLLECTION_EVENTS.document(id).updateData(["usersInvitedIDS": FieldValue.arrayUnion([invitedMember.id ?? ""])])
                 COLLECTION_EVENTS.document(id).updateData(["usersUndecidedID": FieldValue.arrayUnion([invitedMember.id ?? ""])])
                 self.notificationSender.sendPushNotification(to: invitedMember.fcmToken ?? "", title: "\(group?.groupName ?? "")", body: "\(invitedMember.nickName ?? "") created an event!")
             }
@@ -333,12 +337,13 @@ class EventViewModel: ObservableObject {
     }
     
     
-    func joinEvent(eventID: String, groupID: String, userID: String){
-        COLLECTION_GROUP.document(groupID).collection("Events").document(eventID).updateData(["usersAttendingID":FieldValue.arrayUnion([userID])])
+    func joinEvent(eventID: String, userID: String){
+        COLLECTION_EVENTS.document(eventID).updateData(["usersAttendingID":FieldValue.arrayUnion([userID])])
     }
     
     func leaveEvent(eventID: String, groupID: String, userID: String){
-        COLLECTION_GROUP.document(groupID).collection("Events").document(eventID).updateData(["usersAttendingID":FieldValue.arrayRemove([userID])])
+        COLLECTION_EVENTS.document(eventID).updateData(["usersAttendingID":FieldValue.arrayRemove([userID])])
+
     }
     
     

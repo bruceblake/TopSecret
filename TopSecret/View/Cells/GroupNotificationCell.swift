@@ -36,37 +36,23 @@ struct GroupNotificationCell: View {
             //group motd changed
             //group earned a badge
             
-            switch groupNotification.notificationType ?? " "{
+            switch groupNotification.type ?? " "{
             case "eventCreated":
                 GroupEventCreatedNotificationCell(groupNotification: groupNotification)
-            case "countdownCreated":
-                CountdownCreatedNotificationCell(groupNotification: groupNotification)
             case "pollCreated":
                 Text("Hello World")
-            case "userAdded":
-                UserAddedNotificationCell(groupNotification: groupNotification, groupName: selectedGroupVM.group.groupName,actionTaken: "joined")
+            case "acceptedGroupInvitation":
+                UserAddedNotificationCell(groupNotification: groupNotification)
             case "userLeft":
-                UserAddedNotificationCell(groupNotification: groupNotification, groupName: selectedGroupVM.group.groupName,actionTaken: "left")
+                UserAddedNotificationCell(groupNotification: groupNotification)
             case "oneHourRemainingEvent":
-                Text("Hello World")
-            case "oneHourRemainingCountdown":
                 Text("Hello World")
             case "oneHourRemainingPoll":
                 Text("Hello World")
-            case "userPosted":
-                Text("Hello World")
-            case "userSentAText":
-                UserSentTextNotificationCell(groupNotification: groupNotification)
             case "userChangedGroupName":
                 Text("Hello World")
-            case "userChangedGroupBio":
-                Text("Hello World")
-            case "userChangedGroupMOTD":
-                Text("Hello World")
-            case "groupEarnedBadge":
-                Text("Hello World")
             default:
-                Text("Notification")
+                Text("\(groupNotification.type ?? "cock")")
             }
             
         }
@@ -79,6 +65,7 @@ struct GroupNotificationCell: View {
 struct GroupEventCreatedNotificationCell : View {
     
     var groupNotification: GroupNotificationModel
+    var groupNotificationVM = GroupNotificationViewModel()
     var body: some View {
         
         VStack(alignment: .leading){
@@ -86,41 +73,20 @@ struct GroupEventCreatedNotificationCell : View {
                 
                 
                 
-                WebImage(url: URL(string: (groupNotification.notificationCreator as? User ?? User()).profilePicture ?? ""))
+                WebImage(url: URL(string: (groupNotification.sender as? User ?? User()).profilePicture ?? ""))
                     .resizable()
                     .scaledToFill()
                     .frame(width:40,height:40)
                     .clipShape(Circle())
                 
-                Text("\((groupNotification.notificationCreator as? User ?? User() ).username ?? "USER_USERNAME") created an event!").fontWeight(.bold).font(.callout).foregroundColor(FOREGROUNDCOLOR)
+                VStack(alignment: .leading){
+                    Text("\((groupNotification.sender as? User ?? User() ).username ?? "USER_USERNAME")").fontWeight(.bold).font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                    Text("\((groupNotification.sender as? User ?? User() ).nickName ?? "USER_USERNAME") created an event").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                }
                 Spacer()
-                Text("\(groupNotification.notificationTime?.dateValue() ?? Date(), style: .time)").foregroundColor(.gray).font(.footnote)
+                Text("\(groupNotification.timeStamp?.dateValue() ?? Date(), style: .time)").foregroundColor(.gray).font(.footnote)
             }
-        }.padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color"))).padding()
-        
-    }
-}
-
-struct CountdownCreatedNotificationCell : View {
-    
-    var groupNotification: GroupNotificationModel
-    
-    var body: some View {
-        VStack{
-            HStack{
-                WebImage(url: URL(string: (groupNotification.notificationCreator as? User ?? User()).profilePicture ?? ""))
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width:40,height:40)
-                    .clipShape(Circle())
-                Text("\((groupNotification.notificationCreator as? User ?? User()).username ?? "USER_USERNAME") created a countdown!").fontWeight(.bold).foregroundColor(FOREGROUNDCOLOR).font(.callout)
-                
-                Spacer()
-                
-                Text("\(groupNotification.notificationTime?.dateValue() ?? Date(), style: .time)").foregroundColor(.gray).font(.footnote)
-                
-            }
-        }.padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color"))).padding(10)
+        }.padding(5).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
         
     }
 }
@@ -129,53 +95,31 @@ struct CountdownCreatedNotificationCell : View {
 struct UserAddedNotificationCell : View {
     
     var groupNotification: GroupNotificationModel
-    var groupName : String
-    var actionTaken : String
+    @EnvironmentObject var groupVM: SelectedGroupViewModel
     var body: some View {
         VStack{
             HStack{
                 
                 
                 
-                WebImage(url: URL(string: (groupNotification.notificationCreator as? User ?? User()).profilePicture ?? ""))
+                WebImage(url: URL(string: (groupNotification.sender as? User ?? User()).profilePicture ?? ""))
                     .resizable()
                     .scaledToFill()
                     .frame(width:40,height:40)
                     .clipShape(Circle())
-                
-                Text("\((groupNotification.notificationCreator as? User ?? User() ).username ?? "USER_USERNAME") \(actionTaken) \(groupName)!").fontWeight(.bold).font(.callout).foregroundColor(FOREGROUNDCOLOR)
+                VStack(alignment: .leading){
+                    Text("\((groupNotification.sender as? User ?? User() ).username ?? "USER_USERNAME")").fontWeight(.bold).font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                    Text("\((groupNotification.sender as? User ?? User() ).nickName ?? "USER_USERNAME") accepted their invitation to \(groupVM.group.groupName ?? " ")").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                }
+             
                 Spacer()
-                Text("\(groupNotification.notificationTime?.dateValue() ?? Date(), style: .time)").foregroundColor(.gray).font(.footnote)
+                Text("\(groupNotification.timeStamp?.dateValue() ?? Date(), style: .time)").foregroundColor(.gray).font(.footnote)
             }
-        }.padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color"))).padding(10)
+        }.padding(5).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
     }
 }
 
 
-struct UserSentTextNotificationCell : View {
-    
-    var groupNotification : GroupNotificationModel
-    
-    var body: some View {
-        VStack{
-            HStack{
-                
-                
-                
-                WebImage(url: URL(string: (groupNotification.notificationCreator as? User ?? User()).profilePicture ?? ""))
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width:40,height:40)
-                    .clipShape(Circle())
-                
-                Text("\((groupNotification.notificationCreator as? User ?? User()).username ?? "USER_USERNAME") sent a message").fontWeight(.bold).font(.callout).foregroundColor(FOREGROUNDCOLOR)
-                Spacer()
-                Text("\(groupNotification.notificationTime?.dateValue() ?? Date(), style: .time)").foregroundColor(.gray).font(.footnote)
-            }
-        }.padding(10).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color"))).padding(10)
-        
-    }
-}
 
 
 

@@ -7,6 +7,7 @@
 
 import Foundation
 import Firebase
+import FirebaseStorage
 import SwiftUI
 import UIKit
 
@@ -137,7 +138,7 @@ class GroupGalleryViewModel : ObservableObject {
             groupD.leave()
             groupD.notify(queue: .main, execute:{
                 self.isLoading = false
-                self.fetchedAllMedia = imagesToReturn
+                self.fetchedAllMedia = imagesToReturn.sorted{$0.timeStamp?.dateValue() ?? Date() < $1.timeStamp?.dateValue() ?? Date()}
                 self.fetchedFavoriteMedia = imagesToReturn.sorted(by: {$0.favoritedListID?.count ?? 0 > $1.favoritedListID?.count ?? 0})
                 return completion(true)
             })

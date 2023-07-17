@@ -28,40 +28,31 @@ class UserCalendarViewModel : ObservableObject {
     
     
     func fetchEventUsersAttending(usersAttendingID: [String], eventID: String , groupID: String, completion: @escaping ([User]) -> ()) -> (){
-        COLLECTION_GROUP.document(groupID).collection("Events").document(eventID).getDocument { snapshot, err in
-            
-            if err != nil {
-                print("ERROR")
-                return
-            }
-            var usersToReturn : [User] = []
-            
-            
-            let groupD = DispatchGroup()
-            
-            let data = snapshot?.data() as? [String:Any] ?? [:]
-            let users = data["usersAttendingID"] as? [String] ?? []
-            
-            for user in users {
-                groupD.enter()
-                COLLECTION_USER.document(user).getDocument { userSnapshot, err in
-                    if err != nil {
-                        print("ERROR")
-                        return
-                    }
-                    
-                    let userData = userSnapshot?.data() as? [String:Any] ?? [:]
-                    
-                    usersToReturn.append(User(dictionary: userData))
-                    groupD.leave()
+        
+        var usersToReturn : [User] = []
+        
+        
+        let groupD = DispatchGroup()
+        
+        for userID in usersAttendingID {
+            groupD.enter()
+            COLLECTION_USER.document(userID).getDocument { userSnapshot, err in
+                if err != nil {
+                    print("ERROR")
+                    return
                 }
+                
+                let userData = userSnapshot?.data() as? [String:Any] ?? [:]
+                
+                usersToReturn.append(User(dictionary: userData))
+                groupD.leave()
             }
-            
-            groupD.notify(queue: .main, execute: {
-                return completion(usersToReturn)
-            })
-            
         }
+        
+        groupD.notify(queue: .main, execute: {
+            return completion(usersToReturn)
+        })
+    
         
         
     }
@@ -71,36 +62,57 @@ class UserCalendarViewModel : ObservableObject {
         let dp = DispatchGroup()
         var eventsToReturn : [EventModel] = []
 
+        dp.enter()
         for id in eventsID{
             dp.enter()
-            COLLECTION_EVENTS.document(id).getDocument { snapshot, err in
-             
-                if err != nil {
-                    print("ERROR")
-                    return
-                }
-           
-                var data = snapshot?.data() as? [String:Any] ?? [:]
-//                    var startTime = data["eventStartTime"] as? Date ?? Date()
-//                    let users = data["usersAttendingID"] as? [String] ?? []
-//    //                self.fetchEventUsersAttending(usersAttendingID: users, eventID: data["id"] as? String ?? " ", groupID: groupID) { fetchedUsers in
-//    //                    data["usersAttending"] = fetchedUsers
-//    //                    groupD.leave()
-//    //                }
-            
-                        eventsToReturn.append(EventModel(dictionary: data))
-                    dp.leave()
-
+            self.fetchEvent(eventID: id) { fetchedEvents in
+                eventsToReturn.append(fetchedEvents)
+                dp.leave()
             }
         }
-        
-       
+        dp.leave()
       
         dp.notify(queue: .main, execute: {
             self.eventsResults = eventsToReturn
             self.isLoading = false
         })
         
+    }
+    
+    func fetchEvent(eventID: String, completion: @escaping (EventModel) -> ()){
+        COLLECTION_EVENTS.document(eventID).getDocument { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            let dp = DispatchGroup()
+            
+            var data = snapshot?.data() as? [String:Any] ?? [:]
+            var creatorID = data["creatorID"] as? String ?? " "
+            dp.enter()
+            self.fetchCreator(creatorID: creatorID) { fetchedCreator in
+                data["creator"] = fetchedCreator
+                dp.leave()
+            }
+            
+            dp.notify(queue: .main, execute: {
+                return completion(EventModel(dictionary: data))
+            })
+            
+        }
+    }
+    
+    
+    func fetchCreator(creatorID: String, completion: @escaping (User) -> ()){
+        COLLECTION_USER.document(creatorID).getDocument { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            let data = snapshot?.data() as? [String:Any] ?? [:]
+            return completion(User(dictionary: data))
+        }
     }
     
     

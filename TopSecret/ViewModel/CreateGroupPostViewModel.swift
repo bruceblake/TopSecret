@@ -8,6 +8,7 @@
 import Foundation
 import SwiftUI
 import Firebase
+import FirebaseStorage
 
 class CreateGroupPostViewModel : ObservableObject {
     

@@ -62,41 +62,44 @@ struct CurrentUserProfilePage: View {
                     ScrollView{
                         
                         //pfp username nickname
-                            VStack{
                                 
-                                Button(action:{
-                                    self.seeProfilePicture.toggle()
-                                },label:{
-                                    WebImage(url: URL(string: userVM.user?.profilePicture ?? ""))
-                                        .scaledToFill()
-                                        .frame(width:60,height:60)
-                                        .clipShape(Circle())
-                                        
-                                }).fullScreenCover(isPresented: $seeProfilePicture) {
+                             
+                                
+                                
+                                VStack(alignment: .leading){
                                     
-                                } content: {
-                                    WebImage(url: URL(string: userVM.user?.profilePicture ?? ""))
-                                            .resizable().placeholder{
-                                                ProgressView()
-                                            }
-                                            .scaledToFit()
-                                .onTapGesture{
+                                    Button(action:{
                                         self.seeProfilePicture.toggle()
+                                    },label:{
+                                        WebImage(url: URL(string: userVM.user?.profilePicture ?? ""))
+                                            .resizable()
+                                            .scaledToFill()
+                                            .frame(width:60,height:60)
+                                            .clipShape(Circle())
+                                    }).fullScreenCover(isPresented: $seeProfilePicture) {
+                                        
+                                    } content: {
+                                        WebImage(url: URL(string: userVM.user?.profilePicture ?? ""))
+                                                .resizable().placeholder{
+                                                    ProgressView()
+                                                }
+                                                .scaledToFit()
+                                    .onTapGesture{
+                                            self.seeProfilePicture.toggle()
+                                        }
                                     }
-                                }
-                                
-                                
-                                
                                     
                                     Text("\(userVM.user?.nickName ?? "") ").fontWeight(.bold).font(.headline).lineLimit(1).foregroundColor(FOREGROUNDCOLOR)
                                     
                                     
                                     Text("@\(userVM.user?.username ?? "")").font(.footnote).foregroundColor(.gray)
+                                }
+                                    
                                 
                                 
                                 
                                 
-                            }.padding(5).padding(.leading)
+                            
 
                     
                     HStack{

@@ -3,6 +3,7 @@ import Firebase
 import SwiftUI
 import Foundation
 import UserNotifications
+import FirebaseMessaging
 import UIKit
 import CoreData
 
@@ -12,8 +13,10 @@ class AppDelegate: NSObject, UIApplicationDelegate {
     let gcmMessageIDKey = "gcm.message_id"
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey : Any]? = nil) -> Bool {
+        
+        
         FirebaseApp.configure()
-    
+        
 
         Messaging.messaging().delegate = self
 

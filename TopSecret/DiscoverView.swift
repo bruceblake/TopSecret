@@ -14,8 +14,6 @@ struct DiscoverView : View{
     @StateObject var locationManager = LocationManager()
     @EnvironmentObject var userVM: UserViewModel
     @StateObject var eventVM = EventsTabViewModel()
-    let options = ["Open to Friends", "Invite Only"]
-    let radiusOptions = ["Within 1 mile", "Within 5 miles", "Within 10 miles", "Any"]
     @State var searchText : String = ""
     @State var showAddEventView: Bool = false
     let formatter: NumberFormatter = {
@@ -130,6 +128,37 @@ struct DiscoverView : View{
                                     
                                 }
                             }
+                            
+                            VStack(alignment: .leading){
+                                Text("Past Events").font(.title2).bold().padding(.leading,5)
+                                ScrollView(.horizontal, showsIndicators: false){
+                                    HStack(spacing: 20){
+                                        if eventVM.isLoadingPastEvents {
+                                            ProgressView()
+                                        }else{
+                                            if eventVM.pastEvents.isEmpty{
+                                                Text("Currently there are no events, come back later?").padding(.leading,5).foregroundColor(Color.gray)
+                                            }else{
+                                                ForEach(eventVM.pastEvents.uniqued(), id: \.id) { event in
+                                                    Button(action:{
+                                                        self.selectedEvent = event
+                                                        self.showAddEventView.toggle()
+                                                    },label:{
+                                                        EventTabEventCell(event: event, userIsAttending: event.usersAttendingID?.contains(userVM.user?.id ?? " ") ?? false)
+                                                    })
+                                                 
+                                                   
+                                                }
+                                            }
+                                           
+                                        }
+                                       
+                                    }
+                                    
+                                }
+                            }
+                            
+                            
                         }.padding(.bottom, UIScreen.main.bounds.width/3)
                       
                        
@@ -151,6 +180,9 @@ struct DiscoverView : View{
             eventVM.fetchAttendingEvents(user: userVM.user ?? User())
             eventVM.fetchOpenToFriendsEvents(user: userVM.user ?? User())
             eventVM.fetchInvitedToEvents(user: userVM.user ?? User())
+            eventVM.fetchPastEvents(user: userVM.user ?? User())
+        }.onDisappear{
+            eventVM.removeListeners()
         }
     }
 }
@@ -161,10 +193,10 @@ struct EventTabEventCell : View {
     @State var event: EventModel
     @State var friendsAttending: [User] = []
     @EnvironmentObject var userVM: UserViewModel
-    @ObservedObject var eventsVM = EventsTabViewModel()
+    @StateObject var eventsVM = EventsTabViewModel()
     @State var userIsAttending: Bool
     @State var usersAttendingID: [String] = []
-   
+    
     var eventLocationName : String {
         event.location?.name ?? ""
     }
@@ -216,12 +248,46 @@ struct EventTabEventCell : View {
         let date1 = calendar.startOfDay(for: Date())
         let date2 = calendar.startOfDay(for: date.addingTimeInterval(86400))
         let components = calendar.dateComponents([.day], from: date1, to: date2)
-
+        
         if let days = components.day {
             return days
         } else {
-           return -1
+            return -1
         }
+    }
+    
+    func getHoursUntil(date: Date) -> Int {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.hour], from: Date(), to: date)
+        
+        if let hours = components.hour {
+            return hours
+        } else {
+            return -1
+        }
+    }
+    
+    func getMinutesUntil(date: Date) -> Int {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.minute], from: Date(), to: date)
+        
+        if let minutes = components.minute {
+            return minutes
+        } else {
+            return -1
+        }
+    }
+    
+    var minutesUntil : Int {
+        getMinutesUntil(date: event.eventStartTime?.dateValue() ?? Date())
+    }
+    
+    var hoursUntil : Int {
+        getHoursUntil(date: event.eventStartTime?.dateValue() ?? Date())
+    }
+    
+    var daysUntil : Int {
+        getDaysUntil(date: event.eventStartTime?.dateValue() ?? Date())
     }
     var body: some View {
         
@@ -239,20 +305,40 @@ struct EventTabEventCell : View {
                             Text(event.eventName ?? " ").font(.title3).bold().foregroundColor(FOREGROUNDCOLOR)
                             Spacer()
                         }
-                        if event.eventStartTime?.dateValue() ?? Date() <= Date(){
-                            Text("Event started \(getTimeSince(date: event.eventStartTime?.dateValue() ?? Date()))").foregroundColor(Color.green)
+                        if event.ended ?? false {
+                            Text("Event ended \(getTimeSince(date: event.eventEndTime?.dateValue() ?? Date()))").foregroundColor(Color.red)
                         }else{
-                            VStack(alignment: .leading){
-                                Text("\(event.eventStartTime?.dateValue() ?? Date(), style: .date)").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
-                                HStack{
-                                    Text(event.eventStartTime?.dateValue() ?? Date(), style: .time).foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
-                                    Text("-")
-                                    Text("\(event.eventEndTime?.dateValue() ?? Date(), style: .time)").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
-                                }.foregroundColor(FOREGROUNDCOLOR)
-                                
-                                Text("\(getDaysUntil(date: event.eventStartTime?.dateValue() ?? Date())) days away")
+                            if event.eventStartTime?.dateValue() ?? Date() <= Date(){
+                                Text("Event started \(getTimeSince(date: event.eventStartTime?.dateValue() ?? Date()))").foregroundColor(Color.green)
+                            }else{
+                                VStack(alignment: .leading){
+                                    Text("\(event.eventStartTime?.dateValue() ?? Date(), style: .date)").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+                                    HStack{
+                                        Text(event.eventStartTime?.dateValue() ?? Date(), style: .time).foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+                                        Text("-")
+                                        Text("\(event.eventEndTime?.dateValue() ?? Date(), style: .time)").foregroundColor(FOREGROUNDCOLOR).font(.subheadline)
+                                    }.foregroundColor(FOREGROUNDCOLOR)
+                                    
+                                    if let eventStartTime = event.eventStartTime?.dateValue() {
+                                        let minutesUntil = getMinutesUntil(date: eventStartTime)
+                                        
+                                        if minutesUntil >= 1440 {
+                                            // 24 hours or more away from event
+                                            let daysUntil = minutesUntil / 1440
+                                            Text("\(daysUntil == 1 ? "1 day away" : "\(daysUntil) days away")")
+                                        } else if minutesUntil >= 60 {
+                                            // at least 1 hour away from event
+                                            let hoursUntil = minutesUntil / 60
+                                            Text("\(hoursUntil == 1 ? "1 hour away" : "\(hoursUntil) hours away")")
+                                        } else {
+                                            // less than 60 minutes away from event
+                                            Text("\(minutesUntil == 0 || minutesUntil == 1 ? "1 minute away" : "\(minutesUntil) minutes away")")
+                                        }
+                                    }
+                                }
                             }
                         }
+                       
                        
                         
                         Text("\(eventLocationName == "" ? "No Location Specified" : eventLocationName)").foregroundColor(Color.gray).font(.callout)
@@ -288,6 +374,7 @@ struct EventTabEventCell : View {
             
             
         }.frame(width: (UIScreen.main.bounds.width/1.5)).clipShape(RoundedRectangle(cornerRadius: 16)).onAppear{
+           
             friendsAttending = eventsVM.getFriendsAttending(event: event, user: userVM.user ?? User())
         }
     }

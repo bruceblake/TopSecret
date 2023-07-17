@@ -12,27 +12,26 @@ import Firebase
 
 struct GroupNotificationModel : Identifiable {
     var id: String = UUID().uuidString
-    var notificationName : String?
-    var notificationTime : Timestamp?
-    var notificationType: String?
-    var notificationCreatorID: String?
-    var notificationCreator : Any?
+    var timeStamp : Timestamp?
+    var type: String?
+    var senderID: String?
+    var sender: User?
+    var receiverID: String?
+    var receiver: User?
     var usersThatHaveSeen : [String]?
-    var actionTypeID: String?
-    var actionType: Any?
+    var requiresAction: Bool?
     
     
     init(dictionary: [String:Any]) {
         self.id = dictionary["id"] as? String ?? "EVENT_ID"
-        self.notificationName = dictionary["notificationName"] as? String ?? "NOTIFICATION_NAME"
-        self.notificationTime = dictionary["notificationTime"] as? Timestamp ?? Timestamp()
-        self.notificationType = dictionary["notificationType"] as? String ?? "NOTIFICATION_TYPE"
-        self.notificationCreatorID = dictionary["notificationCreatorID"] as? String ?? "NOTIFICATION_CREATOR"
+        self.timeStamp = dictionary["timeStamp"] as? Timestamp ?? Timestamp()
+        self.type = dictionary["type"] as? String ?? "NOTIFICATION_TYPE"
         self.usersThatHaveSeen = dictionary["usersThatHaveSeen"] as? [String] ?? []
-        self.notificationCreator = dictionary["notificationCreator"] as? Any ?? User()
-        self.actionTypeID = dictionary["actionTypeID"] as? String ?? " "
-        self.actionType = dictionary["actionType"] ?? (Any).self
-        
+        self.receiverID = dictionary["receiverID"] as? String ?? "RECEIVER_ID"
+        self.receiver = dictionary["receiver"] as? User ?? User()
+        self.senderID = dictionary["senderID"] as? String ?? "SENDER_ID"
+        self.sender = dictionary["sender"] as? User ?? User()
+        self.requiresAction = dictionary["requiresAction"] as? Bool ?? false
     }
     
     

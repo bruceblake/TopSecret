@@ -9,8 +9,8 @@ import Foundation
 import Firebase
 
 struct PollOptionModel : Identifiable {
-    var id: String?
-    var choice : String?
+    var id: String = UUID().uuidString
+    var choice : String = ""
     var pickedUsers : [User]?
     var pickedUsersID: [String]?
     

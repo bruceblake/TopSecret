@@ -2,7 +2,7 @@ import Foundation
 import SwiftUI
 import SDWebImageSwiftUI
 import MapKit
-
+import ScalingHeaderScrollView
 
 
 struct ScheduleView : View {
@@ -21,7 +21,11 @@ struct ScheduleView : View {
     @State var showAddEventView: Bool = false
     @State var selectedEvent: EventModel = EventModel()
     
-    
+    func checkIfSelectedDateIsInPast(selectedDate: Date) -> Bool{
+        let selectedDay = Calendar.current.dateComponents([.day], from: selectedDate).day ?? 0
+        let currentDay = Calendar.current.dateComponents([.day], from: Date()).day ?? 0
+        return selectedDay < currentDay && selectedDate < Date()
+    }
     
     func getNumberOfEventsOfDay(events: [EventModel], date: Date) -> Int {
         var eventCount : Int = 0
@@ -119,11 +123,14 @@ struct ScheduleView : View {
                             })
                         }, fullScreenButton: { date in
                             Button(action:{
-                                showWeekView = false
+                                withAnimation{
+                                    showWeekView = false
+                                }
+                                UIDevice.vibrate()
                             }, label:{
                                 ZStack{
                                     Circle().foregroundColor(Color("Background")).frame(width: 30, height: 30)
-                                    Image(systemName: "arrow.down.right.and.arrow.up.left").font(.subheadline).foregroundColor(FOREGROUNDCOLOR)
+                                    Image(systemName: "pip.swap").font(.subheadline).foregroundColor(FOREGROUNDCOLOR)
                                 }
                             })
                         }
@@ -138,7 +145,7 @@ struct ScheduleView : View {
                     
                     HStack{
                         
-                        Text("You have \(getNumberOfEventsOfDay(events: calendarVM.eventsResults, date: selectedDate)) \(getNumberOfEventsOfDay(events:calendarVM.eventsResults, date:selectedDate) == 1 ? "event" : "events")").bold().font(.title3).foregroundColor(getNumberOfEventsOfDay(events:calendarVM.eventsResults, date:selectedDate) == 0 ? Color.white : Color.yellow)
+                        Text("You \(self.checkIfSelectedDateIsInPast(selectedDate: selectedDate) ? "had" : "have") \(getNumberOfEventsOfDay(events: calendarVM.eventsResults, date: selectedDate)) \(getNumberOfEventsOfDay(events:calendarVM.eventsResults, date:selectedDate) == 1 ? "event" : "events")").bold().font(.title3).foregroundColor(getNumberOfEventsOfDay(events:calendarVM.eventsResults, date:selectedDate) == 0 ? Color.white : Color.yellow)
                         
                         Spacer()
                         
@@ -153,28 +160,46 @@ struct ScheduleView : View {
                     if calendarVM.isLoading{
                         ProgressView()
                     }else{
-                        ScrollView(){
-                            
-                            VStack(spacing: 40){
-                                
-                                VStack(spacing: 15){
-                                    ForEach(calendarVM.eventsResults.sorted(by: {$0.eventStartTime?.dateValue() ?? Date() > $1.eventStartTime?.dateValue() ?? Date()})){ event in
-                                        if Calendar.current.isDate(event.eventStartTime?.dateValue() ?? Date(), inSameDayAs: selectedDate){
-                                            Button(action:{
-                                                self.selectedEvent = event
-                                                self.showAddEventView.toggle()
-                                            },label:{
-                                                UserCalendarEventCell(event: event)
-                                            })
-                                            
-                                          
-                                            
-                                        }
+                        ScrollView{
+                            if calendarVM.eventsResults.filter({Calendar.current.isDate($0.eventStartTime?.dateValue() ?? Date(), inSameDayAs: selectedDate)}).count == 0 && !calendarVM.isLoading {
+                                VStack{
+                                    Text("You're free today, unless you wanna change that").foregroundColor(Color.gray)
+                                    NavigationLink {
+                                        CreateEventView(isGroup: false, showAddEventView: $showAddEventView)
+                                    } label: {
+                                        Text("Create Event").foregroundColor(Color("Foreground"))
+                                            .padding(.vertical)
+                                            .frame(width: UIScreen.main.bounds.width/2).background(Color("AccentColor")).cornerRadius(15)
                                     }
-                                }.padding(.top,5)
+
+                                  
+                                }
+                            }else{
+                                    
+                                    VStack(spacing: 40){
+                                        
+                                        VStack(spacing: 15){
+                                            ForEach(calendarVM.eventsResults.sorted(by: {$0.eventStartTime?.dateValue() ?? Date() > $1.eventStartTime?.dateValue() ?? Date()})){ event in
+                                                if Calendar.current.isDate(event.eventStartTime?.dateValue() ?? Date(), inSameDayAs: selectedDate){
+                                                    Button(action:{
+                                                        self.selectedEvent = event
+                                                        self.showAddEventView.toggle()
+                                                    },label:{
+                                                        UserCalendarEventCell(event: event)
+                                                    })
+                                                    
+                                                  
+                                                    
+                                                }
+                                            }
+                                        }.padding(.top,5)
+                                        
+                                    }.padding(.bottom,UIScreen.main.bounds.height/4)
                                 
-                            }.padding(.bottom,UIScreen.main.bounds.height/4)
+                            }
                         }
+                    
+                      
                     }
                     
                 }
@@ -388,13 +413,12 @@ struct EventDetailView : View {
     
     @State var region : MKCoordinateRegion = MKCoordinateRegion()
     var body: some View{
+        
         ZStack{
             Color("Background")
-            if showBackground{
-                WebImage(url: URL(string: event.eventImage ?? " ")).resizeToScreenSize().scaledToFit().opacity(0.3)
-            }
-            
             VStack{
+                
+                
                 HStack{
                     Button(action:{
                         showBackground = false
@@ -432,9 +456,9 @@ struct EventDetailView : View {
                                     Text("Share")
                                 })
                             }
-                          
                             
-                          
+                            
+                            
                         }
                     } label: {
                         ZStack{
@@ -445,44 +469,45 @@ struct EventDetailView : View {
                     
                 }.padding(.top,50).padding(.horizontal)
                 
-                ScrollView{
-                    
-                    HStack{
-                        VStack(alignment: .leading){
-                            
-                            if isSameDay(start: event.eventStartTime?.dateValue() ?? Date(), end: event.eventEndTime?.dateValue() ?? Date()){
+                        ScalingHeaderScrollView {
+                            WebImage(url: URL(string: event.eventImage ?? " ")).scaledToFill()
+                        } content: {
+                            HStack{
                                 VStack(alignment: .leading){
-                                    Text("\(event.eventStartTime?.dateValue() ?? Date(), style: .date)").foregroundColor(FOREGROUNDCOLOR).font(.title2).fontWeight(.bold)
-                                    HStack(spacing: 2){
-                                        Text("From:").font(.headline)
-                                        Text("\(event.eventStartTime?.dateValue() ?? Date(), style: .time)").foregroundColor(FOREGROUNDCOLOR).font(.headline).fontWeight(.bold)
+                                    
+                                    if isSameDay(start: event.eventStartTime?.dateValue() ?? Date(), end: event.eventEndTime?.dateValue() ?? Date()){
+                                        VStack(alignment: .leading){
+                                            Text("\(event.eventStartTime?.dateValue() ?? Date(), style: .date)").foregroundColor(FOREGROUNDCOLOR).font(.title2).fontWeight(.bold)
+                                            HStack(spacing: 2){
+                                                Text("From:").font(.headline)
+                                                Text("\(event.eventStartTime?.dateValue() ?? Date(), style: .time)").foregroundColor(FOREGROUNDCOLOR).font(.headline).fontWeight(.bold)
+                                            }
+                                            HStack(spacing: 2){
+                                                Text("To:").font(.headline)
+                                                Text("\(event.eventEndTime?.dateValue() ?? Date(), style: .time)").foregroundColor(FOREGROUNDCOLOR).font(.headline).fontWeight(.bold)
+                                            }
+                                        }
+                                    }else{
+                                        HStack(spacing: 2){
+                                            Text("From:").font(.headline)
+                                            Text("\(event.eventStartTime?.dateValue() ?? Date(), style: .date)").foregroundColor(FOREGROUNDCOLOR).font(.headline).fontWeight(.bold)
+                                        }
+                                        HStack(spacing: 2){
+                                            Text("To:").font(.headline)
+                                            Text("\(event.eventEndTime?.dateValue() ?? Date(), style: .date)").foregroundColor(FOREGROUNDCOLOR).font(.headline).fontWeight(.bold)
+                                        }
                                     }
-                                    HStack(spacing: 2){
-                                        Text("To:").font(.headline)
-                                        Text("\(event.eventEndTime?.dateValue() ?? Date(), style: .time)").foregroundColor(FOREGROUNDCOLOR).font(.headline).fontWeight(.bold)
-                                    }
+                                    
+                                    
+                                    
                                 }
-                            }else{
-                                HStack(spacing: 2){
-                                    Text("From:").font(.headline)
-                                    Text("\(event.eventStartTime?.dateValue() ?? Date(), style: .date)").foregroundColor(FOREGROUNDCOLOR).font(.headline).fontWeight(.bold)
-                                }
-                                HStack(spacing: 2){
-                                    Text("To:").font(.headline)
-                                    Text("\(event.eventEndTime?.dateValue() ?? Date(), style: .date)").foregroundColor(FOREGROUNDCOLOR).font(.headline).fontWeight(.bold)
-                                }
-                            }
+                                Spacer()
+                            }.padding()
                             
+                            Text(event.description ?? "")
                             
-                            
-                        }
-                        Spacer()
-                    }.padding()
-                    
-                    Text(event.description ?? "")
-                    
-                    if event.location?.name != "" {
-                        VStack(spacing: 5){
+                            if event.location?.name != "" {
+                                VStack(spacing: 5){
                                     
                                     HStack{
                                         Image(systemName: "mappin").foregroundColor(Color.gray)
@@ -491,128 +516,137 @@ struct EventDetailView : View {
                                         
                                         
                                     }
+                                    
+                                    
+                                    
+                                    Map(coordinateRegion: $region, annotationItems: [event.location ?? EventModel.Location()]) { location in
+                                        MapPin(coordinate: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude))
+                                    }.frame(height: 150).cornerRadius(12).disabled(true)
+                                    
+                                    
+                                }.padding(5).background(RoundedRectangle(cornerRadius: 12).fill(Color("Background"))).padding()
                                 
                                 
-                            
-                            Map(coordinateRegion: $region, annotationItems: [event.location ?? EventModel.Location()]) { location in
-                                MapPin(coordinate: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude))
-                            }.frame(height: 150).cornerRadius(12).disabled(true)
-                            
-                            
-                        }.padding(5).background(RoundedRectangle(cornerRadius: 12).fill(Color("Background"))).padding()
-                          
-                       
-                    }
-                    
-                    
-                    
-                    VStack(alignment: .leading, spacing: 3){
-                        HStack(spacing: 3){
-                            Text("Hosted by").foregroundColor(Color.gray).bold()
-                            Text("\(event.creator?.username ?? " ")").foregroundColor(FOREGROUNDCOLOR).bold()
-                        }
-                        VStack(alignment: .leading, spacing: 0){
-                            
-                            Button(action:{
-                                self.openAttendanceView.toggle()
-                            },label:{
-                                HStack{
-                                    HStack(spacing: 5){
-                                        HStack(spacing: -10){
-                                            ForEach(friendsAttending.prefix(3)){ friend in
-                                                    WebImage(url: URL(string: friend.profilePicture ?? " ")).resizable().frame(width: 30, height: 30).clipShape(Circle())
-                                                
-                                               
-                                            }
-                                        }
-                                        if friendsAttending.count == 0 {
-                                            Text("No friends are attending this event").foregroundColor(Color.gray).font(.callout)
-                                        }else{
-                                            
-                                        if friendsAttending.count < 4 {
-                                            Text("\(friendsAttending.count) friends attending").foregroundColor(Color.gray).font(.callout)
-
-                                        }else{
-                                            Text("+\(friendsAttending.count - 3) friends attending").foregroundColor(Color.gray).font(.callout)
-
-                                        }
-                                        }
-                                    }
-                                    Spacer()
-                                    Image(systemName: "chevron.right").foregroundColor(Color.gray)
-                                }.padding(10)
-                            })
-                            Divider()
-                            NavigationLink(destination: InviteFriendsToEventView(event: event)) {
-                                HStack{
-                                 
-                                        Image(systemName: "person.fill.badge.plus").font(.system(size: 18)).foregroundColor(FOREGROUNDCOLOR)
-                                    
-                                    Text("Invite Friends").foregroundColor(FOREGROUNDCOLOR)
-                                    
-                                    Spacer()
-                                }.padding(.vertical,10).padding(.leading,10)
                             }
-                           
-                        }.padding(5).background(RoundedRectangle(cornerRadius: 12).fill(Color("Background")))
-                    }.padding()
-                    
-                    if event.eventStartTime?.dateValue() ?? Date() > Date() {
-                        VStack(alignment: .leading){
-                            Text("RSVP").foregroundColor(Color.gray).bold()
-                            VStack(alignment: .leading){
-                                
-                                Toggle("I don't know yet", isOn: $isUndecided)
-                                
                             
-                                if !isUndecided{
-                                    Button(action:{
-                                        selectedOption = 0
-                                    },label:{
-                                        HStack{
-                                           
-                                            Text("I Will Be Attending").foregroundColor(FOREGROUNDCOLOR).bold()
-                                            Spacer()
-                                            if selectedOption == 0 {
-                                                    Image(systemName: "checkmark")
-                                            }
-                                        }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color.green)).foregroundColor(FOREGROUNDCOLOR).opacity(selectedOption == 1 ? 0.5 : 1)
-                                    })
+                            VStack(alignment: .leading, spacing: 3){
+                                HStack(spacing: 3){
+                                    Text("Hosted by").foregroundColor(Color.gray).bold()
+                                    Text("\(event.creator?.username ?? " ")").foregroundColor(FOREGROUNDCOLOR).bold()
+                                }
+                                VStack(alignment: .leading, spacing: 0){
                                     
                                     Button(action:{
-                                        selectedOption = 1
+                                        self.openAttendanceView.toggle()
                                     },label:{
                                         HStack{
-                                           
-                                            Text("I Will Not Be Attending").foregroundColor(FOREGROUNDCOLOR).bold()
-                                            Spacer()
-                                            if selectedOption == 1 {
-                                                    Image(systemName: "checkmark")
+                                            HStack(spacing: 5){
+                                                HStack(spacing: -10){
+                                                    ForEach(friendsAttending.prefix(3)){ friend in
+                                                        WebImage(url: URL(string: friend.profilePicture ?? " ")).resizable().frame(width: 30, height: 30).clipShape(Circle())
+                                                        
+                                                        
+                                                    }
+                                                }
+                                                if friendsAttending.count == 0 {
+                                                    Text("No friends are attending this event").foregroundColor(Color.gray).font(.callout)
+                                                }else{
+                                                    
+                                                    if friendsAttending.count < 4 {
+                                                        Text("\(friendsAttending.count) friends attending").foregroundColor(Color.gray).font(.callout)
+                                                        
+                                                    }else{
+                                                        Text("+\(friendsAttending.count - 3) friends attending").foregroundColor(Color.gray).font(.callout)
+                                                        
+                                                    }
+                                                }
                                             }
-                                          
-                                        }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color.red)).foregroundColor(FOREGROUNDCOLOR).opacity(selectedOption == 0 ? 0.5 : 1)
+                                            Spacer()
+                                            Image(systemName: "chevron.right").foregroundColor(Color.gray)
+                                        }.padding(10)
                                     })
+                                    Divider()
+                                    NavigationLink(destination: InviteFriendsToEventView(event: event)) {
+                                        HStack{
+                                            
+                                            Image(systemName: "person.fill.badge.plus").font(.system(size: 18)).foregroundColor(FOREGROUNDCOLOR)
+                                            
+                                            Text("Invite Friends").foregroundColor(FOREGROUNDCOLOR)
+                                            
+                                            Spacer()
+                                        }.padding(.vertical,10).padding(.leading,10)
+                                    }
+                                    
+                                }.padding(5).background(RoundedRectangle(cornerRadius: 12).fill(Color("Background")))
+                            }.padding()
+                            
+                            if !(event.ended ?? false) {
+                                VStack(alignment: .leading){
+                                    Text("RSVP").foregroundColor(Color.gray).bold()
+                                    VStack(alignment: .leading){
+                                        
+                                        Toggle("I don't know yet", isOn: $isUndecided)
+                                        
+                                        
+                                        if !isUndecided{
+                                            Button(action:{
+                                                selectedOption = 0
+                                            },label:{
+                                                HStack{
+                                                    
+                                                    Text("I Will Be Attending").foregroundColor(FOREGROUNDCOLOR).bold()
+                                                    Spacer()
+                                                    if selectedOption == 0 {
+                                                        Image(systemName: "checkmark")
+                                                    }
+                                                }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color.green)).foregroundColor(FOREGROUNDCOLOR).opacity(selectedOption == 1 ? 0.5 : 1)
+                                            })
+                                            
+                                            Button(action:{
+                                                selectedOption = 1
+                                            },label:{
+                                                HStack{
+                                                    
+                                                    Text("I Will Not Be Attending").foregroundColor(FOREGROUNDCOLOR).bold()
+                                                    Spacer()
+                                                    if selectedOption == 1 {
+                                                        Image(systemName: "checkmark")
+                                                    }
+                                                    
+                                                }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color.red)).foregroundColor(FOREGROUNDCOLOR).opacity(selectedOption == 0 ? 0.5 : 1)
+                                            })
+                                        }
+                                        
+                                    }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
+                                }.padding(.horizontal)
+                                
+                                if event.creatorID == USER_ID  {
+                                    Button(action:{
+                                        eventsVM.endEvent(eventID: event.id, usersAttendingID: event.usersAttendingID ?? [])
+                                        presentationMode.wrappedValue.dismiss()
+                                    },label:{
+                                        Text("End \(event.eventName ?? " ")").foregroundColor(Color.red).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
+                                    })
+                                }else {
+                                    Button(action:{
+                                        if event.usersUndecided?.count ?? 0 <= 1 && event.usersAttending?.count ?? 0 <= 1 {
+                                            eventsVM.endEvent(eventID: event.id, usersAttendingID: event.usersAttendingID ?? [])
+                                        }else{
+                                            eventsVM.leaveEvent(eventID: event.id)
+                                        }
+                                    },label:{
+                                        Text("Leave \(event.eventName ?? " ")").foregroundColor(Color.red).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
+                                    })
+                                    
                                 }
-                              
-                            }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
-                        }.padding(.horizontal)
-                       
-                    }else{
-                        if event.creatorID == USER_ID {
-                            Text("End \(event.eventName ?? " ")").foregroundColor(Color.red)
-                        }else{
-                            Text("Leave \(event.eventName ?? " ")")
-                        }
-                    }
-                    
-               
-                    
-                    
-                    
-                    Spacer()
-                }
+                            }else{
+                                Text("Event has ended")
+                            }
+                            
+
+                        }.height(min: 0)
+                
             }
-               
             NavigationLink(destination: EventAttendanceView(event: event), isActive: $openAttendanceView) {
                 EmptyView()
             }
@@ -644,10 +678,10 @@ struct EventDetailView : View {
                     dp.notify(queue: .main, execute:{
                         eventsVM.fetchEvent(eventID: event.id, completion: { eventFetched in
                             self.event = eventFetched
-                                friendsAttending = eventsVM.getFriendsAttending(event: event, user: userVM.user ?? User())
+                            friendsAttending = eventsVM.getFriendsAttending(event: event, user: userVM.user ?? User())
+                            self.userIsAttending = self.userIsAttending(event: event)
                             
                         })
-                        self.userIsAttending = self.userIsAttending(event: event)
                     })
                 }else{
                     let dp = DispatchGroup()
@@ -656,26 +690,27 @@ struct EventDetailView : View {
                         eventsVM.declineEvent(userID: userVM.user?.id ?? " ", event: event)
                         event.usersAttendingID?.removeAll(where: {$0 == userVM.user?.id ?? " "})
                         self.userIsAttending = false
+                        selectedOption = 1
                     }else{
                         eventsVM.attendEvent(userID: userVM.user?.id ?? " ", event: event)
                         event.usersAttendingID?.append(userVM.user?.id ?? " ")
                         self.userIsAttending = true
-
+                        selectedOption = 0
                     }
                     dp.leave()
                     dp.notify(queue: .main, execute:{
                         eventsVM.fetchEvent(eventID: event.id, completion: { eventFetched in
                             self.event = eventFetched
                             friendsAttending = eventsVM.getFriendsAttending(event: eventFetched, user: userVM.user ?? User())
-
+                            
                         })
-                       
-
+                        
+                        
                     })
                 }
             }
             
-          
+            
         }.onChange(of: selectedOption) { newValue in
             if finishedSetting{
                 let dp = DispatchGroup()
@@ -691,15 +726,16 @@ struct EventDetailView : View {
                 dp.notify(queue: .main, execute:{
                     eventsVM.fetchEvent(eventID: event.id, completion: { eventFetched in
                         self.event = eventFetched
-                            friendsAttending = eventsVM.getFriendsAttending(event: event, user: userVM.user ?? User())
+                        friendsAttending = eventsVM.getFriendsAttending(event: event, user: userVM.user ?? User())
                         
                     })
-                   
-
+                    
+                    
                 })
             }
-           
+            
         }
+    
     }
 }
 
@@ -775,3 +811,29 @@ private extension Calendar{
 
 
 
+
+
+//
+//struct StickyHeader<Content: View>: View {
+//
+//    var minHeight: CGFloat
+//    var content: Content
+//
+//    init(minHeight: CGFloat = 200, @ViewBuilder content: () -> Content) {
+//        self.minHeight = minHeight
+//        self.content = content()
+//    }
+//
+//    var body: some View {
+//        GeometryReader { geo in
+//            if(geo.frame(in: .global).minY <= 0) {
+//                content
+//                    .frame(width: geo.size.width, height: geo.size.height, alignment: .center)
+//            } else {
+//                content
+//                    .offset(y: -geo.frame(in: .global).minY)
+//                    .frame(width: geo.size.width, height: geo.size.height + geo.frame(in: .global).minY)
+//            }
+//        }.frame(minHeight: minHeight)
+//    }
+//}

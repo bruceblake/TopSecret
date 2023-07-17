@@ -13,7 +13,7 @@ import AVFoundation
 struct ActivityView: View {
     
     @EnvironmentObject var userVM : UserViewModel
-    
+    @ObservedObject var notificationVM = GroupNotificationViewModel()
     @State var showEvent : Bool = false
     @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
     @State var openChat : Bool = false
@@ -83,7 +83,7 @@ struct ActivityView: View {
                     GroupFeed(selectedPoll: $selectedPoll,selectedEvent: $selectedEvent,shareType: $shareType, filterOption: $filterType).environmentObject(selectedGroupVM)
                     
                     
-                }
+                }.padding(.bottom, UIScreen.main.bounds.height / 4)
                 
             }
             
@@ -95,14 +95,10 @@ struct ActivityView: View {
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
             
-            selectedGroupVM.listenToGroupPolls()
-            selectedGroupVM.listenToGroupPosts()
-            selectedGroupVM.listenToGroupEvents()
-            
+         
+            notificationVM.readAllNotification(userID: USER_ID, groupID: selectedGroupVM.group.id, notifications: selectedGroupVM.notifications)
         }
-        
-        
-        
+
     }
 }
 
@@ -115,11 +111,10 @@ struct GroupFeed : View {
     @Binding var filterOption : Int
     var sortedFeed: [FeedItemObjectModel] {
         
-        let feed : [Any] = (selectedGroupVM.posts + selectedGroupVM.polls + selectedGroupVM.events)
+        let feed : [Any] = (selectedGroupVM.polls + selectedGroupVM.events + selectedGroupVM.notifications)
         var arrayToReturn : [FeedItemObjectModel] = []
         for item in feed{
             arrayToReturn.append(self.parseIntoFeedObject(feedItem: item) ?? FeedItemObjectModel())
-            print("parsed")
         }
         
         
@@ -139,7 +134,13 @@ struct GroupFeed : View {
                         "poll": poll,
                         "itemType":FeedItemObjectModel.ItemType.poll] as [String: Any]
             return FeedItemObjectModel(dictionary: data)
-        } else {
+        } else if let notification = feedItem as? GroupNotificationModel {
+            let data = ["id": notification.id ?? "",
+                        "timeStamp": notification.timeStamp ?? Timestamp(),
+                        "notification": notification,
+                        "itemType":FeedItemObjectModel.ItemType.notification] as [String: Any]
+            return FeedItemObjectModel(dictionary: data)
+        }else {
             // Return nil if feedItem is not of any of the expected types
             return nil
         }
@@ -152,7 +153,7 @@ struct GroupFeed : View {
     var body : some View {
         ZStack{
             Color("Background")
-            VStack(spacing: 15){
+            VStack(spacing: 10){
                 switch filterOption{
                     case 0: //all
                     ForEach(sortedFeed.uniqued(), id: \.id){ item in
@@ -161,6 +162,8 @@ struct GroupFeed : View {
                             EventCell(event: item.event ?? EventModel(), selectedEvent: $selectedEvent).frame(width: UIScreen.main.bounds.width-20)
                         case .poll:
                             PollCell(poll: item.poll ?? PollModel(), selectedPoll: $selectedPoll).frame(width: UIScreen.main.bounds.width-20)
+                            case .notification:
+                                GroupNotificationCell(groupNotification: item.notification ?? GroupNotificationModel()).frame(width: UIScreen.main.bounds.width-20)
                         default:
                             Text("Unknown")
                         }

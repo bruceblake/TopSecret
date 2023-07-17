@@ -255,7 +255,3 @@ struct UserAddSearchCell : View {
 
 
 
-//Brand A: 10K/mo
-//Brand B: 5K/mo
-//Brand C: 1K/mo
-

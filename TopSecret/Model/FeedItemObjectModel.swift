@@ -21,7 +21,7 @@ struct FeedItemObjectModel: Identifiable, Hashable{
     var timeStamp : Timestamp?
     var event : EventModel?
     var poll: PollModel?
-    var post: GroupPostModel?
+    var notification : GroupNotificationModel?
     var itemType : ItemType?
     var groupID: String?
     
@@ -29,6 +29,7 @@ struct FeedItemObjectModel: Identifiable, Hashable{
         case event
         case poll
         case post
+        case notification
         case unknown
     }
     
@@ -37,8 +38,8 @@ struct FeedItemObjectModel: Identifiable, Hashable{
         self.timeStamp = dictionary["timeStamp"] as? Timestamp ?? Timestamp()
         self.event = dictionary["event"] as? EventModel ?? EventModel()
         self.poll = dictionary["poll"] as? PollModel ?? PollModel()
-        self.post = dictionary["post"] as? GroupPostModel ?? GroupPostModel()
         self.itemType = dictionary["itemType"] as? ItemType ?? ItemType.unknown
+        self.notification = dictionary["notification"] as? GroupNotificationModel ?? GroupNotificationModel()
         self.groupID = dictionary["groupID"] as? String ?? " "
     }
     

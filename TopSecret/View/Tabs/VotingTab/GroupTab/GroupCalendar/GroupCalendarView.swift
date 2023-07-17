@@ -302,9 +302,6 @@ struct CalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitcher: 
             calendarVM.startSearch(groupID: selectedGroupVM.group.id, startDay: makeDays(selectedDate: newDate).prefix(daysInWeek)[0], endDay: makeDays(selectedDate: newDate).prefix(daysInWeek)[6])
 
             
-        }.onAppear{
-            
-
         }
      
         

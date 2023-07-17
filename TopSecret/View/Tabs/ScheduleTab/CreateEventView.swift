@@ -56,7 +56,7 @@ struct CreateEventView: View {
     var body: some View {
         ZStack{
             Color("Background")
-            Image(uiImage: image).resizeToScreenSize().scaledToFill().opacity(0.5)
+            Image(uiImage: image).scaledToFill().ignoresSafeArea()
             VStack{
                 
                 HStack(alignment: .center){
@@ -204,7 +204,7 @@ struct CreateEventView: View {
                                         if eventStartTime < Date(){
                                             Text("Start Date cannot be before today").foregroundColor(Color.red).font(.caption)
                                         }
-                                        if eventStartTime == eventEndTime{
+                                        if eventStartTime == eventEndTime && !isAllDay{
                                             Text("Start Date and End Date cannot be the same.. lame party").foregroundColor(Color.red).font(.caption)
                                         }
                                     }
@@ -409,7 +409,7 @@ struct CreateEventView: View {
                     self.selectedOption = 1
                 }
                 
-                self.invitedMembers = event?.usersInvited ?? []
+                self.invitedMembers = event?.usersUndecided ?? []
                 
                 self.location = event?.location ?? EventModel.Location()
             }else{

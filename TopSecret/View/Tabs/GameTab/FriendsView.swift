@@ -32,14 +32,14 @@ struct FriendsView: View {
             VStack{
                 VStack(alignment: .leading, spacing: 3){
                     HStack(spacing: 2){
-                        Text("\(userVM.personalChats.count) \(userVM.personalChats.count != 1 ? "friends" : "friend")").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
+                        Text("\(userVM.user?.friendsListID?.count ?? 0) \(userVM.user?.friendsListID?.count ?? 0 != 1 ? "friends" : "friend")").font(.body).bold().foregroundColor(Color.gray)
                         
-                        Text(", \(userVM.groups.count) \(userVM.groups.count > 0 ? "groups" : "group")").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)
+                        Text(", \(userVM.groups.count) \(userVM.groups.count != 1 ? "groups" : "group")").font(.body).bold().foregroundColor(Color.gray)
                         
                         Spacer()
                     }
                     if (userVM.user?.incomingFriendInvitationID?.count ?? 0) != 0 {
-                        Text("\((userVM.user?.incomingFriendInvitationID?.count ?? 0) != 1 ? "\(userVM.user?.incomingFriendInvitationID?.count ?? 0) friend requests" : "\(userVM.user?.incomingFriendInvitationID?.count ?? 0) friend request")").foregroundColor(Color.gray)
+                        Text("\((userVM.user?.incomingFriendInvitationID?.count ?? 0) != 1 ? "\(userVM.user?.incomingFriendInvitationID?.count ?? 0) friend requests" : "\(userVM.user?.incomingFriendInvitationID?.count ?? 0) friend request")").foregroundColor(FOREGROUNDCOLOR)
                     }
                       
                        
@@ -47,50 +47,59 @@ struct FriendsView: View {
                 
                 }.padding(.horizontal,30)
                 ScrollView{
-                    VStack(spacing: 0){
                         if ((userVM.personalChats.isEmpty )) {
-                            
-                            Text("You have 0 friends")
+                          
+                                Button(action: {
+                                    //todo
+                                },label: {
+                                    Text("Add Friends").foregroundColor(Color("Foreground"))
+                                        .padding(.vertical)
+                                        .frame(width: UIScreen.main.bounds.width/2.5).background(Color("AccentColor")).cornerRadius(15)
+                                })
+                               
                         }else{
-                            ForEach(self.sortPersonalChats(userID: userVM.user?.id ?? " "), id: \.id){ chat in
-                                if chat.chatType == "groupChat"{
-                                    Button(action:{
-                                        let dp = DispatchGroup()
-                                        dp.enter()
-                                        groupVM.changeCurrentGroup(groupID: chat.groupID ?? " ") { finishedFetching in
-                                            dp.leave()
-                                        }
-                                        dp.notify(queue: .main, execute: {
-                                            openGroupChatView.toggle()
+                            VStack{
+                                ForEach(self.sortPersonalChats(userID: userVM.user?.id ?? " "), id: \.id){ chat in
+                                    if chat.chatType == "groupChat"{
+                                        Button(action:{
+                                            let dp = DispatchGroup()
+                                            dp.enter()
+                                            groupVM.changeCurrentGroup(groupID: chat.groupID ?? " ") { finishedFetching in
+                                                dp.leave()
+                                            }
+                                            dp.notify(queue: .main, execute: {
+                                                openGroupChatView.toggle()
+                                            })
+                                        },label:{
+                                            GroupChatCell(chat: chat)
                                         })
-                                    },label:{
-                                        GroupChatCell(chat: chat)
-                                    })
-                                    NavigationLink(destination:  HomeScreenView(chatID: chat.id, groupID: chat.groupID ?? " ", selectedOptionIndex: 1), isActive: $openGroupChatView) {
-                                        EmptyView()
-                                    }
-                                  
-                                    
-                                }else{
-                                    Button {
-                                       
-                                            openPersonalChatView = true
+                                        NavigationLink(destination:  HomeScreenView(chatID: groupVM.group.chatID ?? " ", groupID: chat.groupID ?? " ", selectedOptionIndex: 1), isActive: $openGroupChatView) {
+                                            EmptyView()
+                                        }
+                                      
                                         
-                                    } label: {
-                                        FriendCell(user: personalChatVM.getPersonalChatUser(chat: chat, userID: userVM.user?.id ?? " "), personalChatVM: personalChatVM, chat: chat)
-                                    }
-                                    NavigationLink(destination: PersonalChatView(chatID: chat.id), isActive: $openPersonalChatView) {
-                                        EmptyView()
+                                    }else{
+                                        Button {
+                                           
+                                                openPersonalChatView = true
+                                            
+                                        } label: {
+                                            FriendCell(user: personalChatVM.getPersonalChatUser(chat: chat, userID: userVM.user?.id ?? " "), personalChatVM: personalChatVM, chat: chat)
+                                        }
+                                        NavigationLink(destination: PersonalChatView(chatID: chat.id), isActive: $openPersonalChatView) {
+                                            EmptyView()
+                                        }
+                                        
                                     }
                                     
-                                }
-                                
-                                
+                                    
 
-                                }
+                                    }
+                            }.padding(.bottom, UIScreen.main.bounds.height/4)
+                         
                         }
                   
-                    }.padding(.bottom, UIScreen.main.bounds.height/4)
+                    
                     
                 }
             }
@@ -177,15 +186,23 @@ struct GroupChatCell : View {
                             
                             HStack{
                                 
-                              if chat.lastMessage?.type == "eventMessage"{
+                                 if chat.lastMessage?.type == "eventMessage"{
                                     Text("\(chat.lastMessage?.name ?? "") sent an event")
                                 }else if chat.lastMessage?.type == "pollMessage"{
                                     Text("\(chat.lastMessage?.name ?? "") sent a poll")
+                                }else if chat.lastMessage?.type == "image"{
+                                    Text("\(chat.lastMessage?.name ?? "") sent an image")
+                                }else if chat.lastMessage?.type == "video"{
+                                    Text("\(chat.lastMessage?.name ?? "") sent a video")
+                                }else if chat.lastMessage?.type == "multipleImages"{
+                                    Text("\(chat.lastMessage?.name ?? "") sent \(chat.lastMessage?.urls?.count ?? 0) images")
+                                }else if chat.lastMessage?.type == "multipleVideos"{
+                                    Text("\(chat.lastMessage?.name ?? "") sent \(chat.lastMessage?.urls?.count ?? 0) videos")
                                 }
                                 else{
                                     Text("\( (chat.lastMessage ?? Message() ).value ?? "")").lineLimit(1).foregroundColor(chat.lastMessage?.type == "delete" ? Color("AccentColor") : (chat.usersThatHaveSeenLastMessage?.contains(userVM.user?.id ?? "") ?? false ) ? Color.gray : FOREGROUNDCOLOR).font(.subheadline)
                                 }
-                            }
+                            }.foregroundColor(Color.gray)
 
                         }
    

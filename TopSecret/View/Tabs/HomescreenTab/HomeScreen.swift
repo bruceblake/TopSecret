@@ -22,7 +22,7 @@ struct ShowGroups : View {
     @Binding var openGroupHomescreen : Bool
     
     var widthAdd : CGFloat = 50
-    var heightDivide: CGFloat = 3
+    var heightDivide: CGFloat = 3.25
     var width : CGFloat = UIScreen.main.bounds.width
     var height : CGFloat = UIScreen.main.bounds.height
     
@@ -34,7 +34,7 @@ struct ShowGroups : View {
             ScrollView(showsIndicators: false){
                 VStack(spacing: 40){
                     
-                    if userVM.connected {
+                    
                         ForEach(userVM.groups, id: \.id){ group in
                             Button(action:{
                                 
@@ -90,9 +90,7 @@ struct ShowGroups : View {
                             
                         }
                         
-                    }else{
-                        Text("Unable to connect!").foregroundColor(Color.gray)
-                    }
+                    
                     
                    
                     

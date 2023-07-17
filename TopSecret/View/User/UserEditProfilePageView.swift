@@ -164,7 +164,7 @@ struct UserEditProfilePageView: View {
                         Spacer()
                     }.padding(.leading)
               
-                    OmenTextField("", text: $bio, canAddAnotherLine: $canAddAnotherLine).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color"))).padding(.horizontal)
+                    OmenTextField("\(userVM.user?.bio ?? " ")", text: $bio, canAddAnotherLine: $canAddAnotherLine).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color"))).padding(.horizontal)
                     
                    
                 }
@@ -201,7 +201,9 @@ struct UserEditProfilePageView: View {
             }
         }
         .onChange(of: registerValidation.nickName) { newValue in
-            userEditVM.didChangeNickName = true
+            if storedUsername {
+                userEditVM.didChangeNickName = true
+            }
         }.onChange(of: bio) { newValue in
             userEditVM.didChangeBio = true
         }.onAppear{
@@ -211,7 +213,6 @@ struct UserEditProfilePageView: View {
             dp.enter()
             registerValidation.username = userVM.user?.username ?? " "
             registerValidation.nickName = userVM.user?.nickName ?? " "
-            bio = userVM.user?.bio ?? " "
             dp.leave()
             
             dp.notify(queue: .main, execute: {

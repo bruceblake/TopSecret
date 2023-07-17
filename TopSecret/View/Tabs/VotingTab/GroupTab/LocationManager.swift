@@ -8,9 +8,8 @@
 import Foundation
 import CoreLocation
 import Firebase
-import GeoFire
-import GeoFireUtils
 import SwiftUI
+import MapKit
 
 final class LocationManager : NSObject, ObservableObject, CLLocationManagerDelegate, MKMapViewDelegate {
     @Published var userLocation : CLLocation?

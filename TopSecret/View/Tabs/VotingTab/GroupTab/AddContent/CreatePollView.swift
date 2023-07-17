@@ -7,6 +7,13 @@
 
 import SwiftUI
 
+
+struct AnswerOption : Identifiable{
+
+    var id: String = UUID().uuidString
+    var option: String = ""
+}
+
 struct CreatePollView: View {
     
     
@@ -16,13 +23,10 @@ struct CreatePollView: View {
     @State var optionsCount = 0
     @State var options : [PollOptionModel] = []
     @State var question = ""
-    @State var choice1 = ""
-    @State var choice2 = ""
-    @State var choice3 = ""
-    @State var choice4 = ""
     @EnvironmentObject var groupVM : SelectedGroupViewModel
     var body: some View {
         ZStack{
+        
             Color("Background")
             VStack{
                 HStack{
@@ -37,9 +41,6 @@ struct CreatePollView: View {
                         
                         Spacer()
                         
-                        Text("Create A Poll").foregroundColor(FOREGROUNDCOLOR).font(.title2).bold()
-                        
-                        Spacer()
                         
                         Circle().foregroundColor(Color.clear).frame(width: 40, height: 40)
                     })
@@ -47,36 +48,53 @@ struct CreatePollView: View {
                 
                 
                 VStack(spacing: 20){
-                    VStack(alignment: .leading){
-                        Text("Question").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
-                        VStack{
-                            CustomTextField(text: $question, placeholder: "Group Name", isPassword: false, isSecure: false, hasSymbol: false ,symbol: "")
-                        }
-                    }.padding(.horizontal)
+                    VStack(){
+                        
+                        TextField("Poll Question",text: $question).multilineTextAlignment(.center).font(.system(size: 25, weight: .bold))
+                        Rectangle().frame(width: UIScreen.main.bounds.width-50, height: 2).foregroundColor(Color.gray)
+                        
+                    }.padding(10)
                     
                     VStack(alignment: .leading){
-                        Text("Options").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
-                        ScrollView{
-                            VStack(spacing: 10){
-                                
-                            CustomTextField(text: $choice1, placeholder: "Option 1")
-                            CustomTextField(text: $choice2, placeholder: "Option 2")
-                            CustomTextField(text: $choice3, placeholder: "Option 3")
-                            CustomTextField(text: $choice4, placeholder: "Option 4")
-                          
+                       
+                        VStack(spacing: 15){
+                            ForEach(0..<options.count, id: \.self){ index in
+                                HStack{
+                                    CustomTextField(text: $options[index].choice, placeholder: "Option \(index + 1)")
+                                    Button {
+                                        withAnimation{
+                                            let _ = options.remove(at: index)
+                                        }
+                                    } label: {
+                                        Image(systemName: "xmark")
+                                    }
+
+                                }
                             }
                         }
+                     
+                      
                       
                     }.padding(.horizontal)
-                    
+                    HStack{
+                        Spacer()
+                        Button(action:{
+                            if options.count < 5 {
+                                withAnimation{
+                                    options.append(PollOptionModel())
+                                }
+                            }
+                        },label:{
+                            Text("Add Option").padding(10).background(Color("AccentColor")).foregroundColor(FOREGROUNDCOLOR).cornerRadius(12)
+                        })
+                        Spacer()
+                    }
+                
                     Spacer()
                      
                     
                     Button(action:{
-                        createPollVM.createPoll(creatorID: userVM.user?.id ?? " ", pollOptions: [PollOptionModel(dictionary: ["id":UUID().uuidString,"choice":choice1,"pickedUsers":[]]),
-                            PollOptionModel(dictionary: ["id":UUID().uuidString,"choice":choice2,"pickedUsers":[]]),
-                            PollOptionModel(dictionary: ["id":UUID().uuidString,"choice":choice3,"pickedUsers":[]]),
-                                                                                                 PollOptionModel(dictionary: ["id":UUID().uuidString,"choice":choice4,"pickedUsers":[]])                                                       ], groupID: groupVM.group.id ?? " ", question: question, usersVisibleToID: groupVM.group.usersID ?? [])
+                        createPollVM.createPoll(creatorID: userVM.user?.id ?? " ", pollOptions: options, groupID: groupVM.group.id ?? " ", question: question, usersVisibleToID: groupVM.group.usersID ?? [])
                         presentationMode.wrappedValue.dismiss()
                     },label:{
                         Text("Create Poll").foregroundColor(Color("Foreground"))

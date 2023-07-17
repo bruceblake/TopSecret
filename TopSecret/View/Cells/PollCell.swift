@@ -22,13 +22,13 @@ struct PollCell : View {
         var days = (hours / 24)
         var time = ""
         if seconds < 60{
-            time = "\(seconds)s"
+            time = "\(seconds) seconds ago"
         }else if seconds < 3600  {
-            time = "\(minutes)m"
+            time = "\(minutes) minutes ago"
         }else if seconds < 86400 {
-            time = "\(hours)h"
+            time = "\(hours) hours ago"
         }else if seconds < 604800 {
-            time = "\(days)d"
+            time = "\(days) days ago"
         }
         if time == "0s"{
             return "now"
@@ -47,39 +47,17 @@ struct PollCell : View {
                     
                     VStack{
                         HStack(alignment: .top){
-                            HStack(alignment: .center){
-                                ZStack(alignment: .bottomTrailing){
-                                    
-                                    NavigationLink(destination: GroupProfileView(group: poll.group ?? Group(), isInGroup: poll.group?.usersID.contains(userVM.user?.id ?? " ") ?? false)) {
-                                        WebImage(url: URL(string: poll.group?.groupProfileImage ?? "")).resizable().frame(width: 40, height: 40).clipShape(Circle())
-                                    }
-                                    
-                                    NavigationLink(destination: UserProfilePage(user: poll.creator ?? User())) {
-                                        WebImage(url: URL(string: poll.creator?.profilePicture ?? "")).resizable().frame(width: 18, height: 18).clipShape(Circle())
-                                    }.offset(x: 3, y: 2)
+                                NavigationLink(destination: UserProfilePage(user: poll.creator ?? User())) {
+                                    WebImage(url: URL(string: poll.creator?.profilePicture ?? "")).resizable().frame(width: 40, height: 40).clipShape(Circle())
                                     
                                 }
                                 
-                                VStack(alignment: .leading, spacing: 1){
-                                    HStack(alignment: .center, spacing: 3){
-                                        Text("\(poll.group?.groupName ?? "" )").font((.system(size: 15))).bold()
-                                        HStack(spacing: 3){
-                                            Circle().frame(width: 3, height: 3)
+                                    VStack(alignment: .leading, spacing: 2){
+                                        Text("\(poll.creator?.username ?? "" )").font((.system(size: 15))).bold()
                                             Text("\(getTimeSincePoll(date:poll.timeStamp?.dateValue() ?? Date()))").font(.system(size: 15))
-                                        }.foregroundColor(Color.gray)
-                                        
-                                        
+                                        .foregroundColor(Color.gray)
                                     }
-                                    
-                                    HStack(spacing: 3){
-                                        Text("asked by").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 12))
-                                        NavigationLink(destination: UserProfilePage(user: poll.creator ?? User())) {
-                                            Text("\(poll.creator?.username ?? "")").foregroundColor(Color.gray).font(.system(size: 12))
-                                        }
-                                    }
-                                    
-                                }
-                            }
+                           
                             
                             Spacer()
                             
@@ -145,32 +123,7 @@ struct PollCell : View {
                         }
                         Spacer()
                         
-                        HStack(alignment: .top, spacing: 15){
-                            
-                            Button(action:{
-                                
-                            },label:{
-                                VStack(spacing: 2){
-                                    Image(systemName: "message").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 16))
-                                    Text("3").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 14))
-                                }
-                            })
-                            
-                            Button(action:{
-                                withAnimation{
-                                    shareVM.selectedPoll = poll
-                                    shareVM.shareType = "poll"
-                                    shareVM.showShareMenu.toggle()
-                                    userVM.hideBackground.toggle()
-                                    userVM.hideTabButtons.toggle()
-                                }
-                            },label:{
-                                Image(systemName: "arrowshape.turn.up.right").foregroundColor(FOREGROUNDCOLOR).font(.system(size: 22))
-                            })
-                            
-                            
-                            
-                        }
+                   
                         
                     }.padding(10)
                 }

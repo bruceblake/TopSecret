@@ -72,11 +72,14 @@ struct CustomDatePicker: View {
                     })
                     
                     Button(action:{
-                        showWeekView = true
+                        UIDevice.vibrate()
+                        withAnimation{
+                            showWeekView = true
+                        }
                     },label:{
                         ZStack{
                             Circle().foregroundColor(Color("Background")).frame(width: 30, height: 30)
-                            Image(systemName: "arrow.down.right.and.arrow.up.left").font(.subheadline).foregroundColor(FOREGROUNDCOLOR)
+                            Image(systemName: "pip.swap").font(.subheadline).foregroundColor(FOREGROUNDCOLOR)
                         }
                     })
                 }
@@ -212,7 +215,6 @@ struct CustomDatePicker: View {
             return Date()
          
         }
-        print("current month: \(currentMonth)")
         return currentMonth
     }
     

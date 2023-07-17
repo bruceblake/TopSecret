@@ -24,7 +24,7 @@ struct GroupsView: View {
                 VStack{
                     Spacer()
                     VStack{
-                        Text("You are in 0 groups")
+                        Text("You are in 0 groups :(").foregroundColor(Color.gray)
                         Button {
                             self.showCreateGroupView = true
                         } label: {

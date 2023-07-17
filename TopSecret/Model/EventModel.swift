@@ -25,8 +25,6 @@ struct EventModel : Identifiable, Hashable{
     var eventLocation : String?
     var eventStartTime : Timestamp?
     var eventEndTime : Timestamp?
-    var usersInvitedIDS : [String]?
-    var usersInvited: [User]?
     var usersExcludedIDS: [String]?
     var usersExcluded: [User]?
     var usersAttendingID : [String]?
@@ -52,6 +50,7 @@ struct EventModel : Identifiable, Hashable{
 
     var invitationType: InvitationType?
     var location: Location?
+    var ended: Bool?
     
     struct Location : Identifiable {
         var id : String?
@@ -103,8 +102,6 @@ enum InvitationType {
         self.eventLocation = dictionary["eventLocation"] as? String ?? "EVENT_LOCATION"
         self.eventStartTime = dictionary["eventStartTime"] as? Timestamp ?? Timestamp()
         self.eventEndTime = dictionary["eventEndTime"] as? Timestamp ?? Timestamp()
-        self.usersInvitedIDS = dictionary["usersInvitedIDS"] as? [String] ?? []
-        self.usersInvited = dictionary["usersInvited"] as? [User] ?? []
         self.usersExcludedIDS = dictionary["usersExcludedIDS"] as? [String] ?? []
         self.usersExcluded = dictionary["usersExcluded"] as? [User] ?? []
         self.usersAttendingID = dictionary["usersAttendingID"] as? [String] ?? []
@@ -127,6 +124,9 @@ enum InvitationType {
         self.description = dictionary["description"] as? String ?? ""
         self.membersCanInviteGuests = dictionary["membersCanInviteGuests"] as? Bool ?? false
         self.eventImage = dictionary["eventImage"] as? String ?? " "
+        self.ended = dictionary["ended"] as? Bool ?? false
+
+        
         if let invitationTypeString = dictionary["invitationType"] as? String, let invitationType = InvitationType.fromFirestoreValue(invitationTypeString) {
             self.invitationType = invitationType
         }
