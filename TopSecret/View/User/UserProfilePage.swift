@@ -150,10 +150,15 @@ struct UserProfilePage: View {
                                         }
                                         else{
                                             Button(action:{
-                                                userVM.sendFriendRequest(friend: user){ finished in
-                                                    userVM.fetchUser(userID: user.id ?? " ") { fetchedUser in
-                                                        self.user = fetchedUser
+                                                userVM.sendFriendRequest(friend: user){ sent in
+                                                    if sent {
+                                                        userVM.fetchUser(userID: user.id ?? " ") { fetchedUser in
+                                                            self.user = fetchedUser
+                                                        }
+                                                    }else{
+                                                        print("unable to send friend request")
                                                     }
+                                                    
                                                 }
                                                 
                                             },label:{
@@ -235,16 +240,16 @@ struct UserProfilePage: View {
             BottomSheetView(isOpen: $showInfo, maxHeight: UIScreen.main.bounds.height / 4 ) {
                 VStack{
                     Button(action:{
-                        if userVM.user?.blockedAccounts?.contains(user) ?? false {
+                        if userVM.user?.blockedAccountsID?.contains(user.id ?? " ") ?? false {
                             userVM.unblockUser(unblocker: userVM.user?.id ?? " ", blockee: user.id ?? " ")
                         } else {
                             userVM.blockUser(blocker: userVM.user?.id ?? " ", blockee: user.id ?? " ")
                         }
                     },label:{
-                        Text("\(userVM.user?.blockedAccounts?.contains(user) ?? false ? "Unblock User" : "Block User")").fontWeight(.bold).foregroundColor(FOREGROUNDCOLOR).padding(.vertical,10).frame(width: UIScreen.main.bounds.width/1.2).background(Color("Background")).cornerRadius(15)
+                        Text("\(userVM.user?.blockedAccountsID?.contains(user.id ?? " ") ?? false ? "Unblock User" : "Block User")").fontWeight(.bold).foregroundColor(FOREGROUNDCOLOR).padding(.vertical,10).frame(width: UIScreen.main.bounds.width/1.2).background(Color("Background")).cornerRadius(15)
                     })
                     
-                    if !(userVM.user?.blockedAccounts?.contains(user) ?? false) {
+                    if !(userVM.user?.blockedAccountsID?.contains(user.id ?? " ") ?? false) {
                         if userVM.user?.incomingFriendInvitationID?.contains(user.id ?? " ") ?? false {
                             VStack{
                                 Button(action: {

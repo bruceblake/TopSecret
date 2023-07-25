@@ -18,6 +18,12 @@ class UserNotificationViewModel: ObservableObject{
         }
     }
     
+    func readNotification(notification: UserNotificationModel){
+        if (notification.hasSeen ?? false) == false{
+            COLLECTION_USER.document(USER_ID).collection("Notifications").document(notification.id).updateData(["hasSeen":true])
+        }
+    }
+    
     func getTimeSinceNotification(date: Date) -> String{
        let interval = (Date() - date)
         

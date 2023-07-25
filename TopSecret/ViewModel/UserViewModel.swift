@@ -59,6 +59,7 @@ class UserViewModel : ObservableObject {
         dp.leave()
         
         dp.notify(queue: .main, execute: {
+            self.checkConnection()
             self.beginListening()
         })
         
@@ -70,7 +71,6 @@ class UserViewModel : ObservableObject {
         dp.enter()
         
         self.removeListeners()
-        self.checkConnection()
         dp.leave()
         dp.notify(queue: .main, execute:{
             self.listenToAll(uid: self.userSession?.uid ?? " ")
@@ -1535,7 +1535,7 @@ class UserViewModel : ObservableObject {
     
     
     
-    func removeFriend(friendID: String, completion: @escaping (Bool) -> ()) -> () {
+    func removeFriend(friendID: String, sendNotification: Bool = true, completion: @escaping (Bool) -> ()) -> () {
         
         
         //friends list
@@ -1575,6 +1575,24 @@ class UserViewModel : ObservableObject {
             
         }
         
+        if sendNotification{
+        let notificationID = UUID().uuidString
+        
+        let userNotificationData = ["id":notificationID,
+                                    "timeStamp":Timestamp(),
+                                    "senderID":USER_ID,
+                                    "receiverID":friendID,
+                                    "hasSeen":false,
+                                    "type":"removedFriend",
+                                    "requiresAction":false] as [String:Any]
+        
+        
+        COLLECTION_USER.document(friendID).collection("Notifications").document(notificationID).setData(userNotificationData)
+        
+        COLLECTION_USER.document(USER_ID).collection("Notifications").document(notificationID).setData(userNotificationData)
+        }
+        
+        
         dp.leave()
         
         dp.notify(queue: .main, execute: {
@@ -1590,6 +1608,22 @@ class UserViewModel : ObservableObject {
     func unblockUser(unblocker: String, blockee: String){
         COLLECTION_USER.document(unblocker).updateData(["blockedAccountsID":FieldValue.arrayRemove([blockee])])
         COLLECTION_USER.document(blockee).updateData(["blockedAccountsID":FieldValue.arrayRemove([unblocker])])
+        
+        let notificationID = UUID().uuidString
+        
+        let userNotificationData = ["id":notificationID,
+                                    "timeStamp":Timestamp(),
+                                    "senderID":USER_ID,
+                                    "receiverID":blockee,
+                                    "hasSeen":false,
+                                    "type":"unblockedUser",
+                                    "requiresAction":false] as [String:Any]
+        
+        
+        COLLECTION_USER.document(blockee).collection("Notifications").document(notificationID).setData(userNotificationData)
+        
+        COLLECTION_USER.document(USER_ID).collection("Notifications").document(notificationID).setData(userNotificationData)
+        
     }
     
     
@@ -1597,8 +1631,24 @@ class UserViewModel : ObservableObject {
         COLLECTION_USER.document(blocker).updateData(["blockedAccountsID":FieldValue.arrayUnion([blockee])])
         COLLECTION_USER.document(blockee).updateData(["blockedAccountsID":FieldValue.arrayUnion([blocker])])
         
+        let notificationID = UUID().uuidString
         
-        self.removeFriend(friendID: blockee){ finished in
+        let userNotificationData = ["id":notificationID,
+                                    "timeStamp":Timestamp(),
+                                    "senderID":USER_ID,
+                                    "receiverID":blockee,
+                                    "hasSeen":false,
+                                    "type":"blockedUser",
+                                    "requiresAction":false] as [String:Any]
+        
+        
+        COLLECTION_USER.document(blockee).collection("Notifications").document(notificationID).setData(userNotificationData)
+        
+        COLLECTION_USER.document(USER_ID).collection("Notifications").document(notificationID).setData(userNotificationData)
+        
+        
+        
+        self.removeFriend(friendID: blockee, sendNotification: false){ finished in
             print("removed friend")
         }
     }

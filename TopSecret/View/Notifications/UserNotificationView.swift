@@ -149,7 +149,7 @@ struct UserNotificationView: View {
                             }
                             
                             if userVM.notifications.isEmpty{
-                                Text("You have 0 notifications")
+                                Text("You have no activity yet :(").foregroundColor(Color.gray)
                             }
                          
                            
@@ -167,9 +167,7 @@ struct UserNotificationView: View {
                 }
             }
             
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
-            notificationVM.readAllNotification(userID: userVM.user?.id ?? " ", notifications: userVM.notifications)
-        }
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
     }
 }
 

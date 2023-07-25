@@ -200,6 +200,7 @@ class EventViewModel: ObservableObject {
     
             COLLECTION_EVENTS.document(id).collection("Location").document(location.id ?? " ").setData(locationData)
 
+            dp.enter()
             COLLECTION_EVENTS.document(id).setData(data) { (err) in
                 if let err = err {
                     print("ERROR \(err.localizedDescription)")
@@ -213,29 +214,33 @@ class EventViewModel: ObservableObject {
                 if createGroupFromEvent {
                     self.createGroupFromEvent(groupName: eventName, image: image , users: invitedMembers)
                 }
+                dp.leave()
             }
+            dp.notify(queue: .main, execute:{
+                for invitedMember in invitedMembers {
+                    if invitedMember.id ?? "" != user.id ?? "" {
+                        let notificationID = UUID().uuidString
+                        let userNotificationData: [String: Any] = [
+                            "id": notificationID,
+                            "name": "Invite To Event",
+                            "timeStamp": Timestamp(),
+                            "senderID": USER_ID,
+                            "receiverID": invitedMember.id ?? " ",
+                            "eventID": id,
+                            "hasSeen": false,
+                            "type": "invitedToEvent"
+                        ]
+                        COLLECTION_USER.document(invitedMember.id ?? "").updateData(["pendingEventInvitationID": FieldValue.arrayUnion([id])])
+                        COLLECTION_USER.document(invitedMember.id ?? "").collection("Notifications").document(notificationID).setData(userNotificationData)
+                        COLLECTION_EVENTS.document(id).updateData(["usersUndecidedID": FieldValue.arrayUnion([invitedMember.id ?? ""])])
+                        self.notificationSender.sendPushNotification(to: invitedMember.fcmToken ?? "", title: "\(group?.groupName ?? "")", body: "\(invitedMember.nickName ?? "") created an event!")
+                    }
+                }
+                COLLECTION_USER.document(USER_ID).updateData(["eventsID":FieldValue.arrayUnion([id])])
+            })
         }
 
-        for invitedMember in invitedMembers {
-            if invitedMember.id ?? "" != user.id ?? "" {
-                let notificationID = UUID().uuidString
-                let userNotificationData: [String: Any] = [
-                    "id": notificationID,
-                    "name": "Invite To Event",
-                    "timeStamp": Timestamp(),
-                    "senderID": USER_ID,
-                    "receiverID": invitedMember.id ?? " ",
-                    "eventID": id,
-                    "hasSeen": false,
-                    "type": "invitedToEvent"
-                ]
-                COLLECTION_USER.document(invitedMember.id ?? "").updateData(["pendingEventInvitationID": FieldValue.arrayUnion([id])])
-                COLLECTION_USER.document(invitedMember.id ?? "").collection("Notifications").document(notificationID).setData(userNotificationData)
-                COLLECTION_EVENTS.document(id).updateData(["usersUndecidedID": FieldValue.arrayUnion([invitedMember.id ?? ""])])
-                self.notificationSender.sendPushNotification(to: invitedMember.fcmToken ?? "", title: "\(group?.groupName ?? "")", body: "\(invitedMember.nickName ?? "") created an event!")
-            }
-        }
-        COLLECTION_USER.document(USER_ID).updateData(["eventsID":FieldValue.arrayUnion([id])])
+    
 
     }
     

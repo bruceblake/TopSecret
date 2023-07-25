@@ -14,6 +14,7 @@ import SDWebImageSwiftUI
 struct UserNotificationCell: View {
     var userNotification : UserNotificationModel
     @EnvironmentObject var userVM: UserViewModel
+    @ObservedObject var notificationVM = UserNotificationViewModel()
     @State var showAddEventView: Bool = false
     var body: some View {
         ZStack{
@@ -40,11 +41,18 @@ struct UserNotificationCell: View {
                     UserAcceptedEventInvitationNotificationCell(userNotification: userNotification)
                 case "deniedGroupInvitation":
                     UserDeniedGroupInvitationNotificationCell(userNotification: userNotification)
-                    
+                case "removedFriend":
+                    UserRemovedFriendNotificationCell(userNotification: userNotification)
+                case "blockedUser":
+                    UserBlockedNotificationCell(userNotification: userNotification)
+                case "unblockedUser":
+                    UserUnblockedNotificationCell(userNotification: userNotification)
                 default:
                     Text("Notification")
             }
-        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true)
+        }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
+            notificationVM.readNotification(notification: userNotification)
+        }
     }
 }
 
@@ -406,7 +414,7 @@ struct UserRescindedFriendRequestNotificationCell : View {
                                     Text("\(sender.username ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
                                 }
                               
-                                Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.footnote)
+                                Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.subheadline)
                             }
                             
                             if USER_ID == sender.id ?? " " {
@@ -496,7 +504,7 @@ struct UserAcceptedFriendRequestNotificationCell : View {
                                     Text("\(receiver.username ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
                                     Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.subheadline)
                                 }
-                                    Text("You accepted \(receiver.username ?? " ")'s friend request.").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                                    Text("You accepted their friend request.").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
                                 
                             }else{
                                 HStack(spacing: 5){
@@ -504,7 +512,7 @@ struct UserAcceptedFriendRequestNotificationCell : View {
 
                                     Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.subheadline)
                                 }
-                                    Text("\(sender.nickName ?? " ") accepted your friend request.").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                                    Text("accepted your friend request.").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
                                   
                                 
                             }
@@ -590,7 +598,7 @@ struct UserDeniedFriendRequestNotificationCell : View {
                             VStack(alignment: .leading){
                                 HStack(spacing: 5){
                                     Text("\(receiver.username ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
-                                    Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.footnote)
+                                    Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.subheadline)
                                 }
                                     Text("You denied their friend request.").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
                                    
@@ -876,19 +884,21 @@ struct UserInvitedToEventNotificationCell : View {
                         VStack(alignment: .leading){
                             HStack(spacing: 5){
                                 Text("\((userNotification.event ?? EventModel()).eventName ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
-                                Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.footnote)
+                                Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.subheadline)
                             }
                             Text("\((userNotification.event ?? EventModel()).creator?.nickName ?? " ") invited you to \((userNotification.event ?? EventModel()).eventName ?? " ")").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
                             
                         }
                         
                         Spacer()
-                        
-                        Button(action:{
-                            self.showAddEventView.toggle()
-                        },label:{
-                            Text("See Details").padding(.trailing)
-                        })
+                        if !(userNotification.event?.usersDeclinedID?.contains(where: {$0 == USER_ID}) ?? false){
+                            Button(action:{
+                                self.showAddEventView.toggle()
+                            },label:{
+                                Text("See Details").padding(.trailing)
+                            })
+                        }
+                      
                         
                     }
                  
@@ -909,6 +919,296 @@ struct UserInvitedToEventNotificationCell : View {
             eventVM.fetchEvent(eventID: userNotification.eventID ?? " ")
            
         }
+        
+        
+    }
+}
+
+
+struct UserRemovedFriendNotificationCell : View {
+    
+    var userNotification: UserNotificationModel
+    var userNotificationVM = UserNotificationViewModel()
+    
+    var sender : User {
+        return userNotification.sender ?? User()
+    }
+    
+    var receiver : User {
+        return userNotification.receiver ?? User()
+    }
+    
+    var body: some View {
+        
+        NavigationLink {
+            if USER_ID == sender.id ?? " "{
+                UserProfilePage(user: (receiver) )
+            }else{
+                UserProfilePage(user: (sender) )
+            }
+        } label: {
+            HStack{
+                
+                
+                
+                VStack(alignment: .leading, spacing: 8){
+                    
+                    
+                    HStack(alignment: .top, spacing: 5){
+                        
+                        ZStack(alignment: .bottomTrailing){
+                            WebImage(url: URL(string: (sender.id ?? " " == USER_ID ) ?  receiver.profilePicture ?? "" : sender.profilePicture ?? ""))
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width:40,height:40)
+                                .clipShape(Circle())
+                                .padding(.leading,5)
+                    
+                            ZStack{
+                                Circle().foregroundColor(Color("Color")).frame(width: 20, height: 20)
+                                
+                                
+                                    
+                               
+                                Image(systemName: "person.fill.badge.plus").foregroundColor(FOREGROUNDCOLOR).font(.caption)
+
+
+                            }.offset(y: 2)
+                        }
+                           
+                        
+                        
+                        if receiver.id ?? " " != USER_ID {
+                       
+                            
+                            VStack(alignment: .leading){
+                                HStack(spacing: 5){
+                                    Text("\(receiver.username ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
+                                    Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.subheadline)
+                                }
+                                    Text("You removed them as a friend.").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                                   
+                                
+                            }
+                        }else {
+                            VStack(alignment: .leading){
+                                HStack(spacing: 5){
+                                    Text("\(sender.username ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
+                                    Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.subheadline)
+                                }
+                                    Text("removed you as a friend.").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                            }
+                        }
+                        
+                        
+                        
+                        
+                    }
+                    
+                }
+                
+                Spacer()
+                
+                
+                
+                
+            }
+        }
+        
+        
+        
+        
+    }
+}
+
+
+struct UserBlockedNotificationCell : View {
+    
+    var userNotification: UserNotificationModel
+    var userNotificationVM = UserNotificationViewModel()
+    
+    var sender : User {
+        return userNotification.sender ?? User()
+    }
+    
+    var receiver : User {
+        return userNotification.receiver ?? User()
+    }
+    
+    var body: some View {
+        
+        NavigationLink {
+            if USER_ID == sender.id ?? " "{
+                UserProfilePage(user: (receiver) )
+            }else{
+                UserProfilePage(user: (sender) )
+            }
+        } label: {
+            HStack{
+                
+                
+                
+                VStack(alignment: .leading, spacing: 8){
+                    
+                    
+                    HStack(alignment: .top, spacing: 5){
+                        
+                        ZStack(alignment: .bottomTrailing){
+                            WebImage(url: URL(string: (sender.id ?? " " == USER_ID ) ?  receiver.profilePicture ?? "" : sender.profilePicture ?? ""))
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width:40,height:40)
+                                .clipShape(Circle())
+                                .padding(.leading,5)
+                    
+                            ZStack{
+                                Circle().foregroundColor(Color("Color")).frame(width: 20, height: 20)
+                                
+                                
+                                    
+                               
+                                Image(systemName: "person.fill.badge.plus").foregroundColor(FOREGROUNDCOLOR).font(.caption)
+
+
+                            }.offset(y: 2)
+                        }
+                           
+                        
+                        
+                        if receiver.id ?? " " != USER_ID {
+                       
+                            
+                            VStack(alignment: .leading){
+                                HStack(spacing: 5){
+                                    Text("\(receiver.username ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
+                                    Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.subheadline)
+                                }
+                                    Text("You blocked them.").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                                   
+                                
+                            }
+                        }else {
+                            VStack(alignment: .leading){
+                                HStack(spacing: 5){
+                                    Text("\(sender.username ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
+                                    Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.subheadline)
+                                }
+                                    Text("blocked you.").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                            }
+                        }
+                        
+                        
+                        
+                        
+                    }
+                    
+                }
+                
+                Spacer()
+                
+                
+                
+                
+            }
+        }
+        
+        
+        
+        
+    }
+}
+
+struct UserUnblockedNotificationCell : View {
+    
+    var userNotification: UserNotificationModel
+    var userNotificationVM = UserNotificationViewModel()
+    
+    var sender : User {
+        return userNotification.sender ?? User()
+    }
+    
+    var receiver : User {
+        return userNotification.receiver ?? User()
+    }
+    
+    var body: some View {
+        
+        NavigationLink {
+            if USER_ID == sender.id ?? " "{
+                UserProfilePage(user: (receiver) )
+            }else{
+                UserProfilePage(user: (sender) )
+            }
+        } label: {
+            HStack{
+                
+                
+                
+                VStack(alignment: .leading, spacing: 8){
+                    
+                    
+                    HStack(alignment: .top, spacing: 5){
+                        
+                        ZStack(alignment: .bottomTrailing){
+                            WebImage(url: URL(string: (sender.id ?? " " == USER_ID ) ?  receiver.profilePicture ?? "" : sender.profilePicture ?? ""))
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width:40,height:40)
+                                .clipShape(Circle())
+                                .padding(.leading,5)
+                    
+                            ZStack{
+                                Circle().foregroundColor(Color("Color")).frame(width: 20, height: 20)
+                                
+                                
+                                    
+                               
+                                Image(systemName: "person.fill.badge.plus").foregroundColor(FOREGROUNDCOLOR).font(.caption)
+
+
+                            }.offset(y: 2)
+                        }
+                           
+                        
+                        
+                        if receiver.id ?? " " != USER_ID {
+                       
+                            
+                            VStack(alignment: .leading){
+                                HStack(spacing: 5){
+                                    Text("\(receiver.username ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
+                                    Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.subheadline)
+                                }
+                                    Text("You unblocked them.").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                                   
+                                
+                            }
+                        }else {
+                            VStack(alignment: .leading){
+                                HStack(spacing: 5){
+                                    Text("\(sender.username ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
+                                    Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.subheadline)
+                                }
+                                    Text("unblocked you.").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                            }
+                        }
+                        
+                        
+                        
+                        
+                    }
+                    
+                }
+                
+                Spacer()
+                
+                
+                
+                
+            }
+        }
+        
+        
         
         
     }
