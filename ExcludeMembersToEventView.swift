@@ -14,6 +14,7 @@ struct ExcludeMembersToEventView: View {
     @Binding var selectedUsers : [User]
     @StateObject var searchVM = SearchRepository()
     @Binding var openInviteFriendsView: Bool
+    var invitedMembers : [User]
     @Environment(\.presentationMode) var presentationMode
     
     var body: some View {
@@ -40,7 +41,9 @@ struct ExcludeMembersToEventView: View {
             
             
             VStack(alignment: .leading){
-                Text("Excluded Users").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                if !selectedUsers.isEmpty{
+                    Text("Excluded Users").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold)
+                }
                 ScrollView(.horizontal){
                     HStack{
                         ForEach(selectedUsers, id: \.id){ user in

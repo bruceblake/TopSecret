@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import Firebase
 
 struct SettingsMenuView: View {
     @EnvironmentObject var userVM : UserViewModel
@@ -71,6 +72,85 @@ struct SettingsMenuView: View {
                                 
                             }.background(Color("Color")).cornerRadius(12).padding([.horizontal,.bottom])
                         }
+                        
+                        VStack(alignment: .leading, spacing: 5){
+                            
+                            Text("Dev Tools").fontWeight(.bold).foregroundColor(Color("Foreground")).padding(.leading,25)
+                            
+                            VStack(alignment: .leading, spacing: 15){
+                                
+                        
+                                
+                                Button(action:{
+                                    COLLECTION_USER.document(USER_ID).collection("Notifications").getDocuments { snapshot, err in
+                                        if err != nil {
+                                            print("ERROR")
+                                            return
+                                        }
+                                        
+                                        let documents = snapshot!.documents
+                                        let dp = DispatchGroup()
+                                        
+                                        for document in documents {
+                                            dp.enter()
+                                            COLLECTION_USER.document(USER_ID).collection("Notifications").document(document.documentID).delete { error in
+                                                if let error = error {
+                                                    print("Error deleting document: \(error)")
+                                                }
+                                                dp.leave()
+                                            }
+                                        }
+                                        dp.notify(queue: .main, execute: {
+                                            userVM.notifications = []
+                                            print("all documents deleted")
+                                        })
+                                    }
+                                },label:{
+                                    Text("Delete All Notifications")
+                                })
+                                
+                                Button(action:{
+                                    COLLECTION_EVENTS.getDocuments { snapshot, err in
+                                        if err != nil {
+                                            print("ERROR")
+                                            return
+                                        }
+                                        
+                                        let documents = snapshot!.documents
+                                        let dp = DispatchGroup()
+                                        
+                                        for document in documents {
+                                            dp.enter()
+                                            COLLECTION_EVENTS.document(document.documentID).delete { error in
+                                                if let error = error {
+                                                    print("Error deleting document: \(error)")
+                                                }
+                                                dp.leave()
+                                            }
+                                        }
+                                        dp.notify(queue: .main, execute: {
+                                            userVM.user?.eventsID = []
+                                            print("all documents deleted")
+                                        })
+                                    }
+                                },label:{
+                                    Text("Delete All Events")
+                                })
+                                
+                                Button(action:{
+                                    COLLECTION_USER.document(USER_ID).updateData(["eventsID":[]])
+                                },label:{
+                                    Text("Delete \(userVM.user?.username ?? " ") Events")
+                                })
+                                
+                            }.background(Color("Color")).cornerRadius(12).padding([.horizontal,.bottom])
+                        }
+                        
+                     
+                     
+                        
+                   
+                        
                         
                         HStack{
                             Spacer()

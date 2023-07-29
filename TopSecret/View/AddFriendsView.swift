@@ -6,6 +6,7 @@
 //
 import SDWebImageSwiftUI
 import SwiftUI
+import Firebase
 
 struct AddFriendsView: View {
     @Environment(\.presentationMode) var presentationMode
@@ -46,6 +47,8 @@ struct AddFriendsView: View {
             })
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
             searchVM.startSearch(searchRequest: "allUsers", id: "")
+        }.onDisappear{
+            searchVM.removeListener()
         }
     }
 }
@@ -99,7 +102,7 @@ struct UserAddSearchCell : View {
     @State var isPendingFriendRequest : Bool = false
     @Binding var selectedChatID : String
     @Binding var openChat: Bool
-
+    @StateObject var userAddVM = UserAddSearchViewModel()
     
     func getPersonalChatID(friendID: String) -> String {
         var chats = userVM.personalChats.filter({$0.usersID?.count ?? 0 == 2})
@@ -161,22 +164,6 @@ struct UserAddSearchCell : View {
                             Button(action:{
                                 isLoading = true
                                 userVM.unsendFriendRequest(friend: user) { finished in
-                                    if finished {
-                                        userVM.fetchUser(userID: user.id ?? " ") { fetchedUser in
-                                            if fetchedUser.friendsListID?.contains(userVM.user?.id ?? " ") ?? false {
-                                                self.isFriends = true
-                                                self.isPendingFriendRequest = false
-                                            }else if (fetchedUser.incomingFriendInvitationID?.contains(userVM.user?.id ?? " ") ?? false) || (fetchedUser.incomingFriendInvitationID?.contains(userVM.user?.id ?? " ") ?? false) {
-                                                self.isPendingFriendRequest = true
-                                                self.isFriends = false
-                                            }else{
-                                                self.isFriends = false
-                                                self.isPendingFriendRequest = false
-                                            }
-                                            self.isLoading = false
-                                        }
-                                      
-                                    }
                                 }
                             },label:{
                                 Image(systemName: "xmark").font(.caption).foregroundColor(FOREGROUNDCOLOR).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
@@ -189,22 +176,7 @@ struct UserAddSearchCell : View {
                             Button(action:{
                                 isLoading = true
                                 userVM.sendFriendRequest(friend: user) { finished in
-                                    if finished {
-                                        userVM.fetchUser(userID: user.id ?? " ") { fetchedUser in
-                                            if fetchedUser.friendsListID?.contains(userVM.user?.id ?? " ") ?? false {
-                                                self.isFriends = true
-                                                self.isPendingFriendRequest = false
-                                            }else if (fetchedUser.incomingFriendInvitationID?.contains(userVM.user?.id ?? " ") ?? false) || (fetchedUser.incomingFriendInvitationID?.contains(userVM.user?.id ?? " ") ?? false) {
-                                                self.isPendingFriendRequest = true
-                                                self.isFriends = false
-                                            }else{
-                                                self.isFriends = false
-                                                self.isPendingFriendRequest = false
-                                            }
-                                            self.isLoading = false
-                                        }
-                                       
-                                    }else{
+                                    if !finished {
                                         self.isBlocked = true
                                         self.isLoading = false
                                     }
@@ -233,25 +205,47 @@ struct UserAddSearchCell : View {
             Divider()
             
         }
-             
-            
+
         .onAppear{
-            userVM.fetchUser(userID: user.id ?? " ") { fetchedUser in
-                if fetchedUser.friendsListID?.contains(userVM.user?.id ?? " ") ?? false {
-                    self.isFriends = true
-                    self.isPendingFriendRequest = false
-                }else if (fetchedUser.incomingFriendInvitationID?.contains(userVM.user?.id ?? " ") ?? false) || (fetchedUser.outgoingFriendInvitationID?.contains(userVM.user?.id ?? " ") ?? false) {
-                    self.isPendingFriendRequest = true
-                    self.isFriends = false
-                }else{
-                    self.isFriends = false
-                    self.isPendingFriendRequest = false
-                }
-                self.isLoading = false
+            userAddVM.listenToUser(userID: user.id ?? " ")
+        }.onReceive(userAddVM.$user) { fetchedUser in
+            if fetchedUser.friendsListID?.contains(userVM.user?.id ?? " ") ?? false {
+                self.isFriends = true
+                self.isPendingFriendRequest = false
+            }else if (fetchedUser.incomingFriendInvitationID?.contains(userVM.user?.id ?? " ") ?? false) || (fetchedUser.outgoingFriendInvitationID?.contains(userVM.user?.id ?? " ") ?? false) {
+                self.isPendingFriendRequest = true
+                self.isFriends = false
+            }else{
+                self.isFriends = false
+                self.isPendingFriendRequest = false
             }
+            self.isLoading = false
+        }.onDisappear{
+            userAddVM.removeListener()
         }
     }
 }
 
 
 
+
+class UserAddSearchViewModel : ObservableObject {
+    @Published var user: User = User()
+    @Published var listener : ListenerRegistration?
+    func listenToUser(userID: String){
+        listener = COLLECTION_USER.document(userID).addSnapshotListener { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            let data = snapshot?.data() as? [String:Any] ?? [:]
+            
+            self.user = User(dictionary: data)
+        }
+    }
+    
+    func removeListener(){
+        self.listener?.remove()
+    }
+}

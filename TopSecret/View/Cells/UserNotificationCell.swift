@@ -21,8 +21,8 @@ struct UserNotificationCell: View {
             
             
             switch userNotification.type ?? ""{
-                case "eventCreated":
-                    UserEventCreatedNotificationCell(userNotification: userNotification)
+            
+                //friend requests
                 case "sentFriendRequest":
                     UserSentFriendRequestNotificationCell(userNotification: userNotification)
                 case "acceptedFriendRequest":
@@ -31,18 +31,33 @@ struct UserNotificationCell: View {
                     UserDeniedFriendRequestNotificationCell(userNotification: userNotification)
                 case "rescindFriendRequest":
                     UserRescindedFriendRequestNotificationCell(userNotification: userNotification)
+                case "removedFriend":
+                    UserRemovedFriendNotificationCell(userNotification: userNotification)
+                    
+                //group
                 case "sentGroupInvitation":
                     UserSentGroupInvitationNotificationCell(userNotification: userNotification)
                 case "acceptedGroupInvitation":
                     UserAcceptedGroupInvitationNotificationCell(userNotification: userNotification)
-                case "invitedToEvent":
-                    UserInvitedToEventNotificationCell(userNotification: userNotification, showAddEventView: $showAddEventView)
                 case "acceptedEventInvitation":
                     UserAcceptedEventInvitationNotificationCell(userNotification: userNotification)
                 case "deniedGroupInvitation":
                     UserDeniedGroupInvitationNotificationCell(userNotification: userNotification)
-                case "removedFriend":
-                    UserRemovedFriendNotificationCell(userNotification: userNotification)
+                    
+                //events
+                case "eventEnded":
+                    UserEventEndedNotificationCell(userNotification: userNotification, showAddEventView: $showAddEventView)
+                case "eventCreated":
+                    UserEventCreatedNotificationCell(userNotification: userNotification, showAddEventView: $showAddEventView)
+                case "invitedToEvent":
+                    UserInvitedToEventNotificationCell(userNotification: userNotification, showAddEventView: $showAddEventView)
+                case "uninvitedToEvent":
+                    UserUninvitedToEventNotificationCell(userNotification: userNotification, showAddEventView: $showAddEventView)
+                case "leftEvent":
+                    UserLeftEventNotificationCell(userNotification: userNotification, showAddEventView: $showAddEventView)
+             
+          
+                //block
                 case "blockedUser":
                     UserBlockedNotificationCell(userNotification: userNotification)
                 case "unblockedUser":
@@ -50,6 +65,8 @@ struct UserNotificationCell: View {
                 default:
                     Text("Notification")
             }
+            
+            
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
             notificationVM.readNotification(notification: userNotification)
         }
@@ -87,22 +104,24 @@ struct UserAcceptedEventInvitationNotificationCell : View {
                         
                         ZStack{
                             Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
-                            Image(systemName: "party.popper").foregroundColor(FOREGROUNDCOLOR)
-                        }
+                            Image(systemName: "party.popper").foregroundColor(Color("AccentColor"))
+                        }.padding(.leading,5)
                         
                         VStack(alignment: .leading){
                             HStack{
                                 Text("\((userNotification.event ?? EventModel()).eventName ?? " ")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
                                 Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.footnote)
                             }
-                            HStack(spacing: 2){
-                                
+                            if sender.id == USER_ID{
+                                Text("you accepted the invitation to \(event.eventName ?? " ") " ).font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                            }else{
                                 Text(" \(sender.nickName ?? " ") accepted the invitation to \(event.eventName ?? " ") " ).font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
-                                Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.subheadline)
                             }
+                         
+                            
                             
                         }
-                        
+                        Spacer()
                     }
                     
                 }
@@ -790,6 +809,8 @@ struct UserEventCreatedNotificationCell : View {
     var userNotificationVM = UserNotificationViewModel()
     
     
+    @Binding var showAddEventView: Bool
+    
     var sender : User {
         return userNotification.sender ?? User()
     }
@@ -804,37 +825,106 @@ struct UserEventCreatedNotificationCell : View {
     
     var body: some View {
         
-        
-        VStack(alignment: .leading, spacing: 8){
-            
-            
-            HStack(alignment: .top, spacing: 10){
-                
-                WebImage(url: URL(string: event.creator?.profilePicture ?? ""))
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width:50,height:50)
-                    .clipShape(Circle())
-                    .padding(.leading, 5)
+        Button(action:{
+            showAddEventView.toggle()
+        },label:{
+            VStack(alignment: .leading, spacing: 8){
                 
                 
-                VStack(alignment: .leading){
-                    HStack(alignment: .top, spacing: 5){
-                        Text("\((userNotification.event ?? EventModel()).creator?.username ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
-                        Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.footnote)
-                    }
-                    Text("\((userNotification.event ?? EventModel()).creator?.nickName ?? " ") created an event").font(.subheadline).foregroundColor(FOREGROUNDCOLOR)
+                HStack(alignment: .top, spacing: 5){
                     
+                    WebImage(url: URL(string: event.creator?.profilePicture ?? ""))
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width:40,height:40)
+                        .clipShape(Circle())
+                        .padding(.leading, 5)
+                    
+                    
+                    VStack(alignment: .leading){
+                        HStack(alignment: .top, spacing: 5){
+                            Text("\((userNotification.event ?? EventModel()).eventName ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
+                            Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.footnote)
+                        }
+                        Text("you created \((userNotification.event ?? EventModel()).eventName ?? "")").font(.subheadline).foregroundColor(FOREGROUNDCOLOR)
+                        
+                    }
+                    
+                    Spacer()
                 }
                 
             }
-            
-        }
+        })
         
+       
+        NavigationLink(destination:   EventDetailView(eventID: userNotification.event?.id ?? " ", showAddEventView: $showAddEventView), isActive: $showAddEventView) {
+            EmptyView()
+        }
     }
     
 }
 
+struct UserEventEndedNotificationCell : View {
+    
+    var userNotification : UserNotificationModel
+    var userNotificationVM = UserNotificationViewModel()
+    
+    
+    @Binding var showAddEventView: Bool
+    
+    var sender : User {
+        return userNotification.sender ?? User()
+    }
+    
+    var receiver : User {
+        return userNotification.receiver ?? User()
+    }
+    
+    var event : EventModel {
+        return userNotification.event ?? EventModel()
+    }
+
+    
+    var body: some View {
+        
+        Button(action:{
+            showAddEventView.toggle()
+        },label:{
+            VStack(alignment: .leading, spacing: 8){
+                
+                
+                HStack(alignment: .top, spacing: 5){
+                    
+                    WebImage(url: URL(string: event.creator?.profilePicture ?? ""))
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width:40,height:40)
+                        .clipShape(Circle())
+                        .padding(.leading, 5)
+                    
+                    
+                    VStack(alignment: .leading){
+                        HStack(alignment: .top, spacing: 5){
+                            Text("\((userNotification.event ?? EventModel()).eventName ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
+                            Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.footnote)
+                        }
+                        Text("ended on \((userNotification.event ?? EventModel()).eventEndTime?.dateValue() ?? Date(), style: .date)").font(.subheadline).foregroundColor(FOREGROUNDCOLOR)
+                        
+                    }
+                    
+                    Spacer()
+                }
+                
+            }
+        })
+        
+       
+        NavigationLink(destination:   EventDetailView(eventID: userNotification.event?.id ?? "", showAddEventView: $showAddEventView), isActive: $showAddEventView) {
+            EmptyView()
+        }
+    }
+    
+}
 
 
 
@@ -862,6 +952,13 @@ struct UserInvitedToEventNotificationCell : View {
         return userNotification.event ?? EventModel()
     }
     
+    var uninvitedFromEvent : Bool {
+        var event = eventVM.event
+        var usersAttending = (event.usersAttendingID ?? []).contains(where: {$0 == USER_ID})
+        var usersUndecided = (event.usersUndecidedID ?? []).contains(where: {$0 == USER_ID})
+        var usersDeclined = (event.usersDeclinedID ?? []).contains(where: {$0 == USER_ID})
+        return !usersAttending && !usersUndecided && !usersDeclined
+    }
     
     var body: some View {
         
@@ -871,7 +968,7 @@ struct UserInvitedToEventNotificationCell : View {
             VStack(alignment: .leading, spacing: 8){
                 
                 
-                HStack(alignment: .top, spacing: 10){
+                HStack(alignment: .top, spacing: 5){
                     
                     WebImage(url: URL(string: (userNotification.event ?? EventModel()).creator?.profilePicture ?? ""))
                         .resizable()
@@ -891,7 +988,7 @@ struct UserInvitedToEventNotificationCell : View {
                         }
                         
                         Spacer()
-                        if !(userNotification.event?.usersDeclinedID?.contains(where: {$0 == USER_ID}) ?? false){
+                        if !(userNotification.event?.usersDeclinedID?.contains(where: {$0 == USER_ID}) ?? false) || !uninvitedFromEvent{
                             Button(action:{
                                 self.showAddEventView.toggle()
                             },label:{
@@ -910,7 +1007,7 @@ struct UserInvitedToEventNotificationCell : View {
                 }
                 
             }
-            NavigationLink(destination:   EventDetailView(event: userNotification.event ?? EventModel(), showAddEventView: $showAddEventView), isActive: $showAddEventView) {
+            NavigationLink(destination:   EventDetailView(eventID: userNotification.event?.id ?? "", showAddEventView: $showAddEventView), isActive: $showAddEventView) {
                 EmptyView()
             }
         }
@@ -919,6 +1016,165 @@ struct UserInvitedToEventNotificationCell : View {
             eventVM.fetchEvent(eventID: userNotification.eventID ?? " ")
            
         }
+        
+        
+    }
+}
+
+
+
+struct UserUninvitedToEventNotificationCell : View {
+    
+    var userNotification : UserNotificationModel
+    var userNotificationVM = UserNotificationViewModel()
+    @EnvironmentObject var userVM: UserViewModel
+    @State var userIsAttending: Bool = false
+    func userIsAttending(event: EventModel) -> Bool{
+        return event.usersAttendingID?.contains(userVM.user?.id ?? " ") ?? false
+    }
+    @Binding var showAddEventView: Bool
+    
+    var sender : User {
+        return userNotification.sender ?? User()
+    }
+    
+    var receiver : User {
+        return userNotification.receiver ?? User()
+    }
+    
+    var event : EventModel {
+        return userNotification.event ?? EventModel()
+    }
+    
+    
+    var body: some View {
+        
+        NavigationLink {
+            UserProfilePage(user: sender)
+        } label : {
+            VStack(alignment: .leading, spacing: 8){
+                
+                
+                HStack(alignment: .top, spacing: 5){
+                    
+                    WebImage(url: URL(string: (userNotification.event ?? EventModel()).creator?.profilePicture ?? ""))
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width:40,height:40)
+                        .clipShape(Circle())
+                        .padding(.leading, 5)
+                    
+                    HStack{
+                        VStack(alignment: .leading){
+                            HStack(spacing: 5){
+                                Text("\((userNotification.event ?? EventModel()).eventName ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
+                                Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.subheadline)
+                            }
+                            Text("you were uninvited from \((userNotification.event ?? EventModel()).eventName ?? " ")").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                            
+                        }
+                        
+                        Spacer()
+                    
+                      
+                        
+                    }
+                 
+                    
+                    
+                    
+                    
+                    
+                }
+                
+            }
+            NavigationLink(destination:   EventDetailView(eventID: userNotification.event?.id ?? "", showAddEventView: $showAddEventView), isActive: $showAddEventView) {
+                EmptyView()
+            }
+        }
+        
+        
+        
+    }
+}
+
+
+struct UserLeftEventNotificationCell : View {
+    
+    var userNotification : UserNotificationModel
+    var userNotificationVM = UserNotificationViewModel()
+    @EnvironmentObject var userVM: UserViewModel
+    @State var userIsAttending: Bool = false
+    func userIsAttending(event: EventModel) -> Bool{
+        return event.usersAttendingID?.contains(userVM.user?.id ?? " ") ?? false
+    }
+    @Binding var showAddEventView: Bool
+    
+    var sender : User {
+        return userNotification.sender ?? User()
+    }
+    
+    var receiver : User {
+        return userNotification.receiver ?? User()
+    }
+    
+    var event : EventModel {
+        return userNotification.event ?? EventModel()
+    }
+    
+    
+    var body: some View {
+        
+        NavigationLink {
+            UserProfilePage(user: sender)
+        } label : {
+            VStack(alignment: .leading, spacing: 8){
+                
+                 
+                HStack(alignment: .top, spacing: 5){
+                    
+                    WebImage(url: URL(string: (userNotification.event ?? EventModel()).creator?.profilePicture ?? ""))
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width:40,height:40)
+                        .clipShape(Circle())
+                        .padding(.leading, 5)
+                    
+                    HStack{
+                        VStack(alignment: .leading){
+                            HStack(spacing: 5){
+                                Text("\((userNotification.event ?? EventModel()).eventName ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
+                                Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.subheadline)
+                            }
+                            if sender.id ?? " " == USER_ID{
+                                Text("you left \((userNotification.event ?? EventModel()).eventName ?? " ")").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+
+                            }else{
+                                Text("\( (userNotification.event ?? EventModel()).creator?.username ?? " ") left \((userNotification.event ?? EventModel()).eventName ?? " ")").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+
+                            }
+                            
+                        }
+                        
+                        Spacer()
+                    
+                      
+                        
+                    }
+                 
+                    
+                    
+                    
+                    
+                    
+                }
+                
+            }
+            NavigationLink(destination:   EventDetailView(eventID: userNotification.event?.id ?? "", showAddEventView: $showAddEventView), isActive: $showAddEventView) {
+                EmptyView()
+            }
+        }
+        
         
         
     }

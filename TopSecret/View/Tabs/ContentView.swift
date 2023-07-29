@@ -53,11 +53,13 @@ struct ContentView: View {
         .onChange(of: scenePhase) { newPhase in
             if newPhase == .active {
                 if userVM.userSession != nil{
+                    userVM.checkConnection()
                     userVM.setUserActivity(isActive: true, userID: userVM.user?.id ?? " ", completion: { fetchedUser in
                     })
                 }
             }else if newPhase == .background{
                 if userVM.userSession != nil{
+                    userVM.endConnection()
                     userVM.setUserActivity(isActive: false, userID: userVM.user?.id ?? " ", completion: { fetchedUser in
                     })
                 }
@@ -105,7 +107,7 @@ struct Tabs : View {
                     VStack(){
                         VStack(spacing: 0){
                             TopBar(showSearch: $showSearch, tabIndex: tabIndex)
-                            if !userVM.connected {
+                            if !(userVM.connected ?? true) {
                                 HStack{
                                     Spacer()
                                     Text("Disconnected from internet, data may fail to load").font(.subheadline).fontWeight(.bold).foregroundColor(FOREGROUNDCOLOR)

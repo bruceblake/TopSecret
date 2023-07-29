@@ -111,7 +111,14 @@ struct AttendingAttendanceView: View {
         VStack{
             ScrollView{
                 ForEach(attendanceVM.event.usersAttending ?? [], id: \.id) { user in
-                    UserSearchCell(user: user, showActivity: false)
+                    NavigationLink {
+                        if user.id != USER_ID{
+                            UserProfilePage(user: user)
+                        }
+                    } label: {
+                        UserSearchCell(user: user, showActivity: false, showUninviteButton: true, attendanceVM: attendanceVM)
+                    }
+
                 }
             }
         }
@@ -127,7 +134,14 @@ struct UndecidedAttendanceView: View {
         VStack{
             ScrollView{
                 ForEach(attendanceVM.event.usersUndecided ?? [], id: \.id) { user in
-                    UserSearchCell(user: user, showActivity: false)
+                    NavigationLink {
+                        if user.id != USER_ID{
+                            UserProfilePage(user: user)
+                        }
+                    } label: {
+                        UserSearchCell(user: user, showActivity: false, showUninviteButton: true, attendanceVM: attendanceVM)
+                    }
+
                 }
             }
         }
@@ -142,7 +156,13 @@ struct DeclinedAttendanceView: View {
         VStack{
             ScrollView{
                 ForEach(attendanceVM.event.usersDeclined ?? [], id: \.id) { user in
-                    UserSearchCell(user: user, showActivity: false)
+                    NavigationLink {
+                        if user.id != USER_ID{
+                            UserProfilePage(user: user)
+                        }
+                    } label: {
+                        UserSearchCell(user: user, showActivity: false)
+                    }
                 }
             }
         }

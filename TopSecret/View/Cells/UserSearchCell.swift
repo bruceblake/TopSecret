@@ -11,6 +11,8 @@ import SDWebImageSwiftUI
 struct UserSearchCell: View {
     var user: User
     var showActivity: Bool
+    var showUninviteButton : Bool = false
+    @StateObject var attendanceVM: EventAttendanceViewModel = EventAttendanceViewModel()
     var body: some View {
         
         VStack(alignment: .leading){
@@ -40,7 +42,15 @@ struct UserSearchCell: View {
                     Text("@\(user.username ?? "")").font(.subheadline).foregroundColor(.gray)
                 }
                 Spacer()
-            }.padding([.leading,.vertical],10)
+                
+                if showUninviteButton && (attendanceVM.event.creatorID ?? " ") == USER_ID && (user.id ?? " ") != USER_ID{
+                    Button(action:{
+                        attendanceVM.uninviteToEvent(userID: user.id ?? " ", eventID: attendanceVM.event.id )
+                    },label:{
+                        Text("Uninvite")
+                    })
+                }
+            }.padding(10)
             Divider()
         }
         .edgesIgnoringSafeArea(.all)

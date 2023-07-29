@@ -27,14 +27,7 @@ class EventsTabViewModel: ObservableObject {
             listener.remove()
         }
     }
-    
-    func endEvent(eventID: String, usersAttendingID: [String]){
-        COLLECTION_EVENTS.document(eventID).updateData(["ended":true])
-        COLLECTION_EVENTS.document(eventID).updateData(["eventEndTime":Date()])
-        for userID in usersAttendingID{
-            COLLECTION_USER.document(userID).updateData(["eventsID":FieldValue.arrayRemove([eventID])])
-        }
-    }
+  
     
     func fetchUsers(usersID: [String], completion: @escaping ([User]) -> ()) -> (){
         var usersToReturn : [User] = []
@@ -72,6 +65,7 @@ class EventsTabViewModel: ObservableObject {
         }
         return friendsToReturn
     }
+    
     func fetchUserEvents(eventsID: [String], completion: @escaping ([EventModel]) -> ()) -> (){
         let dp = DispatchGroup()
         var eventsToReturn : [EventModel] = []
@@ -274,10 +268,12 @@ class EventsTabViewModel: ObservableObject {
                 var userID = data["creatorID"] as? String ?? " "
                 var usersUndecidedID = data["usersUndecidedID"] as? [String] ?? []
                 var ended = data["ended"] as? Bool ?? false
+                
                 self.fetchEventCreator(userID: userID) { fetchedCreator in
                     data["creator"] = fetchedCreator
                     dispatchGroup.leave()
                 }
+                
                 dispatchGroup.enter()
                 self.fetchUsers(usersID: usersUndecidedID) { fetchedUndecidedUsers in
                     data["usersUndecided"] = fetchedUndecidedUsers
@@ -310,6 +306,7 @@ class EventsTabViewModel: ObservableObject {
             if invitedMember.id ?? " " != userID{
                 COLLECTION_USER.document(invitedMember.id ?? " ").updateData(["pendingEventInvitationID":FieldValue.arrayUnion([event.id])])
                 COLLECTION_EVENTS.document(event.id).updateData(["usersUndecidedID":FieldValue.arrayUnion([invitedMember.id ?? " "])])
+                
                 var notificationID = UUID().uuidString
                
                 
@@ -329,40 +326,10 @@ class EventsTabViewModel: ObservableObject {
         }
     }
     
+   
  
-    
-    func attendEvent(userID: String, event: EventModel) {
-        
-        let notificationID = UUID().uuidString
-        
-        let userNotificationData = [
-            "id":notificationID,
-            "name": "acceptedEventInvitation",
-            "timeStamp":Timestamp(),
-            "type":"acceptedEventInvitation",
-            "eventID": event.id,
-            "userID": event.creatorID ?? " ",
-            "hasSeen":false] as [String:Any]
-        
-        for userID in event.usersAttendingID ?? [] {
-            COLLECTION_USER.document(userID).collection("Notifications").document(notificationID).setData(userNotificationData)
-        }
-        
-        COLLECTION_EVENTS.document(event.id).updateData(["usersAttendingID":FieldValue.arrayUnion([userID])])
-        COLLECTION_EVENTS.document(event.id).updateData(["usersDeclinedID":FieldValue.arrayRemove([userID])])
-        COLLECTION_USER.document(userID).updateData(["pendingEventInvitationID":FieldValue.arrayRemove([event.id])])
-        COLLECTION_EVENTS.document(event.id).updateData(["usersUndecidedID":FieldValue.arrayRemove([userID])])
-        COLLECTION_USER.document(userID).updateData(["eventsID":FieldValue.arrayUnion([event.id])])
-    }
-    
-    func chooseUndecidedOnEvent(userID: String, event: EventModel){
-        COLLECTION_EVENTS.document(event.id).updateData(["usersAttendingID":FieldValue.arrayRemove([userID])])
-        COLLECTION_EVENTS.document(event.id).updateData(["usersDeclinedID":FieldValue.arrayRemove([userID])])
-        COLLECTION_EVENTS.document(event.id).updateData(["usersUndecidedID":FieldValue.arrayUnion([userID])])
-        COLLECTION_USER.document(userID).updateData(["pendingEventInvitationID":FieldValue.arrayUnion([event.id])])
-        COLLECTION_USER.document(userID).updateData(["eventsID":FieldValue.arrayRemove([event.id])])
-
-    }
+   
+   
     
     func declineEvent(userID: String, event: EventModel) {
         // TODO: Implement leave event
@@ -371,7 +338,6 @@ class EventsTabViewModel: ObservableObject {
         
         let userNotificationData = [
             "id":notificationID,
-            "name": "declinedEventInvitation",
             "timeStamp":Timestamp(),
             "type":"declinedEventInvitation",
             "eventID": event.id,
@@ -410,14 +376,7 @@ class EventsTabViewModel: ObservableObject {
         }
     }
     
-    func deleteEvent(eventID: String){
-        COLLECTION_EVENTS.document(eventID).delete()
-    }
-    
-    func leaveEvent(eventID: String){
-        COLLECTION_EVENTS.document(eventID).updateData(["usersAttendingID":FieldValue.arrayRemove([USER_ID])])
-        COLLECTION_USER.document(USER_ID).updateData(["eventsID":FieldValue.arrayRemove([eventID])])
-    }
+  
     
     
 }

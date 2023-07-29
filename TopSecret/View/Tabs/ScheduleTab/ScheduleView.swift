@@ -165,51 +165,51 @@ struct ScheduleView : View {
                                 VStack{
                                     Text("You're free today, unless you wanna change that").foregroundColor(Color.gray)
                                     NavigationLink {
-                                        CreateEventView(isGroup: false, showAddEventView: $showAddEventView)
+                                        CreateEventView(eventStartTime: selectedDate, eventEndTime: selectedDate , isGroup: false, showAddEventView: $showAddEventView)
                                     } label: {
                                         Text("Create Event").foregroundColor(Color("Foreground"))
                                             .padding(.vertical)
                                             .frame(width: UIScreen.main.bounds.width/2).background(Color("AccentColor")).cornerRadius(15)
                                     }
-
-                                  
+                                    
+                                    
                                 }
                             }else{
+                                
+                                VStack(spacing: 40){
                                     
-                                    VStack(spacing: 40){
-                                        
-                                        VStack(spacing: 15){
-                                            ForEach(calendarVM.eventsResults.sorted(by: {$0.eventStartTime?.dateValue() ?? Date() > $1.eventStartTime?.dateValue() ?? Date()})){ event in
-                                                if Calendar.current.isDate(event.eventStartTime?.dateValue() ?? Date(), inSameDayAs: selectedDate){
-                                                    Button(action:{
-                                                        self.selectedEvent = event
-                                                        self.showAddEventView.toggle()
-                                                    },label:{
-                                                        UserCalendarEventCell(event: event)
-                                                    })
-                                                    
-                                                  
-                                                    
-                                                }
+                                    VStack(spacing: 15){
+                                        ForEach(calendarVM.eventsResults.sorted(by: {$0.eventStartTime?.dateValue() ?? Date() > $1.eventStartTime?.dateValue() ?? Date()})){ event in
+                                            if Calendar.current.isDate(event.eventStartTime?.dateValue() ?? Date(), inSameDayAs: selectedDate){
+                                                Button(action:{
+                                                    self.selectedEvent = event
+                                                    self.showAddEventView.toggle()
+                                                },label:{
+                                                    UserCalendarEventCell(event: event)
+                                                })
+                                                
+                                                
+                                                
                                             }
-                                        }.padding(.top,5)
-                                        
-                                    }.padding(.bottom,UIScreen.main.bounds.height/4)
+                                        }
+                                    }.padding(.top,5)
+                                    
+                                }.padding(.bottom,UIScreen.main.bounds.height/4)
                                 
                             }
                         }
-                    
-                      
+                        
+                        
                     }
                     
                 }
-             
+                
                 
                 
                 
                 Spacer()
             }
-            NavigationLink(destination: EventDetailView(event: selectedEvent, showAddEventView: $showAddEventView), isActive: $showAddEventView) {
+            NavigationLink(destination: EventDetailView(eventID: selectedEvent.id, showAddEventView: $showAddEventView), isActive: $showAddEventView) {
                 EmptyView()
             }
         }.frame(width: UIScreen.main.bounds.width).onChange(of: selectedDate) { newDate in
@@ -370,19 +370,26 @@ struct UserCalendarWeekListView<Day: View, Header: View, Title: View, WeekSwitch
 
 struct EventDetailView : View {
     
-    @State var event: EventModel
+    var eventID: String
+    var event : EventModel {
+        return eventVM.event
+    }
     @Environment(\.presentationMode) var presentationMode
-    @ObservedObject var eventsVM = EventsTabViewModel()
+    @StateObject var eventVM = EventViewModel()
     @EnvironmentObject var userVM: UserViewModel
-    @State var userIsAttending: Bool = false
-    @State var usersAttendingID: [String] = []
-    @State var friendsAttending: [User] = []
+    var friendsAttending: [User] {
+        (event.usersAttending ?? []).filter { user in
+            return userVM.user?.friendsListID?.contains(where: {$0 == user.id ?? " "}) ?? false
+        }
+    }
     @State var showBackground: Bool = true
     @State var openAttendanceView: Bool = false
     @State var isUndecided: Bool = true
     @State var finishedSetting: Bool = false
     @State var openEditView: Bool = false
-    @State var selectedOption: Int = 0
+    var isAttending : Bool {
+        return event.usersAttendingID?.contains(USER_ID) ?? false
+    }
     @Binding var showAddEventView : Bool
     @State var progress : CGFloat = 0.0
     func isSameDay(start: Date, end: Date) -> Bool{
@@ -400,17 +407,7 @@ struct EventDetailView : View {
         
     }
     
-    func userIsAttending(event: EventModel) -> Bool{
-       return event.usersAttendingID?.contains(userVM.user?.id ?? " ") ?? false
-    }
     
-    func getSelectedOption(event: EventModel) -> Int {
-        if event.usersAttendingID?.contains(USER_ID) ?? false {
-            return 0
-        }else{
-            return 1
-        }
-    }
     
     @State var region : MKCoordinateRegion = MKCoordinateRegion()
     var body: some View{
@@ -445,7 +442,7 @@ struct EventDetailView : View {
                                 })
                                 
                                 Button(action:{
-                                    eventsVM.deleteEvent(eventID: event.id)
+                                    eventVM.deleteEvent(eventID: event.id)
                                     presentationMode.wrappedValue.dismiss()
                                 },label:{
                                     Text("Delete")
@@ -470,185 +467,189 @@ struct EventDetailView : View {
                     
                 }.padding(.top,50).padding(.horizontal)
                 
-                        ScalingHeaderScrollView {
-                            ZStack{
-                                WebImage(url: URL(string: event.eventImage ?? " ")).scaledToFill()
-                            }
-                           
-                        } content: {
-                            VStack{
-                                HStack{
+                ScalingHeaderScrollView {
+                    ZStack{
+                        WebImage(url: URL(string: event.eventImage ?? " ")).scaledToFill()
+                    }
+                    
+                } content: {
+                    VStack{
+                        HStack{
+                            VStack(alignment: .leading){
+                                
+                                if isSameDay(start: event.eventStartTime?.dateValue() ?? Date(), end: event.eventEndTime?.dateValue() ?? Date()){
                                     VStack(alignment: .leading){
-                                        
-                                        if isSameDay(start: event.eventStartTime?.dateValue() ?? Date(), end: event.eventEndTime?.dateValue() ?? Date()){
-                                            VStack(alignment: .leading){
-                                                Text("\(event.eventStartTime?.dateValue() ?? Date(), style: .date)").foregroundColor(FOREGROUNDCOLOR).font(.title2).fontWeight(.bold)
-                                                HStack(spacing: 2){
-                                                    Text("From:").font(.headline)
-                                                    Text("\(event.eventStartTime?.dateValue() ?? Date(), style: .time)").foregroundColor(FOREGROUNDCOLOR).font(.headline).fontWeight(.bold)
-                                                }
-                                                HStack(spacing: 2){
-                                                    Text("To:").font(.headline)
-                                                    Text("\(event.eventEndTime?.dateValue() ?? Date(), style: .time)").foregroundColor(FOREGROUNDCOLOR).font(.headline).fontWeight(.bold)
-                                                }
-                                            }
-                                        }else{
-                                            HStack(spacing: 2){
-                                                Text("From:").font(.headline)
-                                                Text("\(event.eventStartTime?.dateValue() ?? Date(), style: .date)").foregroundColor(FOREGROUNDCOLOR).font(.headline).fontWeight(.bold)
-                                            }
-                                            HStack(spacing: 2){
-                                                Text("To:").font(.headline)
-                                                Text("\(event.eventEndTime?.dateValue() ?? Date(), style: .date)").foregroundColor(FOREGROUNDCOLOR).font(.headline).fontWeight(.bold)
-                                            }
+                                        Text("\(event.eventStartTime?.dateValue() ?? Date(), style: .date)").foregroundColor(FOREGROUNDCOLOR).font(.title2).fontWeight(.bold)
+                                        HStack(spacing: 2){
+                                            Text("From:").font(.headline)
+                                            Text("\(event.eventStartTime?.dateValue() ?? Date(), style: .time)").foregroundColor(FOREGROUNDCOLOR).font(.headline).fontWeight(.bold)
                                         }
-                                        
-                                        
-                                        
-                                    }
-                                    Spacer()
-                                }.padding()
-                                
-                                Text(event.description ?? "")
-                                
-                                if event.location?.name != "" {
-                                    VStack(spacing: 5){
-                                        
-                                        HStack{
-                                            Image(systemName: "mappin").foregroundColor(Color.gray)
-                                            Text("\(event.location?.name ?? " ")").foregroundColor(Color.gray).bold().lineLimit(1)
-                                            Text("\(event.location?.address ?? " ")").foregroundColor(Color.gray).bold().lineLimit(1)
-                                            
-                                            
+                                        HStack(spacing: 2){
+                                            Text("To:").font(.headline)
+                                            Text("\(event.eventEndTime?.dateValue() ?? Date(), style: .time)").foregroundColor(FOREGROUNDCOLOR).font(.headline).fontWeight(.bold)
                                         }
-                                        
-                                        
-                                        
-                                        Map(coordinateRegion: $region, annotationItems: [event.location ?? EventModel.Location()]) { location in
-                                            MapPin(coordinate: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude))
-                                        }.frame(height: 150).cornerRadius(12).disabled(true)
-                                        
-                                        
-                                    }.padding(5).background(RoundedRectangle(cornerRadius: 12).fill(Color("Background"))).padding()
-                                    
-                                    
-                                }
-                                
-                                VStack(alignment: .leading, spacing: 3){
-                                    HStack(spacing: 3){
-                                        Text("Hosted by").foregroundColor(Color.gray).bold()
-                                        Text("\(event.creator?.username ?? " ")").foregroundColor(FOREGROUNDCOLOR).bold()
-                                    }
-                                    VStack(alignment: .leading, spacing: 0){
-                                        
-                                        Button(action:{
-                                            self.openAttendanceView.toggle()
-                                        },label:{
-                                            HStack{
-                                                HStack(spacing: 5){
-                                                    HStack(spacing: -10){
-                                                        ForEach(friendsAttending.prefix(3)){ friend in
-                                                            WebImage(url: URL(string: friend.profilePicture ?? " ")).resizable().frame(width: 30, height: 30).clipShape(Circle())
-                                                            
-                                                            
-                                                        }
-                                                    }
-                                                    if friendsAttending.count == 0 {
-                                                        Text("No friends are attending this event").foregroundColor(Color.gray).font(.callout)
-                                                    }else{
-                                                        
-                                                        if friendsAttending.count < 4 {
-                                                            Text("\(friendsAttending.count) friends attending").foregroundColor(Color.gray).font(.callout)
-                                                            
-                                                        }else{
-                                                            Text("+\(friendsAttending.count - 3) friends attending").foregroundColor(Color.gray).font(.callout)
-                                                            
-                                                        }
-                                                    }
-                                                }
-                                                Spacer()
-                                                Image(systemName: "chevron.right").foregroundColor(Color.gray)
-                                            }.padding(10)
-                                        })
-                                        Divider()
-                                        NavigationLink(destination: InviteFriendsToEventView(event: event)) {
-                                            HStack{
-                                                
-                                                Image(systemName: "person.fill.badge.plus").font(.system(size: 18)).foregroundColor(FOREGROUNDCOLOR)
-                                                
-                                                Text("Invite Friends").foregroundColor(FOREGROUNDCOLOR)
-                                                
-                                                Spacer()
-                                            }.padding(.vertical,10).padding(.leading,10)
-                                        }
-                                        
-                                    }.padding(5).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
-                                }.padding()
-                                
-                                if !(event.ended ?? false) {
-                                    VStack(alignment: .leading){
-                                        Text("RSVP").foregroundColor(Color.gray).bold()
-                                        VStack(alignment: .leading){
-                                            
-                                            Toggle("I don't know yet", isOn: $isUndecided)
-                                            
-                                            
-                                            if !isUndecided{
-                                                Button(action:{
-                                                    selectedOption = 0
-                                                },label:{
-                                                    HStack{
-                                                        
-                                                        Text("I Will Be Attending").foregroundColor(FOREGROUNDCOLOR).bold()
-                                                        Spacer()
-                                                        if selectedOption == 0 {
-                                                            Image(systemName: "checkmark")
-                                                        }
-                                                    }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color.green)).foregroundColor(FOREGROUNDCOLOR).opacity(selectedOption == 1 ? 0.5 : 1)
-                                                })
-                                                
-                                                Button(action:{
-                                                    selectedOption = 1
-                                                },label:{
-                                                    HStack{
-                                                        
-                                                        Text("I Will Not Be Attending").foregroundColor(FOREGROUNDCOLOR).bold()
-                                                        Spacer()
-                                                        if selectedOption == 1 {
-                                                            Image(systemName: "checkmark")
-                                                        }
-                                                        
-                                                    }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color.red)).foregroundColor(FOREGROUNDCOLOR).opacity(selectedOption == 0 ? 0.5 : 1)
-                                                })
-                                            }
-                                            
-                                        }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
-                                    }.padding(.horizontal)
-                                    
-                                    if event.creatorID == USER_ID  {
-                                        Button(action:{
-                                            eventsVM.endEvent(eventID: event.id, usersAttendingID: event.usersAttendingID ?? [])
-                                            presentationMode.wrappedValue.dismiss()
-                                        },label:{
-                                            Text("End \(event.eventName ?? " ")").foregroundColor(Color.red).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
-                                        })
-                                    }else if !isUndecided && selectedOption == 0{
-                                        Button(action:{
-                                            if event.usersUndecided?.count ?? 0 <= 1 && event.usersAttending?.count ?? 0 <= 1 {
-                                                eventsVM.endEvent(eventID: event.id, usersAttendingID: event.usersAttendingID ?? [])
-                                            }else{
-                                                eventsVM.leaveEvent(eventID: event.id)
-                                            }
-                                        },label:{
-                                            Text("Leave \(event.eventName ?? " ")").foregroundColor(Color.red).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
-                                        })
-                                        
                                     }
                                 }else{
-                                    Text("Event has ended")
+                                    HStack(spacing: 2){
+                                        Text("From:").font(.headline)
+                                        Text("\(event.eventStartTime?.dateValue() ?? Date(), style: .date)").foregroundColor(FOREGROUNDCOLOR).font(.headline).fontWeight(.bold)
+                                    }
+                                    HStack(spacing: 2){
+                                        Text("To:").font(.headline)
+                                        Text("\(event.eventEndTime?.dateValue() ?? Date(), style: .date)").foregroundColor(FOREGROUNDCOLOR).font(.headline).fontWeight(.bold)
+                                    }
                                 }
+                                
+                                
+                                
                             }
-                        }.height(min: 0).collapseProgress($progress)
+                            Spacer()
+                        }.padding()
+                        
+                        Text(event.description ?? "")
+                        
+                        if event.location?.name != "" {
+                            VStack(spacing: 5){
+                                
+                                HStack{
+                                    Image(systemName: "mappin").foregroundColor(Color.gray)
+                                    Text("\(event.location?.name ?? " ")").foregroundColor(Color.gray).bold().lineLimit(1)
+                                    Text("\(event.location?.address ?? " ")").foregroundColor(Color.gray).bold().lineLimit(1)
+                                    
+                                    
+                                }
+                                
+                                
+                                
+                                Map(coordinateRegion: $region, annotationItems: [event.location ?? EventModel.Location()]) { location in
+                                    MapPin(coordinate: CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude))
+                                }.frame(height: 150).cornerRadius(12).disabled(true)
+                                
+                                
+                            }.padding(5).background(RoundedRectangle(cornerRadius: 12).fill(Color("Background"))).padding()
+                            
+                            
+                        }
+                        
+                        VStack(alignment: .leading, spacing: 3){
+                            HStack(spacing: 3){
+                                Text("Hosted by").foregroundColor(Color.gray).bold()
+                                Text("\(event.creator?.username ?? " ")").foregroundColor(FOREGROUNDCOLOR).bold()
+                            }
+                            VStack(alignment: .leading, spacing: 0){
+                                
+                                Button(action:{
+                                    self.openAttendanceView.toggle()
+                                },label:{
+                                    HStack{
+                                        HStack(spacing: 5){
+                                            HStack(spacing: -10){
+                                                ForEach(friendsAttending.prefix(3)){ friend in
+                                                    WebImage(url: URL(string: friend.profilePicture ?? " ")).resizable().frame(width: 30, height: 30).clipShape(Circle())
+                                                    
+                                                    
+                                                }
+                                            }
+                                            if friendsAttending.count == 0 {
+                                                Text("No friends are attending this event").foregroundColor(Color.gray).font(.callout)
+                                            }else{
+                                                
+                                                if friendsAttending.count < 4 {
+                                                    Text(" \(friendsAttending.count) \(friendsAttending.count == 1 ? "friend" : "friends") attending").foregroundColor(Color.gray).font(.callout)
+                                                    
+                                                }else{
+                                                    Text("+\(friendsAttending.count - 3) friends attending").foregroundColor(Color.gray).font(.callout)
+                                                    
+                                                }
+                                            }
+                                        }
+                                        Spacer()
+                                        Image(systemName: "chevron.right").foregroundColor(Color.gray)
+                                    }.padding(10)
+                                })
+                                
+                                if event.membersCanInviteGuests ?? false || event.creatorID ?? " " == USER_ID{
+                                    Divider()
+                                    NavigationLink(destination: InviteFriendsToEventView(event: event)) {
+                                        HStack{
+                                            
+                                            Image(systemName: "person.fill.badge.plus").font(.system(size: 18)).foregroundColor(FOREGROUNDCOLOR)
+                                            
+                                            Text("Invite Friends").foregroundColor(FOREGROUNDCOLOR)
+                                            
+                                            Spacer()
+                                        }.padding(.vertical,10).padding(.leading,10)
+                                    }
+                                }
+                              
+                                
+                            }.padding(5).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
+                        }.padding()
+                        
+                        if !(event.ended ?? false) {
+                            VStack(alignment: .leading){
+                                Text("RSVP").foregroundColor(Color.gray).bold()
+                                VStack(alignment: .leading){
+                                    
+                                    Toggle("I don't know yet", isOn: $isUndecided)
+                                    
+                                    
+                                    if !isUndecided{
+                                        Button(action:{
+                                            eventVM.attendEvent()
+                                        },label:{
+                                            HStack{
+                                                
+                                                Text("I Will Be Attending").foregroundColor(FOREGROUNDCOLOR).bold()
+                                                Spacer()
+                                                if isAttending {
+                                                    Image(systemName: "checkmark")
+                                                }
+                                            }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color.green)).foregroundColor(FOREGROUNDCOLOR).opacity(!isAttending ? 0.5 : 1)
+                                        })
+                                        
+                                        Button(action:{
+                                            eventVM.declineEventInvitation()
+                                        },label:{
+                                            HStack{
+                                                
+                                                Text("I Will Not Be Attending").foregroundColor(FOREGROUNDCOLOR).bold()
+                                                Spacer()
+                                                if !isAttending {
+                                                    Image(systemName: "checkmark")
+                                                }
+                                                
+                                            }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color.red)).foregroundColor(FOREGROUNDCOLOR).opacity(isAttending ? 0.5 : 1)
+                                        })
+                                    }
+                                    
+                                }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
+                            }.padding(.horizontal)
+                            
+                            if event.creatorID == USER_ID && (event.ended ?? false)  {
+                                Button(action:{
+                                    eventVM.endEvent(eventID: event.id, usersAttendingID: event.usersAttendingID ?? [])
+                                    presentationMode.wrappedValue.dismiss()
+                                },label:{
+                                    Text("End \(event.eventName ?? " ")").foregroundColor(Color.red).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
+                                })
+                            }else if !isUndecided && isAttending{
+                                Button(action:{
+                                    if event.usersAttending?.count ?? 0 == 1 {
+                                        eventVM.endEvent(eventID: event.id, usersAttendingID: event.usersAttendingID ?? [])
+                                    }else{
+                                        eventVM.leaveEvent(eventID: event.id)
+                                    }
+                                },label:{
+                                    Text("Leave \(event.eventName ?? " ")").foregroundColor(Color.red).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
+                                })
+                                
+                            }
+                        }else{
+                            Text("Event has ended")
+                        }
+                    }
+                }.height(min: 0).collapseProgress($progress)
                     .allowsHeaderGrowth()
                 
             }
@@ -661,86 +662,26 @@ struct EventDetailView : View {
             }
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
-            let dp = DispatchGroup()
-            dp.enter()
-            self.friendsAttending = eventsVM.getFriendsAttending(event: event, user: userVM.user ?? User())
-            self.isUndecided = event.usersUndecidedID?.contains(USER_ID) ?? false
-            self.userIsAttending = self.userIsAttending(event: event)
-            self.selectedOption = self.getSelectedOption(event: event)
-            self.region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: self.event.location?.latitude ?? 0.0 , longitude: self.event.location?.longitude ?? 0.0), span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
-            dp.leave()
-            dp.notify(queue: .main, execute:{
-                self.finishedSetting = true
-            })
-        }.onChange(of: isUndecided) { newValue in
-            
-            if finishedSetting {
-                if newValue{
-                    let dp = DispatchGroup()
-                    dp.enter()
-                    eventsVM.chooseUndecidedOnEvent(userID: USER_ID, event: event)
-                    dp.leave()
-                    dp.notify(queue: .main, execute:{
-                        eventsVM.fetchEvent(eventID: event.id, completion: { eventFetched in
-                            self.event = eventFetched
-                            friendsAttending = eventsVM.getFriendsAttending(event: event, user: userVM.user ?? User())
-                            self.userIsAttending = self.userIsAttending(event: event)
-                            
-                        })
-                    })
+            eventVM.listenToEvent(eventID: eventID)
+        }.onDisappear{
+            eventVM.removeListener()
+        }.onReceive(eventVM.$event) { fetchedEvent in
+            if eventVM.finishedFetchingEvent {
+                self.region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: self.event.location?.latitude ?? 0.0 , longitude: self.event.location?.longitude ?? 0.0), span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
+                isUndecided = event.usersAttendingID?.contains(USER_ID) ?? false
+            }
+        }.onChange(of: isUndecided, perform: { newValue in
+            if newValue{
+                eventVM.chooseUndecidedOnEvent(userID: USER_ID)
+            }else{
+                if isAttending {
+                    eventVM.attendEvent()
                 }else{
-                    let dp = DispatchGroup()
-                    dp.enter()
-                    if self.userIsAttending{
-                        eventsVM.declineEvent(userID: userVM.user?.id ?? " ", event: event)
-                        event.usersAttendingID?.removeAll(where: {$0 == userVM.user?.id ?? " "})
-                        self.userIsAttending = false
-                        selectedOption = 1
-                    }else{
-                        eventsVM.attendEvent(userID: userVM.user?.id ?? " ", event: event)
-                        event.usersAttendingID?.append(userVM.user?.id ?? " ")
-                        self.userIsAttending = true
-                        selectedOption = 0
-                    }
-                    dp.leave()
-                    dp.notify(queue: .main, execute:{
-                        eventsVM.fetchEvent(eventID: event.id, completion: { eventFetched in
-                            self.event = eventFetched
-                            friendsAttending = eventsVM.getFriendsAttending(event: eventFetched, user: userVM.user ?? User())
-                            
-                        })
-                        
-                        
-                    })
+                    eventVM.declineEventInvitation()
                 }
             }
-            
-            
-        }.onChange(of: selectedOption) { newValue in
-            if finishedSetting{
-                let dp = DispatchGroup()
-                dp.enter()
-                if newValue == 1{
-                    eventsVM.declineEvent(userID: userVM.user?.id ?? " ", event: event)
-                    event.usersAttendingID?.removeAll(where: {$0 == userVM.user?.id ?? " "})
-                }else{
-                    eventsVM.attendEvent(userID: userVM.user?.id ?? " ", event: event)
-                    event.usersAttendingID?.append(userVM.user?.id ?? " ")
-                }
-                dp.leave()
-                dp.notify(queue: .main, execute:{
-                    eventsVM.fetchEvent(eventID: event.id, completion: { eventFetched in
-                        self.event = eventFetched
-                        friendsAttending = eventsVM.getFriendsAttending(event: event, user: userVM.user ?? User())
-                        
-                    })
-                    
-                    
-                })
-            }
-            
-        }
-    
+        })
+        
     }
 }
 
@@ -750,22 +691,22 @@ struct UserCalendarEventCell : View{
     var body: some View {
         HStack{
             RoundedRectangle(cornerRadius: 12).frame(width: 5).foregroundColor(Color.gray)
-                VStack(alignment: .leading, spacing: 5){
-                    Text(event.eventName ?? "").font(.title2).bold().foregroundColor(FOREGROUNDCOLOR)
-                    HStack(alignment: .center){
-                        Text(event.eventStartTime?.dateValue() ?? Date(), style: .time).font(.headline)
-                        Text("-").font(.headline)
-                        Text(event.eventEndTime?.dateValue() ?? Date(), style: .time).font(.headline)
-                    }.foregroundColor(FOREGROUNDCOLOR)
-                   
-                    HStack{
-                            Text("\(event.location?.name ?? "" == "" ? "No Location Specified" : event.location?.name ?? "")").font(.footnote)
-                        
-                        Text("|")
+            VStack(alignment: .leading, spacing: 5){
+                Text(event.eventName ?? "").font(.title2).bold().foregroundColor(FOREGROUNDCOLOR)
+                HStack(alignment: .center){
+                    Text(event.eventStartTime?.dateValue() ?? Date(), style: .time).font(.headline)
+                    Text("-").font(.headline)
+                    Text(event.eventEndTime?.dateValue() ?? Date(), style: .time).font(.headline)
+                }.foregroundColor(FOREGROUNDCOLOR)
+                
+                HStack{
+                    Text("\(event.location?.name ?? "" == "" ? "No Location Specified" : event.location?.name ?? "")").font(.footnote)
+                    
+                    Text("|")
                     Text("\(event.usersAttendingID?.count ?? 0) attending").font(.footnote)
-                    }.foregroundColor(FOREGROUNDCOLOR.opacity(0.7))
-                }
-
+                }.foregroundColor(FOREGROUNDCOLOR.opacity(0.7))
+            }
+            
             Spacer()
             
             Image(systemName: "chevron.right").foregroundColor(.gray)

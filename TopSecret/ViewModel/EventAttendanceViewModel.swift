@@ -45,7 +45,7 @@ class EventAttendanceViewModel : ObservableObject {
             if err != nil {
                 print("ERROR")
             }
-            
+            print("listening to events")
             var data = snapshot?.data() as? [String:Any] ?? [:]
             var usersAttendingID = data["usersAttendingID"] as? [String] ?? []
             var usersUndecidedID = data["usersUndecidedID"] as? [String] ?? []
@@ -77,5 +77,28 @@ class EventAttendanceViewModel : ObservableObject {
     
     func removeListener(){
         self.eventListener?.remove()
+        print("removed")
+    }
+    
+    
+    func uninviteToEvent(userID: String, eventID: String){
+        COLLECTION_USER.document(userID).updateData(["pendingEventInvitationID":FieldValue.arrayRemove([eventID])])
+        
+        COLLECTION_EVENTS.document(eventID).updateData(["usersUndecidedID":FieldValue.arrayRemove([userID])])
+        COLLECTION_EVENTS.document(eventID).updateData(["usersAttendingID":FieldValue.arrayRemove([userID])])
+        COLLECTION_EVENTS.document(eventID).updateData(["usersDeclinedID":FieldValue.arrayRemove([userID])])
+
+        var notificationID = UUID().uuidString
+       
+        
+        
+        var userNotificationData = ["id":notificationID,
+            "timeStamp":Timestamp(),
+            "senderID":USER_ID,
+            "receiverID": userID,
+            "eventID": eventID,
+            "hasSeen":false,
+            "type":"uninvitedToEvent"] as [String:Any]
+        COLLECTION_USER.document(USER_ID).collection("Notifications").document(notificationID).setData(userNotificationData)
     }
 }

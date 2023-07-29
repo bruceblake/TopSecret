@@ -25,6 +25,8 @@ struct EventModel : Identifiable, Hashable{
     var eventLocation : String?
     var eventStartTime : Timestamp?
     var eventEndTime : Timestamp?
+    var usersInvitedID: [String]?
+    var usersInvited : [User]?
     var usersExcludedIDS: [String]?
     var usersExcluded: [User]?
     var usersAttendingID : [String]?
@@ -102,6 +104,8 @@ enum InvitationType {
         self.eventLocation = dictionary["eventLocation"] as? String ?? "EVENT_LOCATION"
         self.eventStartTime = dictionary["eventStartTime"] as? Timestamp ?? Timestamp()
         self.eventEndTime = dictionary["eventEndTime"] as? Timestamp ?? Timestamp()
+        self.usersInvitedID = dictionary["usersInvitedID"] as? [String] ?? []
+        self.usersInvited = dictionary["usersInvited"] as? [User] ?? []
         self.usersExcludedIDS = dictionary["usersExcludedIDS"] as? [String] ?? []
         self.usersExcluded = dictionary["usersExcluded"] as? [User] ?? []
         self.usersAttendingID = dictionary["usersAttendingID"] as? [String] ?? []

@@ -15,15 +15,18 @@ import CoreLocation
 
 class EventViewModel: ObservableObject {
     @Published var description: String = ""
+    @Published var finishedFetchingEvent : Bool = false
     @Published var event: EventModel = EventModel()
-    @Published var eventIsLoading : Bool = false
+    @Published var friendsAttending: [User] = []
+    @Published var creatingEvent : Bool = false
+    @Published var eventListener: ListenerRegistration?
     
     let shared = UserViewModel.shared
     @ObservedObject var chatRepository = ChatRepository()
     
     let notificationSender = PushNotificationSender()
     
-    func acceptEventInvitation(event: EventModel, userID: String){
+    func acceptEventInvitation(){
         let notificationID = UUID().uuidString
         
         let userNotificationData = [
@@ -39,46 +42,81 @@ class EventViewModel: ObservableObject {
             COLLECTION_USER.document(userID).collection("Notifications").document(notificationID).setData(userNotificationData)
         }
         
-        COLLECTION_EVENTS.document(event.id).updateData(["usersAttendingID":FieldValue.arrayUnion([userID])])
-        COLLECTION_EVENTS.document(event.id).updateData(["usersDeclinedID":FieldValue.arrayRemove([userID])])
-        COLLECTION_USER.document(userID).updateData(["pendingEventInvitationID":FieldValue.arrayRemove([event.id])])
-        COLLECTION_USER.document(userID).updateData(["eventsID":FieldValue.arrayUnion([event.id])])
+        COLLECTION_EVENTS.document(self.event.id).updateData(["usersAttendingID":FieldValue.arrayUnion([USER_ID])])
+        COLLECTION_EVENTS.document(self.event.id).updateData(["usersDeclinedID":FieldValue.arrayRemove([USER_ID])])
+        COLLECTION_USER.document(USER_ID).updateData(["pendingEventInvitationID":FieldValue.arrayRemove([self.event.id])])
+        COLLECTION_USER.document(USER_ID).updateData(["eventsID":FieldValue.arrayUnion([self.event.id])])
     }
     
-    func declineEventInvitation(event: EventModel, userID: String){
+    func declineEventInvitation(){
         
         let notificationID = UUID().uuidString
         
         let userNotificationData = [
             "id":notificationID,
-            "name": "declinedEventInvitation",
             "timeStamp":Timestamp(),
-            "type":"declinedEventInvitation",
-            "eventID": event.id,
+            "type":"decliningEvent",
+            "eventID": self.event.id,
             "userID": event.creatorID ?? " ",
             "hasSeen":false] as [String:Any]
         
-        for userID in event.usersAttendingID ?? [] {
+        for userID in self.event.usersAttendingID ?? [] {
             COLLECTION_USER.document(userID).collection("Notifications").document(notificationID).setData(userNotificationData)
         }
         
-        COLLECTION_EVENTS.document(event.id).updateData(["usersAttendingID":FieldValue.arrayRemove([userID])])
-        COLLECTION_EVENTS.document(event.id).updateData(["usersDeclinedID":FieldValue.arrayUnion([userID])])
-        COLLECTION_USER.document(userID).updateData(["pendingEventInvitationID":FieldValue.arrayRemove([event.id])])
-        COLLECTION_USER.document(userID).updateData(["eventsID":FieldValue.arrayRemove([event.id])])
+        COLLECTION_EVENTS.document(self.event.id).updateData(["usersAttendingID":FieldValue.arrayRemove([USER_ID])])
+        COLLECTION_EVENTS.document(self.event.id).updateData(["usersDeclinedID":FieldValue.arrayUnion([USER_ID])])
+        COLLECTION_USER.document(USER_ID).updateData(["pendingEventInvitationID":FieldValue.arrayRemove([self.event.id])])
+        COLLECTION_USER.document(USER_ID).updateData(["eventsID":FieldValue.arrayRemove([self.event.id])])
     }
     
     
-    func editEvent(event: EventModel, name: String, startTime: Date, endTime: Date, user: User, image: UIImage, invitationType: String, location: EventModel.Location, membersCanInviteGuests: Bool, invitedMembers: [User], excludedMembers: [User], description: String, createEventChat: Bool, createGroupFromEvent: Bool){
+    func chooseUndecidedOnEvent(userID: String){
+        COLLECTION_EVENTS.document(self.event.id).updateData(["usersAttendingID":FieldValue.arrayRemove([userID])])
+        COLLECTION_EVENTS.document(self.event.id).updateData(["usersDeclinedID":FieldValue.arrayRemove([userID])])
+        COLLECTION_EVENTS.document(self.event.id).updateData(["usersUndecidedID":FieldValue.arrayUnion([userID])])
+        COLLECTION_USER.document(userID).updateData(["pendingEventInvitationID":FieldValue.arrayUnion([self.event.id])])
+        COLLECTION_USER.document(userID).updateData(["eventsID":FieldValue.arrayRemove([self.event.id])])
+
+    }
+    
+   
+    
+    func attendEvent() {
+        
+        let notificationID = UUID().uuidString
+        
+        let userNotificationData = [
+            "id":notificationID,
+            "timeStamp":Timestamp(),
+            "type":"attendingEvent",
+            "eventID": self.event.id,
+            "userID": event.creatorID ?? " ",
+            "hasSeen":false] as [String:Any]
+        
+        for userID in self.event.usersAttendingID ?? [] {
+            COLLECTION_USER.document(userID).collection("Notifications").document(notificationID).setData(userNotificationData)
+        }
+        
+        COLLECTION_EVENTS.document(self.event.id).updateData(["usersAttendingID":FieldValue.arrayUnion([USER_ID])])
+        COLLECTION_EVENTS.document(self.event.id).updateData(["usersDeclinedID":FieldValue.arrayRemove([USER_ID])])
+        COLLECTION_USER.document(USER_ID).updateData(["pendingEventInvitationID":FieldValue.arrayRemove([self.event.id])])
+        COLLECTION_EVENTS.document(self.event.id).updateData(["usersUndecidedID":FieldValue.arrayRemove([USER_ID])])
+        COLLECTION_USER.document(USER_ID).updateData(["eventsID":FieldValue.arrayUnion([self.event.id])])
+    }
+    
+    
+    func editEvent(event: EventModel, name: String, startTime: Date, endTime: Date, user: User, image: UIImage, invitationType: String, location: EventModel.Location, membersCanInviteGuests: Bool, invitedMembers: [User], excludedMembers: [User], description: String, createEventChat: Bool, createGroupFromEvent: Bool, completion: @escaping (Bool) -> ()){
         let dp = DispatchGroup()
         dp.enter()
+        //this is for editing the event but im too fucking lazy to change variable names :/
+        self.creatingEvent = true
         COLLECTION_EVENTS.document(event.id).updateData(["eventName":name])
         COLLECTION_EVENTS.document(event.id).updateData(["eventStartTime":startTime])
         COLLECTION_EVENTS.document(event.id).updateData(["eventEndTime":endTime])
         COLLECTION_EVENTS.document(event.id).updateData(["invitationType":invitationType])
         COLLECTION_EVENTS.document(event.id).updateData(["usersExcludedIDS":excludedMembers.map({$0.id ?? " "})])
         COLLECTION_EVENTS.document(event.id).updateData(["description":description])
-        COLLECTION_EVENTS.document(event.id).updateData(["location":location.toDictionary()])
         
         let locationData = ["id": location.id ?? " ",
                             "name":location.name,
@@ -88,9 +126,9 @@ class EventViewModel: ObservableObject {
         
         self.persistImageToEventStorage(eventID: event.id, image: image) { fetchedImageURL in
             COLLECTION_EVENTS.document(event.id).updateData(["eventImage":fetchedImageURL])
-            dp.leave()
         }
-        
+        dp.leave()
+
         
         dp.notify(queue: .main, execute:{
             COLLECTION_EVENTS.document(event.id).collection("Location").document(location.id ?? " ").setData(locationData)
@@ -105,40 +143,44 @@ class EventViewModel: ObservableObject {
                 self.createGroupFromEvent(groupName: name, image: image , users: invitedMembers)
             }
             
-        })
-        
-        
-        var notificationID = UUID().uuidString
-        
-        
-        
-        let userNotificationData = ["id":notificationID,
-                                    "name": "Invite To Event",
-                                    "timeStamp":Timestamp(),
-                                    "userID": user.id ?? " ",
-                                    "eventID": event.id,
-                                    "hasSeen":false,
-                                    "type":"invitedToEvent"] as [String:Any]
-        
-        for invitedMember in invitedMembers {
-            if invitedMember.id ?? " " != user.id ?? " "{
-                COLLECTION_USER.document(invitedMember.id ?? " ").updateData(["pendingEventInvitationID":FieldValue.arrayUnion([event.id])])
-                COLLECTION_USER.document(invitedMember.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)
-                COLLECTION_EVENTS.document(event.id).updateData(["usersUndecidedID":FieldValue.arrayUnion([invitedMember.id ?? " "])])
-                //                self.notificationSender.sendPushNotification(to: invitedMember.fcmToken ?? " ", title: "\(group.groupName)", body: "\(invitedMember.nickName ?? " ") created an event!")
+            
+            var notificationID = UUID().uuidString
+            
+            
+            
+            let userNotificationData = ["id":notificationID,
+                                        "name": "Invite To Event",
+                                        "timeStamp":Timestamp(),
+                                        "userID": user.id ?? " ",
+                                        "eventID": event.id,
+                                        "hasSeen":false,
+                                        "type":"invitedToEvent"] as [String:Any]
+            
+            for invitedMember in invitedMembers {
+                if invitedMember.id ?? " " != user.id ?? " "{
+                    COLLECTION_USER.document(invitedMember.id ?? " ").updateData(["pendingEventInvitationID":FieldValue.arrayUnion([event.id])])
+                    COLLECTION_USER.document(invitedMember.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)
+                    COLLECTION_EVENTS.document(event.id).updateData(["usersUndecidedID":FieldValue.arrayUnion([invitedMember.id ?? " "])])
+                    //                self.notificationSender.sendPushNotification(to: invitedMember.fcmToken ?? " ", title: "\(group.groupName)", body: "\(invitedMember.nickName ?? " ") created an event!")
+                }
+                
             }
             
-        }
+            
+            self.creatingEvent = false
+            return completion(true)
+        })
         
+       
         
         
     }
     
-    func createEvent(group: Group?, eventName: String, eventStartTime: Date, eventEndTime: Date, user: User, image: UIImage, invitationType: String, location: EventModel.Location, membersCanInviteGuests: Bool, invitedMembers: [User], excludedMembers: [User], description: String, createEventChat: Bool, createGroupFromEvent: Bool) {
+    func createEvent(group: Group?, eventName: String, eventStartTime: Date, eventEndTime: Date, user: User, image: UIImage, invitationType: String, location: EventModel.Location, membersCanInviteGuests: Bool, invitedMembers: [User], excludedMembers: [User], description: String, createEventChat: Bool, createGroupFromEvent: Bool, completion: @escaping (Bool) -> ()) {
         let id = UUID().uuidString
         let dp = DispatchGroup()
         dp.enter()
-
+        self.creatingEvent = true
         var data: [String: Any] = [
             "eventName" : eventName,
             "eventStartTime": eventStartTime,
@@ -166,7 +208,7 @@ class EventViewModel: ObservableObject {
             COLLECTION_GROUP.document(group.id).collection("Events").document(id).setData(data) { (err) in
                 if let err = err {
                     print("ERROR \(err.localizedDescription)")
-                    return
+                    return completion(false)
                 }
                 
             }
@@ -192,8 +234,8 @@ class EventViewModel: ObservableObject {
 
         self.persistImageToEventStorage(eventID: id, image: image) { fetchedImageURL in
             data["eventImage"] = fetchedImageURL
-            dp.leave()
         }
+        dp.leave()
 
         dp.notify(queue: .main) {
             
@@ -204,7 +246,7 @@ class EventViewModel: ObservableObject {
             COLLECTION_EVENTS.document(id).setData(data) { (err) in
                 if let err = err {
                     print("ERROR \(err.localizedDescription)")
-                    return
+                    return completion(false)
                 }
                 if createEventChat {
                     let chatID = UUID().uuidString
@@ -217,6 +259,19 @@ class EventViewModel: ObservableObject {
                 dp.leave()
             }
             dp.notify(queue: .main, execute:{
+                
+                let notificationID = UUID().uuidString
+                let userNotificationData: [String: Any] = [
+                    "id": notificationID,
+                    "timeStamp": Timestamp(),
+                    "eventID": id,
+                    "hasSeen": false,
+                    "type": "eventCreated"
+                ]
+                
+                COLLECTION_USER.document(USER_ID).collection("Notifications").document(notificationID).setData(userNotificationData)
+                
+                
                 for invitedMember in invitedMembers {
                     if invitedMember.id ?? "" != user.id ?? "" {
                         let notificationID = UUID().uuidString
@@ -237,6 +292,8 @@ class EventViewModel: ObservableObject {
                     }
                 }
                 COLLECTION_USER.document(USER_ID).updateData(["eventsID":FieldValue.arrayUnion([id])])
+                self.creatingEvent = false
+                return completion(true)
             })
         }
 
@@ -340,22 +397,59 @@ class EventViewModel: ObservableObject {
         }
         
     }
-    
-    
-    func joinEvent(eventID: String, userID: String){
-        COLLECTION_EVENTS.document(eventID).updateData(["usersAttendingID":FieldValue.arrayUnion([userID])])
-    }
-    
-    func leaveEvent(eventID: String, groupID: String, userID: String){
-        COLLECTION_EVENTS.document(eventID).updateData(["usersAttendingID":FieldValue.arrayRemove([userID])])
 
+    
+    
+    func deleteEvent(eventID: String){
+        COLLECTION_EVENTS.document(eventID).delete()
     }
     
     
+    func endEvent(eventID: String, usersAttendingID: [String]){
+        COLLECTION_EVENTS.document(eventID).updateData(["ended":true])
+        COLLECTION_EVENTS.document(eventID).updateData(["eventEndTime":Date()])
+        for userID in usersAttendingID{
+            let notificationID = UUID().uuidString
+            
+            let userNotificationData = ["id":notificationID,
+                                        "timeStamp":Timestamp(),
+                                        "senderID":USER_ID,
+                                        "eventID":eventID,
+                                        "receiverID":userID,
+                                        "hasSeen":false,
+                                        "type":"eventEnded",
+                                        "requiresAction":false] as [String:Any]
+            COLLECTION_USER.document(userID).collection("Notifications").document(notificationID).setData(userNotificationData)
+            COLLECTION_USER.document(userID).updateData(["eventsID":FieldValue.arrayRemove([eventID])])
+        }
+    }
     
-    func addUserToVisibilityList(eventID: String, userID: String){
-        //TODO
-        COLLECTION_EVENTS.document(eventID).updateData(["usersVisibleTo" : FieldValue.arrayUnion([userID])])
+    func leaveEvent(eventID: String){
+        COLLECTION_USER.document(USER_ID).updateData(["eventsID":FieldValue.arrayRemove([eventID])])
+        let dp = DispatchGroup()
+        dp.enter()
+        let users = (self.event.usersAttendingID ?? []) + (self.event.usersUndecidedID ?? [])
+        for user in users {
+            dp.enter()
+            var notificationID = UUID().uuidString
+           
+
+            var userNotificationData = ["id":notificationID,
+                "timeStamp":Timestamp(),
+                "senderID":USER_ID,
+                "receiverID": user,
+                "eventID": eventID,
+                "hasSeen":false,
+                "type":"leftEvent"] as [String:Any]
+            COLLECTION_USER.document(user).collection("Notifications").document(notificationID).setData(userNotificationData)
+            dp.leave()
+        }
+       
+        dp.leave()
+        dp.notify(queue: .main, execute: {
+            COLLECTION_EVENTS.document(eventID).updateData(["usersAttendingID":FieldValue.arrayRemove([USER_ID])])
+        })
+
     }
     
     func fetchEvent(eventID: String, completion: @escaping (EventModel) -> () ) -> (){
@@ -383,6 +477,95 @@ class EventViewModel: ObservableObject {
             
             self.event = EventModel(dictionary: data ?? [:])
             
+        }
+    }
+    
+    func fetchEventUsersAttending(usersAttendingID: [String], eventID: String, completion: @escaping ([User]) -> ()) -> (){
+       COLLECTION_EVENTS.document(eventID).getDocument { snapshot, err in
+            
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            var usersToReturn : [User] = []
+            
+            
+            let groupD = DispatchGroup()
+            
+            let data = snapshot?.data() as? [String:Any] ?? [:]
+            let users = data["usersAttendingID"] as? [String] ?? []
+            
+            for user in users {
+                groupD.enter()
+                COLLECTION_USER.document(user).getDocument { userSnapshot, err in
+                    if err != nil {
+                        print("ERROR")
+                        return
+                    }
+                    
+                    let userData = userSnapshot?.data() as? [String:Any] ?? [:]
+                    
+                    usersToReturn.append(User(dictionary: userData))
+                    groupD.leave()
+                }
+            }
+            
+            groupD.notify(queue: .main, execute: {
+                return completion(usersToReturn)
+            })
+            
+        }
+        
+        
+    }
+    
+    func listenToEvent(eventID: String){
+        let dp = DispatchGroup()
+        eventListener =  COLLECTION_EVENTS.document(eventID).addSnapshotListener { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            var data = snapshot?.data() as? [String:Any] ?? [:]
+            var creatorID = data["creatorID"] as? String ?? ""
+            var usersAttendingID = data["usersAttendingID"] as? [String] ?? []
+            
+            dp.enter()
+            self.finishedFetchingEvent = false
+            self.fetchCreator(userID: creatorID) { fetchedUser in
+                if let fetchedUser = fetchedUser {
+                    data["creator"] = fetchedUser
+                }
+                dp.leave()
+            }
+            
+            dp.enter()
+            self.fetchEventUsersAttending(usersAttendingID: usersAttendingID, eventID: eventID) { fetchedUsers in
+                data["usersAttending"] = fetchedUsers
+                dp.leave()
+            }
+            
+            dp.notify(queue: .main, execute: {
+                self.event = EventModel(dictionary: data)
+                self.finishedFetchingEvent = true
+            })
+        }
+    }
+    
+    func removeListener(){
+        self.eventListener?.remove()
+    }
+    
+    
+    func fetchCreator(userID: String, completion: @escaping (User?) -> () ) {
+        COLLECTION_USER.document(userID).getDocument { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return completion(nil)
+            }
+            
+            let data = snapshot?.data() as? [String:Any] ?? [:]
+            return completion(User(dictionary: data))
         }
     }
     

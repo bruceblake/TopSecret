@@ -94,7 +94,7 @@ class UserCalendarViewModel : ObservableObject {
                 data["creator"] = fetchedCreator
                 dp.leave()
             }
-            
+           print("fetching event")
             dp.notify(queue: .main, execute: {
                 return completion(EventModel(dictionary: data))
             })

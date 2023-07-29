@@ -126,6 +126,7 @@
 		78A61F2526BB1C7C00671021 /* ForgotPasswordView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78A61F2426BB1C7C00671021 /* ForgotPasswordView.swift */; };
 		78A63B0629BA94E10042FB05 /* OmenTextField in Resources */ = {isa = PBXBuildFile; fileRef = 78A63B0529BA94DD0042FB05 /* OmenTextField */; };
 		78A9095C2A6F861000F95B36 /* EventAttendanceViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78A9095B2A6F861000F95B36 /* EventAttendanceViewModel.swift */; };
+		78A9095E2A730EE200F95B36 /* ContactsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78A9095D2A730EE200F95B36 /* ContactsViewModel.swift */; };
 		78A9707E28F351420087B5AE /* Amadeus in Frameworks */ = {isa = PBXBuildFile; productRef = 78A9707D28F351420087B5AE /* Amadeus */; };
 		78ABDC5929647C1300D442B8 /* AdvancedList in Frameworks */ = {isa = PBXBuildFile; productRef = 78ABDC5829647C1300D442B8 /* AdvancedList */; };
 		78ABDC5F2965291900D442B8 /* OpenSwiftUIViews in Frameworks */ = {isa = PBXBuildFile; productRef = 78ABDC5E2965291900D442B8 /* OpenSwiftUIViews */; };
@@ -392,6 +393,7 @@
 		78A63B0529BA94DD0042FB05 /* OmenTextField */ = {isa = PBXFileReference; lastKnownFileType = folder; path = OmenTextField; sourceTree = "<group>"; };
 		78A7CB5B29672493000344C5 /* swiftui-pull-to-refresh */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "swiftui-pull-to-refresh"; path = "../PackageEditFolder/swiftui-pull-to-refresh"; sourceTree = "<group>"; };
 		78A9095B2A6F861000F95B36 /* EventAttendanceViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventAttendanceViewModel.swift; sourceTree = "<group>"; };
+		78A9095D2A730EE200F95B36 /* ContactsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsViewModel.swift; sourceTree = "<group>"; };
 		78ACD9B42A39828D006371D2 /* InviteFriendsToEventView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteFriendsToEventView.swift; sourceTree = "<group>"; };
 		78ADC64727628104001E831B /* GroupUsersProfilePictureCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GroupUsersProfilePictureCell.swift; sourceTree = "<group>"; };
 		78AFB7062A32BA420087EE9E /* UserGroupsListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserGroupsListView.swift; sourceTree = "<group>"; };
@@ -864,6 +866,7 @@
 				78C34CF72A1948A3005715DB /* EventsTabViewModel.swift */,
 				7851EFB72A3D5EAC00C1FE31 /* EditGalleryMediaViewModel.swift */,
 				78A9095B2A6F861000F95B36 /* EventAttendanceViewModel.swift */,
+				78A9095D2A730EE200F95B36 /* ContactsViewModel.swift */,
 			);
 			path = ViewModel;
 			sourceTree = "<group>";
@@ -1511,6 +1514,7 @@
 				78E938D226FCB573006D630F /* GroupListCell.swift in Sources */,
 				78A3E63227CEE374000E9EBD /* GalleryPostCommentModel.swift in Sources */,
 				78C1B2BD285D2F6900A5DE58 /* EventCell.swift in Sources */,
+				78A9095E2A730EE200F95B36 /* ContactsViewModel.swift in Sources */,
 				78B0927E27B1DC0D003B27A6 /* GroupSearchCell.swift in Sources */,
 				78D1A72E26DEA1590083FE2C /* CreateUsername.swift in Sources */,
 				78B003BA28B42803006E6183 /* GroupChatViewModel.swift in Sources */,

@@ -207,6 +207,10 @@ class PersonalChatViewModel : ObservableObject {
       
    }
     
+    
+    
+    
+    
     func fetchEvent(eventID: String, completion: @escaping (EventModel) -> ()) -> () {
         COLLECTION_EVENTS.document(eventID).getDocument { snapshot, err in
             if err != nil {

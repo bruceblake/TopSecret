@@ -41,6 +41,7 @@ struct CreateEventView: View {
     @State var openDescriptionView : Bool = false
     @State var description: String = ""
     @State var openInviteMembersView : Bool = false
+    @State var openAddContactsView : Bool = false
     @State var invitedMembers : [User] = []
     @State var openExcludeMembersView : Bool = false
     @State var excludedMembers: [User] = []
@@ -52,6 +53,9 @@ struct CreateEventView: View {
     @State var imageText : String = "Add Event Cover"
     @State var isKeyboardPresented = false
     @Binding var showAddEventView : Bool
+    
+    @StateObject var contactVM = ContactsViewModel()
+
     
     var body: some View {
         ZStack{
@@ -90,20 +94,40 @@ struct CreateEventView: View {
                     Button(action:{
                         
                         if event != nil{
-                            eventVM.editEvent(event: event!, name: eventName, startTime: eventStartTime, endTime: eventEndTime, user: userVM.user ?? User(), image: image, invitationType: invitationType, location: location, membersCanInviteGuests: membersCanInviteGuests, invitedMembers: invitedMembers, excludedMembers: excludedMembers, description: description, createEventChat: createEventChat, createGroupFromEvent: createGroupFromEvent)
+                            eventVM.editEvent(event: event!, name: eventName, startTime: eventStartTime, endTime: eventEndTime, user: userVM.user ?? User(), image: image, invitationType: invitationType, location: location, membersCanInviteGuests: membersCanInviteGuests, invitedMembers: invitedMembers, excludedMembers: excludedMembers, description: description, createEventChat: createEventChat, createGroupFromEvent: createGroupFromEvent) { finished in
+                                if finished{
+                                    self.showAddEventView = false
+                                }else{
+                                    print("failed to edit")
+                                }
+                            }
                         }else{
                            
-                                eventVM.createEvent(group: !isGroup ? nil : selectedGroupVM.group , eventName: eventName,eventStartTime: eventStartTime , eventEndTime: eventEndTime, user: userVM.user ?? User(), image: image, invitationType: invitationType, location: location, membersCanInviteGuests: membersCanInviteGuests, invitedMembers: invitedMembers, excludedMembers: excludedMembers, description: description, createEventChat: createEventChat, createGroupFromEvent: createGroupFromEvent)
+                            eventVM.createEvent(group: !isGroup ? nil : selectedGroupVM.group , eventName: eventName,eventStartTime: eventStartTime , eventEndTime: eventEndTime, user: userVM.user ?? User(), image: image, invitationType: invitationType, location: location, membersCanInviteGuests: membersCanInviteGuests, invitedMembers: invitedMembers, excludedMembers: excludedMembers, description: description, createEventChat: createEventChat, createGroupFromEvent: createGroupFromEvent) { finished in
+                                if finished{
+                                    self.showAddEventView = false
+                                }else{
+                                    print("failed to create")
+                                }
+                            }
                             
                            
                         }
                         
-                        self.showAddEventView = false
                     },label:{
                         if event != nil {
+                            if eventVM.creatingEvent {
+                                ProgressView().padding(.horizontal,10).padding(.vertical,5).background(RoundedRectangle(cornerRadius: 16))
+                            }else{
                             Text("Edit").foregroundColor(FOREGROUNDCOLOR).padding(.horizontal,10).padding(.vertical,5).background(RoundedRectangle(cornerRadius: 16).fill(eventName == "" || eventStartTime > eventEndTime ? Color("Color") : Color("AccentColor"))).disabled(eventName == "")
+                            }
                         }else{
-                            Text("Create").foregroundColor(FOREGROUNDCOLOR).padding(.horizontal,10).padding(.vertical,5).background(RoundedRectangle(cornerRadius: 16).fill(eventName == "" || eventStartTime > eventEndTime ? Color("Color") : Color("AccentColor"))).disabled(eventName == "")
+                            if eventVM.creatingEvent {
+                                ProgressView().padding(.horizontal,10).padding(.vertical,5).background(RoundedRectangle(cornerRadius: 16))
+                            }else{
+                                Text("Create").foregroundColor(FOREGROUNDCOLOR).padding(.horizontal,10).padding(.vertical,5).background(RoundedRectangle(cornerRadius: 16).fill(eventName == "" || eventStartTime > eventEndTime ? Color("Color") : Color("AccentColor"))).disabled(eventName == "")
+                            }
+                        
                         }
                       
                         
@@ -254,7 +278,7 @@ struct CreateEventView: View {
                                         
                                     }
                                 }).sheet(isPresented: $showLocationPicker, content: {
-                                    LocationPickerView(location: $location)
+                                    LocationPickerView(location: $location, showLocationPicker: $showLocationPicker)
                                 })
                                 
                                 
@@ -320,7 +344,9 @@ struct CreateEventView: View {
                                         })
                                     }.padding(.bottom,5)
                                 }.sheet(isPresented: $openInviteMembersView, content: {
-                                    InviteMembersToEventView(selectedUsers: $invitedMembers, openInviteFriendsView: $openInviteMembersView)
+                                    InviteMembersToEventView(selectedUsers: $invitedMembers, openInviteFriendsView: $openInviteMembersView, openAddContactsView: $openAddContactsView, excludedMembers: excludedMembers)
+                                }).sheet(isPresented: $openAddContactsView, content: {
+                                    ContactsView(contactVM: contactVM)
                                 })
 
                                 if selectedOption == 0 {
@@ -357,7 +383,7 @@ struct CreateEventView: View {
                                         
                                         
                                     }.sheet(isPresented: $openExcludeMembersView, content: {
-                                        ExcludeMembersToEventView(selectedUsers: $excludedMembers, openInviteFriendsView: $openExcludeMembersView)
+                                        ExcludeMembersToEventView(selectedUsers: $excludedMembers, openInviteFriendsView: $openExcludeMembersView, invitedMembers: invitedMembers)
                                     })
                                 }
                             
@@ -454,6 +480,7 @@ struct LocationPickerView: View {
     @State private var searchText = ""
     @State private var selectedPlace : MKLocalSearchCompletion = MKLocalSearchCompletion()
     @EnvironmentObject var locationManager : LocationManager
+    @Binding var showLocationPicker : Bool
     var body: some View {
         ZStack{
             Color("Background")
@@ -522,8 +549,9 @@ struct LocationPickerView: View {
                                     Spacer()
                                     Button(action:{
                                         locationVM.queryFragment = ""
-                                        presentationMode.wrappedValue.dismiss()
                                         self.location = EventModel.Location(name: selectedPlace.title, id: UUID().uuidString, address: selectedPlace.subtitle, latitude: locationVM.selectedLocationCoordinate?.latitude ?? 0.0, longitude: locationVM.selectedLocationCoordinate?.longitude ?? 0.0)
+                                       showLocationPicker = false
+
                                     },label:{
                                      
                                         Image(systemName: "chevron.right").foregroundColor(FOREGROUNDCOLOR).frame(width: 50, height: 50).background(RoundedRectangle(cornerRadius: 16).fill(Color("AccentColor")))

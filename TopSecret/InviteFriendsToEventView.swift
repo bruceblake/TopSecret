@@ -30,7 +30,7 @@ struct InviteFriendsToEventView: View {
                     
                     Spacer()
                     
-                    Text("Invite Friends To Event")
+                    Text("Invite Friends To Event").font(.title2)
                     
                     Spacer()
                     
@@ -144,7 +144,7 @@ struct InviteFriendsToEventView: View {
                             }
                         }
                     }
-                }
+                }.padding(10)
                 
                 Button(action:{
                     eventVM.inviteToEvent(userID: USER_ID, invitedIDS: selectedUsers, event: event)

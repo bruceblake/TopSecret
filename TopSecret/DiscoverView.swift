@@ -173,7 +173,7 @@ struct DiscoverView : View{
                 Spacer()
                 
             }
-            NavigationLink(destination: EventDetailView(event: selectedEvent, showAddEventView: $showAddEventView), isActive: $showAddEventView) {
+            NavigationLink(destination: EventDetailView(eventID: selectedEvent.id, showAddEventView: $showAddEventView), isActive: $showAddEventView) {
                 EmptyView()
             }
         }.edgesIgnoringSafeArea(.all).frame(width: UIScreen.main.bounds.width).onAppear{

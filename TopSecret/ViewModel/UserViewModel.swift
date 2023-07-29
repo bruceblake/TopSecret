@@ -42,7 +42,7 @@ class UserViewModel : ObservableObject {
     @Published var notificationsCount : Int = 0
     let monitor = NWPathMonitor()
     let queue = DispatchQueue(label: "Monitor")
-    @Published private(set) var connected: Bool = false
+    @Published private(set) var connected: Bool? = nil
     @Published var userListener : ListenerRegistration?
     static let shared = UserViewModel()
     let store = Firestore.firestore()
@@ -88,6 +88,12 @@ class UserViewModel : ObservableObject {
             }
             self.monitor.start(queue: self.queue)
             
+        }
+    }
+    
+    func endConnection(){
+        DispatchQueue.main.async{
+            self.monitor.cancel()
         }
     }
     
@@ -1295,12 +1301,31 @@ class UserViewModel : ObservableObject {
             "senderID":USER_ID,
             "receiverID":friend.id ?? " ",
             "hasSeen":false,
-            "finished":true] as [String:Any]
+            "requiresAction":false] as [String:Any]
         
         
         COLLECTION_USER.document(friend.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)
         
         COLLECTION_USER.document(USER_ID).collection("Notifications").document(notificationID).setData(userNotificationData)
+        
+        COLLECTION_USER.document(friend.id ?? " ").collection("Notifications").whereField("type", isEqualTo: "sentFriendRequest").getDocuments { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            guard let documents = snapshot?.documents else {
+                print("No documents!")
+                return
+                
+            }
+            
+            for document in documents {
+                let id = document.documentID
+                COLLECTION_USER.document(friend.id ?? " ").collection("Notifications").document(id).updateData(["requiresAction":false])
+            }
+            
+        }
         
         dp.leave()
         dp.notify(queue: .main, execute: {

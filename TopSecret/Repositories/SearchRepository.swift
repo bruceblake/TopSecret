@@ -8,7 +8,7 @@
 import SwiftUI
 import Foundation
 import Combine
-
+import Firebase
 
 
 class SearchRepository : ObservableObject {
@@ -23,7 +23,7 @@ class SearchRepository : ObservableObject {
     @Published var userGroupReturnedResults: [Group] = []
     @Published var isRefreshing : Bool = false
     @Published var hasSearched : Bool = false
-    
+    @Published var allUsersListener : ListenerRegistration?
     
     
     private var cancellables = Set<AnyCancellable>()
@@ -360,13 +360,17 @@ class SearchRepository : ObservableObject {
         
     }
     
+    public func removeListener(){
+        self.allUsersListener?.remove()
+    }
+    
     private func getUsers(){
         
         self.isRefreshing = true
         let dp = DispatchGroup()
         dp.enter()
         
-        COLLECTION_USER.getDocuments{ (snapshot, err) in
+        self.allUsersListener = COLLECTION_USER.addSnapshotListener{ (snapshot, err) in
             if err != nil {
                 print("ERROR")
                 return
