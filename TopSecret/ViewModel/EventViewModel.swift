@@ -234,8 +234,8 @@ class EventViewModel: ObservableObject {
 
         self.persistImageToEventStorage(eventID: id, image: image) { fetchedImageURL in
             data["eventImage"] = fetchedImageURL
+            dp.leave()
         }
-        dp.leave()
 
         dp.notify(queue: .main) {
             

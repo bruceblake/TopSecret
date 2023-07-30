@@ -231,22 +231,24 @@ struct PersonalChatView : View {
                         
                         Color("Background")
                         ScrollViewReader{ scrollViewProxy in
-                            ScrollView{
-                                Spacer()
+                        ScrollView
+                        {
+                            PullToRefreshView() {
+                                if  personalChatVM.documentsLeftToFetch > 0 && personalChatVM.lastDocument != nil {
+                                    personalChatVM.fetchMoreMessages(chatID: chatID)
+                                }
+                            }
                                 VStack(spacing: 0){
                                     if personalChatVM.isLoading{
                                         ProgressView()
                                     }
-                                    ForEach(personalChatVM.messages.indices, id: \.self){ index in
+                                    ForEach(personalChatVM.messages, id: \.id){ message in
                                             
                                             
-                                        MessageCell(message: personalChatVM.messages[index], selectedMessage: $selectedMessage,
+                                        MessageCell(message: message, selectedMessage: $selectedMessage,
                                                         showOverlay: $showOverlay, personalChatVM: personalChatVM).disabled(isLeavingChat).environmentObject(userVM)
                                         }
-                                        
-                                    
-                                   
-                                    
+
                                     VStack{
                                         ForEach(personalChatVM.chat.usersTyping){ user in
                                             HStack{
@@ -270,10 +272,11 @@ struct PersonalChatView : View {
                                 }).padding(5).onReceive(personalChatVM.$scrollToBottom, perform: { _ in
                                     withAnimation(.easeOut(duration: 0.5)){
                                         
-                                        self.scrollToBottom(scrollViewProxy: scrollViewProxy)
+//                                        self.scrollToBottom(scrollViewProxy: scrollViewProxy)
                                     }
                                 }).offset(y: -keyboardHeight)
                             }
+                        
                         }.coordinateSpace(name: "scroll")
                         
                         
@@ -817,7 +820,7 @@ struct PersonalChatView : View {
         }
         .onAppear{
             personalChatVM.listenToChat(chatID: chatID)
-            personalChatVM.fetchAllMessages(chatID: chatID, userID: USER_ID)
+            personalChatVM.fetchFirstMessages(chatID: chatID, userID: USER_ID)
             personalChatVM.readLastMessage(chatID: chatID, userID: userVM.user?.id ?? " ")
             personalChatVM.openChat(userID: userVM.user?.id ?? " ", chatID: chatID)
             self.initKeyboardGuardian()
@@ -982,3 +985,77 @@ fileprivate struct DelaysTouchesButtonStyle : ButtonStyle {
     }
 }
 
+
+struct PullToRefreshView: View
+{
+    private static let minRefreshTimeInterval = TimeInterval(0.2)
+    private static let triggerHeight = CGFloat(50)
+    private static let indicatorHeight = CGFloat(50)
+    private static let fullHeight = triggerHeight + indicatorHeight
+    
+    let backgroundColor: Color
+    let foregroundColor: Color
+    let isEnabled: Bool
+    let onRefresh: () -> Void
+    
+    @State private var isRefreshIndicatorVisible = false
+    @State private var refreshStartTime: Date? = nil
+    
+    init(bg: Color = .clear, fg: Color = .white, isEnabled: Bool = true, onRefresh: @escaping () -> Void)
+    {
+        self.backgroundColor = bg
+        self.foregroundColor = fg
+        self.isEnabled = isEnabled
+        self.onRefresh = onRefresh
+    }
+    
+    var body: some View
+    {
+        VStack(spacing: 0)
+        {
+            LazyVStack(spacing: 0)
+            {
+                Color.clear
+                    .frame(height: Self.triggerHeight)
+                    .onAppear
+                    {
+                        if isEnabled
+                        {
+                            withAnimation
+                            {
+                                isRefreshIndicatorVisible = true
+                            }
+                            refreshStartTime = Date()
+                        }
+                    }
+                    .onDisappear
+                    {
+                        if isEnabled, isRefreshIndicatorVisible, let diff = refreshStartTime?.distance(to: Date()), diff > Self.minRefreshTimeInterval
+                        {
+                            onRefresh()
+                        }
+                        withAnimation
+                        {
+                            isRefreshIndicatorVisible = false
+                        }
+                        refreshStartTime = nil
+                    }
+            }
+            .frame(height: Self.triggerHeight)
+            
+            indicator
+                .frame(height: Self.indicatorHeight)
+        }
+        .background(backgroundColor)
+        .ignoresSafeArea(edges: .all)
+        .frame(height: Self.fullHeight)
+        .padding(.top, -Self.fullHeight)
+    }
+    
+    private var indicator: some View
+    {
+        ProgressView()
+            .progressViewStyle(CircularProgressViewStyle(tint: foregroundColor))
+            .opacity(isRefreshIndicatorVisible ? 1 : 0)
+    }
+}

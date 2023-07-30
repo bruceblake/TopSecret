@@ -123,7 +123,6 @@ struct ExcludeMembersToEventView: View {
          Spacer()
             
             Button(action:{
-             
                 presentationMode.wrappedValue.dismiss()
             },label:{
                 Text("Exclude Friends").foregroundColor(FOREGROUNDCOLOR)
