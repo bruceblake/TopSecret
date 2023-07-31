@@ -4,7 +4,6 @@ import Foundation
 import Firebase
 import FirebaseStorage
 import OmenTextField
-import SwiftUIPullToRefresh
 import MediaPicker
 import AVFoundation
 import AVKit
