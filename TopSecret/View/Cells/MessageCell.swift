@@ -13,6 +13,7 @@ import AVKit
 
 
 struct MessageCell: View {
+    var previousMessage: Message?
     var message: Message
     @Binding var selectedMessage : Message
     @Binding var showOverlay: Bool
@@ -21,8 +22,8 @@ struct MessageCell: View {
     var body: some View {
         
         switch message.type ?? "" {
-            case "text", "followUpUserText":
-                MessageTextCell(message: message, chatID: personalChatVM.chat.id).padding(.leading,5)
+            case "text":
+                MessageTextCell(message: message, chatID: personalChatVM.chat.id, isFollowUpText: previousMessage?.userID ?? "" == message.userID).padding(.leading,5)
                     .delaysTouches(for: 0.1).gesture(LongPressGesture(minimumDuration: 0.25).onEnded({ value in
                         withAnimation{
                             UIDevice.vibrate()
@@ -32,21 +33,10 @@ struct MessageCell: View {
                             
                         }
                     }))
-//            case "followUpUserText":
-//                MessageFollowUpTextCell(message: message, chatID: personalChatVM.chat.id).padding(.leading,5)
-//                    .delaysTouches(for: 0.1).gesture(LongPressGesture(minimumDuration: 0.25).onEnded({ value in
-//                        withAnimation{
-//                            UIDevice.vibrate()
-//                            self.selectedMessage = message
-//                            self.showOverlay.toggle()
-//                            userVM.hideBackground.toggle()
-//
-//                        }
-//                    }))
             case "delete":
                 MessageDeleteCell(message: message)
             case "repliedMessage", "followUpUserReplyText":
-                MessageReplyCell(message: message, chatID: personalChatVM.chat.id).padding(.leading,5).delaysTouches(for: 0.3).gesture(LongPressGesture(minimumDuration: 0.25).onEnded({ value in
+                MessageReplyCell(message: message, chatID: personalChatVM.chat.id, isFollowUpText: previousMessage?.userID ?? "" == message.userID).padding(.leading,5).delaysTouches(for: 0.3).gesture(LongPressGesture(minimumDuration: 0.25).onEnded({ value in
                     withAnimation{
                         UIDevice.vibrate()
                         self.selectedMessage = message
@@ -218,7 +208,7 @@ struct MessageTextCell: View {
     @EnvironmentObject var userVM: UserViewModel
     var message: Message
     var chatID: String
-    
+    var isFollowUpText: Bool
     
     
     var body: some View {
@@ -228,7 +218,7 @@ struct MessageTextCell: View {
             Color("Background")
             VStack(alignment: .leading, spacing: 0){
                 
-                if message.type ?? " " != "followUpUserText" {
+                if !isFollowUpText  {
                     HStack(spacing: 3){
                         Image(systemName: "chevron.left").foregroundColor(message.userID == userVM.user?.id ?? "" ? Color("AccentColor") : Color("blue"))
                             .frame(width:2).padding(.horizontal,5)
@@ -395,17 +385,17 @@ struct MessageDeleteCell : View {
 
 struct MessageReplyCell : View {
     
-    
-    
     var message: Message
     var chatID: String
     @EnvironmentObject var userVM: UserViewModel
+    var isFollowUpText: Bool
+
     var body: some View{
         ZStack{
             Color("Background")
             VStack(alignment: .leading, spacing: 2){
                 
-                if message.type ?? " " != "followUpUserReplyText" {
+                if !isFollowUpText {
                     HStack(spacing: 3){
                         if message.userID == userVM.user?.id ?? ""{
                             Image(systemName: "chevron.left").foregroundColor(Color("AccentColor")).frame(width:2).padding(.horizontal,5)
@@ -501,46 +491,7 @@ struct MessageReplyCell : View {
     }
 }
 
-struct MessageFollowUpTextCell : View {
-    @EnvironmentObject var userVM: UserViewModel
-    var message: Message
-    var chatID: String
-    var body: some View {
-        
-        ZStack{
-            Color("Background")
-            VStack(alignment: .leading, spacing: 0){
-                
-                
-                
-                
-                HStack(alignment: .center){
-                    HStack(spacing: 3){
-                        
-                        Rectangle().foregroundColor(Color("\(message.userID == userVM.user?.id ?? " " ? "AccentColor" : "blue")")).frame(width:2).padding(.horizontal,5)
-                        
-                        HStack{
-                            Text("\(message.value ?? "")").foregroundColor(FOREGROUNDCOLOR).lineLimit(5)
-                            if message.edited ?? false{
-                                Text("(edited)").foregroundColor(.gray).font(.footnote)
-                            }
-                        }
-                    }
-                    
-                    
-                    Spacer()
-                    
-                    
-                }
-                
-            }
-            
-            
-            
-            
-        }
-    }
-}
+
 
 struct MessageImageFullScreenView : View {
     var message: Message
@@ -550,10 +501,10 @@ struct MessageImageFullScreenView : View {
         let interval = (Date() - date)
         
         
-        var seconds = interval.second ?? 0
-        var minutes = (seconds / 60)
-        var hours = (minutes / 60)
-        var days = (hours / 24)
+        let seconds = interval.second ?? 0
+        let minutes = (seconds / 60)
+        let hours = (minutes / 60)
+        let days = (hours / 24)
         var time = ""
         if seconds < 60{
             if seconds == 1 {

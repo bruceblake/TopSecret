@@ -242,10 +242,10 @@ struct PersonalChatView : View {
                                     if personalChatVM.isLoading{
                                         ProgressView()
                                     }
-                                    ForEach(personalChatVM.messages, id: \.id){ message in
+                                    ForEach(personalChatVM.messages.indices, id: \.self){ index in
                                             
                                             
-                                        MessageCell(message: message, selectedMessage: $selectedMessage,
+                                        MessageCell(previousMessage: index != 0 ? personalChatVM.messages[index-1] : nil,message: personalChatVM.messages[index], selectedMessage: $selectedMessage,
                                                         showOverlay: $showOverlay, personalChatVM: personalChatVM).disabled(isLeavingChat).environmentObject(userVM)
                                         }
 
@@ -271,8 +271,7 @@ struct PersonalChatView : View {
                                     
                                 }).padding(5).onReceive(personalChatVM.$scrollToBottom, perform: { _ in
                                     withAnimation(.easeOut(duration: 0.5)){
-                                        
-//                                        self.scrollToBottom(scrollViewProxy: scrollViewProxy)
+                                        self.scrollToBottom(scrollViewProxy: scrollViewProxy)
                                     }
                                 }).offset(y: -keyboardHeight)
                             }
@@ -423,7 +422,7 @@ struct PersonalChatView : View {
                                                 self.showReplyView.toggle()
                                             }
                                         }else{
-                                            personalChatVM.sendTextMessage(text: personalChatVM.text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: self.getChatColor(userID: userVM.user?.id ?? " "), messageID: UUID().uuidString, messageType: personalChatVM.getLastMessage().userID == userVM.user?.id ?? " "  ? "followUpUserText" : "text", chatID: personalChatVM.chat.id)
+                                            personalChatVM.sendTextMessage(text: personalChatVM.text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: self.getChatColor(userID: userVM.user?.id ?? " "), messageID: UUID().uuidString, messageType: "text", chatID: personalChatVM.chat.id)
                                         }
                                         
                                         

@@ -172,7 +172,6 @@
 		78C34CBE2A1420A7005715DB /* ElegantPages in Frameworks */ = {isa = PBXBuildFile; productRef = 78C34CBD2A1420A7005715DB /* ElegantPages */; };
 		78C34CC42A1561F2005715DB /* OmenTextField in Frameworks */ = {isa = PBXBuildFile; productRef = 78C34CC32A1561F2005715DB /* OmenTextField */; };
 		78C34CC72A1565E6005715DB /* Package.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78C34CC62A1565E6005715DB /* Package.swift */; };
-		78C34CC92A1569E8005715DB /* SwiftUIPullToRefresh in Frameworks */ = {isa = PBXBuildFile; productRef = 78C34CC82A1569E8005715DB /* SwiftUIPullToRefresh */; };
 		78C34CCB2A156C65005715DB /* ExyteMediaPicker in Frameworks */ = {isa = PBXBuildFile; productRef = 78C34CCA2A156C65005715DB /* ExyteMediaPicker */; };
 		78C34CD42A15BE63005715DB /* JZCalendarWeekView in Frameworks */ = {isa = PBXBuildFile; productRef = 78C34CD32A15BE63005715DB /* JZCalendarWeekView */; };
 		78C34CF82A1948A3005715DB /* EventsTabViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78C34CF72A1948A3005715DB /* EventsTabViewModel.swift */; };
@@ -391,7 +390,6 @@
 		78A61F2426BB1C7C00671021 /* ForgotPasswordView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ForgotPasswordView.swift; sourceTree = "<group>"; };
 		78A63AF129BA8EF30042FB05 /* OmenTextField */ = {isa = PBXFileReference; lastKnownFileType = wrapper; path = OmenTextField; sourceTree = "<group>"; };
 		78A63B0529BA94DD0042FB05 /* OmenTextField */ = {isa = PBXFileReference; lastKnownFileType = folder; path = OmenTextField; sourceTree = "<group>"; };
-		78A7CB5B29672493000344C5 /* swiftui-pull-to-refresh */ = {isa = PBXFileReference; lastKnownFileType = wrapper; name = "swiftui-pull-to-refresh"; path = "../PackageEditFolder/swiftui-pull-to-refresh"; sourceTree = "<group>"; };
 		78A9095B2A6F861000F95B36 /* EventAttendanceViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventAttendanceViewModel.swift; sourceTree = "<group>"; };
 		78A9095D2A730EE200F95B36 /* ContactsViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContactsViewModel.swift; sourceTree = "<group>"; };
 		78ACD9B42A39828D006371D2 /* InviteFriendsToEventView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InviteFriendsToEventView.swift; sourceTree = "<group>"; };
@@ -535,7 +533,6 @@
 				78C34CC42A1561F2005715DB /* OmenTextField in Frameworks */,
 				78D6B53327D2861000D456AE /* SCSDKLoginKit.xcframework in Frameworks */,
 				78A9707E28F351420087B5AE /* Amadeus in Frameworks */,
-				78C34CC92A1569E8005715DB /* SwiftUIPullToRefresh in Frameworks */,
 				78E8E77B2A4E50B000310C74 /* FirebaseFirestoreSwift in Frameworks */,
 				78E8E7792A4E50B000310C74 /* FirebaseFirestore in Frameworks */,
 				78C34CD42A15BE63005715DB /* JZCalendarWeekView in Frameworks */,
@@ -704,7 +701,6 @@
 				7893C86D2A22865400F708FE /* ExcludeMembersToEventView.swift */,
 				7893C86B2A218C0C00F708FE /* InviteMembersToEventView.swift */,
 				7893C8692A217E9300F708FE /* AddEventDescriptionView.swift */,
-				78A7CB5B29672493000344C5 /* swiftui-pull-to-refresh */,
 				783A0408284A3B7600308157 /* AppDelegate.swift */,
 				78199CE828465EA200335E52 /* Top Secret.entitlements */,
 				78D6B51D27D0147B00D456AE /* GoogleService-Info.plist */,
@@ -1164,7 +1160,6 @@
 				78C34CB92A141FA4005715DB /* ElegantCalendar */,
 				78C34CBD2A1420A7005715DB /* ElegantPages */,
 				78C34CC32A1561F2005715DB /* OmenTextField */,
-				78C34CC82A1569E8005715DB /* SwiftUIPullToRefresh */,
 				78C34CCA2A156C65005715DB /* ExyteMediaPicker */,
 				78C34CD32A15BE63005715DB /* JZCalendarWeekView */,
 				78AFB7092A34009C0087EE9E /* PagerTabStripView */,
@@ -1213,7 +1208,6 @@
 				78890299295CB0620073320F /* XCRemoteSwiftPackageReference "MediaPicker" */,
 				78ABDC5729647C1300D442B8 /* XCRemoteSwiftPackageReference "AdvancedList" */,
 				78ABDC5D2965291900D442B8 /* XCRemoteSwiftPackageReference "OpenSwiftUIViews" */,
-				78A7CB5829671C8A000344C5 /* XCRemoteSwiftPackageReference "swiftui-pull-to-refresh" */,
 				78066FD8296DBA1C005A4FDC /* XCRemoteSwiftPackageReference "LegacyScrollView" */,
 				78C34CB82A141FA3005715DB /* XCRemoteSwiftPackageReference "ElegantCalendar" */,
 				78C34CBC2A1420A7005715DB /* XCRemoteSwiftPackageReference "ElegantPages" */,
@@ -1793,14 +1787,6 @@
 				minimumVersion = 0.1.6;
 			};
 		};
-		78A7CB5829671C8A000344C5 /* XCRemoteSwiftPackageReference "swiftui-pull-to-refresh" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/globulus/swiftui-pull-to-refresh";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 1.0.0;
-			};
-		};
 		78A9707C28F351410087B5AE /* XCRemoteSwiftPackageReference "amadeus-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/amadeus4dev/amadeus-ios.git";
@@ -1963,10 +1949,6 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 78C34CC22A1561F2005715DB /* XCRemoteSwiftPackageReference "OmenTextField" */;
 			productName = OmenTextField;
-		};
-		78C34CC82A1569E8005715DB /* SwiftUIPullToRefresh */ = {
-			isa = XCSwiftPackageProductDependency;
-			productName = SwiftUIPullToRefresh;
 		};
 		78C34CCA2A156C65005715DB /* ExyteMediaPicker */ = {
 			isa = XCSwiftPackageProductDependency;

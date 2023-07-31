@@ -148,7 +148,7 @@ class PersonalChatViewModel : ObservableObject {
     }
     
     func fetchMoreMessages(chatID: String){
-        let query = COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").order(by: "timeStamp", descending: true).start(afterDocument: lastDocument!).limit(to: 30)
+        let query = COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").order(by: "timeStamp", descending: true).start(afterDocument: lastDocument!).limit(to: 60)
         
        
         
@@ -159,12 +159,14 @@ class PersonalChatViewModel : ObservableObject {
             }
             var messagesToReturn : [Message] = []
             let dp = DispatchGroup()
-            guard let documents = snapshot?.documents else {return}
+            guard let documents = snapshot?.documentChanges else {return}
+            
             dp.enter()
             
             for document in documents {
                 dp.enter()
-                var data = document.data()
+                
+                var data = document.document.data()
                 let id = data["id"] as? String ?? ""
                 let type = data["type"] as? String ?? ""
                 let value = data["value"] as? String ?? ""
@@ -193,16 +195,37 @@ class PersonalChatViewModel : ObservableObject {
                     }
                 }
                 dp.leave()
-                dp.notify(queue: .main, execute:{
-                 
-                    messagesToReturn.append(Message(dictionary: data))
+
+                dp.notify(queue: .main, execute: {
+                    if document.type == .added{
+                        print("added more to messages")
+                        messagesToReturn.append(Message(dictionary: data))
+                        
+                    }else if document.type == .removed {
+                        print("removed some messages")
+                        self.messages.removeAll(where: {$0.id == id})
+                    }else if document.type == .modified{
+                        print("modified: \(value)")
+                       let index = self.messages.firstIndex(where: {$0.id == id})
+                        if let index = index {
+                            if index >= 0 && index < self.messages.count {
+                                self.messages[index] = Message(dictionary: data)
+                            }
+                        }
+                        
+                    }
+                    
                 })
+               
+              
             }
             dp.leave()
             dp.notify(queue: .main, execute:{
                 self.documentsLeftToFetch -= messagesToReturn.count
                 self.lastDocument = snapshot?.documents.last
                 self.messages.insert(contentsOf: messagesToReturn.reversed(), at: 0)
+               
+                
             })
         }
     }
@@ -226,7 +249,7 @@ class PersonalChatViewModel : ObservableObject {
        
        
        self.messagesListener?.remove()
-       self.messagesListener = COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").order(by: "timeStamp", descending: false).limit(toLast: 30).addSnapshotListener { snapshot, err in
+       self.messagesListener = COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").order(by: "timeStamp", descending: false).limit(toLast: 60).addSnapshotListener { snapshot, err in
            if err != nil {
                print(err!.localizedDescription)
                return
@@ -238,7 +261,6 @@ class PersonalChatViewModel : ObservableObject {
           
            
                for document in snapshot?.documentChanges ?? [] {
-                   if document.type == .added {
                        dp.enter()
                        var data = document.document.data()
                        let id = data["id"] as? String ?? ""
@@ -269,12 +291,27 @@ class PersonalChatViewModel : ObservableObject {
                            }
                        }
                        dp.leave()
+                   
                        dp.notify(queue: .main, execute:{
-                           //oldest messages right (last in the array), newest messages left (first in the array)
-                           //[0,1,2,3,..19] <- this is how they get fetched
-                           messagesToReturn.append(Message(dictionary: data))
+                           if document.type == .added{
+                               print("added more to messages")
+                               self.messages.append(Message(dictionary: data))
+                               
+                           }else if document.type == .removed {
+                               print("removed some messages")
+                               self.messages.removeAll(where: {$0.id == id})
+                           }else if document.type == .modified{
+                              let index = self.messages.firstIndex(where: {$0.id == id})
+                               print("modified: \(value)")
+                               if let index = index {
+                                   if index >= 0 && index < self.messages.count {
+                                       self.messages[index] = Message(dictionary: data)
+                                   }
+                               }
+                               
+                           }
                        })
-                   }
+                   
                  
                }
                dp.leave()
@@ -286,7 +323,10 @@ class PersonalChatViewModel : ObservableObject {
                        }
                    }
                    self.lastDocument = snapshot?.documents.first
-                   self.messages.append(contentsOf: messagesToReturn)
+                
+                   
+                  
+                  
                })
            
        }
@@ -580,6 +620,7 @@ class PersonalChatViewModel : ObservableObject {
                                "timeStamp":Timestamp(),
                                "id":id,
                                "type":"delete",
+                               "userID":user.id ?? " ",
                                "value":messageText] as! [String:Any]
         dp.leave()
         dp.notify(queue: .main, execute:{
