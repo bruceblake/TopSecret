@@ -127,6 +127,7 @@
 		78A63B0629BA94E10042FB05 /* OmenTextField in Resources */ = {isa = PBXBuildFile; fileRef = 78A63B0529BA94DD0042FB05 /* OmenTextField */; };
 		78A9095C2A6F861000F95B36 /* EventAttendanceViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78A9095B2A6F861000F95B36 /* EventAttendanceViewModel.swift */; };
 		78A9095E2A730EE200F95B36 /* ContactsViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78A9095D2A730EE200F95B36 /* ContactsViewModel.swift */; };
+		78A909642A7746E200F95B36 /* SwiftUIPullToRefresh in Frameworks */ = {isa = PBXBuildFile; productRef = 78A909632A7746E200F95B36 /* SwiftUIPullToRefresh */; };
 		78A9707E28F351420087B5AE /* Amadeus in Frameworks */ = {isa = PBXBuildFile; productRef = 78A9707D28F351420087B5AE /* Amadeus */; };
 		78ABDC5929647C1300D442B8 /* AdvancedList in Frameworks */ = {isa = PBXBuildFile; productRef = 78ABDC5829647C1300D442B8 /* AdvancedList */; };
 		78ABDC5F2965291900D442B8 /* OpenSwiftUIViews in Frameworks */ = {isa = PBXBuildFile; productRef = 78ABDC5E2965291900D442B8 /* OpenSwiftUIViews */; };
@@ -534,6 +535,7 @@
 				78D6B53327D2861000D456AE /* SCSDKLoginKit.xcframework in Frameworks */,
 				78A9707E28F351420087B5AE /* Amadeus in Frameworks */,
 				78E8E77B2A4E50B000310C74 /* FirebaseFirestoreSwift in Frameworks */,
+				78A909642A7746E200F95B36 /* SwiftUIPullToRefresh in Frameworks */,
 				78E8E7792A4E50B000310C74 /* FirebaseFirestore in Frameworks */,
 				78C34CD42A15BE63005715DB /* JZCalendarWeekView in Frameworks */,
 				78C34CBA2A141FA4005715DB /* ElegantCalendar in Frameworks */,
@@ -1171,6 +1173,7 @@
 				78E8E77C2A4E50B000310C74 /* FirebaseStorage */,
 				78E8E77E2A4E59A200310C74 /* FirebaseMessaging */,
 				789C6ECB2A5788D700290899 /* ScalingHeaderScrollView */,
+				78A909632A7746E200F95B36 /* SwiftUIPullToRefresh */,
 			);
 			productName = TopSecret;
 			productReference = 789FC2C32617DA700021616B /* Top Secret.app */;
@@ -1217,6 +1220,7 @@
 				78E8E75A2A48E2E200310C74 /* XCRemoteSwiftPackageReference "advanced-scrollview" */,
 				78E8E7752A4E50B000310C74 /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
 				789C6ECA2A5788D600290899 /* XCRemoteSwiftPackageReference "ScalingHeaderScrollView" */,
+				78A909622A7746E200F95B36 /* XCRemoteSwiftPackageReference "swiftui-pull-to-refresh" */,
 			);
 			productRefGroup = 789FC2C42617DA700021616B /* Products */;
 			projectDirPath = "";
@@ -1787,6 +1791,14 @@
 				minimumVersion = 0.1.6;
 			};
 		};
+		78A909622A7746E200F95B36 /* XCRemoteSwiftPackageReference "swiftui-pull-to-refresh" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/globulus/swiftui-pull-to-refresh";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 		78A9707C28F351410087B5AE /* XCRemoteSwiftPackageReference "amadeus-ios" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/amadeus4dev/amadeus-ios.git";
@@ -1909,6 +1921,11 @@
 			isa = XCSwiftPackageProductDependency;
 			package = 789C6ECA2A5788D600290899 /* XCRemoteSwiftPackageReference "ScalingHeaderScrollView" */;
 			productName = ScalingHeaderScrollView;
+		};
+		78A909632A7746E200F95B36 /* SwiftUIPullToRefresh */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 78A909622A7746E200F95B36 /* XCRemoteSwiftPackageReference "swiftui-pull-to-refresh" */;
+			productName = SwiftUIPullToRefresh;
 		};
 		78A9707D28F351420087B5AE /* Amadeus */ = {
 			isa = XCSwiftPackageProductDependency;
