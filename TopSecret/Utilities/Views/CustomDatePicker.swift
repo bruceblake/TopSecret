@@ -13,7 +13,7 @@ struct CustomDatePicker: View {
     @ObservedObject var calendarVM: UserCalendarViewModel
     @Binding var currentDate: Date
     var isGroup : Bool = false
-    var group: Group = Group()
+    var group: GroupModel = GroupModel()
     @State var currentMonth: Int = 0
     
     @State var selectedMonth: Int = Calendar.current.component(.month, from: Date())

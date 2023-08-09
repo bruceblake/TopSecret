@@ -150,21 +150,21 @@ struct UserAcceptedGroupInvitationNotificationCell : View {
         return userNotification.receiver ?? User()
     }
     
-    var group: Group {
-        return userNotification.group ?? Group()
+    var group: GroupModel {
+        return userNotification.group ?? GroupModel()
     }
     
     var body: some View {
                         
             NavigationLink {
-                GroupProfileView(group: userNotification.group ?? Group(), isInGroup: (userNotification.group ?? Group()).usersID.contains(userVM.user?.id ?? " "))
+                GroupProfileView(group: userNotification.group ?? GroupModel(), isInGroup: (userNotification.group ?? GroupModel()).usersID.contains(userVM.user?.id ?? " "))
             } label: {
                 VStack(alignment: .leading, spacing: 8){
                     
                     
                     HStack(alignment: .top, spacing: 5){
                         
-                        WebImage(url: URL(string: (userNotification.group ?? Group()).groupProfileImage ))
+                        WebImage(url: URL(string: (userNotification.group ?? GroupModel()).groupProfileImage ))
                             .resizable()
                             .scaledToFill()
                             .frame(width:40,height:40)
@@ -173,7 +173,7 @@ struct UserAcceptedGroupInvitationNotificationCell : View {
                         
                         VStack(alignment: .leading){
                             HStack(spacing: 5){
-                                Text("\((userNotification.group ?? Group()).groupName )").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
+                                Text("\((userNotification.group ?? GroupModel()).groupName )").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
                                 Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.footnote)
                             }
                             if sender.id == USER_ID{
@@ -213,21 +213,21 @@ struct UserDeniedGroupInvitationNotificationCell : View {
         return userNotification.receiver ?? User()
     }
     
-    var group: Group {
-        return userNotification.group ?? Group()
+    var group: GroupModel {
+        return userNotification.group ?? GroupModel()
     }
     
     var body: some View {
                         
             NavigationLink {
-                GroupProfileView(group: userNotification.group ?? Group(), isInGroup: (userNotification.group ?? Group()).usersID.contains(userVM.user?.id ?? " "))
+                GroupProfileView(group: userNotification.group ?? GroupModel(), isInGroup: (userNotification.group ?? GroupModel()).usersID.contains(userVM.user?.id ?? " "))
             } label: {
                 VStack(alignment: .leading, spacing: 8){
                     
                     
                     HStack(alignment: .top, spacing: 5){
                         
-                        WebImage(url: URL(string: (userNotification.group ?? Group()).groupProfileImage ))
+                        WebImage(url: URL(string: (userNotification.group ?? GroupModel()).groupProfileImage ))
                             .resizable()
                             .scaledToFill()
                             .frame(width:40,height:40)
@@ -236,7 +236,7 @@ struct UserDeniedGroupInvitationNotificationCell : View {
                         
                         VStack(alignment: .leading){
                             HStack(spacing: 5){
-                                Text("\((userNotification.group ?? Group()).groupName )").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
+                                Text("\((userNotification.group ?? GroupModel()).groupName )").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
                                 Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.footnote)
                             }
                             if sender.id == USER_ID{
@@ -282,8 +282,8 @@ struct UserSentGroupInvitationNotificationCell : View {
         return userNotification.receiver ?? User()
     }
     
-    var group: Group {
-        return userNotification.group ?? Group()
+    var group: GroupModel {
+        return userNotification.group ?? GroupModel()
     }
     
     var body: some View {
@@ -291,14 +291,14 @@ struct UserSentGroupInvitationNotificationCell : View {
             
             
             NavigationLink {
-                GroupProfileView(group: userNotification.group ?? Group(), isInGroup: (userNotification.group ?? Group()).usersID.contains(userVM.user?.id ?? " "))
+                GroupProfileView(group: userNotification.group ?? GroupModel(), isInGroup: (userNotification.group ?? GroupModel()).usersID.contains(userVM.user?.id ?? " "))
             } label: {
                 VStack(alignment: .leading, spacing: 8){
                     
                     
                     HStack(alignment: .top, spacing: 5){
                         
-                        WebImage(url: URL(string: (userNotification.group ?? Group()).groupProfileImage ))
+                        WebImage(url: URL(string: (userNotification.group ?? GroupModel()).groupProfileImage ))
                             .resizable()
                             .scaledToFill()
                             .frame(width:40,height:40)
@@ -307,7 +307,7 @@ struct UserSentGroupInvitationNotificationCell : View {
                         
                         VStack(alignment: .leading){
                             HStack(spacing: 5){
-                                Text("\((userNotification.group ?? Group()).groupName )").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
+                                Text("\((userNotification.group ?? GroupModel()).groupName )").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
                                 Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.footnote)
                             }
                                 
@@ -332,11 +332,11 @@ struct UserSentGroupInvitationNotificationCell : View {
             if userNotification.requiresAction ?? false == false {
                 Text("Expired").foregroundColor(Color.gray).font(.footnote)
             }else{
-                if (userVM.user?.pendingGroupInvitationID?.contains((userNotification.group ?? Group()).id ) ?? false) {
+                if (userVM.user?.pendingGroupInvitationID?.contains((userNotification.group ?? GroupModel()).id ) ?? false) {
                     
                     HStack{
                         Button(action:{
-                            groupVM.acceptGroupInvitation(group: userNotification.group ?? Group(), user: self.userVM.user ?? User())
+                            groupVM.acceptGroupInvitation(group: userNotification.group ?? GroupModel(), user: self.userVM.user ?? User())
                             userNotificationVM.setRequiresAction(usersID: [USER_ID], notificationID: userNotification.id)
                         },label:{
                             
@@ -348,7 +348,7 @@ struct UserSentGroupInvitationNotificationCell : View {
                         
                         
                         Button(action:{
-                            groupVM.denyGroupInvitation(group: userNotification.group ?? Group(), user: self.userVM.user ?? User())
+                            groupVM.denyGroupInvitation(group: userNotification.group ?? GroupModel(), user: self.userVM.user ?? User())
                             userNotificationVM.setRequiresAction(usersID: [USER_ID], notificationID: userNotification.id)
                         },label:{
                             ZStack{
@@ -833,16 +833,14 @@ struct UserEventCreatedNotificationCell : View {
                 
                 HStack(alignment: .top, spacing: 5){
                     
-                    WebImage(url: URL(string: event.creator?.profilePicture ?? ""))
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width:40,height:40)
-                        .clipShape(Circle())
-                        .padding(.leading, 5)
+                    ZStack{
+                        Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
+                        Image(systemName: "party.popper").foregroundColor(FOREGROUNDCOLOR)
+                    }.padding(.leading,5)
                     
                     
                     VStack(alignment: .leading){
-                        HStack(alignment: .top, spacing: 5){
+                        HStack(spacing: 5){
                             Text("\((userNotification.event ?? EventModel()).eventName ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
                             Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.footnote)
                         }
@@ -895,16 +893,14 @@ struct UserEventEndedNotificationCell : View {
                 
                 HStack(alignment: .top, spacing: 5){
                     
-                    WebImage(url: URL(string: event.creator?.profilePicture ?? ""))
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width:40,height:40)
-                        .clipShape(Circle())
-                        .padding(.leading, 5)
+                    ZStack{
+                        Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
+                        Image(systemName: "party.popper").foregroundColor(FOREGROUNDCOLOR)
+                    }.padding(.leading,5)
                     
                     
                     VStack(alignment: .leading){
-                        HStack(alignment: .top, spacing: 5){
+                        HStack(spacing: 5){
                             Text("\((userNotification.event ?? EventModel()).eventName ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
                             Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.footnote)
                         }
@@ -952,12 +948,9 @@ struct UserInvitedToEventNotificationCell : View {
         return userNotification.event ?? EventModel()
     }
     
-    var uninvitedFromEvent : Bool {
+    var invitedToEvent : Bool {
         var event = eventVM.event
-        var usersAttending = (event.usersAttendingID ?? []).contains(where: {$0 == USER_ID})
-        var usersUndecided = (event.usersUndecidedID ?? []).contains(where: {$0 == USER_ID})
-        var usersDeclined = (event.usersDeclinedID ?? []).contains(where: {$0 == USER_ID})
-        return !usersAttending && !usersUndecided && !usersDeclined
+        return (event.usersInvitedID?.contains(where: {$0 == USER_ID}) ?? false)
     }
     
     var body: some View {
@@ -968,42 +961,42 @@ struct UserInvitedToEventNotificationCell : View {
             VStack(alignment: .leading, spacing: 8){
                 
                 
-                HStack(alignment: .top, spacing: 5){
+                HStack(spacing: 5){
                     
-                    WebImage(url: URL(string: (userNotification.event ?? EventModel()).creator?.profilePicture ?? ""))
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width:40,height:40)
-                        .clipShape(Circle())
-                        .padding(.leading, 5)
+                    ZStack{
+                        Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
+                        Image(systemName: "party.popper").foregroundColor(FOREGROUNDCOLOR)
+                    }.padding(.leading,5)
                     
                     HStack{
                         VStack(alignment: .leading){
                             HStack(spacing: 5){
                                 Text("\((userNotification.event ?? EventModel()).eventName ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
-                                Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.subheadline)
+                                Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.footnote)
                             }
-                            Text("\((userNotification.event ?? EventModel()).creator?.nickName ?? " ") invited you to \((userNotification.event ?? EventModel()).eventName ?? " ")").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                            
+                            if sender.id ?? "" != USER_ID{
+                                Text("\((userNotification.event ?? EventModel()).creator?.nickName ?? " ") invited you to \((userNotification.event ?? EventModel()).eventName ?? " ")").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                            }else{
+                                Text("\((userNotification.event ?? EventModel()).creator?.nickName ?? " ") invited you to \((userNotification.event ?? EventModel()).eventName ?? " ")").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                            }
+                           
                             
                         }
                         
                         Spacer()
-                        if !(userNotification.event?.usersDeclinedID?.contains(where: {$0 == USER_ID}) ?? false) || !uninvitedFromEvent{
+                        if invitedToEvent{
                             Button(action:{
                                 self.showAddEventView.toggle()
                             },label:{
                                 Text("See Details").padding(.trailing)
                             })
+                        }else{
+                            Text("Uninvited").foregroundColor(Color.gray).padding(.trailing)
                         }
                       
                         
                     }
-                 
-                    
-                    
-                    
-                    
-                    
                 }
                 
             }
@@ -1014,7 +1007,6 @@ struct UserInvitedToEventNotificationCell : View {
         
         .onAppear{
             eventVM.fetchEvent(eventID: userNotification.eventID ?? " ")
-           
         }
         
         
@@ -1057,20 +1049,24 @@ struct UserUninvitedToEventNotificationCell : View {
                 
                 HStack(alignment: .top, spacing: 5){
                     
-                    WebImage(url: URL(string: (userNotification.event ?? EventModel()).creator?.profilePicture ?? ""))
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width:40,height:40)
-                        .clipShape(Circle())
-                        .padding(.leading, 5)
+                    ZStack{
+                        Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
+                        Image(systemName: "party.popper").foregroundColor(FOREGROUNDCOLOR)
+                    }.padding(.leading,5)
                     
                     HStack{
                         VStack(alignment: .leading){
                             HStack(spacing: 5){
                                 Text("\((userNotification.event ?? EventModel()).eventName ?? "")").foregroundColor(FOREGROUNDCOLOR).bold().font(.subheadline)
-                                Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.subheadline)
+                                Text("\(userNotificationVM.getTimeSinceNotification(date: userNotification.timeStamp?.dateValue() ?? Date()))").foregroundColor(.gray).font(.footnote)
                             }
-                            Text("you were uninvited from \((userNotification.event ?? EventModel()).eventName ?? " ")").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                            
+                            if sender.id ?? "" != USER_ID{
+                                Text("you were uninvited from \((userNotification.event ?? EventModel()).eventName ?? " ")").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                            }else{
+                                Text("you uninvited \((userNotification.receiver ?? User()).username ?? "") from \((userNotification.event ?? EventModel()).eventName ?? " ")").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                            }
+                           
                             
                         }
                         
@@ -1133,12 +1129,10 @@ struct UserLeftEventNotificationCell : View {
                  
                 HStack(alignment: .top, spacing: 5){
                     
-                    WebImage(url: URL(string: (userNotification.event ?? EventModel()).creator?.profilePicture ?? ""))
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width:40,height:40)
-                        .clipShape(Circle())
-                        .padding(.leading, 5)
+                    ZStack{
+                        Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
+                        Image(systemName: "party.popper").foregroundColor(FOREGROUNDCOLOR)
+                    }.padding(.leading,5)
                     
                     HStack{
                         VStack(alignment: .leading){

@@ -163,7 +163,7 @@ struct GroupFeed : View {
                         case .poll:
                             PollCell(poll: item.poll ?? PollModel(), selectedPoll: $selectedPoll).frame(width: UIScreen.main.bounds.width-20)
                             case .notification:
-                                GroupNotificationCell(groupNotification: item.notification ?? GroupNotificationModel()).frame(width: UIScreen.main.bounds.width-20)
+                            GroupNotificationCell(groupNotification: item.notification ?? GroupNotificationModel()).frame(width: UIScreen.main.bounds.width-20)
                         default:
                             Text("Unknown")
                         }

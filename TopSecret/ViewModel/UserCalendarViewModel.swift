@@ -66,7 +66,9 @@ class UserCalendarViewModel : ObservableObject {
         for id in eventsID{
             dp.enter()
             self.fetchEvent(eventID: id) { fetchedEvents in
-                eventsToReturn.append(fetchedEvents)
+                if let fetchedEvents = fetchedEvents{
+                    eventsToReturn.append(fetchedEvents)
+                }
                 dp.leave()
             }
         }
@@ -79,15 +81,15 @@ class UserCalendarViewModel : ObservableObject {
         
     }
     
-    func fetchEvent(eventID: String, completion: @escaping (EventModel) -> ()){
+    func fetchEvent(eventID: String, completion: @escaping (EventModel?) -> ()){
         COLLECTION_EVENTS.document(eventID).getDocument { snapshot, err in
             if err != nil {
                 print("ERROR")
-                return
+                return completion(nil)
             }
             let dp = DispatchGroup()
             
-            var data = snapshot?.data() as? [String:Any] ?? [:]
+            guard var data = snapshot?.data() else {return completion(nil)}
             var creatorID = data["creatorID"] as? String ?? " "
             dp.enter()
             self.fetchCreator(creatorID: creatorID) { fetchedCreator in

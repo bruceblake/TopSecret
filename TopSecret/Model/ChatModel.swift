@@ -31,7 +31,7 @@ struct ChatModel : Identifiable {
     var lastActionDate: Timestamp?
     var firstChat: Bool?
     var draftText: String?
-    var group: Group?
+    var group: GroupModel?
     var profileImage: String?
     
     init(dictionary:[String:Any]){
@@ -56,7 +56,7 @@ struct ChatModel : Identifiable {
         self.lastActionDate = dictionary["lastActionDate"] as? Timestamp ?? Timestamp()
         self.firstChat = dictionary["firstChat"] as? Bool ?? false
         self.draftText = dictionary["draftText"] as? String ?? ""
-        self.group = dictionary["group"] as? Group ?? Group()
+        self.group = dictionary["group"] as? GroupModel ?? GroupModel()
         self.profileImage = dictionary["profileImage"] as? String ?? " "
     }
     init(){

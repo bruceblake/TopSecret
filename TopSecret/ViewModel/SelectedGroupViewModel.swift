@@ -12,13 +12,12 @@ import FirebaseStorage
 
 class SelectedGroupViewModel : ObservableObject {
     
-    @Published var group: Group = Group()
+    @Published var group: GroupModel = GroupModel()
     @Published var finishedFetchingGroupEvents : Bool = false
     @Published var finishedFetchingGroup : Bool = false
     @Published var listeners : [ListenerRegistration] = []
     @Published var events: [EventModel] = []
     @Published var polls: [PollModel] = []
-    @Published var posts: [GroupPostModel] = []
     @Published var notifications : [GroupNotificationModel] = []
     @Published var groupChat : ChatModel = ChatModel()
     @Published var groupListener : ListenerRegistration?
@@ -28,7 +27,7 @@ class SelectedGroupViewModel : ObservableObject {
    
     
     
-    func sendGroupInvitation(group: Group, friend: User, userID: String){
+    func sendGroupInvitation(group: GroupModel, friend: User, userID: String){
         
         COLLECTION_USER.document(friend.id ?? " ").updateData(["pendingGroupInvitationID":FieldValue.arrayUnion([group.id])])
         
@@ -49,6 +48,15 @@ class SelectedGroupViewModel : ObservableObject {
         
         
         COLLECTION_USER.document(USER_ID).collection("Notifications").document(notificationID).setData(userNotificationData)
+        
+        notificationID = UUID().uuidString
+        let groupNotificationData: [String: Any] = [
+            "id": notificationID,
+            "timeStamp": Timestamp(),
+            "senderID":USER_ID,
+            "receiverID":friend.id ?? "",
+            "type": "invitedToGroup"]
+        COLLECTION_GROUP.document(group.id).collection("Notifications").document(notificationID).setData(groupNotificationData)
     }
     
     func readGroupNotifications(groupID: String, userID: String, notification: GroupNotificationModel){
@@ -64,7 +72,7 @@ class SelectedGroupViewModel : ObservableObject {
     }
     
     
-    func fetchGroup(groupID: String, completion: @escaping (Group) -> ()) -> () {
+    func fetchGroup(groupID: String, completion: @escaping (GroupModel) -> ()) -> () {
         COLLECTION_GROUP.document(groupID).getDocument { snapshot, err in
             if err != nil{
                 print("ERROR")
@@ -72,7 +80,7 @@ class SelectedGroupViewModel : ObservableObject {
             }
             var data = snapshot?.data() as? [String:Any] ?? [:]
             
-            return completion(Group(dictionary: data))
+            return completion(GroupModel(dictionary: data))
         }
     }
     
@@ -97,11 +105,12 @@ class SelectedGroupViewModel : ObservableObject {
 
     
     
-    func listenToGroupEvents(groupID: String){
+    func listenToGroupEvents(){
         var eventsToReturn : [EventModel] = []
-        
+        var events = self.group.eventsID ?? []
+       
         self.listeners.append(
-            COLLECTION_GROUP.document(groupID).collection("Events").addSnapshotListener({ snapshot, err in
+            COLLECTION_EVENTS.whereField("id", in: events).addSnapshotListener({ snapshot, err in
                 if err != nil {
                     print("ERROR")
                     return
@@ -148,6 +157,32 @@ class SelectedGroupViewModel : ObservableObject {
             })
         )
     }
+    
+    
+    func leaveGroup(){
+    
+        COLLECTION_GROUP.document(self.group.id).updateData(["usersID":FieldValue.arrayRemove([USER_ID])])
+
+        COLLECTION_USER.document(USER_ID).updateData(["groupsID":FieldValue.arrayRemove([self.group.id])])
+        
+        
+        
+            var notificationID = UUID().uuidString
+            
+            let notificationData = ["id":notificationID,
+                                    "notificationName": "User Left",
+                                    "notificationTime":Timestamp(),
+                                    "notificationType":"userLeft", "notificationCreator9ID":USER_ID,
+                                    "usersThatHaveSeen":[]] as [String:Any]
+        COLLECTION_GROUP.document(self.group.id).collection("Notifications").document(notificationID).setData(notificationData)
+            
+        COLLECTION_GROUP.document(self.group.id).updateData(["notificationCount":FieldValue.increment((Int64(1)))])
+           
+//        for user in self.group.users{
+//            self.notificationSender.sendPushNotification(to: user.fcmToken ?? " ", title: "\(self.group.groupName)", body: "\(user.nickName ?? " ") has left \(group.groupName)")
+//            }
+            
+        }
     
     func fetchPollOptions(pollID: String, groupID: String, completion: @escaping ([PollOptionModel]) -> () ) -> () {
         var choicesToReturn : [PollOptionModel] = []
@@ -212,7 +247,7 @@ class SelectedGroupViewModel : ObservableObject {
     
     func listenToGroupPolls(groupID: String){
         var pollsToReturn : [PollModel] = []
-
+        
         self.listeners.append( COLLECTION_GROUP.document(groupID).collection("Polls").addSnapshotListener { snapshot, err in
             if err != nil {
                 print("ERROR")
@@ -271,25 +306,25 @@ class SelectedGroupViewModel : ObservableObject {
     
     func changeCurrentGroup(groupID: String, completion: @escaping (Bool) ->()) -> (){
         self.groupListener = nil
-        self.listenToNotifications(groupID: groupID)
-        self.listenToGroupEvents(groupID: groupID)
-        self.listenToGroupPolls(groupID: groupID)
+       
         self.listenToGroup(groupID: groupID) { fetchedGroup in
             self.finishedFetchingGroup = fetchedGroup
+            self.listenToNotifications(groupID: groupID)
+            self.listenToGroupEvents()
+            self.listenToGroupPolls(groupID: groupID)
             return completion(true)
         }
     }
     
     func listenToGroup(groupID: String, completion: @escaping (Bool) -> ()) -> (){
         let dp = DispatchGroup()
-        dp.enter()
         self.groupListener = COLLECTION_GROUP.document(groupID).addSnapshotListener { snapshot, err in
             
             var data = snapshot?.data() as? [String:Any] ?? [:]
             
             let groupD = DispatchGroup()
-          
-
+            var eventsID = data["eventsID"] as? [String] ?? []
+            print("events: \(eventsID.count)")
             groupD.enter()
                 self.fetchGroupUsers(usersID: data["usersID"] as? [String] ?? []) { fetchedUsers in
                     data["users"] = fetchedUsers
@@ -300,16 +335,13 @@ class SelectedGroupViewModel : ObservableObject {
             
             groupD.notify(queue: .main, execute: {
                 self.finishedFetchingGroup = true
-                self.group = Group(dictionary: data )
+                self.group = GroupModel(dictionary: data )
+                return completion(true)
             })
             
           
         }
-        dp.leave()
-        dp.notify(queue: .main, execute:{
-            
-        return completion(true)
-        })
+      
 
     }
 

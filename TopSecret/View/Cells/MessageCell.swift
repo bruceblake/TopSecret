@@ -23,7 +23,7 @@ struct MessageCell: View {
         
         switch message.type ?? "" {
             case "text":
-                MessageTextCell(message: message, chatID: personalChatVM.chat.id, isFollowUpText: previousMessage?.userID ?? "" == message.userID).padding(.leading,5)
+                MessageTextCell(message: message, chatID: personalChatVM.chat.id, isFollowUpText: previousMessage?.userID ?? "" == message.userID, personalChatVM: personalChatVM).padding(.leading,5)
                     .delaysTouches(for: 0.1).gesture(LongPressGesture(minimumDuration: 0.25).onEnded({ value in
                         withAnimation{
                             UIDevice.vibrate()
@@ -59,6 +59,8 @@ struct MessageCell: View {
                         
                     }
                 }))
+            case "date":
+                Text(message.value ?? " ").foregroundColor(Color.gray)
             default:
                 Text("Hello World")
         }
@@ -209,7 +211,18 @@ struct MessageTextCell: View {
     var message: Message
     var chatID: String
     var isFollowUpText: Bool
+    @ObservedObject var personalChatVM: PersonalChatViewModel
     
+    
+    func getTextColor() -> Color{
+        if personalChatVM.sendingMedia ||  (!personalChatVM.sendingMedia && personalChatVM.failedToSend){
+            return Color.gray
+        }else if !personalChatVM.sendingMedia && !personalChatVM.failedToSend{
+            return FOREGROUNDCOLOR
+        }else {
+            return Color.gray
+        }
+    }
     
     var body: some View {
         
@@ -240,7 +253,7 @@ struct MessageTextCell: View {
                         Rectangle().foregroundColor(Color("\(message.userID == userVM.user?.id ?? " " ? "AccentColor" : "blue")")).frame(width:2).padding(.horizontal,5)
                         
                         HStack{
-                            Text("\(message.value ?? "")").foregroundColor(FOREGROUNDCOLOR)
+                            Text("\(message.value ?? "")").foregroundColor(personalChatVM.sendingMediaID.contains(where: {$0 == message.id}) ? getTextColor() : FOREGROUNDCOLOR)
                             if message.edited ?? false{
                                 Text("(edited)").foregroundColor(.gray).font(.footnote)
                             }
@@ -254,6 +267,19 @@ struct MessageTextCell: View {
                     
                     
                 }
+                
+                if personalChatVM.sendingMediaID.contains(where: {$0 == message.id}){
+                    HStack{
+                      if !personalChatVM.sendingMedia && personalChatVM.failedToSend{
+                            Image(systemName: "xmark.circle.fill").foregroundColor(Color.red)
+                            Text("Try again?").foregroundColor(Color.red)
+                        }
+                        
+                        Spacer()
+                    }.padding(.top,3)
+                }
+                
+                
                 
                 
                 

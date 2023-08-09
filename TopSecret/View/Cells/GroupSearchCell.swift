@@ -9,7 +9,7 @@ import SwiftUI
 import SDWebImageSwiftUI
 
 struct GroupSearchCell: View {
-    var group : Group
+    var group : GroupModel
     var body: some View {
             
             HStack(alignment: .center){

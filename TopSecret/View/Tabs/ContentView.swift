@@ -20,7 +20,7 @@ struct ContentView: View {
     @StateObject var pollVM = PollViewModel()
     @State var tabIndex : Tab = .calendar
     @State var showNotification : Bool = false
-    @State var selectedGroup : Group = Group()
+    @State var selectedGroup : GroupModel = GroupModel()
     
     init() {
         UITextView.appearance().backgroundColor = .clear
@@ -84,11 +84,10 @@ enum Tab {
 
 struct Tabs : View {
     @Binding var tabIndex : Tab
-    @Binding var selectedGroup : Group
+    @Binding var selectedGroup : GroupModel
     @State var showTabButtons : Bool = true
     @State var showSearch: Bool = false
     @StateObject var personalChatVM = PersonalChatViewModel()
-    @StateObject var feedVM = FeedViewModel()
     @StateObject var calendarVM = UserCalendarViewModel()
     @EnvironmentObject var userVM: UserViewModel
     @EnvironmentObject var shareVM: ShareViewModel
@@ -307,7 +306,7 @@ struct Tabs : View {
                 userVM.hideTabButtons.toggle()
             }
         }.onChange(of: userVM.user?.eventsID) { eventsID in
-            if eventsID?.count ?? 0 > 0{
+            if !(eventsID?.isEmpty ?? false){
                 calendarVM.startSearch(eventsID: userVM.user?.eventsID ?? [])
             }
         }

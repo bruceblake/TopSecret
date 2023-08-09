@@ -36,7 +36,7 @@ struct EventCell: View {
                     HStack(alignment: .center){
                         ZStack(alignment: .bottomTrailing){
                             
-                            NavigationLink(destination: GroupProfileView(group: event.group ?? Group(), isInGroup: event.group?.usersID.contains(userVM.user?.id ?? " ") ?? false)) {
+                            NavigationLink(destination: GroupProfileView(group: event.group ?? GroupModel(), isInGroup: event.group?.usersID.contains(userVM.user?.id ?? " ") ?? false)) {
                                 WebImage(url: URL(string: event.group?.groupProfileImage ?? "")).resizable().frame(width: 40, height: 40).clipShape(Circle())
                             }
                             

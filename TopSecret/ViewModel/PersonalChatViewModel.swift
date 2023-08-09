@@ -21,7 +21,7 @@ class PersonalChatViewModel : ObservableObject {
     @Published var text: String = ""
     @Published var currentChatColor = "green"
     @Published var chatListener : ListenerRegistration?
-    @Published var messagesListener : ListenerRegistration?
+    @Published var messageListeners : [ListenerRegistration] = []
     @Published var personalChats: [ChatModel] = []
     @Published var coverMessages : [Message] = []
     @Published var lastMessageListener : ListenerRegistration?
@@ -35,10 +35,12 @@ class PersonalChatViewModel : ObservableObject {
     @Published var documentsLeftToFetch: Int = 0
     @Published var documentsFetched: Int = 0
     @Published var failedToSend : Bool = false
+    @Published var sendingMediaID: [String] = []
+    @Published var pageSize : Int = 40
     let notificationSender = PushNotificationSender()
     var colors : [String] = ["red","green","teal","purple"]
     var cancellables = Set<AnyCancellable>()
-    
+    @Published var testListener : ListenerRegistration?
       
     
     
@@ -59,9 +61,6 @@ class PersonalChatViewModel : ObservableObject {
         COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["usersIdlingID":FieldValue.arrayRemove([userID])])
         if chatListener != nil{
             chatListener?.remove()
-        }
-        if messagesListener != nil {
-            messagesListener?.remove()
         }
     }
     
@@ -119,6 +118,88 @@ class PersonalChatViewModel : ObservableObject {
         })
     }
     
+    func increasePageSize(chatID: String){
+        self.pageSize += 40
+        self.testListener?.remove()
+        self.listenToMessages(chatID: chatID)
+    }
+    
+    func listenToMessages(chatID: String){
+        self.testListener = COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").order(by: "timeStamp", descending: false).limit(toLast: (self.pageSize + self.messages.count)).addSnapshotListener { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+           
+            var messagesToReturn : [Message] = []
+            let dp = DispatchGroup()
+            
+            dp.enter()
+                for document in snapshot?.documentChanges ?? [] {
+                        dp.enter()
+                        var data = document.document.data()
+                        let id = data["id"] as? String ?? ""
+                        let type = data["type"] as? String ?? ""
+                        let value = data["value"] as? String ?? ""
+                        let repliedMessageID = data["repliedMessageID"] as? String ?? ""
+                        if type == "repliedMessage"{
+                            dp.enter()
+                            self.fetchReplyMessages(chatID: chatID, messageID: repliedMessageID) { fetchedReplyMessage in
+                                data["repliedMessage"] = fetchedReplyMessage
+                                dp.leave()
+                            }
+                        }
+                        if type == "pollMessage"{
+                            dp.enter()
+                            
+                            self.fetchPoll(pollID: value){ fetchedPoll in
+                                data["poll"] = fetchedPoll
+                                dp.leave()
+                            }
+                        }
+                        if type == "eventMessage"{
+                            dp.enter()
+                            
+                            self.fetchEvent(eventID: value){ fetchedEvent in
+                                data["event"] = fetchedEvent
+                                dp.leave()
+                            }
+                        }
+                        dp.leave()
+                    
+                        dp.notify(queue: .main, execute:{
+                            if document.type == .added{
+                                print("added more to messages")
+                                if !self.messages.contains(where: {$0.id == id}){
+                                    self.messages.append(Message(dictionary: data))
+                                }
+                                
+                            }else if document.type == .removed {
+                                print("removed some messages")
+                                self.messages.removeAll(where: {$0.id == id})
+                            }else if document.type == .modified{
+                               let index = self.messages.firstIndex(where: {$0.id == id})
+                                print("modified: \(value)")
+                                if let index = index {
+                                    if index >= 0 && index < self.messages.count {
+                                        self.messages[index] = Message(dictionary: data)
+                                    }
+                                }
+                                
+                            }
+                        })
+                    
+                  
+                }
+            
+         
+            dp.leave()
+            dp.notify(queue: .main, execute: {
+                self.messages = self.messages.sorted(by: {$0.timeStamp?.dateValue() ?? Date() < $1.timeStamp?.dateValue() ?? Date()})
+            })
+            
+        }
+    }
     
     func fetchReplyMessages(chatID: String, messageID: String, completion: @escaping (ReplyMessageModel) -> ()) -> (){
         COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").whereField("id",isEqualTo: messageID).getDocuments { snapshot, err in
@@ -147,12 +228,14 @@ class PersonalChatViewModel : ObservableObject {
         }
     }
     
+    
+    
     func fetchMoreMessages(chatID: String){
-        let query = COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").order(by: "timeStamp", descending: true).start(afterDocument: lastDocument!).limit(to: 60)
+        let query = COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").order(by: "timeStamp", descending: true).start(afterDocument: lastDocument!).limit(to: 10)
         
        
         
-        query.addSnapshotListener { snapshot, err in
+        self.messageListeners.append(query.addSnapshotListener { snapshot, err in
             if err != nil{
                 print("ERROR")
                 return
@@ -198,14 +281,13 @@ class PersonalChatViewModel : ObservableObject {
 
                 dp.notify(queue: .main, execute: {
                     if document.type == .added{
-                        print("added more to messages")
-                        messagesToReturn.append(Message(dictionary: data))
+                        if !self.messages.contains(where: {$0.id == id}){
+                            messagesToReturn.append(Message(dictionary: data))
+                        }
                         
                     }else if document.type == .removed {
-                        print("removed some messages")
                         self.messages.removeAll(where: {$0.id == id})
                     }else if document.type == .modified{
-                        print("modified: \(value)")
                        let index = self.messages.firstIndex(where: {$0.id == id})
                         if let index = index {
                             if index >= 0 && index < self.messages.count {
@@ -224,10 +306,8 @@ class PersonalChatViewModel : ObservableObject {
                 self.documentsLeftToFetch -= messagesToReturn.count
                 self.lastDocument = snapshot?.documents.last
                 self.messages.insert(contentsOf: messagesToReturn.reversed(), at: 0)
-               
-                
             })
-        }
+        })
     }
     
 
@@ -237,103 +317,105 @@ class PersonalChatViewModel : ObservableObject {
                 print("ERROR")
                 return
             }
-            
             return completion(snapshot?.count ?? 0)
         }
     }
    
-   func fetchFirstMessages(chatID: String, userID: String){
-       //how to paginate
-       //1. listen to newest 20 messages [20,19,18,17,...,0]
-       //2. fetch 20 starting after the 20th
-       
-       
-       self.messagesListener?.remove()
-       self.messagesListener = COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").order(by: "timeStamp", descending: false).limit(toLast: 60).addSnapshotListener { snapshot, err in
-           if err != nil {
-               print(err!.localizedDescription)
-               return
-           }
-           var messagesToReturn : [Message] = []
-           let dp = DispatchGroup()
-           
-               dp.enter()
-          
-           
-               for document in snapshot?.documentChanges ?? [] {
-                       dp.enter()
-                       var data = document.document.data()
-                       let id = data["id"] as? String ?? ""
-                       let type = data["type"] as? String ?? ""
-                       let value = data["value"] as? String ?? ""
-                       let repliedMessageID = data["repliedMessageID"] as? String ?? ""
-                       if type == "repliedMessage"{
-                           dp.enter()
-                           self.fetchReplyMessages(chatID: chatID, messageID: repliedMessageID) { fetchedReplyMessage in
-                               data["repliedMessage"] = fetchedReplyMessage
-                               dp.leave()
-                           }
-                       }
-                       if type == "pollMessage"{
-                           dp.enter()
-                           
-                           self.fetchPoll(pollID: value){ fetchedPoll in
-                               data["poll"] = fetchedPoll
-                               dp.leave()
-                           }
-                       }
-                       if type == "eventMessage"{
-                           dp.enter()
-                           
-                           self.fetchEvent(eventID: value){ fetchedEvent in
-                               data["event"] = fetchedEvent
-                               dp.leave()
-                           }
-                       }
-                       dp.leave()
-                   
-                       dp.notify(queue: .main, execute:{
-                           if document.type == .added{
-                               print("added more to messages")
-                               self.messages.append(Message(dictionary: data))
-                               
-                           }else if document.type == .removed {
-                               print("removed some messages")
-                               self.messages.removeAll(where: {$0.id == id})
-                           }else if document.type == .modified{
-                              let index = self.messages.firstIndex(where: {$0.id == id})
-                               print("modified: \(value)")
-                               if let index = index {
-                                   if index >= 0 && index < self.messages.count {
-                                       self.messages[index] = Message(dictionary: data)
-                                   }
-                               }
-                               
-                           }
-                       })
-                   
-                 
-               }
-               dp.leave()
-               dp.notify(queue: .main, execute:{
-                   if self.documentsFetched == 0 {
-                       self.documentsFetched = messagesToReturn.count
-                       self.getDocumentsToFetchCount(chatID: chatID) { count in
-                           self.documentsLeftToFetch = (count - self.documentsFetched)
-                       }
-                   }
-                   self.lastDocument = snapshot?.documents.first
-                
-                   
-                  
-                  
-               })
-           
-       }
-      
-   }
+//   func fetchFirstMessages(chatID: String, userID: String){
+//       self.removeListeners()
+//       self.messageListeners.append(COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").order(by: "timeStamp", descending: true).limit(to: 10).addSnapshotListener { snapshot, err in
+//           if err != nil {
+//               print(err!.localizedDescription)
+//               return
+//           }
+//           var messagesToReturn : [Message] = []
+//           let dp = DispatchGroup()
+//
+//               dp.enter()
+//
+//
+//               for document in snapshot?.documentChanges ?? [] {
+//                       dp.enter()
+//                       var data = document.document.data()
+//                       let id = data["id"] as? String ?? ""
+//                       let type = data["type"] as? String ?? ""
+//                       let value = data["value"] as? String ?? ""
+//                       let repliedMessageID = data["repliedMessageID"] as? String ?? ""
+//                       if type == "repliedMessage"{
+//                           dp.enter()
+//                           self.fetchReplyMessages(chatID: chatID, messageID: repliedMessageID) { fetchedReplyMessage in
+//                               data["repliedMessage"] = fetchedReplyMessage
+//                               dp.leave()
+//                           }
+//                       }
+//                       if type == "pollMessage"{
+//                           dp.enter()
+//
+//                           self.fetchPoll(pollID: value){ fetchedPoll in
+//                               data["poll"] = fetchedPoll
+//                               dp.leave()
+//                           }
+//                       }
+//                       if type == "eventMessage"{
+//                           dp.enter()
+//
+//                           self.fetchEvent(eventID: value){ fetchedEvent in
+//                               data["event"] = fetchedEvent
+//                               dp.leave()
+//                           }
+//                       }
+//                       dp.leave()
+//
+//                       dp.notify(queue: .main, execute:{
+//                           if document.type == .added{
+//                               print("added more to messages")
+//                               if !self.messages.contains(where: {$0.id == id}){
+//                                   self.messages.append(Message(dictionary: data))
+//                               }
+//
+//                           }else if document.type == .removed {
+//                               print("removed some messages")
+//                               self.messages.removeAll(where: {$0.id == id})
+//                           }else if document.type == .modified{
+//                              let index = self.messages.firstIndex(where: {$0.id == id})
+//                               print("modified: \(value)")
+//                               if let index = index {
+//                                   if index >= 0 && index < self.messages.count {
+//                                       self.messages[index] = Message(dictionary: data)
+//                                   }
+//                               }
+//
+//                           }
+//                       })
+//
+//
+//               }
+//
+//               dp.leave()
+//               dp.notify(queue: .main, execute:{
+//                   if self.documentsFetched == 0 {
+//                       self.documentsFetched = messagesToReturn.count
+//
+//                   }
+//                   self.getDocumentsToFetchCount(chatID: chatID) { count in
+//                       self.documentsLeftToFetch = (count - self.documentsFetched)
+//                   }
+//                   self.lastDocument = snapshot?.documents.first
+//
+//
+//
+//
+//               })
+//
+//       })
+//
+//   }
     
-    
+    func removeListeners(){
+        self.messageListeners.forEach { listener in
+            listener.remove()
+        }
+    }
     
     
     
@@ -414,7 +496,7 @@ class PersonalChatViewModel : ObservableObject {
     }
     
     
-    func fetchGroup(groupID: String, completion: @escaping (Group) -> ()) -> () {
+    func fetchGroup(groupID: String, completion: @escaping (GroupModel) -> ()) -> () {
         COLLECTION_GROUP.document(groupID).getDocument { snapshot, err in
             if err != nil{
                 print("ERROR")
@@ -422,7 +504,7 @@ class PersonalChatViewModel : ObservableObject {
             }
             var data = snapshot?.data() as? [String:Any] ?? [:]
             
-            return completion(Group(dictionary: data))
+            return completion(GroupModel(dictionary: data))
         }
     }
     
@@ -887,7 +969,7 @@ class PersonalChatViewModel : ObservableObject {
         }
     }
     
-    func sendTextMessage(text: String, user: User, timeStamp: Timestamp, nameColor: String, messageID: String, messageType: String, chatID: String){
+    func sendTextMessage(text: String, user: User, timeStamp: Timestamp, nameColor: String, messageID: String, messageType: String, chatID: String, completion: @escaping (Bool) -> ()) -> (){
         
         let textMessageData = ["name":user.nickName ?? "",
                                "timeStamp":timeStamp,
@@ -902,9 +984,29 @@ class PersonalChatViewModel : ObservableObject {
         let dp = DispatchGroup()
         
         dp.enter()
-            COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").document(messageID).setData(textMessageData)
+        self.sendingMedia = true
+        self.sendingMediaID.append(messageID)
+        self.text = ""
+        DispatchQueue.main.asyncAfter(deadline: .now() + 10, execute: {
+            if self.sendingMedia {
+                self.sendingMedia = false
+                self.failedToSend = true
+                return completion(false)
+            }
+        })
+        COLLECTION_PERSONAL_CHAT.document(chatID).collection("Messages").document(messageID).setData(textMessageData, completion: { err in
+            if err != nil {
+                print("ERROR")
+                self.sendingMedia = false
+                self.failedToSend = true
+                return completion(false)
+            }else{
+                
+                dp.leave()
+            }
+            
+        })
         
-        dp.leave()
         
         dp.notify(queue: .main, execute:{
             
@@ -914,8 +1016,11 @@ class PersonalChatViewModel : ObservableObject {
 
             COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["lastActionDate":Timestamp()])
             
-
-            
+            self.sendingMedia = false
+            self.failedToSend = false
+            self.sendingMediaID.removeAll(where: {$0 == messageID})
+            self.text = ""
+            return completion(true)
         })
         
         

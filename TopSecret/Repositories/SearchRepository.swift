@@ -17,10 +17,10 @@ class SearchRepository : ObservableObject {
     @Published var userReturnedResults : [User] = []
     @Published var userFriendsResults : [User] = []
     @Published var userFriendsReturnedResults : [User] = []
-    @Published var groupResults : [Group] = []
-    @Published var groupReturnedResults : [Group] = []
-    @Published var userGroupResults : [Group] = []
-    @Published var userGroupReturnedResults: [Group] = []
+    @Published var groupResults : [GroupModel] = []
+    @Published var groupReturnedResults : [GroupModel] = []
+    @Published var userGroupResults : [GroupModel] = []
+    @Published var userGroupReturnedResults: [GroupModel] = []
     @Published var isRefreshing : Bool = false
     @Published var hasSearched : Bool = false
     @Published var allUsersListener : ListenerRegistration?
@@ -90,8 +90,8 @@ class SearchRepository : ObservableObject {
         return res
     }
     
-    private func filterUserGroupsResults(text: String, result: [Group]) -> [Group]{
-        var res : [Group] = []
+    private func filterUserGroupsResults(text: String, result: [GroupModel]) -> [GroupModel]{
+        var res : [GroupModel] = []
         let lowercasedText = text.lowercased()
         
         res = result.filter {
@@ -118,7 +118,7 @@ class SearchRepository : ObservableObject {
         return res
     }
     
-    private func filterResults(text: String, results1: [User], results2: [Group]) -> [[Any]]{
+    private func filterResults(text: String, results1: [User], results2: [GroupModel]) -> [[Any]]{
         
         var res : [[Any]] = []
         let lowercasedText = text.lowercased()
@@ -195,7 +195,7 @@ class SearchRepository : ObservableObject {
         })
     }
     
-    func fetchGroup(groupID: String, completion: @escaping (Group) -> ()) -> () {
+    func fetchGroup(groupID: String, completion: @escaping (GroupModel) -> ()) -> () {
         COLLECTION_GROUP.document(groupID).getDocument { snapshot, err in
             if err != nil {
                 print("ERROR")
@@ -203,7 +203,7 @@ class SearchRepository : ObservableObject {
             }
             let data = snapshot?.data() as? [String:Any] ?? [:]
             
-            return completion(Group(dictionary: data))
+            return completion(GroupModel(dictionary: data))
             
         }
     }
@@ -240,7 +240,7 @@ class SearchRepository : ObservableObject {
                 .map(self.filterResults)
                 .sink { [self](returnedResults) in
                     userReturnedResults = returnedResults[0] as? [User] ?? []
-                    groupReturnedResults = returnedResults[1] as? [Group] ?? []
+                    groupReturnedResults = returnedResults[1] as? [GroupModel] ?? []
                     
                 }
                 .store(in: &self.cancellables)
@@ -269,7 +269,7 @@ class SearchRepository : ObservableObject {
             }
             
             
-            var groupsToReturn : [Group] = []
+            var groupsToReturn : [GroupModel] = []
             let groupD = DispatchGroup()
             
             let data = snapshot?.data() as? [String:Any] ?? [:]
@@ -428,10 +428,10 @@ class SearchRepository : ObservableObject {
             
             
             
-            self.groupResults = documents.map({ (queryDocumentSnapshot) -> Group in
+            self.groupResults = documents.map({ (queryDocumentSnapshot) -> GroupModel in
                 let data = queryDocumentSnapshot.data()
                 
-                return Group(dictionary: data)
+                return GroupModel(dictionary: data)
             })
         }
         
@@ -446,7 +446,7 @@ class SearchRepository : ObservableObject {
             .map(filterResults)
             .sink { [self](returnedResults) in
                 userReturnedResults = returnedResults[0] as? [User] ?? []
-                groupReturnedResults = returnedResults[1] as? [Group] ?? []
+                groupReturnedResults = returnedResults[1] as? [GroupModel] ?? []
                 
             }
             .store(in: &cancellables)

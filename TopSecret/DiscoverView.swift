@@ -293,10 +293,16 @@ struct EventTabEventCell : View {
         
     
         VStack(spacing: 0){
-           
+            if event.eventImage != "" {
+                
                 WebImage(url: URL(string: event.eventImage ?? " ")).resizable().frame(height: 225).scaledToFit()
                 
-                
+            }else{
+                Spacer()
+                Text("No Image Provied").foregroundColor(Color.gray)
+                Spacer()
+            }
+
                 HStack(alignment: .top){
                     
                     VStack(alignment: .leading,spacing:5){
@@ -342,9 +348,8 @@ struct EventTabEventCell : View {
                        
                         
                         Text("\(eventLocationName == "" ? "No Location Specified" : eventLocationName)").foregroundColor(Color.gray).font(.callout)
-                        
+
                        
-                        Spacer()
                         if friendsAttending.count != 0 {
                             HStack{
                                 HStack(spacing: -10){
@@ -366,8 +371,6 @@ struct EventTabEventCell : View {
                             }
                         }
                     }.padding(10)
-                    
-                    Spacer(minLength: 0)
                 }.background(Rectangle().foregroundColor(Color("Color")))
             
            
@@ -376,6 +379,9 @@ struct EventTabEventCell : View {
         }.frame(width: (UIScreen.main.bounds.width/1.5)).clipShape(RoundedRectangle(cornerRadius: 16)).onAppear{
            
             friendsAttending = eventsVM.getFriendsAttending(event: event, user: userVM.user ?? User())
+            if event.eventEndTime?.dateValue() ?? Date() < Date() && !(event.ended ?? false){
+                eventsVM.endEvent(eventID: event.id, usersAttendingID: event.usersAttendingID ?? [])
+            }
         }
     }
 }

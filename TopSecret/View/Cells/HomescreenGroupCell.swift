@@ -14,7 +14,7 @@ struct HomescreenGroupCell : View {
     
     @StateObject var groupVM = GroupViewModel()
     @EnvironmentObject var userVM: UserViewModel
-    var group: Group
+    var group: GroupModel
     @Binding var isMultiColumn : Bool
     @State var profilePicturesCount = 0
     
@@ -70,9 +70,3 @@ struct HomescreenGroupCell : View {
 
 
 
-//
-//struct HomescreenGroupCell_Previews: PreviewProvider {
-//    static var previews: some View {
-//        HomescreenGroupCell(group: Group(), isMultiColumn: .constant(true)).colorScheme(.dark)
-//    }
-//}

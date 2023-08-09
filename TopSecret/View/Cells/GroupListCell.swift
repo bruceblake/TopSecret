@@ -11,7 +11,7 @@ import SDWebImageSwiftUI
 
 struct GroupListCell: View {
   
-    var group: Group
+    var group: GroupModel
     
     var body: some View {
        

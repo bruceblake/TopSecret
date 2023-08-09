@@ -16,7 +16,7 @@ struct PollModel : Identifiable {
     var pollOptions : [PollOptionModel] = []
     var finished: Bool?
     var groupID: String?
-    var group: Group?
+    var group: GroupModel?
     var question: String?
     var usersAnsweredID: [String]?
     var usersAnswered: [User]?
@@ -35,7 +35,7 @@ struct PollModel : Identifiable {
         self.pollOptions = dictionary["pollOptions"] as? [PollOptionModel] ?? []
         self.finished = dictionary["finished"] as? Bool ?? false
         self.groupID = dictionary["groupID"] as? String ?? ""
-        self.group = dictionary["group"] as? Group ?? Group()
+        self.group = dictionary["group"] as? GroupModel ?? GroupModel()
         self.question = dictionary["question"] as? String ?? ""
         self.usersAnsweredID = dictionary["usersAnsweredID"] as? [String] ?? []
         self.usersAnswered = dictionary["usersAnswered"] as? [User] ?? []

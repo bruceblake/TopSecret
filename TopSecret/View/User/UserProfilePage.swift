@@ -191,7 +191,7 @@ struct UserProfilePage: View {
                             
                             
                             
-                            NavigationLink(destination: Text("Hello World")){
+                            NavigationLink(destination: UserGroupsListView(user: user)){
                                 
                                 VStack{
                                     Text("\(user.groupsID?.count ?? 0)").font(.body).bold().foregroundColor(FOREGROUNDCOLOR)

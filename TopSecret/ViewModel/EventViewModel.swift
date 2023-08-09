@@ -66,6 +66,7 @@ class EventViewModel: ObservableObject {
         
         COLLECTION_EVENTS.document(self.event.id).updateData(["usersAttendingID":FieldValue.arrayRemove([USER_ID])])
         COLLECTION_EVENTS.document(self.event.id).updateData(["usersDeclinedID":FieldValue.arrayUnion([USER_ID])])
+        COLLECTION_EVENTS.document(self.event.id).updateData(["usersUndecidedID":FieldValue.arrayRemove([USER_ID])])
         COLLECTION_USER.document(USER_ID).updateData(["pendingEventInvitationID":FieldValue.arrayRemove([self.event.id])])
         COLLECTION_USER.document(USER_ID).updateData(["eventsID":FieldValue.arrayRemove([self.event.id])])
     }
@@ -106,7 +107,7 @@ class EventViewModel: ObservableObject {
     }
     
     
-    func editEvent(event: EventModel, name: String, startTime: Date, endTime: Date, user: User, image: UIImage, invitationType: String, location: EventModel.Location, membersCanInviteGuests: Bool, invitedMembers: [User], excludedMembers: [User], description: String, createEventChat: Bool, createGroupFromEvent: Bool, completion: @escaping (Bool) -> ()){
+    func editEvent(event: EventModel, name: String, startTime: Date, endTime: Date, user: User, image: UIImage?, invitationType: String, location: EventModel.Location, membersCanInviteGuests: Bool, invitedMembers: [User], excludedMembers: [User], description: String, createEventChat: Bool, createGroupFromEvent: Bool, completion: @escaping (Bool) -> ()){
         let dp = DispatchGroup()
         dp.enter()
         //this is for editing the event but im too fucking lazy to change variable names :/
@@ -115,23 +116,28 @@ class EventViewModel: ObservableObject {
         COLLECTION_EVENTS.document(event.id).updateData(["eventStartTime":startTime])
         COLLECTION_EVENTS.document(event.id).updateData(["eventEndTime":endTime])
         COLLECTION_EVENTS.document(event.id).updateData(["invitationType":invitationType])
-        COLLECTION_EVENTS.document(event.id).updateData(["usersExcludedIDS":excludedMembers.map({$0.id ?? " "})])
+        COLLECTION_EVENTS.document(event.id).updateData(["usersExcludedID":excludedMembers.map({$0.id ?? " "})])
         COLLECTION_EVENTS.document(event.id).updateData(["description":description])
         
-        let locationData = ["id": location.id ?? " ",
+        let locationData = ["id": location.id ?? nil,
                             "name":location.name,
                             "address":location.address,
                             "latitude":location.latitude,
                             "longitude":location.longitude] as [String:Any]
-        
-        self.persistImageToEventStorage(eventID: event.id, image: image) { fetchedImageURL in
-            COLLECTION_EVENTS.document(event.id).updateData(["eventImage":fetchedImageURL])
+        COLLECTION_EVENTS.document(event.id).updateData(["location":locationData])
+
+        if let image = image {
+            self.persistImageToEventStorage(eventID: event.id, image: image) { fetchedImageURL in
+                COLLECTION_EVENTS.document(event.id).updateData(["eventImage":fetchedImageURL])
+            }
         }
+        
+        
         dp.leave()
 
         
         dp.notify(queue: .main, execute:{
-            COLLECTION_EVENTS.document(event.id).collection("Location").document(location.id ?? " ").setData(locationData)
+      
             
             
             if createEventChat{
@@ -140,7 +146,9 @@ class EventViewModel: ObservableObject {
             }
             
             if createGroupFromEvent{
+                if let image = image {
                 self.createGroupFromEvent(groupName: name, image: image , users: invitedMembers)
+                }
             }
             
             
@@ -176,19 +184,30 @@ class EventViewModel: ObservableObject {
         
     }
     
-    func createEvent(group: Group?, eventName: String, eventStartTime: Date, eventEndTime: Date, user: User, image: UIImage, invitationType: String, location: EventModel.Location, membersCanInviteGuests: Bool, invitedMembers: [User], excludedMembers: [User], description: String, createEventChat: Bool, createGroupFromEvent: Bool, completion: @escaping (Bool) -> ()) {
+    func createEvent(group: GroupModel?, eventName: String, eventStartTime: Date, eventEndTime: Date, user: User, image: UIImage?, invitationType: String, location: EventModel.Location, membersCanInviteGuests: Bool, invitedMembers: [User], excludedMembers: [User], description: String, createEventChat: Bool, createGroupFromEvent: Bool, completion: @escaping (Bool) -> ()) {
         let id = UUID().uuidString
         let dp = DispatchGroup()
         dp.enter()
         self.creatingEvent = true
+        
+        let locationData: [String: Any] = [
+            "id": location.id ?? " ",
+            "name": location.name,
+            "address": location.address,
+            "latitude": location.latitude,
+            "longitude": location.longitude
+        ]
         var data: [String: Any] = [
             "eventName" : eventName,
             "eventStartTime": eventStartTime,
             "eventEndTime": eventEndTime,
+            "usersInvitedID": invitedMembers.map({ user in
+                return user.id ?? ""
+            }),
             "usersUndecidedID": invitedMembers.map({ user in
                 return user.id ?? ""
             }),
-            "usersExcludedIDS": excludedMembers.map({ user in
+            "usersExcludedID": excludedMembers.map({ user in
                 return user.id ?? ""
             }),
             "id": id,
@@ -196,22 +215,17 @@ class EventViewModel: ObservableObject {
             "creatorID": user.id ?? "",
             "timeStamp": Timestamp(),
             "invitationType": invitationType,
-            "location": location.toDictionary(),
+            "location": locationData,
             "membersCanInviteGuests": membersCanInviteGuests,
             "description": description,
-            "groupID":" ",
+            "groupID":"",
             "ended":false
         ]
         
         if let group = group {
+            dp.enter()
             data["groupID"] = group.id
-            COLLECTION_GROUP.document(group.id).collection("Events").document(id).setData(data) { (err) in
-                if let err = err {
-                    print("ERROR \(err.localizedDescription)")
-                    return completion(false)
-                }
-                
-            }
+            
             COLLECTION_GROUP.document(group.id).updateData(["eventsID":FieldValue.arrayUnion([id])])
             let notificationID = UUID().uuidString
             let groupNotificationData: [String: Any] = [
@@ -221,31 +235,33 @@ class EventViewModel: ObservableObject {
                 "eventID": id,
                 "type": "eventCreated"]
             COLLECTION_GROUP.document(group.id).collection("Notifications").document(notificationID).setData(groupNotificationData)
+            dp.leave()
         }
         
 
-        let locationData: [String: Any] = [
-            "id": location.id ?? " ",
-            "name": location.name,
-            "address": location.address,
-            "latitude": location.latitude,
-            "longitude": location.longitude
-        ]
-
-        self.persistImageToEventStorage(eventID: id, image: image) { fetchedImageURL in
-            data["eventImage"] = fetchedImageURL
-            dp.leave()
+      
+        
+        if let image = image {
+            dp.enter()
+            self.persistImageToEventStorage(eventID: id, image: image) { fetchedImageURL in
+                data["eventImage"] = fetchedImageURL
+                dp.leave()
+            }
         }
+    
+        dp.leave()
 
         dp.notify(queue: .main) {
             
     
-            COLLECTION_EVENTS.document(id).collection("Location").document(location.id ?? " ").setData(locationData)
+           
 
             dp.enter()
+            
             COLLECTION_EVENTS.document(id).setData(data) { (err) in
                 if let err = err {
                     print("ERROR \(err.localizedDescription)")
+                    self.creatingEvent = false
                     return completion(false)
                 }
                 if createEventChat {
@@ -254,10 +270,14 @@ class EventViewModel: ObservableObject {
                 }
 
                 if createGroupFromEvent {
-                    self.createGroupFromEvent(groupName: eventName, image: image , users: invitedMembers)
+                    if let image = image {
+                        self.createGroupFromEvent(groupName: eventName, image: image , users: invitedMembers)
+                    }
                 }
+                
                 dp.leave()
             }
+            
             dp.notify(queue: .main, execute:{
                 
                 let notificationID = UUID().uuidString
@@ -291,6 +311,7 @@ class EventViewModel: ObservableObject {
                         self.notificationSender.sendPushNotification(to: invitedMember.fcmToken ?? "", title: "\(group?.groupName ?? "")", body: "\(invitedMember.nickName ?? "") created an event!")
                     }
                 }
+                
                 COLLECTION_USER.document(USER_ID).updateData(["eventsID":FieldValue.arrayUnion([id])])
                 self.creatingEvent = false
                 return completion(true)
@@ -546,8 +567,8 @@ class EventViewModel: ObservableObject {
             }
             
             dp.notify(queue: .main, execute: {
-                self.event = EventModel(dictionary: data)
                 self.finishedFetchingEvent = true
+                self.event = EventModel(dictionary: data)
             })
         }
     }

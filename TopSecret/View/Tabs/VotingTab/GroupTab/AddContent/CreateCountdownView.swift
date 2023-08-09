@@ -13,7 +13,7 @@ struct CreateCountdownView: View {
     @Environment(\.presentationMode) var presentationMode
     @State var countdownName : String = ""
     @State var countdownDate: Date = Date()
-    @Binding var group: Group
+    @Binding var group: GroupModel
     @EnvironmentObject var userVM: UserViewModel
     var body: some View {
         ZStack{

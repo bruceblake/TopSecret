@@ -13,7 +13,7 @@ struct SearchView: View {
     @StateObject var searchRepository = SearchRepository()
     @EnvironmentObject var userVM : UserViewModel
     @State var openGroupProfile : Bool = false
-    @State var selectedGroup : Group = Group()
+    @State var selectedGroup : GroupModel = GroupModel()
     
     func convertToBinding(users: [User]) -> Binding<[User]>{
         

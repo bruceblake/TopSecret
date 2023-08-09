@@ -32,6 +32,8 @@ class UserNotificationViewModel: ObservableObject{
         var minutes = (seconds / 60)
         var hours = (minutes / 60)
         var days = (hours / 24)
+        var weeks = (days / 7)
+        var months = (weeks / 4)
         var time = ""
         if seconds < 60{
             time = "\(seconds)s"
@@ -41,6 +43,10 @@ class UserNotificationViewModel: ObservableObject{
             time = "\(hours)h"
         }else if seconds < 604800 {
             time = "\(days)d"
+        }else if seconds < 2419200 {
+            time = "\(weeks)w"
+        }else if seconds < 29030400 {
+            time = "\(months)mo"
         }
         if time == "0s"{
             return "now"

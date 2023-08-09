@@ -115,14 +115,11 @@ struct HomeScreenView: View {
                                 Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title2)
                             }).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
                             
+                           
                             
-                            NavigationLink(destination: GroupProfileView(group: selectedGroupVM.group, isInGroup: true)){
-                                Image(systemName: "person").foregroundColor(FOREGROUNDCOLOR).font(.title3).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
-                            }
-                            
-                            //                        NavigationLink(destination: GroupSettingsView().environmentObject(selectedGroupVM)){
-                            //                            Image(systemName: "gear").foregroundColor(FOREGROUNDCOLOR).font(.title3).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
-                            //                        }
+                                                    NavigationLink(destination: GroupSettingsView().environmentObject(selectedGroupVM)){
+                                                        Image(systemName: "gear").foregroundColor(FOREGROUNDCOLOR).font(.title3).padding(5).background(RoundedRectangle(cornerRadius: 16).fill(Color("Color")))
+                                                    }
                             
                             
                             
@@ -166,10 +163,13 @@ struct HomeScreenView: View {
                 }.padding(.horizontal,10).frame(width: UIScreen.main.bounds.width)
                 
                 TabView(selection: $selectedOptionIndex) {
-                    ActivityView(shareType: $shareType).environmentObject(selectedGroupVM).tag(0)
-                    GroupChatView(chatID: chatID, groupID: groupID).tag(1)
-                    GroupCalendarView(calendar: Calendar(identifier: .gregorian)).environmentObject(selectedGroupVM).tag(2)
-                    GroupMapView().environmentObject(selectedGroupVM).tag(3)
+                    Group{
+                        ActivityView(shareType: $shareType).environmentObject(selectedGroupVM).tag(0)
+                        GroupChatView(chatID: chatID, groupID: groupID).tag(1)
+                        GroupCalendarView(calendar: Calendar(identifier: .gregorian)).environmentObject(selectedGroupVM).tag(2)
+                        GroupMapView().environmentObject(selectedGroupVM).tag(3)
+                    }
+                   
                 }.tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
 
             }.zIndex(2).opacity(showAddContent ? 0.2 : 1).onTapGesture {

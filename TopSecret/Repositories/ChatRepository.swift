@@ -16,7 +16,7 @@ class ChatRepository : ObservableObject {
     @Published var userIDList: [String] = []
     @Published var usersTypingList : [User] = []
     @Published var usersIdlingList : [User] = []
-    @Published var group : Group = Group()
+    @Published var group : GroupModel = GroupModel()
     @Published var pushText : Bool = false
 
     
@@ -133,7 +133,7 @@ class ChatRepository : ObservableObject {
                 return
             }
             let data = snapshot?.data() as [String:Any]
-            self.group = Group(dictionary: data )
+            self.group = GroupModel(dictionary: data )
         }
     }
    

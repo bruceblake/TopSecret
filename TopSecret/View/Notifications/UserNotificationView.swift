@@ -18,19 +18,29 @@ struct UserNotificationView: View {
             let date = Date()
             let dateDiff = Calendar.current.dateComponents([.day], from: noti.timeStamp?.dateValue() ?? Date(), to: date)
             let days = dateDiff.day ?? 0
-            return days < 7
+            return days == 0
             //return if the difference in dates between Date() and timeStamp is less than 7 days
         }
         
     }
     
-    private var thisWeekNotifications: [UserNotificationModel] {
+    
+    private var yesterdayNotifications : [UserNotificationModel] {
         return userVM.notifications.filter {  noti in
             let date = Date()
             let dateDiff = Calendar.current.dateComponents([.day], from: noti.timeStamp?.dateValue() ?? Date(), to: date)
+            let days = dateDiff.day ?? 0
+            return days == 1
+        }
+    }
+    
+    private var thisWeekNotifications: [UserNotificationModel] {
+        return userVM.notifications.filter {  noti in
+            let date = Date()
+            let dateDiff = Calendar.current.dateComponents([.day, .month], from: noti.timeStamp?.dateValue() ?? Date(), to: date)
             let months = dateDiff.month ?? 0
             let days = dateDiff.day ?? 0
-            return months < 1 && days >= 7
+            return months < 1 && days <= 7 && days > 1
             //return if the difference in dates between Date() and timeStamp is less than 7 days
         }
     }
@@ -38,7 +48,7 @@ struct UserNotificationView: View {
     private var thisMonthNotifications: [UserNotificationModel] {
         return userVM.notifications.filter {  noti in
             let date = Date()
-            let dateDiff = Calendar.current.dateComponents([.day], from: noti.timeStamp?.dateValue() ?? Date(), to: date)
+            let dateDiff = Calendar.current.dateComponents([.month], from: noti.timeStamp?.dateValue() ?? Date(), to: date)
             let months = dateDiff.month ?? 0
             return months == 1
             //return if the difference in dates between Date() and timeStamp is less than 7 days
@@ -48,7 +58,7 @@ struct UserNotificationView: View {
     private var earlierNotifications: [UserNotificationModel] {
         return userVM.notifications.filter {  noti in
             let date = Date()
-            let dateDiff = Calendar.current.dateComponents([.day], from: noti.timeStamp?.dateValue() ?? Date(), to: date)
+            let dateDiff = Calendar.current.dateComponents([.month], from: noti.timeStamp?.dateValue() ?? Date(), to: date)
             let months = dateDiff.month ?? 0
             return months > 1
             //return if the difference in dates between Date() and timeStamp is less than 7 days
@@ -79,6 +89,27 @@ struct UserNotificationView: View {
                                         Spacer()
                                     }.padding(.leading,25)
                                     ForEach(newNotifications){ notification in
+                                       
+                                          
+                                        UserNotificationCell(userNotification: notification).padding(.horizontal)
+
+                                            
+                                        Divider()
+
+                                    }
+                                }
+                            }
+                            
+                            if !yesterdayNotifications.isEmpty{
+                                VStack{
+                                    
+                                   
+                                    HStack{
+                                        
+                                    Text("Yesterday").foregroundColor(FOREGROUNDCOLOR).fontWeight(.bold).font(.headline)
+                                        Spacer()
+                                    }.padding(.leading,25)
+                                    ForEach(yesterdayNotifications){ notification in
                                        
                                           
                                         UserNotificationCell(userNotification: notification).padding(.horizontal)

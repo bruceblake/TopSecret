@@ -48,7 +48,7 @@ struct User : Identifiable, Hashable{
     var personalChatNotificationCount : Int?
     var dateCreated : Timestamp?
     var groupsFollowingID: [String]?
-    var groupsFollowing: [Group]?
+    var groupsFollowing: [GroupModel]?
     var hasUnreadMessages : Bool?
     var appIconBadgeNumber : Int?
     var interests: [String]?
@@ -93,7 +93,7 @@ init(dictionary: [String:Any]) {
     self.pendingEventInvitationID = dictionary["pendingEventInvitationID"] as? [String] ?? []
     self.dateCreated = dictionary["dateCreated"] as? Timestamp ?? Timestamp()
     self.groupsFollowingID = dictionary["groupsFollowingID"] as? [String] ?? []
-    self.groupsFollowing = dictionary["groupsFollowing"] as? [Group] ?? []
+    self.groupsFollowing = dictionary["groupsFollowing"] as? [GroupModel] ?? []
     self.hasUnreadMessages = dictionary["hasUnreadMessages"] as? Bool ?? false
     self.interests = dictionary["interests"] as? [String] ?? []
     self.usersLoggedInCount = dictionary["usersLoggedInCount"] as? Int ?? 0

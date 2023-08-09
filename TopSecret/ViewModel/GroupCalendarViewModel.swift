@@ -24,8 +24,8 @@ class GroupCalendarViewModel : ObservableObject {
    
     private var cancellables = Set<AnyCancellable>()
     
-    func startSearch(groupID: String, startDay: Date, endDay: Date){
-        self.fetchEvents(groupID: groupID, startDay: startDay, endDay: endDay)
+    func startSearch(group: GroupModel, startDay: Date, endDay: Date){
+        self.fetchEvents(group: group, startDay: startDay, endDay: endDay)
     }
     
     
@@ -70,8 +70,9 @@ class GroupCalendarViewModel : ObservableObject {
         
     }
     
-    func fetchEvents(groupID: String, startDay: Date, endDay: Date) {
-        COLLECTION_GROUP.document(groupID).collection("Events").order(by: "eventStartTime", descending: false).getDocuments { snapshot, err in
+    func fetchEvents(group: GroupModel, startDay: Date, endDay: Date) {
+        var events = group.eventsID ?? []
+        COLLECTION_EVENTS.whereField("id", in: events).getDocuments { snapshot, err in
          
             if err != nil {
                 print("ERROR")
@@ -96,7 +97,7 @@ class GroupCalendarViewModel : ObservableObject {
                 var data = document.data()
                 var startTime = data["eventStartTime"] as? Date ?? Date()
                 let users = data["usersAttendingID"] as? [String] ?? []
-                self.fetchEventUsersAttending(usersAttendingID: users, eventID: data["id"] as? String ?? " ", groupID: groupID) { fetchedUsers in
+                self.fetchEventUsersAttending(usersAttendingID: users, eventID: data["id"] as? String ?? " ", groupID: group.id) { fetchedUsers in
                     data["usersAttending"] = fetchedUsers
                     groupD.leave()
                 }

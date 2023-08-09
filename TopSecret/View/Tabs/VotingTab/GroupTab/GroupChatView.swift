@@ -10,7 +10,6 @@ import SDWebImageSwiftUI
 import Foundation
 import UIKit
 import OmenTextField
-import SwiftUIPullToRefresh
 import Firebase
 import MediaPicker
 import AVFoundation

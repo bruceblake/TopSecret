@@ -87,6 +87,7 @@ class EventAttendanceViewModel : ObservableObject {
         COLLECTION_EVENTS.document(eventID).updateData(["usersUndecidedID":FieldValue.arrayRemove([userID])])
         COLLECTION_EVENTS.document(eventID).updateData(["usersAttendingID":FieldValue.arrayRemove([userID])])
         COLLECTION_EVENTS.document(eventID).updateData(["usersDeclinedID":FieldValue.arrayRemove([userID])])
+        COLLECTION_EVENTS.document(eventID).updateData(["usersInvitedID":FieldValue.arrayRemove([userID])])
 
         var notificationID = UUID().uuidString
        
@@ -100,5 +101,7 @@ class EventAttendanceViewModel : ObservableObject {
             "hasSeen":false,
             "type":"uninvitedToEvent"] as [String:Any]
         COLLECTION_USER.document(USER_ID).collection("Notifications").document(notificationID).setData(userNotificationData)
+        
+        COLLECTION_USER.document(userID).collection("Notifications").document(notificationID).setData(userNotificationData)
     }
 }

@@ -27,7 +27,7 @@ struct EventModel : Identifiable, Hashable{
     var eventEndTime : Timestamp?
     var usersInvitedID: [String]?
     var usersInvited : [User]?
-    var usersExcludedIDS: [String]?
+    var usersExcludedID: [String]?
     var usersExcluded: [User]?
     var usersAttendingID : [String]?
     var usersAttending : [User]?
@@ -38,7 +38,7 @@ struct EventModel : Identifiable, Hashable{
     var creatorID: String?
     var creator : User?
     var groupID: String?
-    var group: Group?
+    var group: GroupModel?
     var timeStamp: Timestamp?
     var image: UIImage?
     var eventImage: String?
@@ -106,7 +106,7 @@ enum InvitationType {
         self.eventEndTime = dictionary["eventEndTime"] as? Timestamp ?? Timestamp()
         self.usersInvitedID = dictionary["usersInvitedID"] as? [String] ?? []
         self.usersInvited = dictionary["usersInvited"] as? [User] ?? []
-        self.usersExcludedIDS = dictionary["usersExcludedIDS"] as? [String] ?? []
+        self.usersExcludedID = dictionary["usersExcludedID"] as? [String] ?? []
         self.usersExcluded = dictionary["usersExcluded"] as? [User] ?? []
         self.usersAttendingID = dictionary["usersAttendingID"] as? [String] ?? []
         self.usersAttending = dictionary["usersAttending"] as? [User] ?? []
@@ -117,7 +117,7 @@ enum InvitationType {
         self.creatorID = dictionary["creatorID"] as? String ?? " "
         self.creator = dictionary["creator"] as? User ?? User()
         self.groupID = dictionary["groupID"] as? String ?? ""
-        self.group = dictionary["group"] as? Group ?? Group()
+        self.group = dictionary["group"] as? GroupModel ?? GroupModel()
         self.timeStamp = dictionary["timeStamp"] as? Timestamp ?? Timestamp()
         self.image = dictionary["image"] as? UIImage ?? UIImage()
         self.urlPath = dictionary["urlPath"] as? String ?? ""
@@ -127,7 +127,7 @@ enum InvitationType {
         self.dislikedList = dictionary["dislikedList"] as? [User] ?? []
         self.description = dictionary["description"] as? String ?? ""
         self.membersCanInviteGuests = dictionary["membersCanInviteGuests"] as? Bool ?? false
-        self.eventImage = dictionary["eventImage"] as? String ?? " "
+        self.eventImage = dictionary["eventImage"] as? String ?? ""
         self.ended = dictionary["ended"] as? Bool ?? false
 
         

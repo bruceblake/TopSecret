@@ -9,7 +9,6 @@ import SwiftUI
 import SDWebImageSwiftUI
 import Firebase
 import Foundation
-import SwiftUIPullToRefresh
 
 
 struct ShowGroups : View {
@@ -17,7 +16,7 @@ struct ShowGroups : View {
     @EnvironmentObject var userVM: UserViewModel
     @EnvironmentObject var selectedGroupVM: SelectedGroupViewModel
     @Environment(\.refresh) private var refresh
-    @Binding var selectedGroup : Group
+    @Binding var selectedGroup : GroupModel
     @Binding var users: [User]
     @Binding var openGroupHomescreen : Bool
     
@@ -45,9 +44,7 @@ struct ShowGroups : View {
                                 dispatchGroup.enter()
                                 self.selectedGroup = group
                                 selectedGroupVM.changeCurrentGroup(groupID: group.id){ finishedFetching in
-                                    if finishedFetching{
-                                        dispatchGroup.leave()
-                                    }
+                                        dispatchGroup.leave()                                    
                                 }
 
                                 dispatchGroup.notify(queue: .main, execute:{

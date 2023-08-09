@@ -18,7 +18,7 @@ struct GroupPostModel : Identifiable {
     var creatorID: String?
     var creator: User?
     var groupID: String?
-    var group: Group?
+    var group: GroupModel?
     var timeStamp : Timestamp?
     var likedListID: [String]?
     var likedList: [User]?
@@ -40,7 +40,7 @@ struct GroupPostModel : Identifiable {
         self.creator = dictionary["creator"] as? User ?? User()
         self.timeStamp = dictionary["timeStamp"] as? Timestamp ?? Timestamp()
         self.groupID = dictionary["groupID"] as? String ?? ""
-        self.group = dictionary["group"] as? Group ?? Group()
+        self.group = dictionary["group"] as? GroupModel ?? GroupModel()
         self.likedListID = dictionary["likedListID"] as? [String] ?? []
         self.likedList = dictionary["likedList"] as? [User] ?? []
         self.dislikedListID = dictionary["dislikedListID"] as? [String] ?? []

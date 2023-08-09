@@ -10,7 +10,7 @@ import SDWebImageSwiftUI
 
 struct GroupProfileView: View {
     
-    var group : Group
+    var group : GroupModel
     var isInGroup : Bool
     @EnvironmentObject var userVM : UserViewModel
     @StateObject var groupProfileVM = GroupProfileViewModel()
@@ -205,11 +205,5 @@ struct GroupProfileView: View {
     }
 }
 
-
-//    struct GroupProfileView_Previews: PreviewProvider {
-//        static var previews: some View {
-//            GroupProfileView(group: Group()).colorScheme(.dark)
-//        }
-//    }
 
 

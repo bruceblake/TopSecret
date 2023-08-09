@@ -22,7 +22,7 @@ class UserViewModel : ObservableObject {
     @Published var user : User?
     @Published var loginErrorMessage = ""
     
-    @Published var groups: [Group] = []
+    @Published var groups: [GroupModel] = []
     @Published var personalChats: [ChatModel] = []
     @Published var notifications : [UserNotificationModel] = []
     
@@ -131,7 +131,7 @@ class UserViewModel : ObservableObject {
         return sum
     }
     
-    func fetchGroup(groupID: String, completion: @escaping (Group) -> ()) -> () {
+    func fetchGroup(groupID: String, completion: @escaping (GroupModel) -> ()) -> () {
         COLLECTION_GROUP.document(groupID).getDocument { snapshot, err in
             if err != nil{
                 print("ERROR")
@@ -139,7 +139,7 @@ class UserViewModel : ObservableObject {
             }
             var data = snapshot?.data() as? [String:Any] ?? [:]
             
-            return completion(Group(dictionary: data))
+            return completion(GroupModel(dictionary: data))
         }
     }
     
@@ -263,6 +263,7 @@ class UserViewModel : ObservableObject {
                 let usersThatHaveSeenLastMessage = data["usersThatHaveSeenLastMessage"] as? [String] ?? []
                 let id = data["id"] as? String ?? " "
                 let chatType = data["chatType"] as? String ?? ""
+                
                 groupD.enter()
                 self.fetchChatUsers(users: usersID) { fetchedUsers in
                     data["users"] = fetchedUsers
@@ -425,7 +426,7 @@ class UserViewModel : ObservableObject {
                 print("No document!")
                 return
             }
-            var groupsToReturn : [Group] = []
+            var groupsToReturn : [GroupModel] = []
             
             //fetching notifications
             
@@ -456,7 +457,7 @@ class UserViewModel : ObservableObject {
                 }
                 
                 groupD.notify(queue: .main, execute: {
-                    groupsToReturn.append(Group(dictionary: data))
+                    groupsToReturn.append(GroupModel(dictionary: data))
                 })
                 
             }
@@ -949,7 +950,7 @@ class UserViewModel : ObservableObject {
     }
     
     
-    func fetchNotificationGroup(groupID: String, completion: @escaping (Group) -> ()) -> () {
+    func fetchNotificationGroup(groupID: String, completion: @escaping (GroupModel) -> ()) -> () {
         COLLECTION_GROUP.document(groupID).getDocument { snapshot, err in
             if err != nil{
                 print("ERROR")
@@ -957,7 +958,7 @@ class UserViewModel : ObservableObject {
             }
             
             let data = snapshot?.data() as? [String:Any] ?? [:]
-            return completion(Group(dictionary: data))
+            return completion(GroupModel(dictionary: data))
         }
     }
     
@@ -1008,14 +1009,14 @@ class UserViewModel : ObservableObject {
     }
     
     
-    func concatenate(followedGroups: [Group], groups: [Group]) -> [Group]{
-        var arr1 : [Group] = []
+    func concatenate(followedGroups: [GroupModel], groups: [GroupModel]) -> [GroupModel]{
+        var arr1 : [GroupModel] = []
         arr1 = groups
         arr1.append(contentsOf: followedGroups)
         return arr1
     }
     
-    func getIDS(userGroups: [Group]) -> [String]{
+    func getIDS(userGroups: [GroupModel]) -> [String]{
         var arr : [String] = [""]
         for group in userGroups{
             arr.append(group.id)
@@ -1171,13 +1172,13 @@ class UserViewModel : ObservableObject {
                 return
             }
             
-            self.groups = documents.map{ queryDocumentSnapshot -> Group in
+            self.groups = documents.map{ queryDocumentSnapshot -> GroupModel in
                 let data = queryDocumentSnapshot.data()
                 
                 
                 
                 
-                return Group(dictionary: data)
+                return GroupModel(dictionary: data)
                 
             }
             

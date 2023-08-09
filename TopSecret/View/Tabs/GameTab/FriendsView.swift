@@ -47,7 +47,13 @@ struct FriendsView: View {
                 
                 }.padding(.horizontal,30)
                 ScrollView{
-                        if ((userVM.personalChats.isEmpty )) {
+                    if !(userVM.connected ?? false) && userVM.personalChats.isEmpty {
+                        VStack{
+                            Spacer()
+                            Text("Unable to fetch friends list").foregroundColor(Color.gray)
+                        }
+                    }
+                    else if (userVM.personalChats.isEmpty && userVM.connected ?? false) {
                           
                                 Button(action: {
                                     //todo
@@ -80,13 +86,19 @@ struct FriendsView: View {
                                         
                                     }else{
                                         Button {
-                                           
+                                           let dp = DispatchGroup()
+                                            dp.enter()
+                                            personalChatVM.listenToChat(chatID: chat.id)
+//                                            personalChatVM.fetchFirstMessages(chatID: chat.id, userID: USER_ID)
+                                            dp.leave()
+                                            dp.notify(queue: .main, execute: {
                                                 openPersonalChatView = true
+                                            })
                                             
                                         } label: {
                                             FriendCell(user: personalChatVM.getPersonalChatUser(chat: chat, userID: userVM.user?.id ?? " "), personalChatVM: personalChatVM, chat: chat)
                                         }
-                                        NavigationLink(destination: PersonalChatView(chatID: chat.id), isActive: $openPersonalChatView) {
+                                        NavigationLink(destination: PersonalChatView(personalChatVM: personalChatVM, chatID: chat.id), isActive: $openPersonalChatView) {
                                             EmptyView()
                                         }
                                         

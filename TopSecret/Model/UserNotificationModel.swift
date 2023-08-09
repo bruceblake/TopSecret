@@ -43,7 +43,7 @@ struct UserNotificationModel : Identifiable {
     var eventID: String?
     var poll: PollModel?
     var pollID: String?
-    var group: Group?
+    var group: GroupModel?
     var groupID: String?
     
     init(dictionary: [String:Any]) {
@@ -62,7 +62,7 @@ struct UserNotificationModel : Identifiable {
         self.eventID = dictionary["eventID"] as? String ?? ""
         self.poll = dictionary["poll"] as? PollModel ?? PollModel()
         self.pollID = dictionary["pollID"] as? String ?? ""
-        self.group = dictionary["group"] as? Group ?? Group()
+        self.group = dictionary["group"] as? GroupModel ?? GroupModel()
         self.groupID = dictionary["groupID"] as? String ?? ""
     }
     

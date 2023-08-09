@@ -17,8 +17,8 @@ struct CreateStoryPostView: View {
     @Environment(\.presentationMode) var presentationMode
     @EnvironmentObject var userVM: UserViewModel
     
-    @State var avatarImage = UIImage(named: "topbarlogo")!
-    @State var selectedGroup : Group = Group()
+    @State var avatarImage : UIImage? = nil
+    @State var selectedGroup : GroupModel = GroupModel()
     @State var isShowingPhotoPicker: Bool = false
     @State var posts : [UIImage] = []
     @State var showEditStory = false
@@ -95,7 +95,9 @@ struct CreateStoryPostView: View {
                                 Image(systemName: "photo.on.rectangle")
                             }
                         })  .fullScreenCover(isPresented: $isShowingPhotoPicker, content: {
-                            ImagePicker(avatarImage: $avatarImage, allowsEditing: false)
+//                            if let avatarImage = avatarImage{
+//                                ImagePicker(avatarImage: $avatarImage, allowsEditing: false)
+//                            }
                         })
                         
                         
@@ -127,7 +129,7 @@ struct CreateStoryPostView: View {
                 }
             }.animation(.easeInOut, value: cameraVM.showVideoPreview)
             
-            NavigationLink(destination: EditStoryPost(image: $avatarImage), isActive: $showEditStory, label: {EmptyView()})
+//            NavigationLink(destination: EditStoryPost(image: $avatarImage), isActive: $showEditStory, label: {EmptyView()})
             
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
 //            cameraVM.checkPermission()

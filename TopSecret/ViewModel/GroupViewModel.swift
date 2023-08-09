@@ -43,7 +43,7 @@ class GroupViewModel: ObservableObject {
    
     
     
-    func loadActiveUsers(group: Group){
+    func loadActiveUsers(group: GroupModel){
         COLLECTION_GROUP.document(group.id).getDocument { snapshot, err in
             if err != nil {
                 print("ERROR")
@@ -142,7 +142,7 @@ class GroupViewModel: ObservableObject {
         
     }
     
-    func acceptGroupInvitation(group: Group, user: User){
+    func acceptGroupInvitation(group: GroupModel, user: User){
         
         let dp = DispatchGroup()
         dp.enter()
@@ -184,7 +184,7 @@ class GroupViewModel: ObservableObject {
         
     }
     
-    func denyGroupInvitation(group: Group, user: User){
+    func denyGroupInvitation(group: GroupModel, user: User){
         
         let dp = DispatchGroup()
         dp.enter()
@@ -226,7 +226,7 @@ class GroupViewModel: ObservableObject {
     
    
     
-    func joinGroup(group: Group, user: User){
+    func joinGroup(group: GroupModel, user: User){
         COLLECTION_GROUP.document(group.id).updateData(["usersID":FieldValue.arrayUnion([user.id])])
         COLLECTION_USER.document(user.id ?? "").updateData(["groupsID":FieldValue.arrayUnion([group.id])])
              
@@ -266,62 +266,10 @@ class GroupViewModel: ObservableObject {
              
     }
     
-    
-    
-    
-    
-    func leaveGroup(group: Group, user: User){
-        COLLECTION_GROUP.document(group.id).updateData(["memberAmount": FieldValue.increment(Int64(-1))])
-        COLLECTION_GROUP.document(group.id).updateData(["users":FieldValue.arrayRemove([user.id ?? " "])])
-
-        COLLECTION_USER.document(user.id ?? "").updateData(["groupsID":FieldValue.arrayRemove([group.id])])
-        
-        COLLECTION_GROUP.document(group.id).getDocument { (snapshot, err) in
-            if err != nil{
-                print("ERROR")
-                return
-            }
-            let groupChatID = snapshot?.get("chatID") as? String ?? " "
-            
-
-            self.chatRepository.leaveChat(chatID: groupChatID, userID: user.id ?? " ", groupID: group.id)
-            
-            let users = snapshot?.get("usersID") as? [String] ?? []
-            
-            if users.count <= 0{
-
-                
-                COLLECTION_GROUP.document(group.id).delete() { err in
-                    
-                    if err != nil {
-                        print("Unable to delete document")
-                    }else{
-                        print("sucessfully deleted document")
-                    }
-                    
-                }
-            }
-            var notificationID = UUID().uuidString
-            
-            let notificationData = ["id":notificationID,
-                                    "notificationName": "User Left",
-                                    "notificationTime":Timestamp(),
-                                    "notificationType":"userLeft", "notificationCreator9ID":user.id,
-                                    "usersThatHaveSeen":[]] as [String:Any]
-            COLLECTION_GROUP.document(group.id).collection("Notifications").document(notificationID).setData(notificationData)
-            
-            COLLECTION_GROUP.document(group.id).updateData(["notificationCount":FieldValue.increment((Int64(1)))])
-           
-            for user in group.users ?? []{
-                self.notificationSender.sendPushNotification(to: user.fcmToken ?? " ", title: "\(group.groupName)", body: "\(user.nickName ?? " ") has left \(group.groupName)")
-            }
-            
-        }
-        
 
         
 
-    }
+    
     
     
     func createGroup(groupName: String, dateCreated: Date, users: [String], image: UIImage, groupID: String){
@@ -357,7 +305,7 @@ class GroupViewModel: ObservableObject {
     
   
     
-    func isInGroup(user1: User, group: Group, completion: @escaping (Bool) -> () ) -> (){
+    func isInGroup(user1: User, group: GroupModel, completion: @escaping (Bool) -> () ) -> (){
         COLLECTION_GROUP.document(group.id).getDocument { (snapshot, err) in
             if err != nil {
                 print("ERROR")

@@ -18,7 +18,7 @@ class GroupGalleryViewModel : ObservableObject {
     @Published var isLoading : Bool = true
     
     
-    func uploadPhoto(image: UIImage, userID: String, group: Group, isPrivate: Bool, completion: @escaping (Bool) -> ()){
+    func uploadPhoto(image: UIImage, userID: String, group: GroupModel, isPrivate: Bool, completion: @escaping (Bool) -> ()){
         
       
         
@@ -55,7 +55,7 @@ class GroupGalleryViewModel : ObservableObject {
         }
     }
     
-    func uploadVideo(url: URL, group: Group, completion: @escaping (Bool) -> ()) {
+    func uploadVideo(url: URL, group: GroupModel, completion: @escaping (Bool) -> ()) {
         let data = try! Data(contentsOf: url)
         let storageRef = Storage.storage().reference()
         let path = "\(group.id)/GroupGalleryVideos/\(UUID().uuidString).mp4"

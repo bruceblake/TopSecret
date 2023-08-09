@@ -15,12 +15,12 @@ import MapKit
 struct CreateEventView: View {
     
     @State var eventName: String = ""
-    @State var eventStartTime : Date = Date().addingTimeInterval(300)
+    @State var eventStartTime : Date = Date()
     @State var membersCanInviteGuests : Bool = false
     @State var isAllDay : Bool = false
-    @State var eventEndTime : Date = Date().addingTimeInterval(3900)
+    @State var eventEndTime : Date = Date()
     @State var selectedFriends : [User] = []
-    var selectedGroups : [Group]?
+    var selectedGroups : [GroupModel]?
     @State var openFriendsList : Bool = false
     @State var openGroupsList : Bool = false
     @State var searchLocationView : Bool = false
@@ -53,6 +53,7 @@ struct CreateEventView: View {
     @State var imageText : String = "Add Event Cover"
     @State var isKeyboardPresented = false
     @Binding var showAddEventView : Bool
+    @State var selectedAnImage : Bool = false
     
     @StateObject var contactVM = ContactsViewModel()
 
@@ -60,7 +61,9 @@ struct CreateEventView: View {
     var body: some View {
         ZStack{
             Color("Background")
-            Image(uiImage: image).scaledToFill().ignoresSafeArea()
+            if selectedAnImage{
+                Image(uiImage: image).scaledToFill().ignoresSafeArea()
+            }
             VStack{
                 
                 HStack(alignment: .center){
@@ -94,7 +97,7 @@ struct CreateEventView: View {
                     Button(action:{
                         
                         if event != nil{
-                            eventVM.editEvent(event: event!, name: eventName, startTime: eventStartTime, endTime: eventEndTime, user: userVM.user ?? User(), image: image, invitationType: invitationType, location: location, membersCanInviteGuests: membersCanInviteGuests, invitedMembers: invitedMembers, excludedMembers: excludedMembers, description: description, createEventChat: createEventChat, createGroupFromEvent: createGroupFromEvent) { finished in
+                            eventVM.editEvent(event: event!, name: eventName, startTime: eventStartTime, endTime: eventEndTime, user: userVM.user ?? User(), image: selectedAnImage ? image : nil, invitationType: invitationType, location: location, membersCanInviteGuests: membersCanInviteGuests, invitedMembers: invitedMembers, excludedMembers: excludedMembers, description: description, createEventChat: createEventChat, createGroupFromEvent: createGroupFromEvent) { finished in
                                 if finished{
                                     self.showAddEventView = false
                                 }else{
@@ -103,7 +106,7 @@ struct CreateEventView: View {
                             }
                         }else{
                            
-                            eventVM.createEvent(group: !isGroup ? nil : selectedGroupVM.group , eventName: eventName,eventStartTime: eventStartTime , eventEndTime: eventEndTime, user: userVM.user ?? User(), image: image, invitationType: invitationType, location: location, membersCanInviteGuests: membersCanInviteGuests, invitedMembers: invitedMembers, excludedMembers: excludedMembers, description: description, createEventChat: createEventChat, createGroupFromEvent: createGroupFromEvent) { finished in
+                            eventVM.createEvent(group: !isGroup ? nil : selectedGroupVM.group , eventName: eventName,eventStartTime: eventStartTime , eventEndTime: eventEndTime, user: userVM.user ?? User(), image: selectedAnImage ? image : nil, invitationType: invitationType, location: location, membersCanInviteGuests: membersCanInviteGuests, invitedMembers: invitedMembers, excludedMembers: excludedMembers, description: description, createEventChat: createEventChat, createGroupFromEvent: createGroupFromEvent) { finished in
                                 if finished{
                                     self.showAddEventView = false
                                 }else{
@@ -246,9 +249,9 @@ struct CreateEventView: View {
                                 Button(action:{
                                     let dp = DispatchGroup()
                                     dp.enter()
-                                    if location.id == nil {
-                                        self.location = EventModel.Location()
-                                    }
+//                                    if location.id == nil {
+//                                        self.location = EventModel.Location()
+//                                    }
                                  
                                     dp.leave()
                                     dp.notify(queue: .main, execute:{
@@ -263,7 +266,7 @@ struct CreateEventView: View {
                                                 Spacer()
                                                 Image(systemName: "chevron.right").foregroundColor(Color.gray)
                                             }else{
-                                                Text("\(location.name.isEmpty ? "Add Location" : location.name )").foregroundColor(location.address.isEmpty ? FOREGROUNDCOLOR : Color.blue).lineLimit(1)
+                                                Text("\(location.name)").foregroundColor(location.address.isEmpty ? FOREGROUNDCOLOR : Color.blue).lineLimit(1)
                                                 Spacer()
                                                 Button(action:{
                                                     
@@ -428,6 +431,8 @@ struct CreateEventView: View {
                 
             }.resizeToScreenSize().offset(y: self.isKeyboardPresented ? 100 : 0)
         }.edgesIgnoringSafeArea(.all).navigationBarHidden(true).onAppear{
+            eventStartTime = eventStartTime.addingTimeInterval(300)
+            eventEndTime = eventEndTime.addingTimeInterval(3900)
             if event != nil {
                 if event?.invitationType ?? EventModel.InvitationType.openToFriends == EventModel.InvitationType.openToFriends  {
                     self.selectedOption = 0
@@ -452,6 +457,7 @@ struct CreateEventView: View {
             
         }.onChange(of: image) { newValue in
             self.imageText = "Change Event Cover"
+            self.selectedAnImage = true
         } .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { notification in
             self.isKeyboardPresented = true
         }

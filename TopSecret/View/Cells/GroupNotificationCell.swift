@@ -20,10 +20,6 @@ struct GroupNotificationCell: View {
             
             
             //TODO
-            //1 hour left on event, countdown, poll
-            //user posted on story
-            
-            
             //user sent a text
             //user sent an image
             //user sent a video
@@ -39,18 +35,12 @@ struct GroupNotificationCell: View {
             switch groupNotification.type ?? " "{
             case "eventCreated":
                 GroupEventCreatedNotificationCell(groupNotification: groupNotification)
-            case "pollCreated":
-                Text("Hello World")
             case "acceptedGroupInvitation":
-                UserAddedNotificationCell(groupNotification: groupNotification)
-            case "userLeft":
-                UserAddedNotificationCell(groupNotification: groupNotification)
-            case "oneHourRemainingEvent":
-                Text("Hello World")
-            case "oneHourRemainingPoll":
-                Text("Hello World")
-            case "userChangedGroupName":
-                Text("Hello World")
+                UserAcceptedInvitationNotificationCell(groupNotification: groupNotification)
+            case "declinedGroupInvitation":
+                UserDeclinedInvitationNotificationCell(groupNotification: groupNotification)
+            case "invitedToGroup":
+                    UserInvitedToGroupNotificationCell(groupNotification: groupNotification)
             default:
                 Text("\(groupNotification.type ?? "cock")")
             }
@@ -73,18 +63,21 @@ struct GroupEventCreatedNotificationCell : View {
                 
                 
                 
-                WebImage(url: URL(string: (groupNotification.sender as? User ?? User()).profilePicture ?? ""))
+                WebImage(url: URL(string: (groupNotification.sender ?? User()).profilePicture ?? ""))
                     .resizable()
                     .scaledToFill()
                     .frame(width:40,height:40)
                     .clipShape(Circle())
                 
                 VStack(alignment: .leading){
-                    Text("\((groupNotification.sender as? User ?? User() ).username ?? "USER_USERNAME")").fontWeight(.bold).font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
-                    Text("\((groupNotification.sender as? User ?? User() ).nickName ?? "USER_USERNAME") created an event").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                    HStack{
+                        Text("\((groupNotification.sender ?? User() ).username ?? "USER_USERNAME")").fontWeight(.bold).font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                        Text("\(groupNotification.timeStamp?.dateValue() ?? Date(), style: .time)").foregroundColor(.gray).font(.footnote)
+                        Spacer()
+                    }
+                    Text("\((groupNotification.sender ?? User() ).nickName ?? "USER_USERNAME") created an event").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
                 }
-                Spacer()
-                Text("\(groupNotification.timeStamp?.dateValue() ?? Date(), style: .time)").foregroundColor(.gray).font(.footnote)
+              
             }
         }.padding(5).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
         
@@ -92,7 +85,7 @@ struct GroupEventCreatedNotificationCell : View {
 }
 
 
-struct UserAddedNotificationCell : View {
+struct UserInvitedToGroupNotificationCell : View {
     
     var groupNotification: GroupNotificationModel
     @EnvironmentObject var groupVM: SelectedGroupViewModel
@@ -102,18 +95,56 @@ struct UserAddedNotificationCell : View {
                 
                 
                 
-                WebImage(url: URL(string: (groupNotification.sender as? User ?? User()).profilePicture ?? ""))
+                WebImage(url: URL(string: (groupNotification.sender ?? User()).profilePicture ?? ""))
                     .resizable()
                     .scaledToFill()
                     .frame(width:40,height:40)
                     .clipShape(Circle())
                 VStack(alignment: .leading){
-                    Text("\((groupNotification.sender as? User ?? User() ).username ?? "USER_USERNAME")").fontWeight(.bold).font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
-                    Text("\((groupNotification.sender as? User ?? User() ).nickName ?? "USER_USERNAME") accepted their invitation to \(groupVM.group.groupName ?? " ")").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                    HStack{
+                        Text("\((groupNotification.sender ?? User() ).nickName ?? "USER_USERNAME")").fontWeight(.bold).font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                        Text("\(groupNotification.timeStamp?.dateValue() ?? Date(), style: .time)").foregroundColor(.gray).font(.footnote)
+                        Spacer()
+                    }
+                 
+                    
+                    Text("invited \((groupNotification.receiver ?? User() ).username ?? "USER_USERNAME") to \(groupVM.group.groupName )").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
                 }
              
-                Spacer()
-                Text("\(groupNotification.timeStamp?.dateValue() ?? Date(), style: .time)").foregroundColor(.gray).font(.footnote)
+               
+            }
+        }.padding(5).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
+    }
+}
+
+
+struct UserAcceptedInvitationNotificationCell : View {
+    
+    var groupNotification: GroupNotificationModel
+    @EnvironmentObject var groupVM: SelectedGroupViewModel
+    var body: some View {
+        VStack{
+            HStack{
+                
+                
+                
+                WebImage(url: URL(string: (groupNotification.sender ?? User()).profilePicture ?? ""))
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width:40,height:40)
+                    .clipShape(Circle())
+                VStack(alignment: .leading){
+                    HStack{
+                        Text("\((groupNotification.sender ?? User() ).nickName ?? "USER_USERNAME")").fontWeight(.bold).font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                        Text("\(groupNotification.timeStamp?.dateValue() ?? Date(), style: .time)").foregroundColor(.gray).font(.footnote)
+                        Spacer()
+                    }
+                  
+                    
+                    Text("accepted their invitation to \(groupVM.group.groupName )").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                }
+             
+               
             }
         }.padding(5).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
     }
@@ -123,3 +154,34 @@ struct UserAddedNotificationCell : View {
 
 
 
+struct UserDeclinedInvitationNotificationCell : View {
+    
+    var groupNotification: GroupNotificationModel
+    @EnvironmentObject var groupVM: SelectedGroupViewModel
+    var body: some View {
+        VStack{
+            HStack{
+                
+                
+                
+                WebImage(url: URL(string: (groupNotification.sender ?? User()).profilePicture ?? ""))
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width:40,height:40)
+                    .clipShape(Circle())
+                VStack(alignment: .leading){
+                    HStack{
+                        Text("\((groupNotification.sender ?? User() ).nickName ?? "USER_USERNAME")").fontWeight(.bold).font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                        Text("\(groupNotification.timeStamp?.dateValue() ?? Date(), style: .time)").foregroundColor(.gray).font(.footnote)
+                        Spacer()
+                    }
+                  
+                    
+                    Text("declined their invitation to \(groupVM.group.groupName )").font(.subheadline).foregroundColor(FOREGROUNDCOLOR).lineLimit(1)
+                }
+             
+               
+            }
+        }.padding(5).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
+    }
+}

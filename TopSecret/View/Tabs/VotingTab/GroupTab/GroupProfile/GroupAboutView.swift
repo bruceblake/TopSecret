@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct GroupAboutView: View {
-     var group: Group 
+     var group: GroupModel
     @StateObject var groupVM = GroupViewModel()
     @EnvironmentObject var userVM: UserViewModel
     var body: some View {

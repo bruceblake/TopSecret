@@ -11,7 +11,7 @@ struct ExplorePage: View {
     @ObservedObject var searchVM = SearchRepository()
     @StateObject var recentSearchVM = RecentSearchViewModel()
     @EnvironmentObject var userVM : UserViewModel
-    @State var selectedGroup : Group = Group()
+    @State var selectedGroup : GroupModel = GroupModel()
     @State var selectedUser : User = User()
     @State var openGroupProfile : Bool = false
     @State var openUserProfile : Bool = false
@@ -157,7 +157,7 @@ struct ShowAllRecentSearchView : View {
 struct ExplorePageSearchList : View {
     @EnvironmentObject var userVM: UserViewModel
     @ObservedObject var searchVM : SearchRepository
-    @State var selectedGroup : Group = Group()
+    @State var selectedGroup : GroupModel = GroupModel()
     @State var selectedUser : User = User()
     @State var openGroupProfile : Bool = false
     @State var openUserProfile : Bool = false

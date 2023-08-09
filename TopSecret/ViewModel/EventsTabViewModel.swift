@@ -92,6 +92,25 @@ class EventsTabViewModel: ObservableObject {
                 
     }
     
+    func endEvent(eventID: String, usersAttendingID: [String]){
+        COLLECTION_EVENTS.document(eventID).updateData(["ended":true])
+        COLLECTION_EVENTS.document(eventID).updateData(["eventEndTime":Date()])
+        for userID in usersAttendingID{
+            let notificationID = UUID().uuidString
+            
+            let userNotificationData = ["id":notificationID,
+                                        "timeStamp":Timestamp(),
+                                        "senderID":USER_ID,
+                                        "eventID":eventID,
+                                        "receiverID":userID,
+                                        "hasSeen":false,
+                                        "type":"eventEnded",
+                                        "requiresAction":false] as [String:Any]
+            COLLECTION_USER.document(userID).collection("Notifications").document(notificationID).setData(userNotificationData)
+            COLLECTION_USER.document(userID).updateData(["eventsID":FieldValue.arrayRemove([eventID])])
+        }
+    }
+    
     func fetchEventCreator(userID: String, completion: @escaping (User) -> ()) -> () {
         COLLECTION_USER.document(userID).getDocument { snapshot, err in
             if err != nil{
@@ -154,7 +173,7 @@ class EventsTabViewModel: ObservableObject {
         self.isLoadingAttendingEvents = true
 
 
-        self.listeners.append(COLLECTION_EVENTS.order(by: "eventStartTime", descending: false).addSnapshotListener { snapshot, err in
+        self.listeners.append(COLLECTION_EVENTS.order(by: "eventStartTime", descending: false).whereField("ended", isEqualTo: false).addSnapshotListener { snapshot, err in
             if err != nil {
                 print("ERROR")
                 return
@@ -166,8 +185,8 @@ class EventsTabViewModel: ObservableObject {
                 var data = document.data()
                 var userID = data["creatorID"] as? String ?? " "
                 var usersAttendingID = data["usersAttendingID"] as? [String] ?? []
-                var ended = data["ended"] as? Bool ?? false
                 var startTime = data["eventStartTime"] as? Date ?? Date()
+                var endTime = data["eventEndTime"] as? Date ?? Date()
                 var id = data["id"] as? String ?? " "
                 dp.enter()
                 self.fetchEventCreator(userID: userID) { fetchedCreator in
@@ -175,18 +194,17 @@ class EventsTabViewModel: ObservableObject {
                     dp.leave()
                 }
                 dp.enter()
-                self.fetchUsers(usersID: usersAttendingID) { fetchedAttendingInvitedd in
-                    data["usersAttending"] = fetchedAttendingInvitedd
+                self.fetchUsers(usersID: usersAttendingID) { fetchedAttendingInvited in
+                    data["usersAttending"] = fetchedAttendingInvited
                     dp.leave()
                 }
                 dp.notify(queue: .main, execute: {
                     
+                         if usersAttendingID.contains(where: {$0 == user.id ?? " "}){
+                            eventsToReturn.append(EventModel(dictionary: data))
+                        }
                     
-                    if (Date() < startTime || ended ){
-                        COLLECTION_EVENTS.document(id).updateData(["ended":true])
-                    }else if usersAttendingID.contains(where: {$0 == user.id ?? " "}){
-                        eventsToReturn.append(EventModel(dictionary: data))
-                    }
+                  
                     
                 })
                 
@@ -205,70 +223,86 @@ class EventsTabViewModel: ObservableObject {
         let dp = DispatchGroup()
         var eventsToReturn: [EventModel] = []
         self.isLoadingOpenToFriends = true
-        dp.enter()
-
-        user.friendsListID?.forEach({ id in
-            self.listeners.append(COLLECTION_EVENTS.whereField("invitationType", isEqualTo: "Open to Friends").order(by: "eventStartTime", descending: false).whereField("creatorID", isEqualTo: id).addSnapshotListener { snapshot, err in
+        var idList = user.friendsListID ?? []
+        //fetch all the events that:
+        //1. the invitation type is "Open to Friends"
+        //2. the event has not ended
+        //3. the creator is a friend of the user
+        COLLECTION_EVENTS.order(by: "eventStartTime", descending: false).whereField("invitationType", isEqualTo: "Open to Friends").whereField("ended", isEqualTo: false).whereField("creatorID", in: idList).addSnapshotListener { snapshot, err in
+            if err != nil {
+                print("ERROR")
+                return
+            }
+            
+            dp.enter()
+            snapshot?.documents.forEach { document in
                 
+                var data = document.data()
+                var userID = data["creatorID"] as? String ?? " "
+                var usersUndecidedID = data["usersUndecidedID"] as? [String] ?? []
+                var usersExcludedID = data["usersExcludedID"] as? [String] ?? []
+                var usersInvitedID = data["usersInvitedID"] as? [String] ?? []
+                var ended = data["ended"] as? Bool ?? false
+                var id = data["id"] as? String ?? ""
+                var endTime = data["eventEndTime"] as? Date ?? Date()
+                dp.enter()
                 
-                if err != nil {
-                    print("ERROR")
-                    return
+                self.fetchEventCreator(userID: userID) { fetchedCreator in
+                    data["creator"] = fetchedCreator
+                    dp.leave()
                 }
-
-                for document in snapshot?.documents ?? [] {
-                    var data = document.data()
-                    var userID = data["creatorID"] as? String ?? " "
-                    var usersUndecidedID = data["usersUndecidedID"] as? [String] ?? []
-                    var ended = data["ended"] as? Bool ?? false
-                    dp.enter()
-                    self.fetchEventCreator(userID: id) { fetchedCreator in
-                        data["creator"] = fetchedCreator
-                        dp.leave()
-                    }
-                    dp.enter()
-                    self.fetchUsers(usersID: usersUndecidedID) { fetchedUndecidedUers in
-                        data["usersUndecided"] = fetchedUndecidedUers
-                        dp.leave()
-                    }
-                    dp.notify(queue: .main, execute: {
-                        if !ended{
+                
+                dp.enter()
+                self.fetchUsers(usersID: usersUndecidedID) { fetchedUndecidedUsers in
+                    data["usersUndecided"] = fetchedUndecidedUsers
+                    dp.leave()
+                }
+                
+                dp.enter()
+                self.fetchUsers(usersID: usersExcludedID) { fetchedExcludedUsers in
+                    data["usersExcluded"] = fetchedExcludedUsers
+                    dp.leave()
+                }
+                
+                dp.notify(queue: .main, execute: {
+                    if !usersExcludedID.contains(where: {$0 == user.id ?? " "}){
                         eventsToReturn.append(EventModel(dictionary: data))
-                        }
-                    })
-                    
-                }
+                    }
+                })
                 
-               
+            }
+            dp.leave()
+            
+            dp.notify(queue: .main, execute: {
+                self.openToFriendsEvents = eventsToReturn
+                self.isLoadingOpenToFriends = false
             })
-        })
-        dp.leave()
-        dp.notify(queue: .main, execute: {
-            self.openToFriendsEvents = eventsToReturn
-            self.isLoadingOpenToFriends = false
-        })
-       
-        
+            
+            
+        }
     }
     
     func fetchInvitedToEvents(user: User){
         var eventsToReturn: [EventModel] = []
         let dispatchGroup = DispatchGroup()
-        dispatchGroup.enter()
         self.listeners.append( COLLECTION_EVENTS.whereField("usersUndecidedID", arrayContains: user.id ?? " ").order(by: "eventStartTime", descending: false).addSnapshotListener { snapshot, err in
             if let err = err {
                 print("Fetch events error: \(err.localizedDescription)")
             }
             self.isLoadingInviteOnlyEvents = true
+            dispatchGroup.enter()
 
             snapshot?.documents.forEach { document in
-                dispatchGroup.enter()
 
                 var data = document.data()
                 var userID = data["creatorID"] as? String ?? " "
                 var usersUndecidedID = data["usersUndecidedID"] as? [String] ?? []
+                var usersInvitedID = data["usersInvitedID"] as? [String] ?? []
                 var ended = data["ended"] as? Bool ?? false
-                
+                var id = data["id"] as? String ?? ""
+                var endTime = data["eventEndTime"] as? Date ?? Date()
+                dispatchGroup.enter()
+
                 self.fetchEventCreator(userID: userID) { fetchedCreator in
                     data["creator"] = fetchedCreator
                     dispatchGroup.leave()
@@ -279,9 +313,14 @@ class EventsTabViewModel: ObservableObject {
                     data["usersUndecided"] = fetchedUndecidedUsers
                     dispatchGroup.leave()
                 }
+                
+                
                 dispatchGroup.notify(queue: .main, execute: {
                     if !ended {
-                    eventsToReturn.append(EventModel(dictionary: data))
+                      if usersInvitedID.contains(where: {$0 == user.id ?? " "}){
+                            eventsToReturn.append(EventModel(dictionary: data))
+                        }
+                        
                     }
                 })
                 
@@ -303,10 +342,10 @@ class EventsTabViewModel: ObservableObject {
     func inviteToEvent(userID: String, invitedIDS: [User], event: EventModel){
 
         for invitedMember in invitedIDS {
-            if invitedMember.id ?? " " != userID{
                 COLLECTION_USER.document(invitedMember.id ?? " ").updateData(["pendingEventInvitationID":FieldValue.arrayUnion([event.id])])
                 COLLECTION_EVENTS.document(event.id).updateData(["usersUndecidedID":FieldValue.arrayUnion([invitedMember.id ?? " "])])
-                
+                COLLECTION_EVENTS.document(event.id).updateData(["usersInvitedID":FieldValue.arrayUnion([invitedMember.id ?? " "])])
+
                 var notificationID = UUID().uuidString
                
                 
@@ -321,7 +360,7 @@ class EventsTabViewModel: ObservableObject {
                     "type":"invitedToEvent"] as [String:Any]
                 COLLECTION_USER.document(invitedMember.id ?? " ").collection("Notifications").document(notificationID).setData(userNotificationData)
 //                self.notificationSender.sendPushNotification(to: invitedMember.fcmToken ?? " ", title: "\(group.groupName)", body: "\(invitedMember.nickName ?? " ") created an event!")
-            }
+            
             
         }
     }

@@ -10,7 +10,7 @@ struct SearchedView: View {
     
     @Environment(\.presentationMode) var presentationMode
     @ObservedObject var searchVM: SearchRepository
-    @State var selectedGroup : Group = Group()
+    @State var selectedGroup : GroupModel = GroupModel()
     @State var openGroupProfile : Bool = false
     @EnvironmentObject var userVM : UserViewModel
     @State var selectedOptionIndex : Int = 0
@@ -105,7 +105,7 @@ struct SearchedView: View {
 
 struct FriendResults : View {
     @ObservedObject var searchVM: SearchRepository
-    @State var selectedGroup : Group = Group()
+    @State var selectedGroup : GroupModel = GroupModel()
     @State var openGroupProfile : Bool = false
     @EnvironmentObject var userVM : UserViewModel
     
@@ -155,7 +155,7 @@ struct FriendResults : View {
 
 struct GroupResults : View {
     @ObservedObject var searchVM: SearchRepository
-    @State var selectedGroup : Group = Group()
+    @State var selectedGroup : GroupModel = GroupModel()
     @State var openGroupProfile : Bool = false
     @EnvironmentObject var userVM : UserViewModel
     
@@ -203,7 +203,7 @@ struct GroupResults : View {
 
 struct UserResults : View {
     @ObservedObject var searchVM: SearchRepository
-    @State var selectedGroup : Group = Group()
+    @State var selectedGroup : GroupModel = GroupModel()
     @State var openGroupProfile : Bool = false
     @EnvironmentObject var userVM : UserViewModel
     
@@ -258,7 +258,7 @@ struct UserResults : View {
 
 struct TopResults : View {
     @ObservedObject var searchVM: SearchRepository
-    @State var selectedGroup : Group = Group()
+    @State var selectedGroup : GroupModel = GroupModel()
     @State var openGroupProfile : Bool = false
     @EnvironmentObject var userVM : UserViewModel
     

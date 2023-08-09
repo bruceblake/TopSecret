@@ -49,7 +49,6 @@ struct ScheduleView : View {
             Color("Background")
             VStack{
                 
-                ScrollView{
                     if showWeekView{
                         UserCalendarWeekListView(calendar: calendar, calendarVM: calendarVM,
                                                  date: $selectedDate,
@@ -142,68 +141,70 @@ struct ScheduleView : View {
                         CustomDatePicker(calendarVM: calendarVM, currentDate: $currentDate, selectedDate: $selectedDate, showWeekView: $showWeekView).padding(10)
                         
                     }
-                    
-                    HStack{
-                        
-                        Text("You \(self.checkIfSelectedDateIsInPast(selectedDate: selectedDate) ? "had" : "have") \(getNumberOfEventsOfDay(events: calendarVM.eventsResults, date: selectedDate)) \(getNumberOfEventsOfDay(events:calendarVM.eventsResults, date:selectedDate) == 1 ? "event" : "events")").bold().font(.title3).foregroundColor(getNumberOfEventsOfDay(events:calendarVM.eventsResults, date:selectedDate) == 0 ? Color.white : Color.yellow)
-                        
-                        Spacer()
-                        
-                        
-                        Text(selectedDate, style: .date).foregroundColor(getNumberOfEventsOfDay(events:calendarVM.eventsResults, date:selectedDate) == 0 ? Color.white : Color.yellow).font(.headline).padding(.leading)
-                        
-                        
-                        
-                        
-                    } .padding(10).background(RoundedRectangle(cornerRadius: 12).fill(getNumberOfEventsOfDay(events: calendarVM.eventsResults, date: selectedDate) == 0 ? Color("Color") : Color("AccentColor").opacity(0.9))).padding(.horizontal)
-                    
+                ScrollView{
+                    PullToRefreshView(){
+                            UIDevice.vibrate()
+                            calendarVM.startSearch(eventsID: userVM.user?.eventsID ?? [])
+                    }
                     if calendarVM.isLoading{
-                        ProgressView()
+                            ProgressView()
                     }else{
-                        ScrollView{
-                            if calendarVM.eventsResults.filter({Calendar.current.isDate($0.eventStartTime?.dateValue() ?? Date(), inSameDayAs: selectedDate)}).count == 0 && !calendarVM.isLoading {
-                                VStack{
-                                    Text("You're free today, unless you wanna change that").foregroundColor(Color.gray)
-                                    NavigationLink {
-                                        CreateEventView(eventStartTime: selectedDate, eventEndTime: selectedDate , isGroup: false, showAddEventView: $showAddEventView)
-                                    } label: {
-                                        Text("Create Event").foregroundColor(Color("Foreground"))
-                                            .padding(.vertical)
-                                            .frame(width: UIScreen.main.bounds.width/2).background(Color("AccentColor")).cornerRadius(15)
-                                    }
-                                    
-                                    
+                        HStack{
+                            
+                            Text("You \(self.checkIfSelectedDateIsInPast(selectedDate: selectedDate) ? "had" : "have") \(getNumberOfEventsOfDay(events: calendarVM.eventsResults, date: selectedDate)) \(getNumberOfEventsOfDay(events:calendarVM.eventsResults, date:selectedDate) == 1 ? "event" : "events")").bold().font(.title3).foregroundColor(getNumberOfEventsOfDay(events:calendarVM.eventsResults, date:selectedDate) == 0 ? Color.white : Color.yellow)
+                            
+                            Spacer()
+                            
+                            
+                            Text(selectedDate, style: .date).foregroundColor(getNumberOfEventsOfDay(events:calendarVM.eventsResults, date:selectedDate) == 0 ? Color.white : Color.yellow).font(.headline).padding(.leading)
+                            
+                            
+                            
+                            
+                        } .padding(10).background(RoundedRectangle(cornerRadius: 12).fill(getNumberOfEventsOfDay(events: calendarVM.eventsResults, date: selectedDate) == 0 ? Color("Color") : Color("AccentColor").opacity(0.9))).padding(.horizontal)
+                        if calendarVM.eventsResults.filter({Calendar.current.isDate($0.eventStartTime?.dateValue() ?? Date(), inSameDayAs: selectedDate)}).count == 0 && !calendarVM.isLoading {
+                            VStack{
+                                Text("You're free today, unless you wanna change that").foregroundColor(Color.gray)
+                                NavigationLink {
+                                    CreateEventView(eventStartTime: selectedDate, eventEndTime: selectedDate , isGroup: false, showAddEventView: $showAddEventView)
+                                } label: {
+                                    Text("Create Event").foregroundColor(Color("Foreground"))
+                                        .padding(.vertical)
+                                        .frame(width: UIScreen.main.bounds.width/2).background(Color("AccentColor")).cornerRadius(15)
                                 }
-                            }else{
                                 
-                                VStack(spacing: 40){
-                                    
-                                    VStack(spacing: 15){
-                                        ForEach(calendarVM.eventsResults.sorted(by: {$0.eventStartTime?.dateValue() ?? Date() > $1.eventStartTime?.dateValue() ?? Date()})){ event in
-                                            if Calendar.current.isDate(event.eventStartTime?.dateValue() ?? Date(), inSameDayAs: selectedDate){
-                                                Button(action:{
-                                                    self.selectedEvent = event
-                                                    self.showAddEventView.toggle()
-                                                },label:{
-                                                    UserCalendarEventCell(event: event)
-                                                })
-                                                
-                                                
-                                                
-                                            }
-                                        }
-                                    }.padding(.top,5)
-                                    
-                                }.padding(.bottom,UIScreen.main.bounds.height/4)
                                 
                             }
+                        }else{
+                            
+                            VStack(spacing: 40){
+                                
+                                VStack(spacing: 15){
+                                    ForEach(calendarVM.eventsResults.sorted(by: {$0.eventStartTime?.dateValue() ?? Date() > $1.eventStartTime?.dateValue() ?? Date()})){ event in
+                                        if Calendar.current.isDate(event.eventStartTime?.dateValue() ?? Date(), inSameDayAs: selectedDate){
+                                            Button(action:{
+                                                self.selectedEvent = event
+                                                self.showAddEventView.toggle()
+                                            },label:{
+                                                UserCalendarEventCell(event: event)
+                                            })
+                                            
+                                            
+                                            
+                                        }
+                                    }
+                                }.padding(.top,5)
+                                
+                            }.padding(.bottom,UIScreen.main.bounds.height/4)
+                            
                         }
+                        
                         
                         
                     }
                     
+                    
                 }
-                
                 
                 
                 
@@ -385,14 +386,13 @@ struct EventDetailView : View {
     @State var showBackground: Bool = true
     @State var openAttendanceView: Bool = false
     @State var isUndecided: Bool = true
+    @State var isAttending : Bool = true
     @State var finishedSetting: Bool = false
     @State var openEditView: Bool = false
-    var isAttending : Bool {
-        return event.usersAttendingID?.contains(USER_ID) ?? false
-    }
     @Binding var showAddEventView : Bool
     @State var progress : CGFloat = 0.0
-    
+    @State var selectedOption = 0
+    @State var fetched: Bool = false
     @State var imageHeight: CGFloat = 0
     let headerHeight: CGFloat = 200
     
@@ -597,32 +597,53 @@ struct EventDetailView : View {
                                             
                                             if !isUndecided{
                                                 Button(action:{
-                                                    eventVM.attendEvent()
+                                                    selectedOption = 0
                                                 },label:{
                                                     HStack{
                                                         
                                                         Text("I Will Be Attending").foregroundColor(FOREGROUNDCOLOR).bold()
                                                         Spacer()
-                                                        if isAttending {
+                                                        if selectedOption == 0 {
                                                             Image(systemName: "checkmark")
                                                         }
-                                                    }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color.green)).foregroundColor(FOREGROUNDCOLOR).opacity(!isAttending ? 0.5 : 1)
+                                                    }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color.green)).foregroundColor(FOREGROUNDCOLOR).opacity(selectedOption == 1 ? 0.5 : 1)
                                                 })
                                                 
                                                 Button(action:{
-                                                    eventVM.declineEventInvitation()
+                                                    selectedOption = 1
                                                 },label:{
                                                     HStack{
                                                         
                                                         Text("I Will Not Be Attending").foregroundColor(FOREGROUNDCOLOR).bold()
                                                         Spacer()
-                                                        if !isAttending {
+                                                        if selectedOption == 1 {
                                                             Image(systemName: "checkmark")
                                                         }
                                                         
-                                                    }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color.red)).foregroundColor(FOREGROUNDCOLOR).opacity(isAttending ? 0.5 : 1)
+                                                    }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color.red)).foregroundColor(FOREGROUNDCOLOR).opacity(selectedOption == 0 ? 0.5 : 1)
                                                 })
                                             }
+                                            
+                                            HStack{
+                                                Spacer()
+                                                Button(action:{
+                                                    if isUndecided {
+                                                        eventVM.chooseUndecidedOnEvent(userID: USER_ID)
+                                                    }else{
+                                                        if selectedOption == 0 {
+                                                            eventVM.attendEvent()
+                                                        }else{
+                                                            eventVM.declineEventInvitation()
+                                                            presentationMode.wrappedValue.dismiss()
+                                                        }
+                                                    }
+                                                  
+                                                },label:{
+                                                    Text("Save Changes")
+                                                })
+                                                Spacer()
+                                            }
+                                            
                                             
                                         }.padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Color")))
                                     }.padding(.horizontal)
@@ -662,15 +683,16 @@ struct EventDetailView : View {
                                                     imageHeight = $0 < 0 ? 0.001 : $0
                                                 }
                         }
-                    }
+                    } .padding(.bottom, UIScreen.main.bounds.height/4)
                 }
                 .coordinateSpace(name: "area")
                 .overlay(
-                    
+                 
+                
                     WebImage(url: URL(string: event.eventImage ?? " ")).resizable().scaledToFill().frame(height: imageHeight).allowsHitTesting(false).cornerRadius(16)
                     
                     , alignment: .top).clipped()
-                
+                   
           
                 
             }
@@ -687,21 +709,15 @@ struct EventDetailView : View {
         }.onDisappear{
             eventVM.removeListener()
         }.onReceive(eventVM.$event) { fetchedEvent in
-            if eventVM.finishedFetchingEvent {
-                self.region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: self.event.location?.latitude ?? 0.0 , longitude: self.event.location?.longitude ?? 0.0), span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
-                isUndecided = event.usersAttendingID?.contains(USER_ID) ?? false
-            }
-        }.onChange(of: isUndecided, perform: { newValue in
-            if newValue{
-                eventVM.chooseUndecidedOnEvent(userID: USER_ID)
+                self.region = MKCoordinateRegion(center: CLLocationCoordinate2D(latitude: fetchedEvent.location?.latitude ?? 0.0 , longitude: fetchedEvent.location?.longitude ?? 0.0), span: MKCoordinateSpan(latitudeDelta: 0.01, longitudeDelta: 0.01))
+                isAttending = fetchedEvent.usersAttendingID?.contains(USER_ID) ?? false
+                isUndecided = fetchedEvent.usersUndecidedID?.contains(USER_ID) ?? false
+            if isAttending {
+                selectedOption = 0
             }else{
-                if isAttending {
-                    eventVM.attendEvent()
-                }else{
-                    eventVM.declineEventInvitation()
-                }
+                selectedOption = 1
             }
-        })
+        }
         
     }
 }
@@ -734,7 +750,9 @@ struct UserCalendarEventCell : View{
         }.padding(.horizontal).onAppear{
             calendarVM.fetchEvent(eventID: event.id) { fetchedEvent in
                 withAnimation{
-                    event = fetchedEvent
+                    if let fetchedEvent = fetchedEvent {
+                        event = fetchedEvent
+                    }
                 }
             }
         }

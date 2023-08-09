@@ -20,7 +20,7 @@ class CreateGroupPostViewModel : ObservableObject {
     
     @Published var uploadStatus = UploadStatus.notStartedUpload
     
-    func createPost(image: UIImage, userID: String, group: Group, description: String){
+    func createPost(image: UIImage, userID: String, group: GroupModel, description: String){
         let storageRef = Storage.storage().reference()
         let postID = UUID().uuidString
         

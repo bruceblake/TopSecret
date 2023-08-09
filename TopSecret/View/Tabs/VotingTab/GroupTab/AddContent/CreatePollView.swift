@@ -20,10 +20,15 @@ struct CreatePollView: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject var createPollVM = CreatePollViewModel()
     @EnvironmentObject var userVM : UserViewModel
-    @State var optionsCount = 0
-    @State var options : [PollOptionModel] = []
+    @State var options : [PollOptionModel] = [PollOptionModel()]
     @State var question = ""
     @EnvironmentObject var groupVM : SelectedGroupViewModel
+    
+    func ableToCreatePoll() -> Bool {
+        // must be atleast 2 options and no more than 5
+        // must have a question
+        return options.count > 1 && question != ""
+    }
     var body: some View {
         ZStack{
         
@@ -61,13 +66,16 @@ struct CreatePollView: View {
                             ForEach(0..<options.count, id: \.self){ index in
                                 HStack{
                                     CustomTextField(text: $options[index].choice, placeholder: "Option \(index + 1)")
-                                    Button {
-                                        withAnimation{
-                                            let _ = options.remove(at: index)
+                                    if options.count > 1 {
+                                        Button {
+                                            withAnimation{
+                                                let _ = options.remove(at: index)
+                                            }
+                                        } label: {
+                                            Image(systemName: "xmark")
                                         }
-                                    } label: {
-                                        Image(systemName: "xmark")
                                     }
+                                  
 
                                 }
                             }
@@ -76,33 +84,36 @@ struct CreatePollView: View {
                       
                       
                     }.padding(.horizontal)
-                    HStack{
-                        Spacer()
-                        Button(action:{
-                            if options.count < 5 {
-                                withAnimation{
-                                    options.append(PollOptionModel())
-                                }
-                            }
-                        },label:{
-                            Text("Add Option").padding(10).background(Color("AccentColor")).foregroundColor(FOREGROUNDCOLOR).cornerRadius(12)
-                        })
-                        Spacer()
+                    
+                    if options.count < 5 {
+                        HStack{
+                            Spacer()
+                            Button(action:{
+                                    withAnimation{
+                                        options.append(PollOptionModel())
+                                    }
+                                
+                            },label:{
+                                Text("Add Option").padding(10).background(Color("AccentColor") ).foregroundColor(FOREGROUNDCOLOR).cornerRadius(12)
+                            })
+                            Spacer()
+                        }
                     }
+                  
                 
-                    Spacer()
                      
                     
                     Button(action:{
                         createPollVM.createPoll(creatorID: userVM.user?.id ?? " ", pollOptions: options, groupID: groupVM.group.id ?? " ", question: question, usersVisibleToID: groupVM.group.usersID ?? [])
                         presentationMode.wrappedValue.dismiss()
                     },label:{
-                        Text("Create Poll").foregroundColor(Color("Foreground"))
+                        Text("Create Poll").foregroundColor(FOREGROUNDCOLOR)
                             .padding(.vertical)
-                            .frame(width: UIScreen.main.bounds.width/1.5).background(Color("AccentColor")).cornerRadius(15)
-                    }).padding(.bottom,30)
+                            .frame(width: UIScreen.main.bounds.width/1.5).background(ableToCreatePoll() ? Color("AccentColor") : Color.gray).cornerRadius(15)
+                    }).padding().disabled(!ableToCreatePoll())
                   
-                    
+                    Spacer()
+
                 }
                 
                 

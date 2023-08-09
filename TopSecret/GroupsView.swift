@@ -10,7 +10,7 @@ import SwiftUI
 struct GroupsView: View {
     @State var openGroupHomescreen : Bool = false
     @EnvironmentObject var userVM: UserViewModel
-    @State var selectedGroup : Group = Group()
+    @State var selectedGroup : GroupModel = GroupModel()
     @State var users: [User] = []
     @State var showCreateGroupView: Bool = false
     

@@ -15,7 +15,7 @@ class ChatViewModel : ObservableObject {
     @Published var userList : [User] = []
     @Published var usersTypingList : [User] = []
     @Published var usersIdlingList : [User] = []
-    @Published var group : Group = Group()
+    @Published var group : GroupModel = GroupModel()
     @Published var pushText : Bool = false
 
     var colors: [String] = ["green","red","blue","orange","purple","teal"]

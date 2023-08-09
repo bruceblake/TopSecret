@@ -9,7 +9,7 @@ import SwiftUI
 
 struct GroupNotificationsView: View {
     
-    @Binding var group : Group
+    @Binding var group : GroupModel
     @EnvironmentObject var userVM: UserViewModel
     @EnvironmentObject var selectedGroupVM : SelectedGroupViewModel
 

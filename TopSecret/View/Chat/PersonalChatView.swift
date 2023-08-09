@@ -16,7 +16,7 @@ struct PersonalChatView : View {
     
     @EnvironmentObject var userVM: UserViewModel
     @Environment(\.presentationMode) var presentationMode
-    @StateObject var personalChatVM = PersonalChatViewModel()
+    @StateObject var personalChatVM : PersonalChatViewModel
     @State var showOverlay : Bool = false
     @State var selectedMessage: Message = Message()
     @State var showEditView: Bool = false
@@ -156,6 +156,7 @@ struct PersonalChatView : View {
     }
     @State private var offset: CGFloat = 0
     
+  
     
     
     
@@ -233,21 +234,24 @@ struct PersonalChatView : View {
                         ScrollView
                         {
                             PullToRefreshView() {
-                                if  personalChatVM.documentsLeftToFetch > 0 && personalChatVM.lastDocument != nil {
-                                    personalChatVM.fetchMoreMessages(chatID: chatID)
-                                }
+//                                if  personalChatVM.documentsLeftToFetch > 0 && personalChatVM.lastDocument != nil {
+//                                    DispatchQueue.main.async{
+//                                        personalChatVM.fetchMoreMessages(chatID: chatID)
+//                                    }
+//                                }
+                                personalChatVM.increasePageSize(chatID: chatID)
                             }
                                 VStack(spacing: 0){
                                     if personalChatVM.isLoading{
                                         ProgressView()
                                     }
+                                    
                                     ForEach(personalChatVM.messages.indices, id: \.self){ index in
-                                            
-                                            
                                         MessageCell(previousMessage: index != 0 ? personalChatVM.messages[index-1] : nil,message: personalChatVM.messages[index], selectedMessage: $selectedMessage,
                                                         showOverlay: $showOverlay, personalChatVM: personalChatVM).disabled(isLeavingChat).environmentObject(userVM)
                                         }
-
+                                    
+                                    
                                     VStack{
                                         ForEach(personalChatVM.chat.usersTyping){ user in
                                             HStack{
@@ -260,8 +264,8 @@ struct PersonalChatView : View {
                                             }.padding(5)
                                         }
                                     }
-                                    HStack{Spacer()}.padding(0).id("Empty")
                                     Spacer()
+                                    HStack{Spacer()}.padding(0).id("Empty")
                                 }.background(GeometryReader{ proxy -> Color in
                                     DispatchQueue.main.async{
                                         scrollViewOffset = -proxy.frame(in: .named("scroll")).origin.y
@@ -421,15 +425,22 @@ struct PersonalChatView : View {
                                                 self.showReplyView.toggle()
                                             }
                                         }else{
-                                            personalChatVM.sendTextMessage(text: personalChatVM.text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: self.getChatColor(userID: userVM.user?.id ?? " "), messageID: UUID().uuidString, messageType: "text", chatID: personalChatVM.chat.id)
+                                            personalChatVM.sendTextMessage(text: personalChatVM.text, user: userVM.user ?? User(), timeStamp: Timestamp(), nameColor: self.getChatColor(userID: userVM.user?.id ?? " "), messageID: UUID().uuidString, messageType: "text", chatID: personalChatVM.chat.id, completion: { sent in
+                                                if sent{
+                                                    print("sent")
+                                                }else{
+                                                    print("failed to send")
+                                                }
+                                            })
                                         }
                                         
                                         
                                         if !personalChatVM.chat.usersIdlingID.contains(self.getPersonalChatUser().id ?? ""){
                                             self.notificationSender.sendPushNotification(to: self.getPersonalChatUser().fcmToken ?? " ", title: userVM.user?.nickName ?? " ", body: personalChatVM.text)
                                         }
+                                        
                                         DispatchQueue.main.async{
-                                            personalChatVM.text = ""
+           
                                             personalChatVM.scrollToBottom += 1
                                         }
                                         
@@ -817,8 +828,7 @@ struct PersonalChatView : View {
                 )
         }
         .onAppear{
-            personalChatVM.listenToChat(chatID: chatID)
-            personalChatVM.fetchFirstMessages(chatID: chatID, userID: USER_ID)
+            personalChatVM.listenToMessages(chatID: chatID)
             personalChatVM.readLastMessage(chatID: chatID, userID: userVM.user?.id ?? " ")
             personalChatVM.openChat(userID: userVM.user?.id ?? " ", chatID: chatID)
             self.initKeyboardGuardian()
@@ -829,6 +839,7 @@ struct PersonalChatView : View {
             
         }.onDisappear{
             personalChatVM.exitChat(userID: userVM.user?.id ?? " ", chatID: chatID)
+            personalChatVM.removeListeners()
         } .onChange(of: scenePhase) { newPhase in
             if newPhase == .active {
                 personalChatVM.openChat(userID: userVM.user?.id ?? " ", chatID: chatID)

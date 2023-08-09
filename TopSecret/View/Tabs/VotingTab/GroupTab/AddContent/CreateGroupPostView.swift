@@ -10,7 +10,7 @@ import SwiftUI
 struct CreateGroupPostView: View {
     @Environment(\.presentationMode) var presentationMode
     @StateObject var createPostVM = CreateGroupPostViewModel()
-    var group: Group = Group()
+    var group: GroupModel = GroupModel()
     @EnvironmentObject var userVM: UserViewModel
     @State var openImagePicker: Bool = false
     @State var post = UIImage(named: "topbarlogo")!
@@ -18,9 +18,9 @@ struct CreateGroupPostView: View {
     @State var showTaggedUsersView: Bool = false
     @State var selectedUsers: [User] = []
     @State var description : String = ""
-    @State var selectedGroups: [Group] = []
+    @State var selectedGroups: [GroupModel] = []
     
-    func makeSelection(groups: [Group], selectedGroup: Group) -> [Group]{
+    func makeSelection(groups: [GroupModel], selectedGroup: GroupModel) -> [GroupModel]{
         var groupsToReturn = groups
         if groups.contains(where: {$0.id == selectedGroup.id}){
             groupsToReturn.removeAll(where: {$0.id == selectedGroup.id})

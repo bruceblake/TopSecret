@@ -11,7 +11,7 @@ import Firebase
 
 
 
-struct Group: Identifiable {
+struct GroupModel: Identifiable {
     
    
     

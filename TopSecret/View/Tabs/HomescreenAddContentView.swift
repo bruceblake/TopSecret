@@ -79,13 +79,13 @@ struct AddGroupsToEventView : View {
     
     @Environment(\.presentationMode) var presentationMode
     @State var openCreateEventView: Bool = false
-    @State var selectedGroups: [Group] = []
+    @State var selectedGroups: [GroupModel] = []
     @EnvironmentObject var userVM: UserViewModel
     @StateObject var searchVM = SearchRepository()
     @Binding var showAddEventView : Bool
     @Binding var showCreateGroupView: Bool
     
-    var groupsToShow: [Group] {
+    var groupsToShow: [GroupModel] {
         if searchVM.searchText == ""{
             return userVM.groups
         }else{
