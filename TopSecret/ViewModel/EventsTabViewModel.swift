@@ -228,7 +228,7 @@ class EventsTabViewModel: ObservableObject {
         //1. the invitation type is "Open to Friends"
         //2. the event has not ended
         //3. the creator is a friend of the user
-        COLLECTION_EVENTS.order(by: "eventStartTime", descending: false).whereField("invitationType", isEqualTo: "Open to Friends").whereField("ended", isEqualTo: false).whereField("creatorID", in: idList).addSnapshotListener { snapshot, err in
+        COLLECTION_EVENTS.order(by: "eventStartTime", descending: false).whereField("invitationType", isEqualTo: "Open to Friends").whereField("ended", isEqualTo: false).addSnapshotListener { snapshot, err in
             if err != nil {
                 print("ERROR")
                 return
@@ -245,6 +245,7 @@ class EventsTabViewModel: ObservableObject {
                 var ended = data["ended"] as? Bool ?? false
                 var id = data["id"] as? String ?? ""
                 var endTime = data["eventEndTime"] as? Date ?? Date()
+                var creatorID = data["creatorID"] as? String ?? ""
                 dp.enter()
                 
                 self.fetchEventCreator(userID: userID) { fetchedCreator in
@@ -265,7 +266,7 @@ class EventsTabViewModel: ObservableObject {
                 }
                 
                 dp.notify(queue: .main, execute: {
-                    if !usersExcludedID.contains(where: {$0 == user.id ?? " "}){
+                    if !usersExcludedID.contains(where: {$0 == user.id ?? " "}) && idList.contains(where: {$0 == creatorID}){
                         eventsToReturn.append(EventModel(dictionary: data))
                     }
                 })

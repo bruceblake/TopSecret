@@ -44,7 +44,9 @@ struct ShowGroups : View {
                                 dispatchGroup.enter()
                                 self.selectedGroup = group
                                 selectedGroupVM.changeCurrentGroup(groupID: group.id){ finishedFetching in
-                                        dispatchGroup.leave()                                    
+                                    if finishedFetching{
+                                        dispatchGroup.leave()
+                                    }
                                 }
 
                                 dispatchGroup.notify(queue: .main, execute:{

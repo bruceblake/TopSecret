@@ -1009,7 +1009,7 @@ class PersonalChatViewModel : ObservableObject {
         
         
         dp.notify(queue: .main, execute:{
-            
+            self.notificationSender.sendPushNotification(to: user.id ?? "", title: user.nickName ?? "", body: text)
             COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["lastMessageID":messageID])
 
             COLLECTION_PERSONAL_CHAT.document(chatID).updateData(["usersThatHaveSeenLastMessage":[user.id ?? " "]])
@@ -1022,7 +1022,6 @@ class PersonalChatViewModel : ObservableObject {
             self.text = ""
             return completion(true)
         })
-        
         
         
         

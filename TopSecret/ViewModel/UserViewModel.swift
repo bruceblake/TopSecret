@@ -87,7 +87,6 @@ class UserViewModel : ObservableObject {
                 }
             }
             self.monitor.start(queue: self.queue)
-            
         }
     }
     

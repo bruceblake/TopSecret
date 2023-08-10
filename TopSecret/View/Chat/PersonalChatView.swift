@@ -44,7 +44,7 @@ struct PersonalChatView : View {
     @State var selectedThumbnailImages: [UIImage] = []
     @State var selectedThumbnailUrls: [URL] = []
     @State var limit: Int = 5
-
+    @State var showSettingsView: Bool = false
     
    
    
@@ -220,8 +220,21 @@ struct PersonalChatView : View {
                         Spacer()
                         
                         
+                        Button(action:{
+                            self.showSettingsView.toggle()
+                        },label:{
+                            ZStack{
+                                Circle().frame(width: 40, height: 40).foregroundColor(Color("Color"))
+                                Image(systemName: "ellipsis").foregroundColor(FOREGROUNDCOLOR)
+                            }
+                        }).sheet(isPresented: $showSettingsView) {
+                            
+                        } content: {
+                            PersonalChatSettingsView()
+                        }
+
+                       
                         
-                        Circle().frame(width: 40, height: 40).foregroundColor(Color.clear)
                         
                         
                     }.padding(.top,50).padding(.horizontal)
@@ -459,7 +472,7 @@ struct PersonalChatView : View {
                                     
                                     
                                     
-                                } ,canAddAnotherLine: $canAddAnotherLine, hasMicrophone: true).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Background")))
+                                } ,canAddAnotherLine: $canAddAnotherLine, hasMicrophone: false).padding(10).background(RoundedRectangle(cornerRadius: 12).fill(Color("Background")))
                                 Button(action:{
                                     self.showAddContent.toggle()
                                 },label:{
@@ -468,7 +481,13 @@ struct PersonalChatView : View {
                                         Image(systemName: "plus").foregroundColor(FOREGROUNDCOLOR).font(.title3)
                                     }
                                 })
-                            }.padding().padding(.bottom,10)
+                            }.padding().padding(.bottom,10).onReceive(personalChatVM.$text) { text in
+                                if text != "" {
+                                    personalChatVM.startTyping(userID: USER_ID, chatID: chatID)
+                                }else{
+                                    personalChatVM.stopTyping(userID: USER_ID, chatID: chatID)
+                                }
+                            }
                             
                         }else{
                             HStack(alignment: .top, spacing: 4){
@@ -1066,5 +1085,32 @@ struct PullToRefreshView: View
         ProgressView()
             .progressViewStyle(CircularProgressViewStyle(tint: foregroundColor))
             .opacity(isRefreshIndicatorVisible ? 1 : 0)
+    }
+}
+
+
+struct PersonalChatSettingsView : View {
+    @State var silenceNotifications = false
+    
+    var body: some View {
+        ZStack{
+            Color("Background")
+            VStack{
+                HStack{
+                    Spacer()
+                    Text("Chat Settings")
+                    Spacer()
+                }.padding(.top,50).padding(.horizontal)
+                VStack(alignment: .leading){
+                    Toggle("Silence Notifications", isOn: $silenceNotifications)
+                }
+            }
+        }.onChange(of: silenceNotifications) { newValue in
+            if newValue{
+                
+            }else{
+                
+            }
+        }
     }
 }

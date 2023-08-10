@@ -65,6 +65,10 @@ struct ContentView: View {
                 }
             }
         }
+        .onReceive(userVM.$connected){ connected in
+            userVM.beginListening()
+            print("connecte: \(connected)")
+        }
     }
 }
 
