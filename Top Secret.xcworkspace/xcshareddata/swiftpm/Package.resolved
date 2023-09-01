@@ -127,24 +127,7 @@
           "version": "0.1.1"
         }
       },
-      {
-        "package": "Media",
-        "repositoryURL": "https://github.com/crelies/Media",
-        "state": {
-          "branch": null,
-          "revision": "84acbe8e4f5c62e304582d5a2d32edfaa509f839",
-          "version": "3.0.0"
-        }
-      },
-      {
-        "package": "MediaPicker",
-        "repositoryURL": "https://github.com/exyte/MediaPicker",
-        "state": {
-          "branch": null,
-          "revision": "7d3949cf30378023a0dd9219c3a8ce988df14420",
-          "version": "0.0.1"
-        }
-      },
+
       {
         "package": "nanopb",
         "repositoryURL": "https://github.com/firebase/nanopb.git",
